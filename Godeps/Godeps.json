@@ -18,10 +18,6 @@
 			"Rev": "179d4d0c4d8d407a32af483c2354df1d2c91e6c3"
 		},
 		{
-			"ImportPath": "golang.org/x/net/context",
-			"Rev": "bc3663df0ac92f928d419e31e0d2af22e683a5a2"
-		},
-		{
 			"ImportPath": "golang.org/x/sys/unix",
 			"Rev": "62bee037599929a6e9146f29d10dd5208c43507d"
 		}
