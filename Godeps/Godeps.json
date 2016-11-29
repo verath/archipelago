@@ -1,0 +1,29 @@
+{
+	"ImportPath": "github.com/verath/archipelago",
+	"GoVersion": "go1.7",
+	"GodepVersion": "v75",
+	"Deps": [
+		{
+			"ImportPath": "github.com/Sirupsen/logrus",
+			"Comment": "v0.11.0-10-ga437dfd",
+			"Rev": "a437dfd2463eaedbec3dfe443e477d3b0a810b3f"
+		},
+		{
+			"ImportPath": "github.com/gorilla/websocket",
+			"Comment": "v1.0.0-15-g54f9dec",
+			"Rev": "54f9decdbfb3fe254c5df3d5aa234480989f4af0"
+		},
+		{
+			"ImportPath": "github.com/nu7hatch/gouuid",
+			"Rev": "179d4d0c4d8d407a32af483c2354df1d2c91e6c3"
+		},
+		{
+			"ImportPath": "golang.org/x/net/context",
+			"Rev": "bc3663df0ac92f928d419e31e0d2af22e683a5a2"
+		},
+		{
+			"ImportPath": "golang.org/x/sys/unix",
+			"Rev": "62bee037599929a6e9146f29d10dd5208c43507d"
+		}
+	]
+}
