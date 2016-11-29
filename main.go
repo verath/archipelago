@@ -3,9 +3,9 @@ package main
 import (
 	"github.com/Sirupsen/logrus"
 	"github.com/verath/archipelago/lib"
-	"golang.org/x/net/context"
 	"os"
 	"os/signal"
+	"context"
 )
 
 func main() {
