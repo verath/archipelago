@@ -45,14 +45,14 @@ func TestGameLoop_AddAction(t *stdtesting.T) {
 
 	t.Log("Tick 1: action added")
 	gl.addAction(a1)
-	gl.tick(1 * time.Millisecond)
+	gl.applyActions(1 * time.Millisecond)
 	if !a1Applied {
 		t.Error("Action was not applied")
 	}
 
 	t.Log("Tick 2: without action")
 	a1Applied = false
-	gl.tick(1 * time.Millisecond)
+	gl.applyActions(1 * time.Millisecond)
 	if a1Applied {
 		t.Error("Action was applied twice")
 	}
@@ -60,7 +60,7 @@ func TestGameLoop_AddAction(t *stdtesting.T) {
 	t.Log("Tick 3: action added")
 	a1Applied = false
 	gl.addAction(a1)
-	gl.tick(1 * time.Millisecond)
+	gl.applyActions(1 * time.Millisecond)
 	if !a1Applied {
 		t.Error("Action was not applied")
 	}
@@ -76,6 +76,7 @@ func TestGameLoop_AddAction_RealTick(t *stdtesting.T) {
 	eventsCh := make(chan event.Event, 0)
 
 	gl := newGameLoop(log, game)
+	gl.tickInterval = time.Millisecond
 	ctx, cancel := context.WithCancel(context.Background())
 	timesApplied := 0
 

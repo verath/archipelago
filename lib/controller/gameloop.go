@@ -13,7 +13,7 @@ import (
 	"time"
 )
 
-const defaultTickInterval time.Duration = (time.Second / 5)
+const defaultTickInterval time.Duration = (time.Second * 2)
 
 type gameLoop struct {
 	log *logrus.Logger
@@ -25,7 +25,7 @@ type gameLoop struct {
 	actions   []action.Action
 }
 
-func (gl *gameLoop) applyActions(delta time.Duration) error {
+func (gl *gameLoop) applyActions(delta time.Duration) ([]event.Event, error) {
 	// We make a copy of the current gl.actions and replace gl.actions
 	// with a new array so that we can release the lock asap
 	gl.actionsMu.Lock()
@@ -36,7 +36,7 @@ func (gl *gameLoop) applyActions(delta time.Duration) error {
 	// Add a tick action as the last action
 	tickAction, err := action.NewTickAction(delta)
 	if err != nil {
-		return fmt.Errorf("Error creating tick action: %v", err)
+		return nil, fmt.Errorf("Error creating tick action: %v", err)
 	}
 	actions = append(actions, tickAction)
 
@@ -45,25 +45,31 @@ func (gl *gameLoop) applyActions(delta time.Duration) error {
 	for _, act := range actions {
 		evts, err := act.Apply(gl.game)
 		if err != nil {
-			return fmt.Errorf("Error applying action: %v", err)
+			return nil, fmt.Errorf("Error applying action: %v", err)
 		}
 		events = append(events, evts...)
 	}
+	return events, nil
+}
+
+func (gl *gameLoop) dispatchEvents(ctx context.Context, eventsCh chan<- event.Event, events []event.Event) error {
+	// TODO: should we dispatch events async?
+	for _, evt := range events {
+		select {
+		case <-ctx.Done():
+			return ctx.Err()
+		case eventsCh <- evt:
+		}
+	}
 	return nil
 }
 
-func (gl *gameLoop) dispatchEvents() error {
-	return nil
-}
-
-func (gl *gameLoop) tick(delta time.Duration) error {
-	if err := gl.applyActions(delta); err != nil {
+func (gl *gameLoop) tick(ctx context.Context, eventsCh chan<- event.Event, delta time.Duration) error {
+	events, err := gl.applyActions(delta)
+	if err != nil {
 		return err
 	}
-	if err := gl.dispatchEvents(); err != nil {
-		return err
-	}
-	return nil
+	return gl.dispatchEvents(ctx, eventsCh, events)
 }
 
 func (gl *gameLoop) tickLoop(ctx context.Context, eventsCh chan<- event.Event) error {
@@ -76,7 +82,7 @@ func (gl *gameLoop) tickLoop(ctx context.Context, eventsCh chan<- event.Event) e
 		case <-ctx.Done():
 			return ctx.Err()
 		case <-ticker.C:
-			if err := gl.tick(tickInterval); err != nil {
+			if err := gl.tick(ctx, eventsCh, tickInterval); err != nil {
 				return err
 			}
 		}
