@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/Sirupsen/logrus"
 	"github.com/gorilla/websocket"
+	"github.com/verath/archipelago/lib/logutil"
 	"github.com/verath/archipelago/lib/network"
 	"net"
 	"net/http"
@@ -25,7 +26,7 @@ type playerConnCh chan<- network.PlayerConn
 var upgrader = websocket.Upgrader{}
 
 func (s *server) handleWSConn(ctx context.Context, playerCh playerConnCh, wg sync.WaitGroup, conn *websocket.Conn) {
-	logEntry := s.log.WithField("module", "http")
+	logEntry := logutil.ModuleEntry(s.log, "http")
 
 	// Move to a new go-routine so the current http response go-routine
 	// is allowed to finish.
@@ -46,21 +47,23 @@ func (s *server) handleWSConn(ctx context.Context, playerCh playerConnCh, wg syn
 		select {
 		case playerCh <- playerConn:
 		case <-ctx.Done():
-			e := logEntry.WithField("err", ctx.Err())
-			e.Error("error when sending playerConn to playerCh")
+			logEntry.WithError(ctx.Err()).Info("could not send playerConn")
 		}
 	}()
 }
 
 func (s *server) Run(ctx context.Context, playerCh playerConnCh) error {
-	logEntry := s.log.WithField("module", "http")
+	logEntry := logutil.ModuleEntry(s.log, "http")
+	logEntry.Info("Starting")
+	defer logEntry.Info("Stopped")
+
 	var wg sync.WaitGroup
 
 	mux := http.NewServeMux()
 	mux.HandleFunc("/ws", func(w http.ResponseWriter, r *http.Request) {
 		conn, err := upgrader.Upgrade(w, r, nil)
 		if err != nil {
-			logEntry.WithField("err", err).Error("Failed upgrading to websocket")
+			logEntry.WithError(err).Error("Failed upgrading to websocket")
 			return
 		}
 		s.handleWSConn(ctx, playerCh, wg, conn)

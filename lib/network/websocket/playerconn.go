@@ -8,6 +8,7 @@ import (
 	"github.com/verath/archipelago/lib/event"
 	"log"
 	"time"
+	"github.com/verath/archipelago/lib/logutil"
 )
 
 // Time until a client is considered disconnected
@@ -42,9 +43,11 @@ func (pc *playerConn) heartbeat(ctx context.Context, heartbeatCh <-chan interfac
 }
 
 func (pc *playerConn) run(ctx context.Context) {
-	pc.log.Debug("Starting player conn...")
+	logEntry := logutil.ModuleEntryWithID(pc.log, "ws/playerconn")
+	logEntry.Info("Starting")
+	defer logEntry.Info("Stopped")
+
 	<-ctx.Done()
-	pc.log.Info("Player conn stopped")
 }
 
 func (pc *playerConn) ActionChannel() <-chan action.Action {

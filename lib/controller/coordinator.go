@@ -4,42 +4,27 @@ import (
 	"context"
 	"github.com/Sirupsen/logrus"
 	"github.com/verath/archipelago/lib/network"
-	"github.com/verath/archipelago/lib/testing"
 	"sync"
-	"time"
-)
-
-const (
-	DefaultGameTimeout time.Duration = 45 * time.Minute
+	"github.com/verath/archipelago/lib/logutil"
 )
 
 type playerConnCh <-chan network.PlayerConn
 
 type gameCoordinator struct {
-	log *logrus.Logger
+	log         *logrus.Logger
+	gameManager *gameManager
 }
 
 func (gc *gameCoordinator) createGame(ctx context.Context, wg sync.WaitGroup, p1Conn, p2Conn network.PlayerConn) {
-	logEntry := gc.log.WithField("module", "gc")
+	logEntry := logutil.ModuleEntry(gc.log, "gameCoordinator")
 
 	wg.Add(1)
 	go func() {
-		defer wg.Done()
-
-		// We don't want games to stay around forever
-		gameCtx, cancel := context.WithTimeout(ctx, DefaultGameTimeout)
-		defer cancel()
-
-		game := testing.CreateSimpleGame()
-		gameLoop := newGameLoop(gc.log, game)
-
-		logEntry.Info("Starting new game")
-		err := gameLoop.Run(gameCtx)
+		err := gc.gameManager.RunGame(ctx, p1Conn, p2Conn)
 		if err != nil {
-			logEntry.WithField("err", err).Error("Game stopped")
-		} else {
-			logEntry.Info("Game stopped")
+			logEntry.WithError(err).Error("error during RunGame")
 		}
+		wg.Done()
 	}()
 }
 
@@ -63,26 +48,25 @@ func (gc *gameCoordinator) runLoop(ctx context.Context, playerCh playerConnCh, w
 	}
 }
 
-func (gc *gameCoordinator) Run(ctx context.Context, playerCh playerConnCh) (err error) {
-	logEntry := gc.log.WithField("module", "gc")
+func (gc *gameCoordinator) Run(ctx context.Context, playerCh playerConnCh) error {
+	logEntry := logutil.ModuleEntry(gc.log, "gameCoordinator")
+	logEntry.Info("Starting")
+	defer logEntry.Info("Stopped")
+
 	var wg sync.WaitGroup
 	ctx, cancel := context.WithCancel(ctx)
 
-	logEntry.Info("Starting...")
-	err = gc.runLoop(ctx, playerCh, wg)
-	if err != nil {
-		logEntry.WithField("err", err).Error("runLoop finished, stopping...")
-	} else {
-		logEntry.Info("runLoop finished, stopping...")
-	}
+	err := gc.runLoop(ctx, playerCh, wg)
 	cancel()
 	wg.Wait()
-	logEntry.Info("Stopped")
 	return err
 }
 
 func NewGameCoordinator(log *logrus.Logger) *gameCoordinator {
+	gameManager := newGameManager(log)
+
 	return &gameCoordinator{
-		log: log,
+		log:         log,
+		gameManager: gameManager,
 	}
 }
