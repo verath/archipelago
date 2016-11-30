@@ -2,48 +2,65 @@ package model
 
 import (
 	"encoding/json"
-	"errors"
 )
 
 type Board struct {
 	size    Coordinate
-	islands map[Coordinate]*Island
+	islands []*Island
+}
+
+func (b *Board) coordToIndex(coord Coordinate) int {
+	return coord.X + (coord.Y * b.size.X)
+}
+
+func (b *Board) indexOk(idx int) bool {
+	return idx >= 0 && idx < (b.size.X*b.size.Y)
 }
 
 func (b *Board) Island(coord Coordinate) *Island {
-	if island, ok := b.islands[coord]; ok {
-		return island
+	idx := b.coordToIndex(coord)
+	if !b.indexOk(idx) {
+		panic("Accessing island at coordinate outside size")
 	}
-	return nil
+	return b.islands[idx]
 }
 
 func (b *Board) Islands() []*Island {
-	islands := make([]*Island, 0, len(b.islands))
+	islands := make([]*Island, 0)
 	for _, island := range b.islands {
-		islands = append(islands, island)
+		if island != nil {
+			islands = append(islands, island)
+		}
 	}
 	return islands
 }
 
-func (b *Board) AddIsland(coord Coordinate, island Island) error {
-	if !coord.IsWithin(b.size) {
-		return errors.New("coord not within size")
+func (b *Board) AddIsland(coord Coordinate, island Island) {
+	idx := b.coordToIndex(coord)
+	if !b.indexOk(idx) {
+		// This should in all cases be due to us creating a bad
+		// map, we panic rather than error to quickly fail
+		panic("Adding island to coordinate outside size")
 	}
-	b.islands[coord] = &island
-	return nil
+	b.islands[idx] = &island
 }
 
 func (b *Board) MarshalJSON() ([]byte, error) {
 	return json.Marshal(&struct {
-		Size Coordinate
+		Size    Coordinate
+		Islands []*Island
 	}{
-		Size: b.size,
+		Size:    b.size,
+		Islands: b.islands,
 	})
 }
 
 func NewBoard(size Coordinate) *Board {
+	if size.X <= 0 || size.Y <= 0 {
+		panic("Size of board cannot be <= 0")
+	}
 	return &Board{
 		size:    size,
-		islands: make(map[Coordinate]*Island),
+		islands: make([]*Island, size.X*size.Y),
 	}
 }

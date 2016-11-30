@@ -1,6 +1,7 @@
 package model
 
 import (
+	"encoding/json"
 	"time"
 )
 
@@ -14,7 +15,6 @@ type Airplane struct {
 }
 
 const airplaneDefaultSpeed = 1 / float64(time.Second)
-
 
 func (a *Airplane) Position() *FloatCoordinate {
 	return &a.position
@@ -30,6 +30,19 @@ func (a *Airplane) Speed() float64 {
 
 func (a *Airplane) SetSpeed(speed float64) {
 	a.speed = speed
+}
+
+func (a *Airplane) MarshalJSON() ([]byte, error) {
+	// TODO: include speed?
+	return json.Marshal(&struct {
+		Army        army
+		Position    FloatCoordinate
+		Destination Coordinate
+	}{
+		Army:        a.army,
+		Position:    a.position,
+		Destination: a.destination,
+	})
 }
 
 func NewAirplane(origin, destination Coordinate, owner *player, strength int) (*Airplane, error) {

@@ -2,6 +2,7 @@ package model
 
 import (
 	"time"
+	"encoding/json"
 )
 
 type Island struct {
@@ -20,6 +21,14 @@ func (i *Island) GrowthRemainder() time.Duration {
 
 func (i *Island) SetGrowthRemainder(growthRemainder time.Duration) {
 	i.growthRemainder = growthRemainder
+}
+
+func (i *Island) MarshalJSON() ([]byte, error) {
+	return json.Marshal(&struct {
+		Army army
+	}{
+		Army: i.army,
+	})
 }
 
 func NewIsland(owner *player, strength int, growthInterval time.Duration) (*Island, error) {
