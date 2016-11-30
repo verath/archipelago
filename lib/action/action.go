@@ -6,11 +6,11 @@ import (
 )
 
 type Action interface {
-	Apply(model.Game) ([]event.Event, error)
+	Apply(*model.Game) ([]event.Event, error)
 }
 
-type ActionFunc func(model.Game) ([]event.Event, error)
+type ActionFunc func(*model.Game) ([]event.Event, error)
 
-func (f ActionFunc) Apply(g model.Game) ([]event.Event, error) {
+func (f ActionFunc) Apply(g *model.Game) ([]event.Event, error) {
 	return f(g)
 }

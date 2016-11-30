@@ -38,7 +38,7 @@ func TestGameLoop_AddAction(t *stdtesting.T) {
 
 	t.Log("Adding action to game loop...")
 	a1Applied := false
-	a1 := action.ActionFunc(func(g model.Game) ([]event.Event, error) {
+	a1 := action.ActionFunc(func(g *model.Game) ([]event.Event, error) {
 		a1Applied = true
 		return []event.Event{}, nil
 	})
@@ -79,7 +79,7 @@ func TestGameLoop_AddAction_RealTick(t *stdtesting.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	timesApplied := 0
 
-	actionsCh <- action.ActionFunc(func(g model.Game) ([]event.Event, error) {
+	actionsCh <- action.ActionFunc(func(g *model.Game) ([]event.Event, error) {
 		timesApplied += 1
 		return []event.Event{}, nil
 	})

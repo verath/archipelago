@@ -1,17 +1,38 @@
 package event
 
+import "encoding/json"
+
 type Event interface {
-	Type() string
+	Name() string
+	Data() interface{}
 }
 
 type event struct {
-	evtType string
+	name string
+	data interface{}
 }
 
-func (e *event) Type() string {
-	return e.evtType
+func (e *event) Name() string {
+	return e.name
 }
 
-func NewEvent(evtType string) (Event, error) {
-	return &event{evtType: evtType}, nil
+func (e *event) Data() interface{} {
+	return e.data
+}
+
+func (e *event) MarshalJSON() ([]byte, error) {
+	return json.Marshal(&struct {
+		Name string
+		Data interface{}
+	}{
+		Name: e.Name(),
+		Data: e.Data(),
+	})
+}
+
+func newEvent(name string, data interface{}) *event {
+	return &event{
+		name: name,
+		data: data,
+	}
 }

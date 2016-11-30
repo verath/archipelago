@@ -18,7 +18,7 @@ const defaultTickInterval time.Duration = (time.Second / 5)
 type gameLoop struct {
 	log *logrus.Logger
 
-	game         model.Game
+	game         *model.Game
 	tickInterval time.Duration
 
 	actionsMu sync.Mutex
@@ -137,7 +137,7 @@ func (gl *gameLoop) Run(ctx context.Context, actionsCh <-chan action.Action, eve
 	return nil
 }
 
-func newGameLoop(log *logrus.Logger, game model.Game) *gameLoop {
+func newGameLoop(log *logrus.Logger, game *model.Game) *gameLoop {
 	return &gameLoop{
 		log:          log,
 		game:         game,

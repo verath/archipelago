@@ -1,6 +1,7 @@
 package action
 
 import (
+	"github.com/verath/archipelago/lib/event"
 	. "github.com/verath/archipelago/lib/model"
 	"github.com/verath/archipelago/lib/testing"
 	stdtesting "testing"
@@ -64,7 +65,12 @@ func TestTickAction_Apply_AddsTickEvent(t *stdtesting.T) {
 		t.Errorf("Expected no error, got: %v", err)
 	}
 
-	if events[0].Type() != "tick" {
+	if len(events) != 1 {
+		t.Error("Expected exactly one event to have been created")
+	}
+
+	evt := events[0]
+	if _, ok := evt.(*event.TickEvent); !ok {
 		t.Error("Expected a TickEvent to have been created")
 	}
 }

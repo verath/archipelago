@@ -1,30 +1,31 @@
 package model
 
 import (
+	"encoding/json"
 	"errors"
 )
 
-type board struct {
+type Board struct {
 	size    Coordinate
-	islands map[Coordinate]*island
+	islands map[Coordinate]*Island
 }
 
-func (b *board) Island(coord Coordinate) *island {
+func (b *Board) Island(coord Coordinate) *Island {
 	if island, ok := b.islands[coord]; ok {
 		return island
 	}
 	return nil
 }
 
-func (b *board) Islands() []*island {
-	islands := make([]*island, 0, len(b.islands))
+func (b *Board) Islands() []*Island {
+	islands := make([]*Island, 0, len(b.islands))
 	for _, island := range b.islands {
 		islands = append(islands, island)
 	}
 	return islands
 }
 
-func (b *board) AddIsland(coord Coordinate, island island) error {
+func (b *Board) AddIsland(coord Coordinate, island Island) error {
 	if !coord.IsWithin(b.size) {
 		return errors.New("coord not within size")
 	}
@@ -32,9 +33,17 @@ func (b *board) AddIsland(coord Coordinate, island island) error {
 	return nil
 }
 
-func NewBoard(size Coordinate) *board {
-	return &board{
+func (b *Board) MarshalJSON() ([]byte, error) {
+	return json.Marshal(&struct {
+		Size Coordinate
+	}{
+		Size: b.size,
+	})
+}
+
+func NewBoard(size Coordinate) *Board {
+	return &Board{
 		size:    size,
-		islands: make(map[Coordinate]*island),
+		islands: make(map[Coordinate]*Island),
 	}
 }

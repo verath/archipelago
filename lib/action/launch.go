@@ -12,7 +12,7 @@ type launchAction struct {
 	owner model.PlayerID
 }
 
-func (a *launchAction) Apply(g model.Game) ([]event.Event, error) {
+func (a *launchAction) Apply(g *model.Game) ([]event.Event, error) {
 	fromIsland := g.Board().Island(a.from)
 	if fromIsland == nil {
 		return nil, errors.New("from island does not exist")

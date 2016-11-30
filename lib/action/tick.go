@@ -12,7 +12,7 @@ type tickAction struct {
 	delta time.Duration
 }
 
-func updateAirplanes(g model.Game, delta time.Duration) error {
+func updateAirplanes(g *model.Game, delta time.Duration) error {
 	for _, airplane := range g.Airplanes() {
 		speed := airplane.Speed()
 		pos := airplane.Position()
@@ -32,7 +32,7 @@ func updateAirplanes(g model.Game, delta time.Duration) error {
 	return nil
 }
 
-func updateIslands(g model.Game, delta time.Duration) error {
+func updateIslands(g *model.Game, delta time.Duration) error {
 	for _, island := range g.Board().Islands() {
 		if island.Owner() == nil {
 			// Neutral islands does not grow in strength
@@ -51,7 +51,7 @@ func updateIslands(g model.Game, delta time.Duration) error {
 	return nil
 }
 
-func (a *tickAction) Apply(g model.Game) ([]event.Event, error){
+func (a *tickAction) Apply(g *model.Game) ([]event.Event, error){
 	if err := updateAirplanes(g, a.delta); err != nil {
 		return nil, err
 	}
@@ -59,10 +59,7 @@ func (a *tickAction) Apply(g model.Game) ([]event.Event, error){
 		return nil, err
 	}
 
-	tickEvent, err := event.NewEvent("tick")
-	if err != nil {
-		return nil, err
-	}
+	tickEvent := event.NewTickEvent(*g)
 	return []event.Event{tickEvent}, nil
 }
 

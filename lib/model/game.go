@@ -1,20 +1,15 @@
 package model
 
-type Game interface {
-	Player(id PlayerID) *player
-	Board() *board
-	Airplanes() []*airplane
-	AddAirplane(airplane *airplane)
-}
+import "encoding/json"
 
-type game struct {
+type Game struct {
 	player1   player
 	player2   player
-	board     board
-	airplanes []*airplane
+	board     Board
+	airplanes []*Airplane
 }
 
-func (g *game) Player(id PlayerID) *player {
+func (g *Game) Player(id PlayerID) *player {
 	if g.player1.id == id {
 		return &g.player1
 	}
@@ -24,23 +19,37 @@ func (g *game) Player(id PlayerID) *player {
 	return nil
 }
 
-func (g *game) Board() *board {
+func (g *Game) Board() *Board {
 	return &g.board
 }
 
-func (g *game) Airplanes() []*airplane {
+func (g *Game) Airplanes() []*Airplane {
 	return g.airplanes
 }
 
-func (g *game) AddAirplane(airplane *airplane) {
+func (g *Game) AddAirplane(airplane *Airplane) {
 	g.airplanes = append(g.airplanes, airplane)
 }
 
-func NewGame(player1 player, player2 player, board board) (*game, error) {
-	return &game{
+func (g *Game) MarshalJSON() ([]byte, error) {
+	return json.Marshal(&struct {
+		Player1   player
+		Player2   player
+		Board     Board
+		Airplanes []*Airplane
+	}{
+		Player1:   g.player1,
+		Player2:   g.player2,
+		Board:     g.board,
+		Airplanes: g.airplanes,
+	})
+}
+
+func NewGame(player1 player, player2 player, board Board) (*Game, error) {
+	return &Game{
 		player1:   player1,
 		player2:   player2,
 		board:     board,
-		airplanes: make([]*airplane, 0),
+		airplanes: make([]*Airplane, 0),
 	}, nil
 }

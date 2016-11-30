@@ -1,6 +1,7 @@
 package model
 
 import (
+	"encoding/json"
 	"github.com/nu7hatch/gouuid"
 )
 
@@ -23,6 +24,16 @@ func (p *player) ID() PlayerID {
 	return p.id
 }
 
+func (p *player) MarshalJSON() ([]byte, error) {
+	return json.Marshal(&struct {
+		Name string
+		ID   PlayerID
+	}{
+		Name: p.name,
+		ID:   p.id,
+	})
+}
+
 func NewPlayer(name string) (*player, error) {
 	id, err := uuid.NewV4()
 	if err != nil {
@@ -34,6 +45,6 @@ func NewPlayer(name string) (*player, error) {
 func NewPlayerWithId(name, id string) (*player, error) {
 	return &player{
 		name: name,
-		id: PlayerID(id),
+		id:   PlayerID(id),
 	}, nil
 }

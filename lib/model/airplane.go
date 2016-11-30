@@ -4,7 +4,7 @@ import (
 	"time"
 )
 
-type airplane struct {
+type Airplane struct {
 	army
 
 	position    FloatCoordinate
@@ -16,29 +16,29 @@ type airplane struct {
 const airplaneDefaultSpeed = 1 / float64(time.Second)
 
 
-func (a *airplane) Position() *FloatCoordinate {
+func (a *Airplane) Position() *FloatCoordinate {
 	return &a.position
 }
 
-func (a *airplane) Destination() *Coordinate {
+func (a *Airplane) Destination() *Coordinate {
 	return &a.destination
 }
 
-func (a *airplane) Speed() float64 {
+func (a *Airplane) Speed() float64 {
 	return a.speed
 }
 
-func (a *airplane) SetSpeed(speed float64) {
+func (a *Airplane) SetSpeed(speed float64) {
 	a.speed = speed
 }
 
-func NewAirplane(origin, destination Coordinate, owner *player, strength int) (*airplane, error) {
+func NewAirplane(origin, destination Coordinate, owner *player, strength int) (*Airplane, error) {
 	army, err := newArmy(owner, strength)
 	if err != nil {
 		return nil, err
 	}
 
-	return &airplane{
+	return &Airplane{
 		army:        *army,
 		position:    origin.ToFloatCoordinate(),
 		destination: destination,
