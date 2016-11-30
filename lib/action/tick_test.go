@@ -29,7 +29,7 @@ func TestTickAction_Apply(t *stdtesting.T) {
 	game := testing.CreateSimpleGame()
 
 	// Add an airplane from 0,0 -> 0,9
-	airplane, _ := NewAirplane(Coordinate{0, 0}, Coordinate{0, 9}, game.Player("1"), 10)
+	airplane := NewAirplane(Coordinate{0, 0}, Coordinate{0, 9}, game.Player("1"), 10)
 	airplane.SetSpeed(1 / float64(time.Second))
 	game.AddAirplane(airplane)
 

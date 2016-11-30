@@ -38,9 +38,9 @@ func (a *army) MarshalJSON() ([]byte, error) {
 	})
 }
 
-func newArmy(owner *player, strength int) (*army, error) {
-	return &army{
+func newArmy(owner *player, strength int) army {
+	return army{
 		owner:    owner,
 		strength: strength,
-	}, nil
+	}
 }

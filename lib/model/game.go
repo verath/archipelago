@@ -9,6 +9,14 @@ type Game struct {
 	airplanes []*Airplane
 }
 
+func (g *Game) Player1() *player {
+	return &g.player1
+}
+
+func (g *Game) Player2() *player {
+	return &g.player2
+}
+
 func (g *Game) Player(id PlayerID) *player {
 	if g.player1.id == id {
 		return &g.player1
@@ -45,11 +53,11 @@ func (g *Game) MarshalJSON() ([]byte, error) {
 	})
 }
 
-func NewGame(player1 player, player2 player, board Board) (*Game, error) {
+func NewGame(player1 player, player2 player, board Board) *Game {
 	return &Game{
 		player1:   player1,
 		player2:   player2,
 		board:     board,
 		airplanes: make([]*Airplane, 0),
-	}, nil
+	}
 }

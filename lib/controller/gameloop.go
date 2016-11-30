@@ -114,32 +114,28 @@ func (gl *gameLoop) Run(ctx context.Context, actionsCh <-chan action.Action, eve
 	logEntry.Info("Starting")
 	defer logEntry.Info("Stopped")
 
-	errCh := make(chan error, 0)
 	ctx, cancel := context.WithCancel(ctx)
+	var wg sync.WaitGroup
 
+	wg.Add(2)
 	go func() {
 		err := gl.tickLoop(ctx, eventsCh)
 		if err != nil && err != context.Canceled {
-			errCh <- fmt.Errorf("tickLoop quit: %v", err)
-		} else {
-			errCh <- nil
+			logEntry.WithError(err).Error("tickLoop quit: %v", err)
 		}
+		cancel()
+		wg.Done()
 	}()
 	go func() {
 		err := gl.actionsLoop(ctx, actionsCh)
 		if err != nil && err != context.Canceled {
-			errCh <- fmt.Errorf("actionsLoop quit: %v", err)
-		} else {
-			errCh <- nil
+			logEntry.WithError(err).Error("actionsLoop quit: %v", err)
 		}
+		cancel()
+		wg.Done()
 	}()
 
-	err1 := <-errCh
-	cancel()
-	err2 := <-errCh
-	if err1 != nil || err2 != nil {
-		return fmt.Errorf("gameLoop Run: %v; %v", err1, err2)
-	}
+	wg.Wait()
 	return nil
 }
 

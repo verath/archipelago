@@ -45,16 +45,11 @@ func (a *Airplane) MarshalJSON() ([]byte, error) {
 	})
 }
 
-func NewAirplane(origin, destination Coordinate, owner *player, strength int) (*Airplane, error) {
-	army, err := newArmy(owner, strength)
-	if err != nil {
-		return nil, err
-	}
-
+func NewAirplane(origin, destination Coordinate, owner *player, strength int) *Airplane {
 	return &Airplane{
-		army:        *army,
+		army:        newArmy(owner, strength),
 		position:    origin.ToFloatCoordinate(),
 		destination: destination,
 		speed:       airplaneDefaultSpeed,
-	}, nil
+	}
 }

@@ -35,10 +35,7 @@ func (a *launchAction) Apply(g *model.Game) ([]event.Event, error) {
 	airplaneStr := islandStr / 2
 	fromIsland.SetStrength(islandStr - airplaneStr)
 
-	airplane, err := model.NewAirplane(a.from, a.to, fromIsland.Owner(), airplaneStr)
-	if err != nil {
-		return nil, err
-	}
+	airplane := model.NewAirplane(a.from, a.to, fromIsland.Owner(), airplaneStr)
 	g.AddAirplane(airplane)
 	return nil, nil
 

@@ -1,8 +1,8 @@
 package model
 
 import (
-	"time"
 	"encoding/json"
+	"time"
 )
 
 type Island struct {
@@ -31,14 +31,9 @@ func (i *Island) MarshalJSON() ([]byte, error) {
 	})
 }
 
-func NewIsland(owner *player, strength int, growthInterval time.Duration) (*Island, error) {
-	army, err := newArmy(owner, strength)
-	if err != nil {
-		return nil, err
-	}
-
+func NewIsland(owner *player, strength int, growthInterval time.Duration) *Island {
 	return &Island{
-		army:           *army,
+		army:           newArmy(owner, strength),
 		growthInterval: growthInterval,
-	}, nil
+	}
 }
