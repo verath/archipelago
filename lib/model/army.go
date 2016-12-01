@@ -23,13 +23,6 @@ func (a *army) IsOwnedBy(id PlayerID) bool {
 	return a.owner != nil && a.owner.id == id
 }
 
-func (a *army) Copy() *army {
-	return &army{
-		owner:    a.owner.Copy(),
-		strength: a.strength,
-	}
-}
-
 func (a *army) MarshalJSON() ([]byte, error) {
 	return json.Marshal(&struct {
 		OwnerID  PlayerID
@@ -38,6 +31,13 @@ func (a *army) MarshalJSON() ([]byte, error) {
 		OwnerID:  a.owner.id,
 		Strength: a.strength,
 	})
+}
+
+func (a *army) Copy() *army {
+	return &army{
+		owner:    a.owner.Copy(),
+		strength: a.strength,
+	}
 }
 
 func newArmy(owner *Player, strength int) *army {

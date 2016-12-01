@@ -45,19 +45,6 @@ func (b *Board) SetIsland(coord Coordinate, island *Island) {
 	b.islands[idx] = island
 }
 
-func (b *Board) Copy() *Board {
-	islandsCopy := make([]*Island, len(b.islands))
-	for i, island := range b.islands {
-		if island != nil {
-			islandsCopy[i] = island.Copy()
-		}
-	}
-	return &Board{
-		size:    b.size,
-		islands: islandsCopy,
-	}
-}
-
 func (b *Board) MarshalJSON() ([]byte, error) {
 	return json.Marshal(&struct {
 		Size    Coordinate
@@ -66,6 +53,21 @@ func (b *Board) MarshalJSON() ([]byte, error) {
 		Size:    b.size,
 		Islands: b.islands,
 	})
+}
+
+func (b *Board) Copy() *Board {
+	islandsCopy := make([]*Island, len(b.islands))
+	for i, island := range b.islands {
+		// The slice of islands will also contain nil entries representing
+		// tiles without an island on them
+		if island != nil {
+			islandsCopy[i] = island.Copy()
+		}
+	}
+	return &Board{
+		size:    b.size,
+		islands: islandsCopy,
+	}
 }
 
 func NewBoard(size Coordinate) *Board {

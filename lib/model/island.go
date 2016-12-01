@@ -23,20 +23,20 @@ func (i *Island) SetGrowthRemainder(growthRemainder time.Duration) {
 	i.growthRemainder = growthRemainder
 }
 
-func (i *Island) Copy() *Island {
-	return &Island{
-		army:            i.army.Copy(),
-		growthInterval:  i.growthInterval,
-		growthRemainder: i.growthRemainder,
-	}
-}
-
 func (i *Island) MarshalJSON() ([]byte, error) {
 	return json.Marshal(&struct {
 		Army *army
 	}{
 		Army: i.army,
 	})
+}
+
+func (i *Island) Copy() *Island {
+	return &Island{
+		army:            i.army.Copy(),
+		growthInterval:  i.growthInterval,
+		growthRemainder: i.growthRemainder,
+	}
 }
 
 func NewIsland(owner *Player, strength int, growthInterval time.Duration) *Island {

@@ -32,15 +32,6 @@ func (a *Airplane) SetSpeed(speed float64) {
 	a.speed = speed
 }
 
-func (a *Airplane) Copy() *Airplane {
-	return &Airplane{
-		army:        a.army.Copy(),
-		position:    a.position,
-		destination: a.destination,
-		speed:       a.speed,
-	}
-}
-
 func (a *Airplane) MarshalJSON() ([]byte, error) {
 	// TODO: include speed?
 	return json.Marshal(&struct {
@@ -52,6 +43,15 @@ func (a *Airplane) MarshalJSON() ([]byte, error) {
 		Position:    a.position,
 		Destination: a.destination,
 	})
+}
+
+func (a *Airplane) Copy() *Airplane {
+	return &Airplane{
+		army:        a.army.Copy(),
+		position:    a.position,
+		destination: a.destination,
+		speed:       a.speed,
+	}
 }
 
 func NewAirplane(origin, destination Coordinate, owner *Player, strength int) *Airplane {
