@@ -12,8 +12,8 @@ type TickEvent struct {
 
 type TickEventData *model.Game
 
-func NewTickEvent(game model.Game) *TickEvent {
-	data := TickEventData(&game)
+func NewTickEvent(game *model.Game) *TickEvent {
+	data := TickEventData(game.Copy())
 	evt := newEvent(EventNameTick, data)
 	return &TickEvent{evt}
 }

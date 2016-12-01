@@ -62,26 +62,38 @@ func (gm *gameManager) eventLoop(ctx context.Context, p1Conn, p2Conn network.Pla
 	}
 }
 
-func (gm *gameManager) createGame() (*model.Game, error) {
-	p1, err := model.NewPlayer("player1")
+func createPlayers() (p1 *model.Player, p2 *model.Player, pn *model.Player, err error) {
+	p1, err = model.NewPlayer("player1")
 	if err != nil {
-		return nil, fmt.Errorf("Error creating player: %v", err)
+		err = fmt.Errorf("Error creating p1: %v", err)
 	}
-	p2, err := model.NewPlayer("player2")
+	p2, err = model.NewPlayer("player2")
 	if err != nil {
-		return nil, fmt.Errorf("Error creating player: %v", err)
+		err = fmt.Errorf("Error creating p2: %v", err)
+	}
+	pn, err = model.NewPlayer("neutral")
+	if err != nil {
+		err = fmt.Errorf("Error creating pn: %v", err)
+	}
+	return
+}
+
+func createGame() (*model.Game, error) {
+	p1, p2, pn, err := createPlayers()
+	if err != nil {
+		return nil, fmt.Errorf("Error creating players: %v", err)
 	}
 
 	p1Island := model.NewIsland(p1, 10, 5.0*time.Second)
 	p2Island := model.NewIsland(p2, 10, 5.0*time.Second)
-	neIsland := model.NewIsland(nil, 10, 5.0*time.Second)
+	neIsland := model.NewIsland(pn, 10, 5.0*time.Second)
 
 	board := model.NewBoard(model.Coordinate{10, 10})
-	board.AddIsland(model.Coordinate{0, 0}, *p1Island)
-	board.AddIsland(model.Coordinate{9, 9}, *p2Island)
-	board.AddIsland(model.Coordinate{4, 4}, *neIsland)
+	board.SetIsland(model.Coordinate{0, 0}, p1Island)
+	board.SetIsland(model.Coordinate{9, 9}, p2Island)
+	board.SetIsland(model.Coordinate{4, 4}, neIsland)
 
-	game := model.NewGame(*p1, *p2, *board)
+	game := model.NewGame(p1, p2, pn, board)
 	return game, nil
 }
 
@@ -95,7 +107,7 @@ func (gm *gameManager) RunGame(ctx context.Context, p1Conn, p2Conn network.Playe
 	// We don't want games to stay around forever
 	ctx, cancel := context.WithTimeout(ctx, DefaultGameTimeout)
 
-	game, err := gm.createGame()
+	game, err := createGame()
 	if err != nil {
 		return err
 	}

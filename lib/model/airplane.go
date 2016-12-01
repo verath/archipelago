@@ -6,7 +6,7 @@ import (
 )
 
 type Airplane struct {
-	army
+	*army
 
 	position    FloatCoordinate
 	destination Coordinate
@@ -32,10 +32,19 @@ func (a *Airplane) SetSpeed(speed float64) {
 	a.speed = speed
 }
 
+func (a *Airplane) Copy() *Airplane {
+	return &Airplane{
+		army:        a.army.Copy(),
+		position:    a.position,
+		destination: a.destination,
+		speed:       a.speed,
+	}
+}
+
 func (a *Airplane) MarshalJSON() ([]byte, error) {
 	// TODO: include speed?
 	return json.Marshal(&struct {
-		Army        army
+		Army        *army
 		Position    FloatCoordinate
 		Destination Coordinate
 	}{
@@ -45,7 +54,7 @@ func (a *Airplane) MarshalJSON() ([]byte, error) {
 	})
 }
 
-func NewAirplane(origin, destination Coordinate, owner *player, strength int) *Airplane {
+func NewAirplane(origin, destination Coordinate, owner *Player, strength int) *Airplane {
 	return &Airplane{
 		army:        newArmy(owner, strength),
 		position:    origin.ToFloatCoordinate(),

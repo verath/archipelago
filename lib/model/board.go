@@ -35,14 +35,27 @@ func (b *Board) Islands() []*Island {
 	return islands
 }
 
-func (b *Board) AddIsland(coord Coordinate, island Island) {
+func (b *Board) SetIsland(coord Coordinate, island *Island) {
 	idx := b.coordToIndex(coord)
 	if !b.indexOk(idx) {
 		// This should in all cases be due to us creating a bad
 		// map, we panic rather than error to quickly fail
 		panic("Adding island to coordinate outside size")
 	}
-	b.islands[idx] = &island
+	b.islands[idx] = island
+}
+
+func (b *Board) Copy() *Board {
+	islandsCopy := make([]*Island, len(b.islands))
+	for i, island := range b.islands {
+		if island != nil {
+			islandsCopy[i] = island.Copy()
+		}
+	}
+	return &Board{
+		size:    b.size,
+		islands: islandsCopy,
+	}
 }
 
 func (b *Board) MarshalJSON() ([]byte, error) {

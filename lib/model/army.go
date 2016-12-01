@@ -3,11 +3,11 @@ package model
 import "encoding/json"
 
 type army struct {
-	owner    *player
+	owner    *Player
 	strength int
 }
 
-func (a *army) Owner() *player {
+func (a *army) Owner() *Player {
 	return a.owner
 }
 
@@ -23,23 +23,29 @@ func (a *army) IsOwnedBy(id PlayerID) bool {
 	return a.owner != nil && a.owner.id == id
 }
 
-func (a *army) MarshalJSON() ([]byte, error) {
-	var ownerId *PlayerID
-	if a.owner != nil {
-		ownerId = &a.owner.id
+func (a *army) Copy() *army {
+	return &army{
+		owner:    a.owner.Copy(),
+		strength: a.strength,
 	}
+}
 
+func (a *army) MarshalJSON() ([]byte, error) {
 	return json.Marshal(&struct {
-		OwnerID  *PlayerID
+		OwnerID  PlayerID
 		Strength int
 	}{
-		OwnerID:  ownerId,
+		OwnerID:  a.owner.id,
 		Strength: a.strength,
 	})
 }
 
-func newArmy(owner *player, strength int) army {
-	return army{
+func newArmy(owner *Player, strength int) *army {
+	if owner == nil {
+		panic("Owner cannot be nil!")
+	}
+
+	return &army{
 		owner:    owner,
 		strength: strength,
 	}

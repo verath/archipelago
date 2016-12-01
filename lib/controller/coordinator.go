@@ -29,6 +29,7 @@ func (gc *gameCoordinator) createGame(ctx context.Context, wg sync.WaitGroup, p1
 }
 
 func (gc *gameCoordinator) runLoop(ctx context.Context, playerCh playerConnCh, wg sync.WaitGroup) error {
+	logEntry := logutil.ModuleEntry(gc.log, "gameCoordinator")
 	// Wait for two player connections. Once we have 2 start a game for them.
 	// TODO: this is obviously a fairly bad solution
 	for {
@@ -38,12 +39,19 @@ func (gc *gameCoordinator) runLoop(ctx context.Context, playerCh playerConnCh, w
 			return ctx.Err()
 		case p1Conn = <-playerCh:
 		}
+		logEntry.Debug("p1Conn established")
+
 		select {
 		case <-ctx.Done():
 			return ctx.Err()
+		case <-p1Conn.DisconnectChannel():
+			// p1 disconnected, find new p1
+			logEntry.Debug("p1Conn disconnected, finding a new p1")
+			continue
 		case p2Conn = <-playerCh:
 		}
 
+		logEntry.Debug("p2Conn established, creating a new game")
 		gc.createGame(ctx, wg, p1Conn, p2Conn)
 	}
 }

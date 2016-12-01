@@ -34,7 +34,7 @@ func updateAirplanes(g *model.Game, delta time.Duration) error {
 
 func updateIslands(g *model.Game, delta time.Duration) error {
 	for _, island := range g.Board().Islands() {
-		if island.Owner() == nil {
+		if island.Owner().Equals(g.PlayerNeutral()) {
 			// Neutral islands does not grow in strength
 			continue
 		}
@@ -59,7 +59,7 @@ func (a *tickAction) Apply(g *model.Game) ([]event.Event, error){
 		return nil, err
 	}
 
-	tickEvent := event.NewTickEvent(*g)
+	tickEvent := event.NewTickEvent(g)
 	return []event.Event{tickEvent}, nil
 }
 

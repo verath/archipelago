@@ -8,7 +8,7 @@ import (
 
 func TestNewTickEvent(t *stdtesting.T) {
 	game := testing.CreateEmptyGame()
-	var evt Event = NewTickEvent(*game)
+	var evt Event = NewTickEvent(game)
 	_, err := json.Marshal(evt)
 	if err != nil {
 		t.Errorf("Expected no error when encoding as json, got: %v", err)

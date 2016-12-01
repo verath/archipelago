@@ -7,24 +7,31 @@ import (
 
 type PlayerID string
 
-type player struct {
+type Player struct {
 	name string
 	id   PlayerID
 }
 
-func (p *player) Name() string {
+func (p *Player) Name() string {
 	return p.name
 }
 
-func (p *player) SetName(name string) {
+func (p *Player) SetName(name string) {
 	p.name = name
 }
 
-func (p *player) ID() PlayerID {
+func (p *Player) ID() PlayerID {
 	return p.id
 }
 
-func (p *player) MarshalJSON() ([]byte, error) {
+func (p *Player) Equals(other *Player) bool {
+	if other == nil {
+		return false
+	}
+	return p.id == other.id
+}
+
+func (p *Player) MarshalJSON() ([]byte, error) {
 	return json.Marshal(&struct {
 		Name string
 		ID   PlayerID
@@ -34,7 +41,14 @@ func (p *player) MarshalJSON() ([]byte, error) {
 	})
 }
 
-func NewPlayer(name string) (*player, error) {
+func (p *Player) Copy() *Player {
+	return &Player{
+		id:   p.id,
+		name: p.name,
+	}
+}
+
+func NewPlayer(name string) (*Player, error) {
 	id, err := uuid.NewV4()
 	if err != nil {
 		return nil, err
@@ -42,8 +56,8 @@ func NewPlayer(name string) (*player, error) {
 	return NewPlayerWithId(name, id.String())
 }
 
-func NewPlayerWithId(name, id string) (*player, error) {
-	return &player{
+func NewPlayerWithId(name, id string) (*Player, error) {
+	return &Player{
 		name: name,
 		id:   PlayerID(id),
 	}, nil
