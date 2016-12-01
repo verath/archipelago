@@ -23,6 +23,10 @@ type gameManager struct {
 }
 
 func (gm *gameManager) playerActionLoop(ctx context.Context, pConn network.PlayerConn, playerId model.PlayerID, actionCh chan<- action.Action) error {
+	playerActionCh := make(chan network.PlayerAction, 0)
+	pConn.AddActionListener(playerActionCh)
+	defer pConn.RemoveActionListener(playerActionCh)
+
 	for {
 		var playerAction network.PlayerAction
 		var ok bool
@@ -30,9 +34,9 @@ func (gm *gameManager) playerActionLoop(ctx context.Context, pConn network.Playe
 		select {
 		case <-ctx.Done():
 			return ctx.Err()
-		case playerAction, ok = <-pConn.ActionChannel():
+		case playerAction, ok = <-playerActionCh:
 			if !ok {
-				return errors.New("player connection action channel closed")
+				return errors.New("playerActionCh closed")
 			}
 		}
 		// Transform it into a model action by applying the player id
