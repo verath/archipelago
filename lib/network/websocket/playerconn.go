@@ -22,12 +22,26 @@ type playerConn struct {
 	conn         *websocket.Conn
 	actionCh     chan network.PlayerAction
 	disconnectCh chan interface{}
+	disconnected bool
 
 	listenerMu sync.RWMutex
 	listeners  []chan<- network.PlayerAction
 }
 
 func (pc *playerConn) disconnect() {
+	if !pc.disconnected {
+		pc.disconnected = true
+
+		pc.listenerMu.Lock()
+		defer pc.listenerMu.Unlock()
+		for _, listener := range pc.listeners {
+			close(listener)
+		}
+		pc.listeners = nil
+		close(pc.disconnectCh)
+		close(pc.actionCh)
+	}
+
 }
 
 func (pc *playerConn) heartbeat(ctx context.Context, heartbeatCh <-chan interface{}) {
@@ -38,7 +52,9 @@ func (pc *playerConn) heartbeat(ctx context.Context, heartbeatCh <-chan interfac
 			return
 		case <-timer.C:
 			log.Println("playerConn: heartbeat timeout, disconnecting...")
+			pc.mu.Lock()
 			pc.disconnect()
+			pc.mu.Unlock()
 			return
 		case <-heartbeatCh:
 			if !timer.Stop() {
@@ -97,12 +113,11 @@ func (pc *playerConn) OnEvent(event event.Event) {
 	logEntry := logutil.ModuleEntryWithID(pc.log, "ws/playerconn")
 
 	pc.mu.Lock()
+	defer pc.mu.Unlock()
 	err := pc.conn.WriteJSON(event)
-	pc.mu.Unlock()
 	if err != nil {
 		logEntry.WithError(err).Error("Could not write json, closing")
-		close(pc.actionCh)
-		close(pc.disconnectCh)
+		pc.disconnect()
 	}
 }
 
