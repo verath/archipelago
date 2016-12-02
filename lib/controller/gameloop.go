@@ -15,6 +15,15 @@ import (
 
 const defaultTickInterval time.Duration = (time.Second * 2)
 
+// The gameLoop is what updates the game model instance that it is
+// associated with. The updates are performed in ticks. Each tick
+// applies all actions that has been added since the last tick
+// sequentially on the model. For each such action, zero or more
+// events is created. All these events are dispatched as the last
+// stage of the tick.
+//
+// Notice that any reads or writes (outside of actions) on the model
+// once the gameLoop is started is not safe.
 type gameLoop struct {
 	log *logrus.Logger
 
@@ -25,6 +34,9 @@ type gameLoop struct {
 	actions   []action.Action
 }
 
+// Applies all queued actions on the game sequentially, making it safe
+// for the applied actions to modify the game state. An additional
+// TickAction is always performed as the last action.
 func (gl *gameLoop) applyActions(delta time.Duration) ([]event.Event, error) {
 	// We make a copy of the current gl.actions and replace gl.actions
 	// with a new array so that we can release the lock asap
@@ -52,6 +64,8 @@ func (gl *gameLoop) applyActions(delta time.Duration) ([]event.Event, error) {
 	return events, nil
 }
 
+// Pushes each event created during the application of actions to the
+// event channel for this game instance.
 func (gl *gameLoop) dispatchEvents(ctx context.Context, eventsCh chan<- event.Event, events []event.Event) error {
 	// TODO: should we dispatch events async?
 	for _, evt := range events {
@@ -64,6 +78,7 @@ func (gl *gameLoop) dispatchEvents(ctx context.Context, eventsCh chan<- event.Ev
 	return nil
 }
 
+// Perform a tick on the game.
 func (gl *gameLoop) tick(ctx context.Context, eventsCh chan<- event.Event, delta time.Duration) error {
 	events, err := gl.applyActions(delta)
 	if err != nil {
@@ -72,6 +87,7 @@ func (gl *gameLoop) tick(ctx context.Context, eventsCh chan<- event.Event, delta
 	return gl.dispatchEvents(ctx, eventsCh, events)
 }
 
+// Performs a "tick" each tickInterval. The tick is what updates the game.
 func (gl *gameLoop) tickLoop(ctx context.Context, eventsCh chan<- event.Event) error {
 	tickInterval := gl.tickInterval
 	ticker := time.NewTicker(tickInterval)
@@ -89,12 +105,15 @@ func (gl *gameLoop) tickLoop(ctx context.Context, eventsCh chan<- event.Event) e
 	}
 }
 
+// Adds an action to the actions to be processed.
 func (gl *gameLoop) addAction(action action.Action) {
 	gl.actionsMu.Lock()
 	gl.actions = append(gl.actions, action)
 	gl.actionsMu.Unlock()
 }
 
+// Reads from a channel of actions, adding each action posted there
+// to the actions to be processed in the next tick.
 func (gl *gameLoop) actionsLoop(ctx context.Context, actionsCh <-chan action.Action) error {
 	for {
 		select {
@@ -117,7 +136,8 @@ func (gl *gameLoop) Run(ctx context.Context, actionsCh <-chan action.Action, eve
 	ctx, cancel := context.WithCancel(ctx)
 	var wg sync.WaitGroup
 
-	wg.Add(2)
+	// Spawn tick loop (updates game)
+	wg.Add(1)
 	go func() {
 		err := gl.tickLoop(ctx, eventsCh)
 		if err != nil && err != context.Canceled {
@@ -126,6 +146,9 @@ func (gl *gameLoop) Run(ctx context.Context, actionsCh <-chan action.Action, eve
 		cancel()
 		wg.Done()
 	}()
+
+	// Spawn actions receiver loop
+	wg.Add(1)
 	go func() {
 		err := gl.actionsLoop(ctx, actionsCh)
 		if err != nil && err != context.Canceled {

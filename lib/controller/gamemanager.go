@@ -18,6 +18,10 @@ const (
 	DefaultGameTimeout time.Duration = 45 * time.Minute
 )
 
+// The game manager represents a single game. It handles communication
+// between the game loop and the player connections. For actions
+// sent by a player connection, the game manager also sets the appropriate
+// sender (as a player in the model).
 type gameManager struct {
 	log *logrus.Logger
 }
@@ -109,20 +113,20 @@ func (gm *gameManager) RunGame(ctx context.Context, p1Conn, p2Conn network.Playe
 	// TODO: This method is kinda large...
 
 	// We don't want games to stay around forever
-	ctx, cancel := context.WithTimeout(ctx, DefaultGameTimeout)
-
 	game, err := createGame()
 	if err != nil {
 		return err
 	}
+
+	var wg sync.WaitGroup
+	ctx, cancel := context.WithTimeout(ctx, DefaultGameTimeout)
 	player1ID := game.Player1().ID()
 	player2ID := game.Player2().ID()
 	gameLoop := newGameLoop(gm.log, game)
 	actionCh := make(chan action.Action, 0)
 	eventCh := make(chan event.Event, 0)
-	var wg sync.WaitGroup
 
-	// Spawn an action "transformer" loop for each player
+	// Spawn an action "forwarder" loop for each player
 	wg.Add(2)
 	go func() {
 		err := gm.playerActionLoop(ctx, p1Conn, player1ID, actionCh)
