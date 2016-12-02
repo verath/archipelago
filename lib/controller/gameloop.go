@@ -25,10 +25,14 @@ const defaultTickInterval time.Duration = (time.Second * 2)
 // Notice that any reads or writes (outside of actions) on the model
 // once the gameLoop is started is not safe.
 type gameLoop struct {
-	log *logrus.Logger
-
-	game         *model.Game
 	tickInterval time.Duration
+	log          *logrus.Logger
+	game         *model.Game
+	actionsCh    <-chan action.Action
+	eventsCh     chan<- event.Event
+
+	isRunningMu sync.Mutex
+	isRunning   bool
 
 	actionsMu sync.Mutex
 	actions   []action.Action
@@ -128,7 +132,22 @@ func (gl *gameLoop) actionsLoop(ctx context.Context, actionsCh <-chan action.Act
 	}
 }
 
-func (gl *gameLoop) Run(ctx context.Context, actionsCh <-chan action.Action, eventsCh chan<- event.Event) error {
+func (gl *gameLoop) ensureNotRunning() error {
+	gl.isRunningMu.Lock()
+	defer gl.isRunningMu.Unlock()
+	if gl.isRunning {
+		return errors.New("gameLoop already running")
+	}
+	gl.isRunning = true
+	return nil
+}
+
+func (gl *gameLoop) Run(ctx context.Context) error {
+	err := gl.ensureNotRunning()
+	if err != nil {
+		return err
+	}
+
 	logEntry := logutil.ModuleEntryWithID(gl.log, "gameLoop")
 	logEntry.Info("Starting")
 	defer logEntry.Info("Stopped")
@@ -139,7 +158,7 @@ func (gl *gameLoop) Run(ctx context.Context, actionsCh <-chan action.Action, eve
 	// Spawn tick loop (updates game)
 	wg.Add(1)
 	go func() {
-		err := gl.tickLoop(ctx, eventsCh)
+		err := gl.tickLoop(ctx, gl.eventsCh)
 		if err != nil && err != context.Canceled {
 			logEntry.WithError(err).Error("tickLoop quit: %v", err)
 		}
@@ -150,7 +169,7 @@ func (gl *gameLoop) Run(ctx context.Context, actionsCh <-chan action.Action, eve
 	// Spawn actions receiver loop
 	wg.Add(1)
 	go func() {
-		err := gl.actionsLoop(ctx, actionsCh)
+		err := gl.actionsLoop(ctx, gl.actionsCh)
 		if err != nil && err != context.Canceled {
 			logEntry.WithError(err).Error("actionsLoop quit: %v", err)
 		}
@@ -162,11 +181,13 @@ func (gl *gameLoop) Run(ctx context.Context, actionsCh <-chan action.Action, eve
 	return nil
 }
 
-func newGameLoop(log *logrus.Logger, game *model.Game) *gameLoop {
+func newGameLoop(log *logrus.Logger, game *model.Game, actionsCh <-chan action.Action, eventsCh chan<- event.Event) *gameLoop {
 	return &gameLoop{
+		tickInterval: defaultTickInterval,
 		log:          log,
 		game:         game,
+		actionsCh:    actionsCh,
+		eventsCh:     eventsCh,
 		actions:      make([]action.Action, 0),
-		tickInterval: defaultTickInterval,
 	}
 }

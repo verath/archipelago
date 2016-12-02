@@ -20,21 +20,21 @@ func TestGameLoop_Start_Stop(t *stdtesting.T) {
 	game := testing.CreateEmptyGame()
 	actionsCh := make(chan action.Action, 0)
 	eventsCh := make(chan event.Event, 0)
-	gl := newGameLoop(log, game)
+	gl := newGameLoop(log, game, actionsCh, eventsCh)
 	ctx, cancel := context.WithCancel(context.Background())
 
 	go func() {
 		time.Sleep(20 * time.Millisecond)
 		cancel()
 	}()
-	gl.Run(ctx, actionsCh, eventsCh)
+	gl.Run(ctx)
 	close(actionsCh)
 	close(eventsCh)
 }
 
 func TestGameLoop_AddAction(t *stdtesting.T) {
 	game := testing.CreateEmptyGame()
-	gl := newGameLoop(log, game)
+	gl := newGameLoop(log, game, nil, nil)
 
 	t.Log("Adding action to game loop...")
 	a1Applied := false
@@ -75,7 +75,7 @@ func TestGameLoop_AddAction_RealTick(t *stdtesting.T) {
 	actionsCh := make(chan action.Action, 1)
 	eventsCh := make(chan event.Event, 0)
 
-	gl := newGameLoop(log, game)
+	gl := newGameLoop(log, game, actionsCh, eventsCh)
 	gl.tickInterval = time.Millisecond
 	ctx, cancel := context.WithCancel(context.Background())
 	timesApplied := 0
@@ -90,7 +90,7 @@ func TestGameLoop_AddAction_RealTick(t *stdtesting.T) {
 		cancel()
 	}()
 
-	gl.Run(ctx, actionsCh, eventsCh)
+	gl.Run(ctx)
 
 	if timesApplied != 1 {
 		t.Errorf("Expected action to be applied once, actual: %d", timesApplied)

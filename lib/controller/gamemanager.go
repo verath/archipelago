@@ -122,9 +122,9 @@ func (gm *gameManager) RunGame(ctx context.Context, p1Conn, p2Conn network.Playe
 	ctx, cancel := context.WithTimeout(ctx, DefaultGameTimeout)
 	player1ID := game.Player1().ID()
 	player2ID := game.Player2().ID()
-	gameLoop := newGameLoop(gm.log, game)
 	actionCh := make(chan action.Action, 0)
 	eventCh := make(chan event.Event, 0)
+	gameLoop := newGameLoop(gm.log, game, actionCh, eventCh)
 
 	// Spawn an action "forwarder" loop for each player
 	wg.Add(2)
@@ -159,7 +159,7 @@ func (gm *gameManager) RunGame(ctx context.Context, p1Conn, p2Conn network.Playe
 	// Run the game logic loop
 	wg.Add(1)
 	go func() {
-		err := gameLoop.Run(ctx, actionCh, eventCh)
+		err := gameLoop.Run(ctx)
 		if err != nil && err != context.Canceled {
 			logEntry.WithError(err).Errorf("gameLoop.Run quit: %v", err)
 		}
