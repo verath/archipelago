@@ -2,7 +2,6 @@ package model
 
 import (
 	"fmt"
-	"time"
 )
 
 func createPlayers() (p1 *Player, p2 *Player, pn *Player, err error) {
@@ -28,9 +27,9 @@ func CreateBasicGame() (*Game, error) {
 		return nil, fmt.Errorf("Error creating players: %v", err)
 	}
 
-	p1Island := NewIsland(p1, 10, 5.0*time.Second)
-	p2Island := NewIsland(p2, 10, 5.0*time.Second)
-	neIsland := NewIsland(pn, 10, 5.0*time.Second)
+	p1Island := NewIsland(p1, 10, IslandSizeMedium)
+	p2Island := NewIsland(p2, 10, IslandSizeMedium)
+	neIsland := NewIsland(pn, 10, IslandSizeMedium)
 
 	board := NewBoard(Coordinate{10, 10})
 	board.SetIsland(Coordinate{0, 0}, p1Island)

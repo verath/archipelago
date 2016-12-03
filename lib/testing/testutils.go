@@ -2,7 +2,6 @@ package testing
 
 import (
 	. "github.com/verath/archipelago/lib/model"
-	"time"
 )
 
 // Creates an empty 10x10 board
@@ -25,9 +24,9 @@ func CreateSimpleGame() *Game {
 	p1, _ := NewPlayerWithId("player1", "1")
 	p2, _ := NewPlayerWithId("player2", "2")
 	pn, _ := NewPlayerWithId("neutral", "-1")
-	p1Island := NewIsland(p1, 10, 1.0*time.Second)
-	p2Island := NewIsland(p2, 10, 1.0*time.Second)
-	neIsland := NewIsland(pn, 10, 1.0*time.Second)
+	p1Island := NewIsland(p1, 10, IslandSizeMedium)
+	p2Island := NewIsland(p2, 10, IslandSizeMedium)
+	neIsland := NewIsland(pn, 10, IslandSizeMedium)
 
 	board := NewBoard(Coordinate{10, 10})
 	board.SetIsland(Coordinate{0, 0}, p1Island)

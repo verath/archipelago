@@ -33,25 +33,34 @@ func updateAirplanes(g *model.Game, delta time.Duration) error {
 }
 
 func updateIslands(g *model.Game, delta time.Duration) error {
+	growthInterval := model.IslandGrowthInterval
 	for _, island := range g.Board().Islands() {
 		if island.Owner().Equals(g.PlayerNeutral()) {
 			// Neutral islands does not grow in strength
 			continue
 		}
 
-		interval := island.GrowthInterval()
+		// The larger the island the more it grows per tick
+		// TODO: Should not be linear growth?
+		size := island.Size()
+		increment := time.Duration(size * float64(delta))
+
+		// Calculate the whole number of added strength, storing
+		// the remaining "fractions" as the growth remainder. Note
+		// that we are doing calculations on time.Duration(=int64)
+		// here, but the reasoning stays the same.
 		remainder := island.GrowthRemainder()
+		addedStrength := (remainder + increment) / growthInterval
+		remainder = (remainder + increment) % growthInterval
 
-		str := int((remainder + delta) / interval)
-		remainder = (remainder + delta) % interval
-
-		island.SetStrength(island.Strength() + str)
+		// TODO: limit max strength depending on island size
+		island.SetStrength(island.Strength() + int(addedStrength))
 		island.SetGrowthRemainder(remainder)
 	}
 	return nil
 }
 
-func (a *tickAction) Apply(g *model.Game) ([]event.Event, error){
+func (a *tickAction) Apply(g *model.Game) ([]event.Event, error) {
 	if err := updateAirplanes(g, a.delta); err != nil {
 		return nil, err
 	}

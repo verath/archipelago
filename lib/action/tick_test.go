@@ -25,28 +25,46 @@ func TestNewTickAction_NegativeDelta(t *stdtesting.T) {
 	}
 }
 
-func TestTickAction_Apply(t *stdtesting.T) {
+func TestTickAction_Apply_Islands(t *stdtesting.T) {
 	game := testing.CreateSimpleGame()
 
-	// Add an airplane from 0,0 -> 0,9
-	airplane := NewAirplane(Coordinate{0, 0}, Coordinate{0, 9}, game.Player("1"), 10)
-	airplane.SetSpeed(1 / float64(time.Second))
-	game.AddAirplane(airplane)
+	i1 := game.Board().Island(Coordinate{0, 0})
+	i2 := game.Board().Island(Coordinate{9, 9})
+	i1.SetSize(1)
+	i2.SetSize(2)
 
-	t.Log("Tick, duration 1 second...")
-	ta, _ := NewTickAction(1 * time.Second)
+	// Tick for IslandGrowthInterval seconds
+	ta, _ := NewTickAction(IslandGrowthInterval)
 	if _, err := ta.Apply(game); err != nil {
 		t.Errorf("Expected no error, got: %v", err)
 	}
 
-	i1 := game.Board().Island(Coordinate{0, 0})
 	if i1.Strength() != 11 {
-		t.Errorf("Expected island strength of player island to be 11, was %d", i1.Strength())
+		t.Errorf("Expected island strength of player island size 1.0 to be 11, was %d", i1.Strength())
+	}
+
+	if i2.Strength() != 12 {
+		t.Errorf("Expected island strength of player island size 2.0 to be 12, was %d", i2.Strength())
 	}
 
 	ni := game.Board().Island(Coordinate{4, 4})
 	if ni.Strength() != 10 {
 		t.Errorf("Expected island strength of neutral to remain 10, was %d", ni.Strength())
+	}
+}
+
+func TestTickAction_Apply_Airplanes(t *stdtesting.T) {
+	game := testing.CreateSimpleGame()
+
+	// Add an airplane from 0,0 -> 0,9, moving at a speed of one coordinate/sec
+	airplane := NewAirplane(Coordinate{0, 0}, Coordinate{0, 9}, game.Player("1"), 10)
+	airplane.SetSpeed(1 / float64(time.Second))
+	game.AddAirplane(airplane)
+
+	// Tick for 1 second
+	ta, _ := NewTickAction(1 * time.Second)
+	if _, err := ta.Apply(game); err != nil {
+		t.Errorf("Expected no error, got: %v", err)
 	}
 
 	expectedPos := FloatCoordinate{X: 0, Y: 1}
