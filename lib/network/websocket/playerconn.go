@@ -109,7 +109,7 @@ func (pc *playerConn) RemoveActionListener(listener chan<- network.PlayerAction)
 	}
 }
 
-func (pc *playerConn) OnEvent(event event.Event) {
+func (pc *playerConn) OnEvent(event event.Event) error {
 	logEntry := logutil.ModuleEntryWithID(pc.log, "ws/playerconn")
 
 	pc.mu.Lock()
@@ -119,6 +119,7 @@ func (pc *playerConn) OnEvent(event event.Event) {
 		logEntry.WithError(err).Error("Could not write json, closing")
 		pc.disconnect()
 	}
+	return err
 }
 
 func (pc *playerConn) DisconnectChannel() <-chan interface{} {

@@ -19,5 +19,5 @@ type PlayerConn interface {
 	// was not registered, this method is a no-op.
 	RemoveActionListener(chan<- PlayerAction)
 
-	OnEvent(event.Event)
+	OnEvent(event.Event) error
 }

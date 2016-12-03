@@ -10,7 +10,6 @@ import (
 	"github.com/verath/archipelago/lib/logutil"
 	"github.com/verath/archipelago/lib/model"
 	"github.com/verath/archipelago/lib/network"
-	"github.com/verath/archipelago/lib/transformer"
 	"sync"
 	"time"
 )
@@ -26,15 +25,29 @@ const (
 type gameManager struct {
 	log *logrus.Logger
 
-	gameLoop   *gameLoop
-	p1ActTrans *transformer.PlayerActionTransformer
-	p2ActTrans *transformer.PlayerActionTransformer
-
-	p1Conn network.PlayerConn
-	p2Conn network.PlayerConn
+	gameLoop *gameLoop
+	p1Proxy  *playerProxy
+	p2Proxy  *playerProxy
 }
 
-func (gm *gameManager) eventLoop(ctx context.Context, eventCh <-chan event.Event) error {
+func (gm *gameManager) runPlayerProxies(ctx context.Context, actionCh chan<- action.Action) error {
+	ctx, cancel := context.WithCancel(ctx)
+	errCh := make(chan error, 0)
+
+	go func() {
+		errCh <- gm.p1Proxy.Run(ctx, actionCh)
+	}()
+	go func() {
+		errCh <- gm.p2Proxy.Run(ctx, actionCh)
+	}()
+	err := <-errCh
+	cancel()
+	<-errCh
+	return err
+}
+
+func (gm *gameManager) eventDispatch(ctx context.Context, eventCh <-chan event.Event) error {
+	errCh := make(chan error, 0)
 	for {
 		select {
 		case <-ctx.Done():
@@ -43,8 +56,22 @@ func (gm *gameManager) eventLoop(ctx context.Context, eventCh <-chan event.Event
 			if !ok {
 				return errors.New("eventCh closed")
 			}
-			go gm.p1Conn.OnEvent(evt)
-			go gm.p2Conn.OnEvent(evt)
+
+			// TODO: should delivery order be fixed?
+			go func() {
+				errCh <- gm.p1Proxy.OnEvent(evt)
+			}()
+			go func() {
+				errCh <- gm.p2Proxy.OnEvent(evt)
+			}()
+			err1 := <-errCh
+			err2 := <-errCh
+			if err1 != nil {
+				return err1
+			}
+			if err2 != nil {
+				return err2
+			}
 		}
 	}
 }
@@ -60,32 +87,13 @@ func (gm *gameManager) RunGame(ctx context.Context) error {
 
 	actionCh := make(chan action.Action, 0)
 	eventCh := make(chan event.Event, 0)
-	p1ActionCh := make(chan network.PlayerAction, 0)
-	p2ActionCh := make(chan network.PlayerAction, 0)
 
-	// Connect the player action channels to the player connections
-	gm.p1Conn.AddActionListener(p1ActionCh)
-	gm.p2Conn.AddActionListener(p2ActionCh)
-	defer gm.p1Conn.RemoveActionListener(p1ActionCh)
-	defer gm.p2Conn.RemoveActionListener(p2ActionCh)
-
-	// Start the action transformer for player 1
+	// Run the player proxies
 	wg.Add(1)
 	go func() {
-		err := gm.p1ActTrans.Run(ctx, p1ActionCh, actionCh)
+		err := gm.runPlayerProxies(ctx, actionCh)
 		if err != nil && err != context.Canceled {
-			logEntry.WithError(err).Error("p1ActTrans quit")
-		}
-		cancel()
-		wg.Done()
-	}()
-
-	// Start the action transformer for player 2
-	wg.Add(1)
-	go func() {
-		err := gm.p2ActTrans.Run(ctx, p2ActionCh, actionCh)
-		if err != nil && err != context.Canceled {
-			logEntry.WithError(err).Error("p2ActTrans quit")
+			logEntry.WithError(err).Error("Player proxy quit")
 		}
 		cancel()
 		wg.Done()
@@ -94,9 +102,9 @@ func (gm *gameManager) RunGame(ctx context.Context) error {
 	// Spawn an event dispatcher loop
 	wg.Add(1)
 	go func() {
-		err := gm.eventLoop(ctx, eventCh)
+		err := gm.eventDispatch(ctx, eventCh)
 		if err != nil && err != context.Canceled {
-			logEntry.WithError(err).Errorf("eventLoop quit: %v", err)
+			logEntry.WithError(err).Error("eventLoop quit")
 		}
 		cancel()
 		wg.Done()
@@ -107,7 +115,7 @@ func (gm *gameManager) RunGame(ctx context.Context) error {
 	go func() {
 		err := gm.gameLoop.Run(ctx, actionCh, eventCh)
 		if err != nil && err != context.Canceled {
-			logEntry.WithError(err).Errorf("gameLoop.Run quit: %v", err)
+			logEntry.WithError(err).Error("gameLoop quit")
 		}
 		cancel()
 		wg.Done()
@@ -122,21 +130,19 @@ func newGameManager(log *logrus.Logger, game *model.Game, p1Conn, p2Conn network
 	if err != nil {
 		return nil, fmt.Errorf("Error creating gameLoop: %v", err)
 	}
-	p1ActTrans, err := transformer.NewPlayerActionTransformer(game.Player1())
+	p1Proxy, err := newPlayerProxy(game.Player1(), p1Conn)
 	if err != nil {
-		return nil, fmt.Errorf("Error creating player transformer: %v", err)
+		return nil, fmt.Errorf("Error creating player1 proxy: %v", err)
 	}
-	p2ActTrans, err := transformer.NewPlayerActionTransformer(game.Player2())
+	p2Proxy, err := newPlayerProxy(game.Player2(), p2Conn)
 	if err != nil {
-		return nil, fmt.Errorf("Error creating player transformer: %v", err)
+		return nil, fmt.Errorf("Error creating player2 proxy: %v", err)
 	}
 
 	return &gameManager{
-		log:        log,
-		gameLoop:   gameLoop,
-		p1ActTrans: p1ActTrans,
-		p2ActTrans: p2ActTrans,
-		p1Conn:     p1Conn,
-		p2Conn:     p2Conn,
+		log:      log,
+		gameLoop: gameLoop,
+		p1Proxy:  p1Proxy,
+		p2Proxy:  p2Proxy,
 	}, nil
 }

@@ -158,7 +158,7 @@ func (gl *gameLoop) Run(ctx context.Context, actionCh <-chan action.Action, even
 	go func() {
 		err := gl.tickLoop(ctx, eventCh)
 		if err != nil && err != context.Canceled {
-			logEntry.WithError(err).Error("tickLoop quit: %v", err)
+			logEntry.WithError(err).Error("tickLoop quit")
 		}
 		cancel()
 		wg.Done()
@@ -169,7 +169,7 @@ func (gl *gameLoop) Run(ctx context.Context, actionCh <-chan action.Action, even
 	go func() {
 		err := gl.actionsLoop(ctx, actionCh)
 		if err != nil && err != context.Canceled {
-			logEntry.WithError(err).Error("actionsLoop quit: %v", err)
+			logEntry.WithError(err).Error("actionsLoop quit")
 		}
 		cancel()
 		wg.Done()
