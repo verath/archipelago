@@ -1,19 +1,28 @@
 package event
 
-import "encoding/json"
+import (
+	"encoding/json"
+	"time"
+)
 
 type Event interface {
 	Name() string
+	Timestamp() time.Time
 	Data() interface{}
 }
 
 type event struct {
-	name string
-	data interface{}
+	name      string
+	timestamp time.Time
+	data      interface{}
 }
 
 func (e *event) Name() string {
 	return e.name
+}
+
+func (e *event) Timestamp() time.Time {
+	return e.timestamp
 }
 
 func (e *event) Data() interface{} {
@@ -22,17 +31,20 @@ func (e *event) Data() interface{} {
 
 func (e *event) MarshalJSON() ([]byte, error) {
 	return json.Marshal(&struct {
-		Name string
-		Data interface{}
+		Name      string
+		Timestamp time.Time
+		Data      interface{}
 	}{
-		Name: e.Name(),
-		Data: e.Data(),
+		Name:      e.Name(),
+		Timestamp: e.Timestamp(),
+		Data:      e.Data(),
 	})
 }
 
 func newEvent(name string, data interface{}) *event {
 	return &event{
-		name: name,
-		data: data,
+		name:      name,
+		timestamp: time.Now(),
+		data:      data,
 	}
 }
