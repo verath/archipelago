@@ -20,7 +20,7 @@ func (a *army) SetStrength(strength int) {
 }
 
 func (a *army) IsOwnedBy(id PlayerID) bool {
-	return a.owner != nil && a.owner.id == id
+	return a.owner.ID().Equals(id)
 }
 
 func (a *army) MarshalJSON() ([]byte, error) {
@@ -28,7 +28,7 @@ func (a *army) MarshalJSON() ([]byte, error) {
 		OwnerID  PlayerID
 		Strength int
 	}{
-		OwnerID:  a.owner.id,
+		OwnerID:  a.owner.ID(),
 		Strength: a.strength,
 	})
 }

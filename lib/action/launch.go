@@ -2,14 +2,14 @@ package action
 
 import (
 	"errors"
-	"github.com/verath/archipelago/lib/model"
 	"github.com/verath/archipelago/lib/event"
+	"github.com/verath/archipelago/lib/model"
 )
 
 type launchAction struct {
-	from  model.Coordinate
-	to    model.Coordinate
-	owner model.PlayerID
+	from    model.Coordinate
+	to      model.Coordinate
+	ownerID model.PlayerID
 }
 
 func (a *launchAction) Apply(g *model.Game) ([]event.Event, error) {
@@ -26,7 +26,7 @@ func (a *launchAction) Apply(g *model.Game) ([]event.Event, error) {
 		return nil, errors.New("to island does not exist")
 	}
 
-	if !fromIsland.IsOwnedBy(a.owner) {
+	if !fromIsland.IsOwnedBy(a.ownerID) {
 		return nil, errors.New("owner does not own from island")
 	}
 
@@ -41,14 +41,17 @@ func (a *launchAction) Apply(g *model.Game) ([]event.Event, error) {
 
 }
 
-func NewLaunchAction(from model.Coordinate, to model.Coordinate, owner model.PlayerID) (*launchAction, error) {
+func NewLaunchAction(from model.Coordinate, to model.Coordinate, owner *model.Player) (*launchAction, error) {
 	if from == to {
 		return nil, errors.New("from == to")
 	}
+	if owner == nil {
+		return nil, errors.New("owner cannot be nil")
+	}
 	la := &launchAction{
-		from:  from,
-		to:    to,
-		owner: owner,
+		from:    from,
+		to:      to,
+		ownerID: owner.ID(),
 	}
 	return la, nil
 }

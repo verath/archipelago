@@ -6,9 +6,9 @@ import (
 
 // Creates an empty 10x10 board
 func CreateEmptyGame() *Game {
-	p1, _ := NewPlayerWithId("player1", "1")
-	p2, _ := NewPlayerWithId("player2", "2")
-	pn, _ := NewPlayerWithId("neutral", "-1")
+	p1, _ := NewPlayer("player1")
+	p2, _ := NewPlayer("player2")
+	pn, _ := NewPlayer("neutral")
 	board := NewBoard(Coordinate{10, 10})
 	game := NewGame(p1, p2, pn, board)
 	return game
@@ -21,9 +21,9 @@ func CreateEmptyGame() *Game {
 // All starting with a strength of 10 and a growth
 // interval of 1/second
 func CreateSimpleGame() *Game {
-	p1, _ := NewPlayerWithId("player1", "1")
-	p2, _ := NewPlayerWithId("player2", "2")
-	pn, _ := NewPlayerWithId("neutral", "-1")
+	p1, _ := NewPlayer("player1")
+	p2, _ := NewPlayer("player2")
+	pn, _ := NewPlayer("neutral")
 	p1Island := NewIsland(p1, 10, IslandSizeMedium)
 	p2Island := NewIsland(p2, 10, IslandSizeMedium)
 	neIsland := NewIsland(pn, 10, IslandSizeMedium)

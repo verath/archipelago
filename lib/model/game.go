@@ -22,19 +22,6 @@ func (g *Game) PlayerNeutral() *Player {
 	return g.playerNeutral
 }
 
-func (g *Game) Player(id PlayerID) *Player {
-	if g.player1.id == id {
-		return g.player1
-	}
-	if g.player2.id == id {
-		return g.player2
-	}
-	if g.playerNeutral.id == id {
-		return g.playerNeutral
-	}
-	return nil
-}
-
 func (g *Game) Board() *Board {
 	return g.board
 }

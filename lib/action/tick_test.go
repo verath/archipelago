@@ -57,7 +57,7 @@ func TestTickAction_Apply_Airplanes(t *stdtesting.T) {
 	game := testing.CreateSimpleGame()
 
 	// Add an airplane from 0,0 -> 0,9, moving at a speed of one coordinate/sec
-	airplane := NewAirplane(Coordinate{0, 0}, Coordinate{0, 9}, game.Player("1"), 10)
+	airplane := NewAirplane(Coordinate{0, 0}, Coordinate{0, 9}, game.Player1(), 10)
 	airplane.SetSpeed(1 / float64(time.Second))
 	game.AddAirplane(airplane)
 

@@ -2,14 +2,19 @@ package model
 
 import (
 	"encoding/json"
-	"github.com/nu7hatch/gouuid"
 )
 
-type PlayerID string
+// We wrap the identifier type in a PlayerID type to add
+// stronger type-support when working with player ids.
+type PlayerID identifier
+
+func (playerID PlayerID) Equals(otherID PlayerID) bool {
+	return identifier(playerID).Equals(identifier(otherID))
+}
 
 type Player struct {
+	identifier
 	name string
-	id   PlayerID
 }
 
 func (p *Player) Name() string {
@@ -21,44 +26,37 @@ func (p *Player) SetName(name string) {
 }
 
 func (p *Player) ID() PlayerID {
-	return p.id
+	return PlayerID(p.identifier.ID())
 }
 
 func (p *Player) Equals(other *Player) bool {
-	if other == nil {
-		return false
-	}
-	return p.id == other.id
+	return (other != nil && p.identifier.Equals(other.identifier))
 }
 
 func (p *Player) MarshalJSON() ([]byte, error) {
 	return json.Marshal(&struct {
+		ID   identifier
 		Name string
-		ID   PlayerID
 	}{
+		ID:   p.identifier,
 		Name: p.name,
-		ID:   p.id,
 	})
 }
 
 func (p *Player) Copy() *Player {
 	return &Player{
-		id:   p.id,
-		name: p.name,
+		identifier: p.identifier,
+		name:       p.name,
 	}
 }
 
 func NewPlayer(name string) (*Player, error) {
-	id, err := uuid.NewV4()
+	identifier, err := newIdentifier()
 	if err != nil {
 		return nil, err
 	}
-	return NewPlayerWithId(name, id.String())
-}
-
-func NewPlayerWithId(name, id string) (*Player, error) {
 	return &Player{
-		name: name,
-		id:   PlayerID(id),
+		identifier: identifier,
+		name:       name,
 	}, nil
 }
