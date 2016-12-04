@@ -23,7 +23,10 @@ type server struct {
 
 type playerConnCh chan<- network.PlayerConn
 
-var upgrader = websocket.Upgrader{}
+var upgrader = websocket.Upgrader{
+	// TODO: should we allow all origins?
+	CheckOrigin: func(r *http.Request) bool { return true },
+}
 
 func (s *server) handleWSConn(ctx context.Context, playerCh playerConnCh, wg sync.WaitGroup, conn *websocket.Conn) {
 	logEntry := logutil.ModuleEntry(s.log, "http")
