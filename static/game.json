@@ -1,0 +1,174 @@
+{
+  "ID": "6ef005ab-d948-491c-7eaa-f16ff1f4f962",
+  "Player1": {
+    "ID": "f398748e-b4d3-4481-71e3-9a734afb7417",
+    "Name": "player1"
+  },
+  "Player2": {
+    "ID": "7c42f12c-de0d-49cb-7b47-03e8f55c466d",
+    "Name": "player2"
+  },
+  "Board": {
+    "Size": {
+      "X": 10,
+      "Y": 10
+    },
+    "Islands": [
+      {
+        "ID": "ef3ef4d8-0b35-4790-7bc0-eb07a4cd4e0b",
+        "Army": {
+          "OwnerID": "f398748e-b4d3-4481-71e3-9a734afb7417",
+          "Strength": 5
+        },
+        "Size": 1
+      },
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      {
+        "ID": "01995c3a-6eef-4be1-4155-db3323eed546",
+        "Army": {
+          "OwnerID": "b02825d4-f411-454e-6f79-5d3d46c3e53c",
+          "Strength": 10
+        },
+        "Size": 1
+      },
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      {
+        "ID": "990960ca-118e-4de2-7fe4-fe04a5b97160",
+        "Army": {
+          "OwnerID": "7c42f12c-de0d-49cb-7b47-03e8f55c466d",
+          "Strength": 5
+        },
+        "Size": 1
+      }
+    ]
+  },
+  "Airplanes": [
+    {
+      "ID": "cd1abe8e-0c81-4039-7a31-e8b63375113c",
+      "Army": {
+        "OwnerID": "f398748e-b4d3-4481-71e3-9a734afb7417",
+        "Strength": 5
+      },
+      "Position": {
+        "X": 1.4142135623730951,
+        "Y": 1.4142135623730951
+      },
+      "Destination": {
+        "X": 9,
+        "Y": 9
+      },
+      "Speed": 0.001
+    },
+    {
+      "ID": "8c53b996-d278-4f22-42b3-9fd0d9d68441",
+      "Army": {
+        "OwnerID": "7c42f12c-de0d-49cb-7b47-03e8f55c466d",
+        "Strength": 5
+      },
+      "Position": {
+        "X": 7.585786437626905,
+        "Y": 7.585786437626905
+      },
+      "Destination": {
+        "X": 0,
+        "Y": 0
+      },
+      "Speed": 0.001
+    }
+  ]
+}
