@@ -6,7 +6,9 @@ import (
 )
 
 type Island struct {
+	identifier
 	*army
+
 	size            float64
 	growthRemainder time.Duration
 }
@@ -39,9 +41,11 @@ func (i *Island) SetGrowthRemainder(growthRemainder time.Duration) {
 
 func (i *Island) MarshalJSON() ([]byte, error) {
 	return json.Marshal(&struct {
+		ID   identifier
 		Army *army
 		Size float64
 	}{
+		ID:   i.identifier,
 		Army: i.army,
 		Size: i.size,
 	})
@@ -49,15 +53,21 @@ func (i *Island) MarshalJSON() ([]byte, error) {
 
 func (i *Island) Copy() *Island {
 	return &Island{
+		identifier:      i.identifier,
 		army:            i.army.Copy(),
 		size:            i.size,
 		growthRemainder: i.growthRemainder,
 	}
 }
 
-func NewIsland(owner *Player, strength int, size float64) *Island {
-	return &Island{
-		army: newArmy(owner, strength),
-		size: size,
+func NewIsland(owner *Player, strength int, size float64) (*Island, error) {
+	identifier, err := newIdentifier()
+	if err != nil {
+		return nil, err
 	}
+	return &Island{
+		identifier: identifier,
+		army:       newArmy(owner, strength),
+		size:       size,
+	}, nil
 }

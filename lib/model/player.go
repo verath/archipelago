@@ -14,6 +14,7 @@ func (playerID PlayerID) Equals(otherID PlayerID) bool {
 
 type Player struct {
 	identifier
+
 	name string
 }
 

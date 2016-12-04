@@ -6,6 +6,7 @@ import (
 )
 
 type Airplane struct {
+	identifier
 	*army
 
 	position    FloatCoordinate
@@ -33,20 +34,27 @@ func (a *Airplane) SetSpeed(speed float64) {
 }
 
 func (a *Airplane) MarshalJSON() ([]byte, error) {
-	// TODO: include speed?
+	// No reason to have nanosecond precision on client side
+	speedMillis := a.speed * float64(time.Millisecond)
+
 	return json.Marshal(&struct {
+		ID          identifier
 		Army        *army
 		Position    FloatCoordinate
 		Destination Coordinate
+		Speed       float64
 	}{
+		ID:          a.identifier,
 		Army:        a.army,
 		Position:    a.position,
 		Destination: a.destination,
+		Speed:       speedMillis,
 	})
 }
 
 func (a *Airplane) Copy() *Airplane {
 	return &Airplane{
+		identifier:  a.identifier,
 		army:        a.army.Copy(),
 		position:    a.position,
 		destination: a.destination,
@@ -54,11 +62,16 @@ func (a *Airplane) Copy() *Airplane {
 	}
 }
 
-func NewAirplane(origin, destination Coordinate, owner *Player, strength int) *Airplane {
+func NewAirplane(origin, destination Coordinate, owner *Player, strength int) (*Airplane, error) {
+	identifier, err := newIdentifier()
+	if err != nil {
+		return nil, err
+	}
 	return &Airplane{
+		identifier:  identifier,
 		army:        newArmy(owner, strength),
 		position:    origin.ToFloatCoordinate(),
 		destination: destination,
 		speed:       airplaneDefaultSpeed,
-	}
+	}, nil
 }

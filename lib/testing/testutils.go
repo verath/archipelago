@@ -10,7 +10,7 @@ func CreateEmptyGame() *Game {
 	p2, _ := NewPlayer("player2")
 	pn, _ := NewPlayer("neutral")
 	board := NewBoard(Coordinate{10, 10})
-	game := NewGame(p1, p2, pn, board)
+	game, _ := NewGame(p1, p2, pn, board)
 	return game
 }
 
@@ -24,15 +24,15 @@ func CreateSimpleGame() *Game {
 	p1, _ := NewPlayer("player1")
 	p2, _ := NewPlayer("player2")
 	pn, _ := NewPlayer("neutral")
-	p1Island := NewIsland(p1, 10, IslandSizeMedium)
-	p2Island := NewIsland(p2, 10, IslandSizeMedium)
-	neIsland := NewIsland(pn, 10, IslandSizeMedium)
+	p1Island, _ := NewIsland(p1, 10, IslandSizeMedium)
+	p2Island, _ := NewIsland(p2, 10, IslandSizeMedium)
+	neIsland, _ := NewIsland(pn, 10, IslandSizeMedium)
 
 	board := NewBoard(Coordinate{10, 10})
 	board.SetIsland(Coordinate{0, 0}, p1Island)
 	board.SetIsland(Coordinate{9, 9}, p2Island)
 	board.SetIsland(Coordinate{4, 4}, neIsland)
 
-	game := NewGame(p1, p2, pn, board)
+	game, _ := NewGame(p1, p2, pn, board)
 	return game
 }

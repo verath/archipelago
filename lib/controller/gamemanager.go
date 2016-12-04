@@ -139,6 +139,12 @@ func newGameManager(log *logrus.Logger, game *model.Game, p1Conn, p2Conn network
 		return nil, fmt.Errorf("Error creating player2 proxy: %v", err)
 	}
 
+	// TODO: test stuff, remove
+	la1, _ := action.NewLaunchAction(model.Coordinate{0, 0}, model.Coordinate{9, 9}, game.Player1())
+	la2, _ := action.NewLaunchAction(model.Coordinate{9, 9}, model.Coordinate{0, 0}, game.Player2())
+	gameLoop.addAction(la1)
+	gameLoop.addAction(la2)
+
 	return &gameManager{
 		log:      log,
 		gameLoop: gameLoop,

@@ -3,6 +3,8 @@ package model
 import "encoding/json"
 
 type Game struct {
+	identifier
+
 	player1       *Player
 	player2       *Player
 	playerNeutral *Player
@@ -36,12 +38,14 @@ func (g *Game) AddAirplane(airplane *Airplane) {
 
 func (g *Game) MarshalJSON() ([]byte, error) {
 	return json.Marshal(&struct {
+		ID            identifier
 		Player1       *Player
 		Player2       *Player
 		playerNeutral *Player
 		Board         *Board
 		Airplanes     []*Airplane
 	}{
+		ID:            g.identifier,
 		Player1:       g.player1,
 		Player2:       g.player2,
 		playerNeutral: g.playerNeutral,
@@ -56,6 +60,7 @@ func (g *Game) Copy() *Game {
 		airplanesCopy[i] = airplane.Copy()
 	}
 	return &Game{
+		identifier:    g.identifier,
 		player1:       g.player1.Copy(),
 		player2:       g.player2.Copy(),
 		playerNeutral: g.playerNeutral.Copy(),
@@ -64,12 +69,17 @@ func (g *Game) Copy() *Game {
 	}
 }
 
-func NewGame(player1 *Player, player2 *Player, playerNeutral *Player, board *Board) *Game {
+func NewGame(player1 *Player, player2 *Player, playerNeutral *Player, board *Board) (*Game, error) {
+	identifier, err := newIdentifier()
+	if err != nil {
+		return nil, err
+	}
 	return &Game{
+		identifier:    identifier,
 		player1:       player1,
 		player2:       player2,
 		playerNeutral: playerNeutral,
 		board:         board,
 		airplanes:     make([]*Airplane, 0),
-	}
+	}, nil
 }
