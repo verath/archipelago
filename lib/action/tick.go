@@ -34,7 +34,7 @@ func updateAirplanes(g *model.Game, delta time.Duration) error {
 
 func updateIslands(g *model.Game, delta time.Duration) error {
 	growthInterval := model.IslandGrowthInterval
-	for _, island := range g.Board().Islands() {
+	for _, island := range g.Islands() {
 		if island.Owner().Equals(g.PlayerNeutral()) {
 			// Neutral islands does not grow in strength
 			continue

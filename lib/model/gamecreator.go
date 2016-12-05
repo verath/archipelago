@@ -54,10 +54,12 @@ func CreateBasicGame() (*Game, error) {
 		return nil, fmt.Errorf("Error creating islands: %v", err)
 	}
 
-	board := NewBoard(Coordinate{10, 10})
-	board.SetIsland(Coordinate{0, 0}, p1Island)
-	board.SetIsland(Coordinate{9, 9}, p2Island)
-	board.SetIsland(Coordinate{4, 4}, neIsland)
+	board := NewBoardBuilder().
+		SetSize(Coordinate{10, 10}).
+		AddIsland(Coordinate{0, 0}, p1Island).
+		AddIsland(Coordinate{9, 9}, p2Island).
+		AddIsland(Coordinate{4, 4}, neIsland).
+		BuildOrPanic()
 
 	return NewGame(p1, p2, pn, board)
 }

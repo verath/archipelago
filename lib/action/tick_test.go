@@ -28,8 +28,8 @@ func TestNewTickAction_NegativeDelta(t *stdtesting.T) {
 func TestTickAction_Apply_Islands(t *stdtesting.T) {
 	game := testing.CreateSimpleGame()
 
-	i1 := game.Board().Island(Coordinate{0, 0})
-	i2 := game.Board().Island(Coordinate{9, 9})
+	i1 := game.Island(Coordinate{0, 0})
+	i2 := game.Island(Coordinate{9, 9})
 	i1.SetSize(1)
 	i2.SetSize(2)
 
@@ -47,7 +47,7 @@ func TestTickAction_Apply_Islands(t *stdtesting.T) {
 		t.Errorf("Expected island strength of player island size 2.0 to be 12, was %d", i2.Strength())
 	}
 
-	ni := game.Board().Island(Coordinate{4, 4})
+	ni := game.Island(Coordinate{4, 4})
 	if ni.Strength() != 10 {
 		t.Errorf("Expected island strength of neutral to remain 10, was %d", ni.Strength())
 	}

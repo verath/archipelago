@@ -39,7 +39,7 @@ func TestLaunchAction_Apply(t *stdtesting.T) {
 		t.Errorf("Expected num airplanes == 1, was: %v", numPlanes)
 	}
 
-	fromIsland := game.Board().Island(Coordinate{0, 0})
+	fromIsland := game.Island(Coordinate{0, 0})
 	if fromIsland.Strength() != 5 {
 		t.Errorf("Expected from island to have a strength of 5, was: %d",
 			fromIsland.Strength())
@@ -88,7 +88,7 @@ func TestLaunchAction_Apply_NoIslandArmy(t *stdtesting.T) {
 	game := testing.CreateSimpleGame()
 
 	t.Log("Launching airplane from island with strength < 2...")
-	game.Board().Island(Coordinate{0, 0}).SetStrength(1)
+	game.Island(Coordinate{0, 0}).SetStrength(1)
 	la, _ := NewLaunchAction(Coordinate{0, 0}, Coordinate{9, 9}, game.Player1())
 	if _, err := la.Apply(game); err == nil {
 		t.Error("Expected an error, got nil")

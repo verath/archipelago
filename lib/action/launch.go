@@ -14,7 +14,7 @@ type launchAction struct {
 }
 
 func (a *launchAction) Apply(g *model.Game) ([]event.Event, error) {
-	fromIsland := g.Board().Island(a.from)
+	fromIsland := g.Island(a.from)
 	if fromIsland == nil {
 		return nil, errors.New("from island does not exist")
 	}
@@ -23,7 +23,7 @@ func (a *launchAction) Apply(g *model.Game) ([]event.Event, error) {
 		return nil, errors.New("from island strength < 2")
 	}
 
-	if g.Board().Island(a.to) == nil {
+	if g.Island(a.to) == nil {
 		return nil, errors.New("to island does not exist")
 	}
 
