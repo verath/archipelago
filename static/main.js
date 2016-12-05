@@ -1,7 +1,8 @@
+import GameView from "./lib/view/game";
+
 const stageWidth = 600;
 const stageHeight = 600;
 
-// Create and add the PIXI renderer
 let renderer = new PIXI.autoDetectRenderer(
     stageWidth, stageHeight,
     {antialias: false, transparent: true, resolution: 1}
@@ -9,12 +10,43 @@ let renderer = new PIXI.autoDetectRenderer(
 document.body.appendChild(renderer.view);
 let stage = new PIXI.Container();
 let textures = {};
-let sprites = {};
 
-/**@type object */
+
+let gameView = new GameView(null, stage);
+
+/*
 let game = null;
 
-function createIsland(width, height) {
+function createAirplane(airplaneData) {
+    let width = 64;
+    let height = 64;
+    let airplane = new PIXI.Sprite(textures.island);
+    airplane.anchor.set(0.5, 0.5);
+    return airplane;
+}
+
+function createAirplanes(stage, game) {
+    const gameWidth = game.Board.Size.X;
+    const gameHeight = game.Board.Size.Y;
+    const tileWidth = stageWidth / gameWidth;
+    const tileHeight = stageHeight / gameHeight;
+
+    game.Airplanes.forEach((airplane) => {
+        const posX = airplane.Position.X;
+        const posY = airplane.Position.Y;
+        let airplaneSprite = createAirplane(airplane);
+        airplaneSprite.width = 40;
+        airplaneSprite.height = 40;
+        airplaneSprite.x = posX * tileWidth;
+        airplaneSprite.y = posY * tileHeight;
+        console.log(posX, posY);
+        stage.addChild(airplaneSprite);
+    })
+}
+
+function createIsland(islandData) {
+    let width = 128;
+    let height = 128;
     let islandContainer = new PIXI.Container();
     islandContainer.width = width;
     islandContainer.height = height;
@@ -26,45 +58,50 @@ function createIsland(width, height) {
     island.y = 1;
     islandContainer.addChild(island);
 
-    let str = new PIXI.Text(
-        "10",
-        {fontFamily: 'Arial', fontSize: 24, fill: 0x1010ff, align: 'center'}
+    let strengthText = new PIXI.Text(
+        islandData.Army.Strength,
+        {fontFamily: 'Arial', fontSize: 34, fill: 0x1010ff, align: 'center'}
     );
-    str.anchor.set(0.5, 0.5);
-    str.x = width / 2;
-    str.y = height / 2;
-    islandContainer.addChild(str);
+    strengthText.anchor.set(0.5, 0.5);
+    strengthText.x = width / 2;
+    strengthText.y = height / 2;
+    islandContainer.addChild(strengthText);
 
     return islandContainer;
 }
 
-function updateIslands(game) {
+function createIslands(stage, game) {
     const gameWidth = game.Board.Size.X;
     const gameHeight = game.Board.Size.Y;
     const gameIslands = game.Board.Islands;
-    const islandWidth = gameWidth / stageWidth;
-    const islandHeight = gameHeight / stageHeight;
+    const tileWidth = stageWidth / gameWidth;
+    const tileHeight = stageHeight / gameHeight;
 
     for (let x = 0; x < gameWidth; x++) {
         for (let y = 0; y < gameHeight; y++) {
             let islandIdx = (y * gameWidth + x);
-            let island = gameIslands[islandIdx];
-            updateIsland(island, x, y);
+            let islandData = gameIslands[islandIdx];
+            if (islandData != null) {
+                let islandSprite = createIsland(islandData);
+                islandSprite.width = tileWidth;
+                islandSprite.height = tileHeight;
+                islandSprite.x = x * tileWidth;
+                islandSprite.y = y * tileHeight;
+
+                islandSprite.interactive = true;
+                islandSprite.on('mousedown', ()=>console.log('click'));
+                islandSprite.on('touchstart', ()=>console.log('click'));
+                stage.addChild(islandSprite);
+            }
         }
     }
 }
 
-function updateSprites(game) {
-    if (!game) {
-        return;
-    }
-
-}
-
-function gameLoop() {
-    requestAnimationFrame(gameLoop);
-    updateSprites(game);
-    renderer.render(stage);
+function createSprites(game) {
+    // TODO: we should reuse the sprites...
+    stage.removeChildren();
+    createIslands(stage, game);
+    createAirplanes(stage, game);
 }
 
 function registerAssets(loader, resources) {
@@ -96,8 +133,8 @@ function loadAssets() {
     });
 }
 
-function onServerTick(tickData) {
-    game = tickData;
+function onServerTick(game) {
+    createSprites(game)
 }
 
 function onWSMessage(messageEvt) {
@@ -110,8 +147,6 @@ function onWSMessage(messageEvt) {
         return;
     }
 
-    console.log(event);
-
     switch (event.Name) {
         case "tick":
             onServerTick(event.Data);
@@ -121,8 +156,13 @@ function onWSMessage(messageEvt) {
     }
 }
 
+function gameLoop() {
+    requestAnimationFrame(gameLoop);
+    renderer.render(stage);
+}
 
 (function main() {
+    new WebSocket("ws://127.0.0.1:8080/ws");
     let wsConn = new WebSocket("ws://127.0.0.1:8080/ws");
     wsConn.addEventListener('open', () => console.log('WS conn opened'));
     wsConn.addEventListener('message', onWSMessage);
@@ -131,4 +171,4 @@ function onWSMessage(messageEvt) {
     loadAssets().then(() => {
         window.requestAnimationFrame(gameLoop);
     });
-})();
+})();*/
