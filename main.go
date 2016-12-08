@@ -5,6 +5,7 @@ import (
 	"github.com/Sirupsen/logrus"
 	"github.com/verath/archipelago/lib"
 	"github.com/verath/archipelago/lib/logutil"
+	"net/http"
 	"os"
 	"os/signal"
 )
@@ -15,7 +16,9 @@ func main() {
 	log.Formatter = &logrus.TextFormatter{}
 	logEntry := logutil.ModuleEntry(log, "main")
 
-	ctx, halt := context.WithCancel(context.Background())
+	logEntry.Info("Starting")
+	defer logEntry.Info("Stopped")
+	ctx, cancel := context.WithCancel(context.Background())
 
 	// Listen for interrupts
 	sigs := make(chan os.Signal, 2)
@@ -23,10 +26,16 @@ func main() {
 	go func() {
 		<-sigs
 		logEntry.Info("Caught interrupt, shutting down")
-		halt()
+		cancel()
 	}()
 
-	archipelagoGame := archipelago.NewArchipelago(log)
-	archipelagoGame.Run(ctx)
-	halt()
+	archipelagoGame, err := archipelago.New(log, http.Dir("static"), ":8080")
+	if err != nil {
+		logEntry.WithError(err).Error("Error creating game")
+	}
+
+	err = archipelagoGame.Run(ctx)
+	if err != nil && err != context.Canceled {
+		logEntry.WithError(err).Error("Error during Run")
+	}
 }

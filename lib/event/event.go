@@ -7,20 +7,20 @@ type Event interface {
 	Data() interface{}
 }
 
-type event struct {
+type baseEvent struct {
 	name string
 	data interface{}
 }
 
-func (e *event) Name() string {
+func (e *baseEvent) Name() string {
 	return e.name
 }
 
-func (e *event) Data() interface{} {
+func (e *baseEvent) Data() interface{} {
 	return e.data
 }
 
-func (e *event) MarshalJSON() ([]byte, error) {
+func (e *baseEvent) MarshalJSON() ([]byte, error) {
 	return json.Marshal(&struct {
 		Name string
 		Data interface{}
@@ -30,8 +30,8 @@ func (e *event) MarshalJSON() ([]byte, error) {
 	})
 }
 
-func newEvent(name string, data interface{}) *event {
-	return &event{
+func newEvent(name string, data interface{}) *baseEvent {
+	return &baseEvent{
 		name: name,
 		data: data,
 	}

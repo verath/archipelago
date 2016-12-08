@@ -7,7 +7,7 @@ import (
 const EventNameTick = "tick"
 
 type TickEvent struct {
-	*event
+	*baseEvent
 }
 
 type TickEventData *model.Game

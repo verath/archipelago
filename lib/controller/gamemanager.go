@@ -35,10 +35,10 @@ func (gm *gameManager) runPlayerProxies(ctx context.Context, actionCh chan<- act
 	errCh := make(chan error, 0)
 
 	go func() {
-		errCh <- gm.p1Proxy.Run(ctx, actionCh)
+		errCh <- gm.p1Proxy.Run(ctx)
 	}()
 	go func() {
-		errCh <- gm.p2Proxy.Run(ctx, actionCh)
+		errCh <- gm.p2Proxy.Run(ctx)
 	}()
 	err := <-errCh
 	cancel()
@@ -46,32 +46,43 @@ func (gm *gameManager) runPlayerProxies(ctx context.Context, actionCh chan<- act
 	return err
 }
 
+func (gm *gameManager) dispatchEvent(ctx context.Context, evt event.Event, proxy *playerProxy) error {
+	select {
+	case <-ctx.Done():
+		return ctx.Err()
+	case proxy.SendCh() <- evt:
+		return nil
+	}
+}
+
 func (gm *gameManager) eventDispatch(ctx context.Context, eventCh <-chan event.Event) error {
 	errCh := make(chan error, 0)
 	for {
+		var evt event.Event
+		var ok bool
 		select {
 		case <-ctx.Done():
 			return ctx.Err()
-		case evt, ok := <-eventCh:
+		case evt, ok = <-eventCh:
 			if !ok {
 				return errors.New("eventCh closed")
 			}
+		}
 
-			// TODO: should delivery order be fixed?
-			go func() {
-				errCh <- gm.p1Proxy.OnEvent(evt)
-			}()
-			go func() {
-				errCh <- gm.p2Proxy.OnEvent(evt)
-			}()
-			err1 := <-errCh
-			err2 := <-errCh
-			if err1 != nil {
-				return err1
-			}
-			if err2 != nil {
-				return err2
-			}
+		// TODO: should delivery order be fixed?
+		go func() {
+			errCh <- gm.dispatchEvent(ctx, evt, gm.p1Proxy)
+		}()
+		go func() {
+			errCh <- gm.dispatchEvent(ctx, evt, gm.p2Proxy)
+		}()
+		err1 := <-errCh
+		err2 := <-errCh
+		if err1 != nil {
+			return err1
+		}
+		if err2 != nil {
+			return err2
 		}
 	}
 }
@@ -95,6 +106,7 @@ func (gm *gameManager) RunGame(ctx context.Context) error {
 		if err != nil && err != context.Canceled {
 			logEntry.WithError(err).Error("Player proxy quit")
 		}
+		logEntry.Debug("Player proxy quit")
 		cancel()
 		wg.Done()
 	}()
@@ -104,8 +116,9 @@ func (gm *gameManager) RunGame(ctx context.Context) error {
 	go func() {
 		err := gm.eventDispatch(ctx, eventCh)
 		if err != nil && err != context.Canceled {
-			logEntry.WithError(err).Error("eventLoop quit")
+			logEntry.WithError(err).Error("Event loop quit")
 		}
+		logEntry.Debug("Event loop quit")
 		cancel()
 		wg.Done()
 	}()
@@ -115,8 +128,9 @@ func (gm *gameManager) RunGame(ctx context.Context) error {
 	go func() {
 		err := gm.gameLoop.Run(ctx, actionCh, eventCh)
 		if err != nil && err != context.Canceled {
-			logEntry.WithError(err).Error("gameLoop quit")
+			logEntry.WithError(err).Error("Game loop quit")
 		}
+		logEntry.Debug("Game loop quit")
 		cancel()
 		wg.Done()
 	}()
@@ -125,16 +139,18 @@ func (gm *gameManager) RunGame(ctx context.Context) error {
 	return nil
 }
 
-func newGameManager(log *logrus.Logger, game *model.Game, p1Conn, p2Conn network.PlayerConn) (*gameManager, error) {
+func newGameManager(log *logrus.Logger, game *model.Game, p1Client, p2Client *network.Client) (*gameManager, error) {
 	gameLoop, err := newGameLoop(log, game)
 	if err != nil {
 		return nil, fmt.Errorf("Error creating gameLoop: %v", err)
 	}
-	p1Proxy, err := newPlayerProxy(game.Player1(), p1Conn)
+
+	p1Proxy, err := newPlayerProxy(game.Player1(), p1Client)
 	if err != nil {
 		return nil, fmt.Errorf("Error creating player1 proxy: %v", err)
 	}
-	p2Proxy, err := newPlayerProxy(game.Player2(), p2Conn)
+
+	p2Proxy, err := newPlayerProxy(game.Player2(), p2Client)
 	if err != nil {
 		return nil, fmt.Errorf("Error creating player2 proxy: %v", err)
 	}

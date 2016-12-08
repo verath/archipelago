@@ -3,7 +3,6 @@ package controller
 import (
 	"context"
 	"errors"
-	"github.com/verath/archipelago/lib/action"
 	"github.com/verath/archipelago/lib/event"
 	"github.com/verath/archipelago/lib/model"
 	"github.com/verath/archipelago/lib/network"
@@ -14,18 +13,19 @@ import (
 // player connection, adding the playerId this proxy represents to each
 // action.
 type playerProxy struct {
-	playerID   model.PlayerID
-	playerConn network.PlayerConn
+	playerID     model.PlayerID
+	playerClient *network.Client
 }
 
-func (pp *playerProxy) OnEvent(evt event.Event) error {
-	return pp.playerConn.OnEvent(evt)
+func (pp *playerProxy) SendCh() chan<- event.Event {
+	// We simply forward events, as they are not player specific
+	return pp.playerClient.SendCh()
 }
 
 // Run starts listening for actions produced by the player action and
 // forwards these as model actions on the provided actionCh.
-func (pp *playerProxy) Run(ctx context.Context, actionCh chan<- action.Action) error {
-	playerActionCh := make(chan network.PlayerAction, 0)
+func (pp *playerProxy) Run(ctx context.Context) error {
+	/*playerActionCh := make(chan network.PlayerAction, 0)
 	pp.playerConn.AddActionListener(playerActionCh)
 	defer pp.playerConn.RemoveActionListener(playerActionCh)
 
@@ -46,14 +46,17 @@ func (pp *playerProxy) Run(ctx context.Context, actionCh chan<- action.Action) e
 		}
 
 	}
+	*/
+	<-ctx.Done()
+	return ctx.Err()
 }
 
-func newPlayerProxy(player *model.Player, playerConn network.PlayerConn) (*playerProxy, error) {
+func newPlayerProxy(player *model.Player, playerClient *network.Client) (*playerProxy, error) {
 	if player == nil {
 		return nil, errors.New("player cannot be nil")
 	}
 	return &playerProxy{
-		playerID:   player.ID(),
-		playerConn: playerConn,
+		playerID:     player.ID(),
+		playerClient: playerClient,
 	}, nil
 }
