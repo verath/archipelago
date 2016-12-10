@@ -38,7 +38,9 @@ func (gc *GameCoordinator) startNewGame(ctx context.Context, p1Client, p2Client 
 
 // Waits for two player connections to be made.
 // TODO: waiting for any 2 connections is not great "match making"...
-func (gc *GameCoordinator) waitForPlayers(ctx context.Context, logEntry *logrus.Entry, clientCh <-chan *network.Client) (*network.Client, *network.Client, error) {
+func (gc *GameCoordinator) waitForPlayers(ctx context.Context, logEntry *logrus.Entry) (*network.Client, *network.Client, error) {
+	clientCh := gc.clientPool.GetCh()
+
 	for {
 		var p1Client, p2Client *network.Client
 		var ok bool
@@ -47,13 +49,10 @@ func (gc *GameCoordinator) waitForPlayers(ctx context.Context, logEntry *logrus.
 		select {
 		case <-ctx.Done():
 			return nil, nil, ctx.Err()
-		case p1Client, ok = <-clientCh:
-			if !ok {
-				return nil, nil, errors.New("clientCh closed")
-			}
-			logEntry.Debug("p1Client established")
+		case p1Client = <-clientCh:
 		}
 
+		logEntry.Debug("p1Client established")
 		// TODO: Listen for p1Client disconnect
 		select {
 		case <-ctx.Done():
@@ -79,7 +78,7 @@ func (gc *GameCoordinator) runLoop(ctx context.Context) error {
 	var p1Client, p2Client *network.Client
 	var err error
 	for {
-		p1Client, p2Client, err = gc.waitForPlayers(ctx, logEntry, gc.clientPool.GetCh())
+		p1Client, p2Client, err = gc.waitForPlayers(ctx, logEntry)
 		if err != nil {
 			break
 		}

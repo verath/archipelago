@@ -45,17 +45,14 @@ func (a *launchAction) Apply(g *model.Game) ([]event.Event, error) {
 
 }
 
-func NewLaunchAction(from model.Coordinate, to model.Coordinate, owner *model.Player) (*launchAction, error) {
+func NewLaunchAction(from model.Coordinate, to model.Coordinate, ownerID model.PlayerID) (*launchAction, error) {
 	if from == to {
 		return nil, errors.New("from == to")
-	}
-	if owner == nil {
-		return nil, errors.New("owner cannot be nil")
 	}
 	la := &launchAction{
 		from:    from,
 		to:      to,
-		ownerID: owner.ID(),
+		ownerID: ownerID,
 	}
 	return la, nil
 }

@@ -6,6 +6,7 @@ import (
 	"github.com/verath/archipelago/lib/event"
 	"github.com/verath/archipelago/lib/model"
 	"github.com/verath/archipelago/lib/network"
+	"github.com/verath/archipelago/lib/action"
 )
 
 // The playerProxy represents a player connection as a single player part
@@ -17,38 +18,18 @@ type playerProxy struct {
 	playerClient *network.Client
 }
 
-func (pp *playerProxy) SendCh() chan<- event.Event {
-	// We simply forward events, as they are not player specific
-	return pp.playerClient.SendCh()
+func (pp *playerProxy) NextAction(ctx context.Context) (action.Action, error) {
+	_, err := pp.playerClient.NextAction(ctx)
+	if err != nil {
+		return nil, err
+	}
+	act, _ := action.NewLaunchAction(model.Coordinate{0,0}, model.Coordinate{9,9}, pp.playerID)
+	return act, nil
 }
 
-// Run starts listening for actions produced by the player action and
-// forwards these as model actions on the provided actionCh.
-func (pp *playerProxy) Run(ctx context.Context) error {
-	/*playerActionCh := make(chan network.PlayerAction, 0)
-	pp.playerConn.AddActionListener(playerActionCh)
-	defer pp.playerConn.RemoveActionListener(playerActionCh)
-
-	for {
-		select {
-		case <-ctx.Done():
-			return ctx.Err()
-		case playerAct, ok := <-playerActionCh:
-			if !ok {
-				// TODO(2016-12-03): should we also close actionCh here?
-				return errors.New("PlayerConn action channel closed")
-			}
-			select {
-			case <-ctx.Done():
-				return ctx.Err()
-			case actionCh <- playerAct.ToAction(pp.playerID):
-			}
-		}
-
-	}
-	*/
-	<-ctx.Done()
-	return ctx.Err()
+func (pp *playerProxy) SendEvent(ctx context.Context, evt event.Event) error {
+	playerEvt := evt.ToPlayerEvent(pp.playerID)
+	return pp.playerClient.SendEvent(ctx, playerEvt)
 }
 
 func newPlayerProxy(player *model.Player, playerClient *network.Client) (*playerProxy, error) {

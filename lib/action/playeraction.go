@@ -1,7 +1,6 @@
-package network
+package action
 
 import (
-	"github.com/verath/archipelago/lib/action"
 	"github.com/verath/archipelago/lib/model"
 )
 
@@ -14,12 +13,12 @@ type PlayerAction interface {
 
 	// Takes a player id representing the player performing
 	// the action and returns an Action.
-	ToAction(model.PlayerID) action.Action
+	ToAction(model.PlayerID) Action
 }
 
 // Wrapper type for a function representing a PlayerAction.
-type PlayerActionFunc func(model.PlayerID) action.Action
+type PlayerActionFunc func(model.PlayerID) Action
 
-func (f PlayerActionFunc) ToAction(playerId model.PlayerID) action.Action {
+func (f PlayerActionFunc) ToAction(playerId model.PlayerID) Action {
 	return f(playerId)
 }

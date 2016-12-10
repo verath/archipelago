@@ -1,10 +1,12 @@
 package event
 
-import "encoding/json"
+import (
+	"encoding/json"
+	"github.com/verath/archipelago/lib/model"
+)
 
 type Event interface {
-	Name() string
-	Data() interface{}
+	ToPlayerEvent(playerID model.PlayerID) PlayerEvent
 }
 
 type baseEvent struct {
@@ -18,6 +20,10 @@ func (e *baseEvent) Name() string {
 
 func (e *baseEvent) Data() interface{} {
 	return e.data
+}
+
+func (e *baseEvent) ToPlayerEvent(playerID model.PlayerID) PlayerEvent {
+	return e
 }
 
 func (e *baseEvent) MarshalJSON() ([]byte, error) {

@@ -2,11 +2,9 @@ package controller
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"github.com/Sirupsen/logrus"
 	"github.com/verath/archipelago/lib/action"
-	"github.com/verath/archipelago/lib/event"
 	"github.com/verath/archipelago/lib/logutil"
 	"github.com/verath/archipelago/lib/model"
 	"github.com/verath/archipelago/lib/network"
@@ -30,65 +28,66 @@ type gameManager struct {
 	p2Proxy  *playerProxy
 }
 
-func (gm *gameManager) runPlayerProxies(ctx context.Context, actionCh chan<- action.Action) error {
-	ctx, cancel := context.WithCancel(ctx)
-	errCh := make(chan error, 0)
-
-	go func() {
-		errCh <- gm.p1Proxy.Run(ctx)
-	}()
-	go func() {
-		errCh <- gm.p2Proxy.Run(ctx)
-	}()
-	err := <-errCh
-	cancel()
-	<-errCh
-	return err
-}
-
-func (gm *gameManager) dispatchEvent(ctx context.Context, evt event.Event, proxy *playerProxy) error {
-	select {
-	case <-ctx.Done():
-		return ctx.Err()
-	case proxy.SendCh() <- evt:
-		return nil
+// eventLoop reads from the eventCh and forwards each event to both
+// of the player proxies. Blocks until the eventCh is closed or the
+// context is cancelled.
+func (gm *gameManager) eventLoop(ctx context.Context) error {
+	for {
+		evt, err := gm.gameLoop.NextEvent(ctx)
+		if err != nil {
+			return err
+		}
+		if err := gm.p1Proxy.SendEvent(ctx, evt); err != nil {
+			return err
+		}
+		if err := gm.p2Proxy.SendEvent(ctx, evt); err != nil {
+			return err
+		}
 	}
 }
 
-func (gm *gameManager) eventDispatch(ctx context.Context, eventCh <-chan event.Event) error {
-	errCh := make(chan error, 0)
+func (gm *gameManager) playerActionLoop(ctx context.Context, proxy *playerProxy, actionCh chan<- action.Action) error {
 	for {
-		var evt event.Event
-		var ok bool
+		act, err := proxy.NextAction(ctx)
+		if err != nil {
+			return err
+		}
 		select {
 		case <-ctx.Done():
 			return ctx.Err()
-		case evt, ok = <-eventCh:
-			if !ok {
-				return errors.New("eventCh closed")
-			}
+		case actionCh <- act:
 		}
+	}
+}
 
-		// TODO: should delivery order be fixed?
-		go func() {
-			errCh <- gm.dispatchEvent(ctx, evt, gm.p1Proxy)
-		}()
-		go func() {
-			errCh <- gm.dispatchEvent(ctx, evt, gm.p2Proxy)
-		}()
-		err1 := <-errCh
-		err2 := <-errCh
-		if err1 != nil {
-			return err1
-		}
-		if err2 != nil {
-			return err2
+func (gm *gameManager) actionLoop(ctx context.Context) error {
+	ctx, cancel := context.WithCancel(ctx)
+	actionCh := make(chan action.Action)
+	errCh := make(chan error)
+
+	go func() {
+		errCh <- gm.playerActionLoop(ctx, gm.p1Proxy, actionCh)
+	}()
+	go func() {
+		errCh <- gm.playerActionLoop(ctx, gm.p2Proxy, actionCh)
+	}()
+
+	for {
+		select {
+		case err := <-errCh:
+			cancel()
+			<-errCh
+			return fmt.Errorf("Error during playerActionLoop: %v", err)
+		case act := <-actionCh:
+			err := gm.gameLoop.AddAction(ctx, act)
+			if err != nil {
+				return fmt.Errorf("Error adding action to gameLoop: %v", err)
+			}
 		}
 	}
 }
 
 func (gm *gameManager) RunGame(ctx context.Context) error {
-	// TODO: ensure not running
 	logEntry := logutil.ModuleEntryWithID(gm.log, "gameManager")
 	logEntry.Info("Starting")
 	defer logEntry.Info("Stopped")
@@ -96,29 +95,24 @@ func (gm *gameManager) RunGame(ctx context.Context) error {
 	var wg sync.WaitGroup
 	ctx, cancel := context.WithTimeout(ctx, DefaultGameTimeout)
 
-	actionCh := make(chan action.Action, 0)
-	eventCh := make(chan event.Event, 0)
-
-	// Run the player proxies
+	// Spawn an event dispatcher loop
 	wg.Add(1)
 	go func() {
-		err := gm.runPlayerProxies(ctx, actionCh)
+		err := gm.eventLoop(ctx)
 		if err != nil && err != context.Canceled {
-			logEntry.WithError(err).Error("Player proxy quit")
+			logEntry.WithError(err).Error("Event dispatch quit")
 		}
-		logEntry.Debug("Player proxy quit")
 		cancel()
 		wg.Done()
 	}()
 
-	// Spawn an event dispatcher loop
+	// Spawn an action dispatcher loop
 	wg.Add(1)
 	go func() {
-		err := gm.eventDispatch(ctx, eventCh)
+		err := gm.actionLoop(ctx)
 		if err != nil && err != context.Canceled {
-			logEntry.WithError(err).Error("Event loop quit")
+			logEntry.WithError(err).Error("Event dispatch quit")
 		}
-		logEntry.Debug("Event loop quit")
 		cancel()
 		wg.Done()
 	}()
@@ -126,7 +120,7 @@ func (gm *gameManager) RunGame(ctx context.Context) error {
 	// Run the game logic loop
 	wg.Add(1)
 	go func() {
-		err := gm.gameLoop.Run(ctx, actionCh, eventCh)
+		err := gm.gameLoop.Run(ctx)
 		if err != nil && err != context.Canceled {
 			logEntry.WithError(err).Error("Game loop quit")
 		}
@@ -156,10 +150,10 @@ func newGameManager(log *logrus.Logger, game *model.Game, p1Client, p2Client *ne
 	}
 
 	// TODO: test stuff, remove
-	la1, _ := action.NewLaunchAction(model.Coordinate{0, 0}, model.Coordinate{9, 9}, game.Player1())
-	la2, _ := action.NewLaunchAction(model.Coordinate{9, 9}, model.Coordinate{0, 0}, game.Player2())
-	gameLoop.addAction(la1)
-	gameLoop.addAction(la2)
+	la1, _ := action.NewLaunchAction(model.Coordinate{0, 0}, model.Coordinate{9, 9}, game.Player1().ID())
+	la2, _ := action.NewLaunchAction(model.Coordinate{9, 9}, model.Coordinate{0, 0}, game.Player2().ID())
+	gameLoop.AddAction(nil, la1)
+	gameLoop.AddAction(nil, la2)
 
 	return &gameManager{
 		log:      log,

@@ -18,8 +18,6 @@ var log = &logrus.Logger{
 
 func TestGameLoop_Start_Stop(t *stdtesting.T) {
 	game := testing.CreateEmptyGame()
-	actionsCh := make(chan action.Action, 0)
-	eventsCh := make(chan event.Event, 0)
 	gl, _ := newGameLoop(log, game)
 	ctx, cancel := context.WithCancel(context.Background())
 
@@ -27,9 +25,7 @@ func TestGameLoop_Start_Stop(t *stdtesting.T) {
 		time.Sleep(20 * time.Millisecond)
 		cancel()
 	}()
-	gl.Run(ctx, actionsCh, eventsCh)
-	close(actionsCh)
-	close(eventsCh)
+	gl.Run(ctx)
 }
 
 func TestGameLoop_AddAction(t *stdtesting.T) {
@@ -72,25 +68,23 @@ func TestGameLoop_AddAction_RealTick(t *stdtesting.T) {
 	}
 
 	game := testing.CreateEmptyGame()
-	actionsCh := make(chan action.Action, 1)
-	eventsCh := make(chan event.Event, 0)
 
 	gl, _ := newGameLoop(log, game)
 	gl.tickInterval = time.Millisecond
 	ctx, cancel := context.WithCancel(context.Background())
 	timesApplied := 0
 
-	actionsCh <- action.ActionFunc(func(g *model.Game) ([]event.Event, error) {
+	gl.addAction(action.ActionFunc(func(g *model.Game) ([]event.Event, error) {
 		timesApplied += 1
 		return []event.Event{}, nil
-	})
+	}))
 
 	go func() {
 		time.Sleep(gl.tickInterval * 4)
 		cancel()
 	}()
 
-	gl.Run(ctx, actionsCh, eventsCh)
+	gl.Run(ctx)
 
 	if timesApplied != 1 {
 		t.Errorf("Expected action to be applied once, actual: %d", timesApplied)

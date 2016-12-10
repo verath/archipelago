@@ -24,24 +24,24 @@ const (
 type ClientPool struct {
 	log *logrus.Logger
 
-	// The addCh holds clients that has been added to the pool, but
+	// The addCh holds Connections that has been added to the pool, but
 	// that has not been started yet.
-	addCh chan *Client
+	addCh chan Connection
 
 	// The clientCh is a buffered channel of started Clients that are
 	// ready to be used.
 	getCh chan *Client
 }
 
-func (pool *ClientPool) waitForNewClient(ctx context.Context, addCh <-chan *Client) (*Client, error) {
+func (pool *ClientPool) waitForNewConn(ctx context.Context, addCh <-chan Connection) (Connection, error) {
 	select {
 	case <-ctx.Done():
 		return nil, ctx.Err()
-	case client, ok := <-addCh:
+	case conn, ok := <-addCh:
 		if !ok {
 			return nil, errors.New("addCh closed")
 		}
-		return client, nil
+		return conn, nil
 	}
 }
 
@@ -60,25 +60,32 @@ func (pool *ClientPool) runLoop(ctx context.Context) error {
 	defer logEntry.Info("Stopped")
 
 	var err error
-	var client *Client
-	var clientsWG sync.WaitGroup
+	var conn Connection
+	var connWG sync.WaitGroup
 
 	for {
-		client, err = pool.waitForNewClient(ctx, pool.addCh)
+		conn, err = pool.waitForNewConn(ctx, pool.addCh)
 		if err != nil {
-			err = fmt.Errorf("Error waiting for new client: %v", err)
+			err = fmt.Errorf("Error waiting for new connection: %v", err)
 			break
 		}
 
-		// Start the client with our current context
-		clientsWG.Add(1)
+		// Start the connection with our current context
+		connWG.Add(1)
 		go func() {
-			defer clientsWG.Done()
-			err := client.Run(ctx)
+			defer connWG.Done()
+			err := conn.Run(ctx)
 			if err != nil && err != context.Canceled {
-				logEntry.WithError(err).Error("Client quit")
+				logEntry.WithError(err).Error("Connection quit")
 			}
 		}()
+
+		// Create a Client wrapping the connection
+		client, err := NewClient(pool.log, conn)
+		if err != nil {
+			err = fmt.Errorf("Error creating client: %v", err)
+			break
+		}
 
 		err = pool.broadcastClient(ctx, pool.getCh, client)
 		if err != nil {
@@ -88,12 +95,12 @@ func (pool *ClientPool) runLoop(ctx context.Context) error {
 	}
 
 	close(pool.getCh)
-	clientsWG.Wait()
+	connWG.Wait()
 	return err
 }
 
 // Returns the channel for adding new clients to the pool.
-func (pool *ClientPool) AddCh() chan<- *Client {
+func (pool *ClientPool) AddCh() chan<- Connection {
 	return pool.addCh
 }
 
@@ -109,7 +116,7 @@ func (pool *ClientPool) Run(ctx context.Context) error {
 func NewClientPool(log *logrus.Logger) (*ClientPool, error) {
 	return &ClientPool{
 		log:   log,
-		addCh: make(chan *Client, poolAddChannelBufferSize),
+		addCh: make(chan Connection, poolAddChannelBufferSize),
 		getCh: make(chan *Client, poolGetChannelBufferSize),
 	}, nil
 }

@@ -29,8 +29,7 @@ type gameLoop struct {
 	log          *logrus.Logger
 	game         *model.Game
 
-	isRunningMu sync.Mutex
-	isRunning   bool
+	eventCh chan event.Event
 
 	actionsMu sync.Mutex
 	actions   []action.Action
@@ -68,29 +67,29 @@ func (gl *gameLoop) applyActions(delta time.Duration) ([]event.Event, error) {
 
 // Pushes each event created during the application of actions to the
 // event channel for this game instance.
-func (gl *gameLoop) dispatchEvents(ctx context.Context, eventsCh chan<- event.Event, events []event.Event) error {
+func (gl *gameLoop) dispatchEvents(ctx context.Context, events []event.Event) error {
 	// TODO: should we dispatch events async?
 	for _, evt := range events {
 		select {
 		case <-ctx.Done():
 			return ctx.Err()
-		case eventsCh <- evt:
+		case gl.eventCh <- evt:
 		}
 	}
 	return nil
 }
 
 // Perform a tick on the game.
-func (gl *gameLoop) tick(ctx context.Context, eventsCh chan<- event.Event, delta time.Duration) error {
+func (gl *gameLoop) tick(ctx context.Context, delta time.Duration) error {
 	events, err := gl.applyActions(delta)
 	if err != nil {
 		return err
 	}
-	return gl.dispatchEvents(ctx, eventsCh, events)
+	return gl.dispatchEvents(ctx, events)
 }
 
 // Performs a "tick" each tickInterval. The tick is what updates the game.
-func (gl *gameLoop) tickLoop(ctx context.Context, eventsCh chan<- event.Event) error {
+func (gl *gameLoop) tickLoop(ctx context.Context) error {
 	tickInterval := gl.tickInterval
 	ticker := time.NewTicker(tickInterval)
 	defer ticker.Stop()
@@ -100,52 +99,40 @@ func (gl *gameLoop) tickLoop(ctx context.Context, eventsCh chan<- event.Event) e
 		case <-ctx.Done():
 			return ctx.Err()
 		case <-ticker.C:
-			if err := gl.tick(ctx, eventsCh, tickInterval); err != nil {
+			if err := gl.tick(ctx, tickInterval); err != nil {
 				return err
 			}
 		}
 	}
 }
 
-// Adds an action to the actions to be processed.
 func (gl *gameLoop) addAction(action action.Action) {
 	gl.actionsMu.Lock()
 	gl.actions = append(gl.actions, action)
 	gl.actionsMu.Unlock()
+	gl.log.Info("Action added!!")
 }
 
-// Reads from a channel of actions, adding each action posted there
-// to the actions to be processed in the next tick.
-func (gl *gameLoop) actionsLoop(ctx context.Context, actionsCh <-chan action.Action) error {
-	for {
-		select {
-		case <-ctx.Done():
-			return ctx.Err()
-		case act, ok := <-actionsCh:
-			if !ok {
-				return errors.New("actionsCh was closed")
-			}
-			gl.addAction(act)
-		}
-	}
-}
-
-func (gl *gameLoop) ensureNotRunning() error {
-	gl.isRunningMu.Lock()
-	defer gl.isRunningMu.Unlock()
-	if gl.isRunning {
-		return errors.New("gameLoop already running")
-	}
-	gl.isRunning = true
+// Adds an action to the actions to be processed.
+func (gl *gameLoop) AddAction(ctx context.Context, action action.Action) error {
+	gl.addAction(action)
 	return nil
 }
 
-func (gl *gameLoop) Run(ctx context.Context, actionCh <-chan action.Action, eventCh chan<- event.Event) error {
-	err := gl.ensureNotRunning()
-	if err != nil {
-		return err
+func (gl *gameLoop) NextEvent(ctx context.Context) (event.Event, error) {
+	select {
+	case <-ctx.Done():
+		return nil, ctx.Err()
+	case evt, ok := <-gl.eventCh:
+		if !ok {
+			return nil, errors.New("eventCh was closed")
+		}
+		return evt, nil
 	}
 
+}
+
+func (gl *gameLoop) Run(ctx context.Context) error {
 	logEntry := logutil.ModuleEntryWithID(gl.log, "gameLoop")
 	logEntry.Info("Starting")
 	defer logEntry.Info("Stopped")
@@ -156,20 +143,9 @@ func (gl *gameLoop) Run(ctx context.Context, actionCh <-chan action.Action, even
 	// Spawn tick loop (updates game)
 	wg.Add(1)
 	go func() {
-		err := gl.tickLoop(ctx, eventCh)
+		err := gl.tickLoop(ctx)
 		if err != nil && err != context.Canceled {
 			logEntry.WithError(err).Error("tickLoop quit")
-		}
-		cancel()
-		wg.Done()
-	}()
-
-	// Spawn actions receiver loop
-	wg.Add(1)
-	go func() {
-		err := gl.actionsLoop(ctx, actionCh)
-		if err != nil && err != context.Canceled {
-			logEntry.WithError(err).Error("actionsLoop quit")
 		}
 		cancel()
 		wg.Done()
@@ -184,6 +160,7 @@ func newGameLoop(log *logrus.Logger, game *model.Game) (*gameLoop, error) {
 		tickInterval: defaultTickInterval,
 		log:          log,
 		game:         game,
+		eventCh:      make(chan event.Event),
 		actions:      make([]action.Action, 0),
 	}, nil
 }

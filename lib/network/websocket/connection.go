@@ -22,9 +22,6 @@ const (
 
 	// Maximum message size allowed from peer.
 	connMaxMessageSize = 512
-
-	// Max number of buffered messages on the send channel.
-	connSendBufferSize = 16
 )
 
 var newline = []byte{'\n'}
@@ -44,10 +41,9 @@ type connection struct {
 
 // The readPump is the single go-routine reading from the underlying
 // ws connection. Read messages are posted on the receiveCh.
-func (c *connection) readPump(receiveCh chan<- []byte) error {
+func (c *connection) readPump(ctx context.Context, receiveCh chan<- []byte) error {
 	defer func() {
 		close(receiveCh)
-		c.conn.Close()
 	}()
 	c.conn.SetReadLimit(connMaxMessageSize)
 	c.conn.SetReadDeadline(time.Now().Add(connPongWait))
@@ -61,13 +57,17 @@ func (c *connection) readPump(receiveCh chan<- []byte) error {
 		if err != nil {
 			return err
 		}
-		receiveCh <- message
+		select {
+		case <-ctx.Done():
+			return ctx.Err()
+		case receiveCh <- message:
+		}
 	}
 }
 
 // The writePump is the single go-routine writing to the underlying
 // ws connection. Messages to write are read from the sendCh.
-func (c *connection) writePump(sendCh <-chan []byte) error {
+func (c *connection) writePump(ctx context.Context, sendCh <-chan []byte) error {
 	ticker := time.NewTicker(connPingPeriod)
 	defer func() {
 		ticker.Stop()
@@ -76,32 +76,19 @@ func (c *connection) writePump(sendCh <-chan []byte) error {
 
 	for {
 		select {
+		case <-ctx.Done():
+			c.conn.SetWriteDeadline(time.Now().Add(connWriteWait))
+			c.conn.WriteMessage(websocket.CloseMessage, []byte{})
+			return ctx.Err()
 		case <-ticker.C:
 			c.conn.SetWriteDeadline(time.Now().Add(connWriteWait))
 			if err := c.conn.WriteMessage(websocket.PingMessage, []byte{}); err != nil {
 				return err
 			}
-		case message, ok := <-sendCh:
+		case message := <-sendCh:
 			c.conn.SetWriteDeadline(time.Now().Add(connWriteWait))
-			if !ok {
-				c.conn.WriteMessage(websocket.CloseMessage, []byte{})
-				return errors.New("sendCh closed")
-			}
-
-			w, err := c.conn.NextWriter(websocket.TextMessage)
+			err := c.conn.WriteMessage(websocket.TextMessage, message)
 			if err != nil {
-				return err
-			}
-			w.Write(message)
-
-			// Add queued chat messages to the current websocket message.
-			n := len(sendCh)
-			for i := 0; i < n; i++ {
-				w.Write(newline)
-				w.Write(<-sendCh)
-			}
-
-			if err := w.Close(); err != nil {
 				return err
 			}
 		}
@@ -109,18 +96,25 @@ func (c *connection) writePump(sendCh <-chan []byte) error {
 	}
 }
 
-// Returns the send channel. Messages on the send channel will
-// be written to the underlying connection. If the send channel
-// is closed, the connection will shutdown.
-func (c *connection) SendCh() chan<- []byte {
-	return c.sendCh
+func (c *connection) ReadMessage(ctx context.Context) ([]byte, error) {
+	select {
+	case <-ctx.Done():
+		return nil, ctx.Err()
+	case message, ok := <-c.receiveCh:
+		if !ok {
+			return nil, errors.New("receiveCh is closed")
+		}
+		return message, nil
+	}
 }
 
-// Returns the receive channel, where messages received from the
-// underlying connection is written. The receive channel is closed
-// if the connection is disconnected.
-func (c *connection) ReceiveCh() <-chan []byte {
-	return c.receiveCh
+func (c *connection) WriteMessage(ctx context.Context, message []byte) error {
+	select {
+	case <-ctx.Done():
+		return ctx.Err()
+	case c.sendCh <- message:
+		return nil
+	}
 }
 
 // Starts the connection and blocks until the connection is
@@ -136,32 +130,21 @@ func (c *connection) Run(ctx context.Context) error {
 
 	wg.Add(1)
 	go func() {
-		err := c.writePump(c.sendCh)
+		defer wg.Done()
+		defer cancel()
+		err := c.writePump(ctx, c.sendCh)
 		if err != nil && err != context.Canceled {
 			logEntry.WithError(err).Error("writePump quit")
 		}
-		cancel()
-		wg.Done()
 	}()
 
-	wg.Add(1)
-	go func() {
-		// The read and write pump does not listen for context cancellation,
-		// instead we listen for cancel here and force close the conn.
-		// Note that generally the connection should be closed "normally" by
-		// the sender closing the sendCh.
-		<-ctx.Done()
-		logEntry.WithError(ctx.Err()).Info("Context done, force closing conn")
-		c.conn.Close()
-		wg.Done()
-	}()
-
-	err := c.readPump(c.receiveCh)
+	err := c.readPump(ctx, c.receiveCh)
 	if err != nil && err != context.Canceled {
 		logEntry.WithError(err).Error("readPump quit")
 	}
 	cancel()
 
+	logEntry.Debug("Waiting for writePump to quit")
 	wg.Wait()
 	return err
 }
@@ -170,7 +153,7 @@ func newConnection(log *logrus.Logger, conn *websocket.Conn) (*connection, error
 	return &connection{
 		log:       log,
 		conn:      conn,
-		sendCh:    make(chan []byte, connSendBufferSize),
+		sendCh:    make(chan []byte),
 		receiveCh: make(chan []byte),
 	}, nil
 }

@@ -21,17 +21,12 @@ func handleWSConn(log *logrus.Logger, clientPool *network.ClientPool, wsConn *we
 		return fmt.Errorf("Failed creating connection: %v", err)
 	}
 
-	client, err := network.NewClient(log, conn)
-	if err != nil {
-		return fmt.Errorf("Failed creating client: %v", err)
-	}
-
 	select {
-	case clientPool.AddCh() <- client:
-		return nil
+	case clientPool.AddCh() <- conn:
 	default:
 		return errors.New("Client dropped, addCh was full")
 	}
+	return nil
 }
 
 // Returns an http handler that connects websockets requests
