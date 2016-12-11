@@ -39,8 +39,8 @@ func (e *baseEvent) MarshalJSON() ([]byte, error) {
 	defer e.jsonMu.Unlock()
 	if e.jsonData == nil {
 		data, err := json.Marshal(&struct {
-			Name string
-			Data interface{}
+			Name string      `json:"name"`
+			Data interface{} `json:"data"`
 		}{
 			Name: e.Name(),
 			Data: e.Data(),

@@ -41,9 +41,9 @@ func (i *Island) SetGrowthRemainder(growthRemainder time.Duration) {
 
 func (i *Island) MarshalJSON() ([]byte, error) {
 	return json.Marshal(&struct {
-		ID   identifier
-		Army *army
-		Size float64
+		ID   identifier `json:"id"`
+		Army *army      `json:"army"`
+		Size float64    `json:"size"`
 	}{
 		ID:   i.identifier,
 		Army: i.army,

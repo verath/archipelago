@@ -38,11 +38,11 @@ func (a *Airplane) MarshalJSON() ([]byte, error) {
 	speedMillis := a.speed * float64(time.Millisecond)
 
 	return json.Marshal(&struct {
-		ID          identifier
-		Army        *army
-		Position    FloatCoordinate
-		Destination Coordinate
-		Speed       float64
+		ID          identifier      `json:"id"`
+		Army        *army           `json:"army"`
+		Position    FloatCoordinate `json:"position"`
+		Destination Coordinate      `json:"destination"`
+		Speed       float64         `json:"speed"`
 	}{
 		ID:          a.identifier,
 		Army:        a.army,

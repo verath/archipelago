@@ -36,8 +36,8 @@ func (p *Player) Equals(other *Player) bool {
 
 func (p *Player) MarshalJSON() ([]byte, error) {
 	return json.Marshal(&struct {
-		ID   identifier
-		Name string
+		ID   identifier `json:"id"`
+		Name string     `json:"name"`
 	}{
 		ID:   p.identifier,
 		Name: p.name,

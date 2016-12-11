@@ -3,11 +3,13 @@ package model
 import "fmt"
 
 type Coordinate struct {
-	X, Y int
+	X int `json:"x"`
+	Y int `json:"y"`
 }
 
 type FloatCoordinate struct {
-	X, Y float64
+	X float64 `json:"x"`
+	Y float64 `json:"y"`
 }
 
 // Checks if the coordinate is within a boundary, seen as a rectangle

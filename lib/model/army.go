@@ -25,8 +25,8 @@ func (a *army) IsOwnedBy(id PlayerID) bool {
 
 func (a *army) MarshalJSON() ([]byte, error) {
 	return json.Marshal(&struct {
-		OwnerID  PlayerID
-		Strength int
+		OwnerID  PlayerID `json:"owner_id"`
+		Strength int      `json:"strength"`
 	}{
 		OwnerID:  a.owner.ID(),
 		Strength: a.strength,

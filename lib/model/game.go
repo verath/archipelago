@@ -67,13 +67,13 @@ func (g *Game) AddAirplane(airplane *Airplane) {
 
 func (g *Game) MarshalJSON() ([]byte, error) {
 	return json.Marshal(&struct {
-		ID            identifier
-		Size          Coordinate
-		Player1       *Player
-		Player2       *Player
-		PlayerNeutral *Player
-		Islands       []*Island
-		Airplanes     []*Airplane
+		ID            identifier  `json:"id"`
+		Size          Coordinate  `json:"size"`
+		Player1       *Player     `json:"player1"`
+		Player2       *Player     `json:"player2"`
+		PlayerNeutral *Player     `json:"player_neutral"`
+		Islands       []*Island   `json:"islands"`
+		Airplanes     []*Airplane `json:"airplanes"`
 	}{
 		ID:            g.identifier,
 		Size:          g.size,
