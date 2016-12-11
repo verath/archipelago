@@ -19,18 +19,16 @@ type playerProxy struct {
 }
 
 func (pp *playerProxy) NextAction(ctx context.Context) (action.Action, error) {
-	_, err := pp.playerClient.NextAction(ctx)
+	actionBuilder, err := pp.playerClient.NextActionBuilder(ctx)
 	if err != nil {
 		return nil, err
 	}
-	// TODO: remove
-	act, _ := action.NewLaunchAction(model.Coordinate{0,0}, model.Coordinate{9,9}, pp.playerID)
-	return act, nil
+	return actionBuilder.Build(pp.playerID)
 }
 
-func (pp *playerProxy) SendEvent(ctx context.Context, evt event.Event) error {
-	playerEvt := evt.ToPlayerEvent(pp.playerID)
-	return pp.playerClient.SendEvent(ctx, playerEvt)
+func (pp *playerProxy) SendEvent(ctx context.Context, eventBuilder event.EventBuilder) error {
+	evt := eventBuilder.Build(pp.playerID)
+	return pp.playerClient.SendEvent(ctx, evt)
 }
 
 func newPlayerProxy(player *model.Player, playerClient *network.Client) (*playerProxy, error) {

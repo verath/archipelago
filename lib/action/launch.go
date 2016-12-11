@@ -13,8 +13,14 @@ type launchAction struct {
 	ownerID model.PlayerID
 }
 
-func (a *launchAction) Apply(g *model.Game) ([]event.Event, error) {
+func (a *launchAction) Apply(g *model.Game) ([]event.EventBuilder, error) {
 	fromIsland := g.Island(a.from)
+	toIsland := g.Island(a.to)
+
+	if a.from == a.to {
+		return nil, errors.New("from == to")
+	}
+
 	if fromIsland == nil {
 		return nil, errors.New("from island does not exist")
 	}
@@ -23,7 +29,7 @@ func (a *launchAction) Apply(g *model.Game) ([]event.Event, error) {
 		return nil, errors.New("from island strength < 2")
 	}
 
-	if g.Island(a.to) == nil {
+	if toIsland == nil {
 		return nil, errors.New("to island does not exist")
 	}
 
@@ -42,17 +48,22 @@ func (a *launchAction) Apply(g *model.Game) ([]event.Event, error) {
 	}
 	g.AddAirplane(airplane)
 	return nil, nil
-
 }
 
-func NewLaunchAction(from model.Coordinate, to model.Coordinate, ownerID model.PlayerID) (*launchAction, error) {
-	if from == to {
-		return nil, errors.New("from == to")
-	}
+func newLaunchAction(from model.Coordinate, to model.Coordinate, ownerID model.PlayerID) (*launchAction, error) {
 	la := &launchAction{
 		from:    from,
 		to:      to,
 		ownerID: ownerID,
 	}
 	return la, nil
+}
+
+type launchActionBuilder struct {
+	From model.Coordinate `json:"from"`
+	To   model.Coordinate `json:"to"`
+}
+
+func (la *launchActionBuilder) Build(playerID model.PlayerID) (Action, error) {
+	return newLaunchAction(la.From, la.To, playerID)
 }

@@ -5,8 +5,10 @@ import (
 	"github.com/verath/archipelago/lib/model"
 )
 
-// An Action is what modifies a game instance. Actions
+// An action is what modifies a game instance. Actions
 // must be applied synchronously.
+//
+// TODO: Generally interface names ends in -er, applier?
 type Action interface {
 
 	// Applies the action to the provided game, returning a slice
@@ -20,11 +22,24 @@ type Action interface {
 	// Invalid actions due to player input is silently ignored
 	// E.g. sending an airplane to a non-existing island.
 	// TODO: we might want to return "InvalidActionEvent" then
-	Apply(*model.Game) ([]event.Event, error)
+	Apply(*model.Game) ([]event.EventBuilder, error)
 }
 
-type ActionFunc func(*model.Game) ([]event.Event, error)
+type ActionFunc func(*model.Game) ([]event.EventBuilder, error)
 
-func (f ActionFunc) Apply(g *model.Game) ([]event.Event, error) {
+func (f ActionFunc) Apply(g *model.Game) ([]event.EventBuilder, error) {
 	return f(g)
+}
+
+type ActionBuilder interface {
+	Build(model.PlayerID) (Action, error)
+}
+
+func BuilderForType(actionType string) (ActionBuilder, bool) {
+	switch actionType {
+	case "launch":
+		return &launchActionBuilder{}, true
+	default:
+		return nil, false
+	}
 }

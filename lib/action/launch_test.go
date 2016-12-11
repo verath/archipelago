@@ -8,7 +8,7 @@ import (
 
 func TestNewLaunchAction(t *stdtesting.T) {
 	player, _ := NewPlayer("")
-	la, err := NewLaunchAction(Coordinate{}, Coordinate{1, 1}, player.ID())
+	la, err := newLaunchAction(Coordinate{}, Coordinate{1, 1}, player.ID())
 	if err != nil {
 		t.Errorf("Expected no error got: %v", err)
 	}
@@ -17,20 +17,12 @@ func TestNewLaunchAction(t *stdtesting.T) {
 	}
 }
 
-func TestNewLaunchAction_SameFromToCoords(t *stdtesting.T) {
-	player, _ := NewPlayer("")
-	_, err := NewLaunchAction(Coordinate{1, 1}, Coordinate{1, 1}, player.ID())
-	if err == nil {
-		t.Error("Expected an error got: nil")
-	}
-}
-
 func TestLaunchAction_Apply(t *stdtesting.T) {
 	game := testing.CreateSimpleGame()
 
 	t.Log("Launching airplane from our island to enemy island...")
 
-	la, _ := NewLaunchAction(Coordinate{0, 0}, Coordinate{9, 9}, game.Player1().ID())
+	la, _ := newLaunchAction(Coordinate{0, 0}, Coordinate{9, 9}, game.Player1().ID())
 	if _, err := la.Apply(game); err != nil {
 		t.Errorf("Expected no error got: %v", err)
 	}
@@ -56,13 +48,13 @@ func TestLaunchAction_Apply_DifferentOwner(t *stdtesting.T) {
 	game := testing.CreateSimpleGame()
 
 	t.Log("Launching airplane from enemy controlled island...")
-	la, _ := NewLaunchAction(Coordinate{0, 0}, Coordinate{9, 9}, game.Player2().ID())
+	la, _ := newLaunchAction(Coordinate{0, 0}, Coordinate{9, 9}, game.Player2().ID())
 	if _, err := la.Apply(game); err == nil {
 		t.Error("Expected an error, got nil")
 	}
 
 	t.Log("Launching airplane from neutral controlled island...")
-	la, _ = NewLaunchAction(Coordinate{4, 4}, Coordinate{9, 9}, game.Player2().ID())
+	la, _ = newLaunchAction(Coordinate{4, 4}, Coordinate{9, 9}, game.Player2().ID())
 	if _, err := la.Apply(game); err == nil {
 		t.Error("Expected an error, got nil")
 	}
@@ -72,13 +64,13 @@ func TestLaunchAction_Apply_NonExistingIslands(t *stdtesting.T) {
 	game := testing.CreateSimpleGame()
 
 	t.Log("Launching airplane from non-existing island...")
-	la, _ := NewLaunchAction(Coordinate{1, 1}, Coordinate{9, 9}, game.Player1().ID())
+	la, _ := newLaunchAction(Coordinate{1, 1}, Coordinate{9, 9}, game.Player1().ID())
 	if _, err := la.Apply(game); err == nil {
 		t.Error("Expected an error, got nil")
 	}
 
 	t.Log("Launching airplane to non-existing island...")
-	la, _ = NewLaunchAction(Coordinate{0, 0}, Coordinate{1, 1}, game.Player1().ID())
+	la, _ = newLaunchAction(Coordinate{0, 0}, Coordinate{1, 1}, game.Player1().ID())
 	if _, err := la.Apply(game); err == nil {
 		t.Error("Expected an error, got nil")
 	}
@@ -89,7 +81,7 @@ func TestLaunchAction_Apply_NoIslandArmy(t *stdtesting.T) {
 
 	t.Log("Launching airplane from island with strength < 2...")
 	game.Island(Coordinate{0, 0}).SetStrength(1)
-	la, _ := NewLaunchAction(Coordinate{0, 0}, Coordinate{9, 9}, game.Player1().ID())
+	la, _ := newLaunchAction(Coordinate{0, 0}, Coordinate{9, 9}, game.Player1().ID())
 	if _, err := la.Apply(game); err == nil {
 		t.Error("Expected an error, got nil")
 	}

@@ -32,7 +32,7 @@ type gameLoop struct {
 	// the events *might* have been updated.
 	eventsSCh chan bool
 	eventsMu  sync.Mutex
-	events    []event.Event
+	events    []event.EventBuilder
 
 	actionsMu sync.Mutex
 	actions   []action.Action
@@ -58,7 +58,7 @@ func (gl *gameLoop) tick(delta time.Duration) error {
 	actions = append(actions, tickAction)
 
 	// Process actions
-	events := make([]event.Event, 0)
+	events := make([]event.EventBuilder, 0)
 	for _, act := range actions {
 		evts, err := act.Apply(gl.game)
 		if err != nil {
@@ -116,8 +116,8 @@ func (gl *gameLoop) AddAction(ctx context.Context, action action.Action) error {
 
 // Returns the next event from the list of events. Blocks until an event
 // can be returned or the context is cancelled.
-func (gl *gameLoop) NextEvent(ctx context.Context) (event.Event, error) {
-	var evt event.Event
+func (gl *gameLoop) NextEvent(ctx context.Context) (event.EventBuilder, error) {
+	var evt event.EventBuilder
 	for {
 		// Try get the first event
 		gl.eventsMu.Lock()
@@ -147,6 +147,13 @@ func (gl *gameLoop) Run(ctx context.Context) error {
 	logEntry.Info("Starting")
 	defer logEntry.Info("Stopped")
 
+	// Add a game start event as the first event
+	// TODO: should probably move this somewhere else
+	createdEvt := event.NewGameStartEventBuilder()
+	gl.eventsMu.Lock()
+	gl.events = append(gl.events, createdEvt)
+	gl.eventsMu.Unlock()
+
 	err := gl.tickLoop(ctx)
 	if err != nil && err != context.Canceled {
 		logEntry.WithError(err).Error("tickLoop quit")
@@ -161,7 +168,7 @@ func newGameLoop(log *logrus.Logger, game *model.Game) (*gameLoop, error) {
 		log:          log,
 		game:         game,
 		eventsSCh:    make(chan bool, 0),
-		events:       make([]event.Event, 0),
+		events:       make([]event.EventBuilder, 0),
 		actions:      make([]action.Action, 0),
 	}, nil
 }

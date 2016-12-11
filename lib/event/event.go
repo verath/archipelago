@@ -6,11 +6,17 @@ import (
 	"sync"
 )
 
-type Event interface {
-	ToPlayerEvent(playerID model.PlayerID) PlayerEvent
+type EventBuilder interface {
+	Build(model.PlayerID) *Event
 }
 
-type baseEvent struct {
+type EventBuilderFunc func(model.PlayerID) *Event
+
+func (f EventBuilderFunc) Build(playerID model.PlayerID) *Event {
+	return f(playerID)
+}
+
+type Event struct {
 	name string
 	data interface{}
 
@@ -18,21 +24,11 @@ type baseEvent struct {
 	jsonData []byte
 }
 
-func (e *baseEvent) Name() string {
-	return e.name
-}
-
-func (e *baseEvent) Data() interface{} {
-	return e.data
-}
-
-func (e *baseEvent) ToPlayerEvent(playerID model.PlayerID) PlayerEvent {
-	// Default implementation is to send the same event, no matter
-	// the player id provided.
+func (e *Event) Build(playerID model.PlayerID) *Event {
 	return e
 }
 
-func (e *baseEvent) MarshalJSON() ([]byte, error) {
+func (e *Event) MarshalJSON() ([]byte, error) {
 	// Default implementation is to do the json encoding only once,
 	// an return the cached encoding afterwards.
 	e.jsonMu.Lock()
@@ -42,8 +38,8 @@ func (e *baseEvent) MarshalJSON() ([]byte, error) {
 			Name string      `json:"name"`
 			Data interface{} `json:"data"`
 		}{
-			Name: e.Name(),
-			Data: e.Data(),
+			Name: e.name,
+			Data: e.data,
 		})
 		if err != nil {
 			return nil, err
@@ -53,8 +49,8 @@ func (e *baseEvent) MarshalJSON() ([]byte, error) {
 	return e.jsonData, nil
 }
 
-func newBaseEvent(name string, data interface{}) *baseEvent {
-	return &baseEvent{
+func newEvent(name string, data interface{}) *Event {
+	return &Event{
 		name: name,
 		data: data,
 	}

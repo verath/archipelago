@@ -6,14 +6,14 @@ import (
 
 const EventNameTick = "tick"
 
-type TickEvent struct {
-	*baseEvent
-}
-
 type TickEventData *model.Game
 
-func NewTickEvent(game *model.Game) *TickEvent {
+type TickEventBuilder struct {
+	*Event
+}
+
+func NewTickEventBuilder(game *model.Game) EventBuilder {
 	data := TickEventData(game.Copy())
-	evt := newBaseEvent(EventNameTick, data)
-	return &TickEvent{evt}
+	evt := newEvent(EventNameTick, data)
+	return &TickEventBuilder{evt}
 }

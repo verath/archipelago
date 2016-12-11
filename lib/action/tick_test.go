@@ -18,12 +18,6 @@ func TestNewTickAction(t *stdtesting.T) {
 	}
 }
 
-func TestNewTickAction_NegativeDelta(t *stdtesting.T) {
-	_, err := NewTickAction(-1)
-	if err == nil {
-		t.Error("Expected an error, got nil")
-	}
-}
 
 func TestTickAction_Apply_Islands(t *stdtesting.T) {
 	game := testing.CreateSimpleGame()
@@ -88,8 +82,8 @@ func TestTickAction_Apply_AddsTickEvent(t *stdtesting.T) {
 	}
 
 	evt := events[0]
-	if _, ok := evt.(*event.TickEvent); !ok {
-		t.Error("Expected a TickEvent to have been created")
+	if _, ok := evt.(*event.TickEventBuilder); !ok {
+		t.Error("Expected a TickEventBuilder to have been created")
 	}
 }
 

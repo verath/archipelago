@@ -60,22 +60,22 @@ func updateIslands(g *model.Game, delta time.Duration) error {
 	return nil
 }
 
-func (a *tickAction) Apply(g *model.Game) ([]event.Event, error) {
-	if err := updateAirplanes(g, a.delta); err != nil {
+func (ta *tickAction) Apply(game *model.Game) ([]event.EventBuilder, error) {
+	if ta.delta < 0 {
+		return nil, errors.New("delta must be positive")
+	}
+	if err := updateAirplanes(game, ta.delta); err != nil {
 		return nil, err
 	}
-	if err := updateIslands(g, a.delta); err != nil {
+	if err := updateIslands(game, ta.delta); err != nil {
 		return nil, err
 	}
 
-	tickEvent := event.NewTickEvent(g)
-	return []event.Event{tickEvent}, nil
+	tickEvtBuilder := event.NewTickEventBuilder(game)
+	return []event.EventBuilder{tickEvtBuilder}, nil
 }
 
 func NewTickAction(delta time.Duration) (*tickAction, error) {
-	if delta < 0 {
-		return nil, errors.New("delta must be positive")
-	}
 	ta := &tickAction{
 		delta: delta,
 	}
