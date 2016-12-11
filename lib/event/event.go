@@ -23,6 +23,8 @@ func (e *baseEvent) Data() interface{} {
 }
 
 func (e *baseEvent) ToPlayerEvent(playerID model.PlayerID) PlayerEvent {
+	// Default implementation is to send the same event, no matter
+	// the player id provided.
 	return e
 }
 

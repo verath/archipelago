@@ -23,6 +23,7 @@ func (pp *playerProxy) NextAction(ctx context.Context) (action.Action, error) {
 	if err != nil {
 		return nil, err
 	}
+	// TODO: remove
 	act, _ := action.NewLaunchAction(model.Coordinate{0,0}, model.Coordinate{9,9}, pp.playerID)
 	return act, nil
 }
