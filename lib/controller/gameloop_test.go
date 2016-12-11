@@ -36,19 +36,19 @@ func TestGameLoop_AddAction(t *stdtesting.T) {
 	a1Applied := false
 	a1 := action.ActionFunc(func(g *model.Game) ([]event.Event, error) {
 		a1Applied = true
-		return []event.Event{}, nil
+		return nil, nil
 	})
 
 	t.Log("Tick 1: action added")
 	gl.addAction(a1)
-	gl.applyActions(1 * time.Millisecond)
+	gl.tick(1 * time.Millisecond)
 	if !a1Applied {
 		t.Error("Action was not applied")
 	}
 
 	t.Log("Tick 2: without action")
 	a1Applied = false
-	gl.applyActions(1 * time.Millisecond)
+	gl.tick(1 * time.Millisecond)
 	if a1Applied {
 		t.Error("Action was applied twice")
 	}
@@ -56,7 +56,7 @@ func TestGameLoop_AddAction(t *stdtesting.T) {
 	t.Log("Tick 3: action added")
 	a1Applied = false
 	gl.addAction(a1)
-	gl.applyActions(1 * time.Millisecond)
+	gl.tick(1 * time.Millisecond)
 	if !a1Applied {
 		t.Error("Action was not applied")
 	}
