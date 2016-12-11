@@ -14,6 +14,6 @@ type TickEventData *model.Game
 
 func NewTickEvent(game *model.Game) *TickEvent {
 	data := TickEventData(game.Copy())
-	evt := newEvent(EventNameTick, data)
+	evt := newBaseEvent(EventNameTick, data)
 	return &TickEvent{evt}
 }
