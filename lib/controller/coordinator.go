@@ -23,6 +23,14 @@ type GameCoordinator struct {
 }
 
 func (gc *GameCoordinator) startNewGame(ctx context.Context, p1Client, p2Client *network.Client) error {
+	defer func() {
+		// TODO: we probably don't want to disconnect clients after
+		// each game. Instead should probably be added back to the
+		// client pool, if they are still connected.
+		p1Client.Disconnect()
+		p2Client.Disconnect()
+	}()
+
 	game, err := model.CreateBasicGame()
 	if err != nil {
 		return fmt.Errorf("Error creating game: %v", err)

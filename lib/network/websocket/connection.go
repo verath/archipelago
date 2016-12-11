@@ -8,6 +8,7 @@ import (
 	"github.com/verath/archipelago/lib/logutil"
 	"sync"
 	"time"
+	"github.com/verath/archipelago/lib/network"
 )
 
 const (
@@ -33,8 +34,12 @@ var newline = []byte{'\n'}
 // with some minor modifications. See:
 // https://github.com/gorilla/websocket/blob/master/examples/chat/client.go
 type connection struct {
-	log       *logrus.Logger
-	conn      *websocket.Conn
+	log  *logrus.Logger
+	conn *websocket.Conn
+
+	// Channel closed when we have been asked to disconnect
+	disconnectCh chan struct{}
+
 	sendCh    chan []byte
 	receiveCh chan []byte
 }
@@ -67,18 +72,27 @@ func (c *connection) readPump(ctx context.Context, receiveCh chan<- []byte) erro
 
 // The writePump is the single go-routine writing to the underlying
 // ws connection. Messages to write are read from the sendCh.
-func (c *connection) writePump(ctx context.Context, sendCh <-chan []byte) error {
+func (c *connection) writePump(ctx context.Context, disconnectCh <-chan struct{}, sendCh <-chan []byte) error {
 	ticker := time.NewTicker(connPingPeriod)
 	defer func() {
 		ticker.Stop()
 		c.conn.Close()
 	}()
 
+	// Helper function for attempting to write a close message
+	// to the connection.
+	writeClose := func() {
+		c.conn.SetWriteDeadline(time.Now().Add(connWriteWait))
+		c.conn.WriteMessage(websocket.CloseMessage, []byte{})
+	}
+
 	for {
 		select {
+		case <- disconnectCh:
+			writeClose()
+			return network.Disconnected
 		case <-ctx.Done():
-			c.conn.SetWriteDeadline(time.Now().Add(connWriteWait))
-			c.conn.WriteMessage(websocket.CloseMessage, []byte{})
+			writeClose()
 			return ctx.Err()
 		case <-ticker.C:
 			c.conn.SetWriteDeadline(time.Now().Add(connWriteWait))
@@ -117,6 +131,15 @@ func (c *connection) WriteMessage(ctx context.Context, message []byte) error {
 	}
 }
 
+func (c *connection) Disconnect() {
+	select {
+	case <-c.disconnectCh:
+		// Already signaled to disconnect
+	default:
+		close(c.disconnectCh)
+	}
+}
+
 // Starts the connection and blocks until the connection is
 // disconnected. Canceling the context will force the connection
 // to shutdown. Run always returns a non-nil error
@@ -132,7 +155,7 @@ func (c *connection) Run(ctx context.Context) error {
 	go func() {
 		defer wg.Done()
 		defer cancel()
-		err := c.writePump(ctx, c.sendCh)
+		err := c.writePump(ctx, c.disconnectCh, c.sendCh)
 		if err != nil && err != context.Canceled {
 			logEntry.WithError(err).Error("writePump quit")
 		}
@@ -151,9 +174,10 @@ func (c *connection) Run(ctx context.Context) error {
 
 func newConnection(log *logrus.Logger, conn *websocket.Conn) (*connection, error) {
 	return &connection{
-		log:       log,
-		conn:      conn,
-		sendCh:    make(chan []byte),
-		receiveCh: make(chan []byte),
+		log:          log,
+		conn:         conn,
+		disconnectCh: make(chan struct{}),
+		sendCh:       make(chan []byte),
+		receiveCh:    make(chan []byte),
 	}, nil
 }

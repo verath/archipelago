@@ -31,6 +31,10 @@ func (c *Client) NextAction(ctx context.Context) (action.PlayerAction, error) {
 	return nil, nil
 }
 
+func (c * Client) Disconnect() {
+	c.conn.Disconnect()
+}
+
 func NewClient(log *logrus.Logger, conn Connection) (*Client, error) {
 	return &Client{
 		log:       log,
