@@ -15,7 +15,7 @@ type Airplane struct {
 	speed float64
 }
 
-const airplaneDefaultSpeed = 1 / float64(time.Second)
+const airplaneDefaultSpeed = 1 / float64(10*time.Second)
 
 func (a *Airplane) Position() FloatCoordinate {
 	return a.position
