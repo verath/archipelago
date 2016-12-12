@@ -16,7 +16,8 @@ func updateAirplanes(g *model.Game, delta time.Duration) error {
 	for _, airplane := range g.Airplanes() {
 		speed := airplane.Speed()
 		pos := airplane.Position()
-		dest := airplane.Destination().ToFloatCoordinate()
+		// Our target is an island, look up its position
+		dest := g.Island(airplane.Destination()).Position().ToFloatCoordinate()
 
 		thrust := speed * float64(delta)
 		dx := dest.X - pos.X
@@ -26,8 +27,9 @@ func updateAirplanes(g *model.Game, delta time.Duration) error {
 		moveX := thrust * (dx / dist)
 		moveY := thrust * (dy / dist)
 
-		airplane.Position().X += moveX
-		airplane.Position().Y += moveY
+		pos.X += moveX
+		pos.Y += moveY
+		airplane.SetPosition(pos)
 	}
 	return nil
 }

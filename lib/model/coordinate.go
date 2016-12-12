@@ -13,9 +13,9 @@ type FloatCoordinate struct {
 }
 
 // Checks if the coordinate is within a boundary, seen as a rectangle
-// from (0,0) to the boundary x and y coordinates
+// from (0,0) to the boundary x and y coordinates.
 func (c Coordinate) IsWithin(boundary Coordinate) bool {
-	return c.X <= boundary.X && c.Y <= boundary.Y
+	return c.X < boundary.X && c.Y < boundary.Y
 }
 
 func (c Coordinate) ToFloatCoordinate() FloatCoordinate {

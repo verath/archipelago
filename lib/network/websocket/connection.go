@@ -6,9 +6,9 @@ import (
 	"github.com/Sirupsen/logrus"
 	"github.com/gorilla/websocket"
 	"github.com/verath/archipelago/lib/logutil"
+	"github.com/verath/archipelago/lib/network"
 	"sync"
 	"time"
-	"github.com/verath/archipelago/lib/network"
 )
 
 const (
@@ -88,7 +88,7 @@ func (c *connection) writePump(ctx context.Context, disconnectCh <-chan struct{}
 
 	for {
 		select {
-		case <- disconnectCh:
+		case <-disconnectCh:
 			writeClose()
 			return network.Disconnected
 		case <-ctx.Done():
@@ -136,6 +136,7 @@ func (c *connection) Disconnect() {
 	case <-c.disconnectCh:
 		// Already signaled to disconnect
 	default:
+		// TODO: race, fix
 		close(c.disconnectCh)
 	}
 }

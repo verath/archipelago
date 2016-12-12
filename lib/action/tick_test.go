@@ -22,8 +22,9 @@ func TestNewTickAction(t *stdtesting.T) {
 func TestTickAction_Apply_Islands(t *stdtesting.T) {
 	game := testing.CreateSimpleGame()
 
-	i1 := game.Island(Coordinate{0, 0})
-	i2 := game.Island(Coordinate{9, 9})
+	i1 := game.Island("p1")
+	i2 := game.Island("p2")
+	in := game.Island("pn")
 	i1.SetSize(1)
 	i2.SetSize(2)
 
@@ -41,17 +42,18 @@ func TestTickAction_Apply_Islands(t *stdtesting.T) {
 		t.Errorf("Expected island strength of player island size 2.0 to be 12, was %d", i2.Strength())
 	}
 
-	ni := game.Island(Coordinate{4, 4})
-	if ni.Strength() != 10 {
-		t.Errorf("Expected island strength of neutral to remain 10, was %d", ni.Strength())
+	if in.Strength() != 10 {
+		t.Errorf("Expected island strength of neutral to remain 10, was %d", in.Strength())
 	}
 }
 
 func TestTickAction_Apply_Airplanes(t *stdtesting.T) {
 	game := testing.CreateSimpleGame()
+	fromIsland := game.Island("p1")
+	toIsland := game.Island("bottom-left")
 
 	// Add an airplane from 0,0 -> 0,9, moving at a speed of one coordinate/sec
-	airplane, _ := NewAirplane(Coordinate{0, 0}, Coordinate{0, 9}, game.Player1(), 10)
+	airplane, _ := NewAirplane(fromIsland, toIsland, game.Player1(), 10)
 	airplane.SetSpeed(1 / float64(time.Second))
 	game.AddAirplane(airplane)
 
@@ -62,7 +64,7 @@ func TestTickAction_Apply_Airplanes(t *stdtesting.T) {
 	}
 
 	expectedPos := FloatCoordinate{X: 0, Y: 1}
-	actualPos := *game.Airplanes()[0].Position()
+	actualPos := game.Airplanes()[0].Position()
 	if actualPos != expectedPos {
 		t.Errorf("Expected airplane pos to be %v was %v", expectedPos, actualPos)
 	}

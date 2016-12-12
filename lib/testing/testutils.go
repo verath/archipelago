@@ -22,13 +22,15 @@ func CreateSimpleGame() *Game {
 	p1, _ := NewPlayer("player1")
 	p2, _ := NewPlayer("player2")
 	pn, _ := NewPlayer("neutral")
-	p1Island, _ := NewIsland(p1, 10, IslandSizeMedium)
-	p2Island, _ := NewIsland(p2, 10, IslandSizeMedium)
-	neIsland, _ := NewIsland(pn, 10, IslandSizeMedium)
+	p1Island, _ := NewIslandWithID(Identifier("p1"), Coordinate{0, 0}, IslandSizeMedium, p1, 10)
+	p2Island, _ := NewIslandWithID(Identifier("p2"), Coordinate{9, 9}, IslandSizeMedium, p2, 10)
+	neIsland, _ := NewIslandWithID(Identifier("pn"), Coordinate{4, 4}, IslandSizeMedium, pn, 10)
+	ne2Island, _ := NewIslandWithID(Identifier("bottom-left"), Coordinate{0, 9}, IslandSizeMedium, pn, 10)
 
 	return NewGameBuilder(Coordinate{10, 10}, p1, p2, pn).
-		AddIsland(Coordinate{0, 0}, p1Island).
-		AddIsland(Coordinate{9, 9}, p2Island).
-		AddIsland(Coordinate{4, 4}, neIsland).
+		AddIsland(p1Island).
+		AddIsland(p2Island).
+		AddIsland(neIsland).
+		AddIsland(ne2Island).
 		BuildOrPanic()
 }

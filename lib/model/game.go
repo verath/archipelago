@@ -7,7 +7,7 @@ import (
 )
 
 type Game struct {
-	identifier
+	Identifier
 
 	size          Coordinate
 	player1       *Player
@@ -15,12 +15,6 @@ type Game struct {
 	playerNeutral *Player
 	islands       []*Island
 	airplanes     []*Airplane
-}
-
-func coordToIslandIndex(size Coordinate, coord Coordinate) (idx int, ok bool) {
-	idx = coord.X + (coord.Y * size.X)
-	ok = (idx >= 0 && idx < (size.X*size.Y))
-	return idx, ok
 }
 
 func (g *Game) Player1() *Player {
@@ -35,23 +29,31 @@ func (g *Game) PlayerNeutral() *Player {
 	return g.playerNeutral
 }
 
-func (g *Game) Island(coord Coordinate) *Island {
-	idx, _ := coordToIslandIndex(g.size, coord)
-	return g.islands[idx]
+func (g *Game) Player(id PlayerID) *Player {
+	if g.player1.ID().Equals(id) {
+		return g.player1
+	}
+	if g.player2.ID().Equals(id) {
+		return g.player2
+	}
+	if g.playerNeutral.ID().Equals(id) {
+		return g.playerNeutral
+	}
+	return nil
+}
+
+// Returns an island by id, or nil if the island does not exist.
+func (g *Game) Island(id IslandID) *Island {
+	for _, island := range g.islands {
+		if island.ID().Equals(id) {
+			return island
+		}
+	}
+	return nil
 }
 
 func (g *Game) Islands() []*Island {
-	// Our internal representation of islands has nil values
-	// representing an empty "tile". These values are not
-	// interesting when iterating islands
-	// TODO: cache this slice of "real" islands?
-	islands := make([]*Island, 0)
-	for _, island := range g.islands {
-		if island != nil {
-			islands = append(islands, island)
-		}
-	}
-	return islands
+	return g.islands
 }
 
 func (g *Game) Airplanes() []*Airplane {
@@ -67,7 +69,7 @@ func (g *Game) AddAirplane(airplane *Airplane) {
 
 func (g *Game) MarshalJSON() ([]byte, error) {
 	return json.Marshal(&struct {
-		ID            identifier  `json:"id"`
+		ID            Identifier  `json:"id"`
 		Size          Coordinate  `json:"size"`
 		Player1       *Player     `json:"player1"`
 		Player2       *Player     `json:"player2"`
@@ -75,7 +77,7 @@ func (g *Game) MarshalJSON() ([]byte, error) {
 		Islands       []*Island   `json:"islands"`
 		Airplanes     []*Airplane `json:"airplanes"`
 	}{
-		ID:            g.identifier,
+		ID:            g.Identifier,
 		Size:          g.size,
 		Player1:       g.player1,
 		Player2:       g.player2,
@@ -92,12 +94,10 @@ func (g *Game) Copy() *Game {
 	}
 	islandsCopy := make([]*Island, len(g.islands))
 	for i, island := range g.islands {
-		if island != nil {
-			islandsCopy[i] = island.Copy()
-		}
+		islandsCopy[i] = island.Copy()
 	}
 	return &Game{
-		identifier:    g.identifier,
+		Identifier:    g.Identifier,
 		size:          g.size,
 		player1:       g.player1.Copy(),
 		player2:       g.player2.Copy(),
@@ -108,12 +108,12 @@ func (g *Game) Copy() *Game {
 }
 
 func newGame(size Coordinate, player1, player2, playerNeutral *Player, islands []*Island, airplanes []*Airplane) (*Game, error) {
-	identifier, err := newIdentifier()
+	identifier, err := NewIdentifier()
 	if err != nil {
 		return nil, err
 	}
 	return &Game{
-		identifier:    identifier,
+		Identifier:    identifier,
 		size:          size,
 		player1:       player1,
 		player2:       player2,
@@ -128,7 +128,7 @@ type GameBuilder struct {
 	player1       *Player
 	player2       *Player
 	playerNeutral *Player
-	islandMap     map[Coordinate]*Island
+	islands       []*Island
 	airplanes     []*Airplane
 }
 
@@ -138,13 +138,13 @@ func NewGameBuilder(size Coordinate, player1, player2, playerNeutral *Player) *G
 		player1:       player1,
 		player2:       player2,
 		playerNeutral: playerNeutral,
-		islandMap:     make(map[Coordinate]*Island),
+		islands:       make([]*Island, 0),
 		airplanes:     make([]*Airplane, 0),
 	}
 }
 
-func (gb *GameBuilder) AddIsland(coord Coordinate, island *Island) *GameBuilder {
-	gb.islandMap[coord] = island
+func (gb *GameBuilder) AddIsland(island *Island) *GameBuilder {
+	gb.islands = append(gb.islands, island)
 	return gb
 }
 
@@ -161,16 +161,20 @@ func (gb *GameBuilder) Build() (*Game, error) {
 	if gb.playerNeutral == nil {
 		return nil, errors.New("playerNeutral cannot be nil")
 	}
-	// Transform: map[Coordinate]*Island -> []*Island
-	islands := make([]*Island, gb.size.X*gb.size.Y)
-	for coord, island := range gb.islandMap {
-		idx, ok := coordToIslandIndex(gb.size, coord)
-		if !ok {
-			return nil, fmt.Errorf("Island out of bounds (coord: %v; size: %v)", coord, gb.size)
+	// Make sure all islands are within the allowed bounds, and that
+	// no islands has the same location
+	for i, island := range gb.islands {
+		if !island.position.IsWithin(gb.size) {
+			return nil, fmt.Errorf("Island out of bounds (coord: %v; size: %v)", island.position, gb.size)
 		}
-		islands[idx] = island
+
+		for j, other := range gb.islands {
+			if i != j && island.position == other.position {
+				return nil, fmt.Errorf("Islands has same position (coord: %v)", island.position)
+			}
+		}
 	}
-	return newGame(gb.size, gb.player1, gb.player2, gb.playerNeutral, islands, gb.airplanes)
+	return newGame(gb.size, gb.player1, gb.player2, gb.playerNeutral, gb.islands, gb.airplanes)
 }
 
 func (gb *GameBuilder) BuildOrPanic() *Game {

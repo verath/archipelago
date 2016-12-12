@@ -1,14 +1,16 @@
 package action
 
 import (
-	. "github.com/verath/archipelago/lib/model"
 	"github.com/verath/archipelago/lib/testing"
 	stdtesting "testing"
 )
 
 func TestNewLaunchAction(t *stdtesting.T) {
-	player, _ := NewPlayer("")
-	la, err := newLaunchAction(Coordinate{}, Coordinate{1, 1}, player.ID())
+	game := testing.CreateSimpleGame()
+	fromIsland := game.Island("p1")
+	toIsland := game.Island("p2")
+
+	la, err := newLaunchAction(fromIsland.ID(), toIsland.ID(), game.Player1().ID())
 	if err != nil {
 		t.Errorf("Expected no error got: %v", err)
 	}
@@ -19,10 +21,12 @@ func TestNewLaunchAction(t *stdtesting.T) {
 
 func TestLaunchAction_Apply(t *stdtesting.T) {
 	game := testing.CreateSimpleGame()
+	fromIsland := game.Island("p1")
+	toIsland := game.Island("p2")
 
 	t.Log("Launching airplane from our island to enemy island...")
 
-	la, _ := newLaunchAction(Coordinate{0, 0}, Coordinate{9, 9}, game.Player1().ID())
+	la, _ := newLaunchAction(fromIsland.ID(), toIsland.ID(), game.Player1().ID())
 	if _, err := la.Apply(game); err != nil {
 		t.Errorf("Expected no error got: %v", err)
 	}
@@ -31,7 +35,6 @@ func TestLaunchAction_Apply(t *stdtesting.T) {
 		t.Errorf("Expected num airplanes == 1, was: %v", numPlanes)
 	}
 
-	fromIsland := game.Island(Coordinate{0, 0})
 	if fromIsland.Strength() != 5 {
 		t.Errorf("Expected from island to have a strength of 5, was: %d",
 			fromIsland.Strength())
@@ -46,15 +49,17 @@ func TestLaunchAction_Apply(t *stdtesting.T) {
 
 func TestLaunchAction_Apply_DifferentOwner(t *stdtesting.T) {
 	game := testing.CreateSimpleGame()
+	fromIsland := game.Island("p1")
+	toIsland := game.Island("p2")
 
 	t.Log("Launching airplane from enemy controlled island...")
-	la, _ := newLaunchAction(Coordinate{0, 0}, Coordinate{9, 9}, game.Player2().ID())
+	la, _ := newLaunchAction(fromIsland.ID(), toIsland.ID(), game.Player2().ID())
 	if _, err := la.Apply(game); err == nil {
 		t.Error("Expected an error, got nil")
 	}
 
 	t.Log("Launching airplane from neutral controlled island...")
-	la, _ = newLaunchAction(Coordinate{4, 4}, Coordinate{9, 9}, game.Player2().ID())
+	la, _ = newLaunchAction(fromIsland.ID(), toIsland.ID(), game.Player2().ID())
 	if _, err := la.Apply(game); err == nil {
 		t.Error("Expected an error, got nil")
 	}
@@ -62,15 +67,17 @@ func TestLaunchAction_Apply_DifferentOwner(t *stdtesting.T) {
 
 func TestLaunchAction_Apply_NonExistingIslands(t *stdtesting.T) {
 	game := testing.CreateSimpleGame()
+	fromIsland := game.Island("p1")
+	toIsland := game.Island("p2")
 
 	t.Log("Launching airplane from non-existing island...")
-	la, _ := newLaunchAction(Coordinate{1, 1}, Coordinate{9, 9}, game.Player1().ID())
+	la, _ := newLaunchAction("-", toIsland.ID(), game.Player1().ID())
 	if _, err := la.Apply(game); err == nil {
 		t.Error("Expected an error, got nil")
 	}
 
 	t.Log("Launching airplane to non-existing island...")
-	la, _ = newLaunchAction(Coordinate{0, 0}, Coordinate{1, 1}, game.Player1().ID())
+	la, _ = newLaunchAction(fromIsland.ID(), "-", game.Player1().ID())
 	if _, err := la.Apply(game); err == nil {
 		t.Error("Expected an error, got nil")
 	}
@@ -78,10 +85,12 @@ func TestLaunchAction_Apply_NonExistingIslands(t *stdtesting.T) {
 
 func TestLaunchAction_Apply_NoIslandArmy(t *stdtesting.T) {
 	game := testing.CreateSimpleGame()
+	fromIsland := game.Island("p1")
+	toIsland := game.Island("p2")
 
 	t.Log("Launching airplane from island with strength < 2...")
-	game.Island(Coordinate{0, 0}).SetStrength(1)
-	la, _ := newLaunchAction(Coordinate{0, 0}, Coordinate{9, 9}, game.Player1().ID())
+	fromIsland.SetStrength(1)
+	la, _ := newLaunchAction(fromIsland.ID(), toIsland.ID(), game.Player1().ID())
 	if _, err := la.Apply(game); err == nil {
 		t.Error("Expected an error, got nil")
 	}

@@ -2,20 +2,20 @@ package model
 
 import "github.com/nu7hatch/gouuid"
 
-type identifier string
+type Identifier string
 
-func (id identifier) ID() identifier {
+func (id Identifier) ID() Identifier {
 	return id
 }
 
-func (id identifier) Equals(other identifier) bool {
+func (id Identifier) Equals(other Identifier) bool {
 	return id == other
 }
 
-func newIdentifier() (identifier, error) {
+func NewIdentifier() (Identifier, error) {
 	id, err := uuid.NewV4()
 	if err != nil {
 		return "", err
 	}
-	return identifier(id.String()), nil
+	return Identifier(id.String()), nil
 }
