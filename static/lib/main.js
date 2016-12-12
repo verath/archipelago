@@ -1,7 +1,7 @@
-import * as PIXI from 'pixi.js'
-import GameController from './controller/game'
-import GameModel from "./model/game";
-import GameView from "./view/game";
+import * as PIXI from 'pixijs'
+import GameController from './controller/GameController'
+import GameModel from "./model/GameModel";
+import GameView from "./view/GameView";
 
 (function main() {
     let renderer = PIXI.autoDetectRenderer(
