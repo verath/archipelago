@@ -19,7 +19,7 @@ System.config({
     "core-js": "npm:core-js@1.2.7",
     "eventemitter3": "npm:eventemitter3@2.0.2",
     "jquery": "npm:jquery@3.1.1",
-    "pixi.js": "npm:pixi.js@4.2.3",
+    "pixijs": "npm:pixi.js@4.2.3",
     "github:jspm/nodelibs-assert@0.1.0": {
       "assert": "npm:assert@1.4.1"
     },
