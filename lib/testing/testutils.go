@@ -9,7 +9,7 @@ func CreateEmptyGame() *Game {
 	p1, _ := NewPlayer("player1")
 	p2, _ := NewPlayer("player2")
 	pn, _ := NewPlayer("neutral")
-	return NewGameBuilder(Coordinate{10, 10}, p1, p2, pn).BuildOrPanic()
+	return NewGameBuilder(Coordinate{9, 9}, p1, p2, pn).BuildOrPanic()
 }
 
 // Creates a 10x10 board with 3 island:
@@ -23,11 +23,11 @@ func CreateSimpleGame() *Game {
 	p2, _ := NewPlayer("player2")
 	pn, _ := NewPlayer("neutral")
 	p1Island, _ := NewIslandWithID(Identifier("p1"), Coordinate{0, 0}, IslandSizeMedium, p1, 10)
-	p2Island, _ := NewIslandWithID(Identifier("p2"), Coordinate{9, 9}, IslandSizeMedium, p2, 10)
+	p2Island, _ := NewIslandWithID(Identifier("p2"), Coordinate{8, 8}, IslandSizeMedium, p2, 10)
 	neIsland, _ := NewIslandWithID(Identifier("pn"), Coordinate{4, 4}, IslandSizeMedium, pn, 10)
-	ne2Island, _ := NewIslandWithID(Identifier("bottom-left"), Coordinate{0, 9}, IslandSizeMedium, pn, 10)
+	ne2Island, _ := NewIslandWithID(Identifier("bottom-left"), Coordinate{0, 8}, IslandSizeMedium, pn, 10)
 
-	return NewGameBuilder(Coordinate{10, 10}, p1, p2, pn).
+	return NewGameBuilder(Coordinate{9, 9}, p1, p2, pn).
 		AddIsland(p1Island).
 		AddIsland(p2Island).
 		AddIsland(neIsland).

@@ -29,7 +29,7 @@ func createIslands(p1, p2, pn *Player) (p1Island, p2Island, neIsland *Island, er
 		err = fmt.Errorf("Error creating p1Island: %v", err)
 		return
 	}
-	p2Island, err = NewIsland(Coordinate{9, 9}, IslandSizeMedium, p2, 10)
+	p2Island, err = NewIsland(Coordinate{8, 8}, IslandSizeMedium, p2, 10)
 	if err != nil {
 		err = fmt.Errorf("Error creating p2Island: %v", err)
 		return
@@ -54,7 +54,7 @@ func CreateBasicGame() (*Game, error) {
 		return nil, fmt.Errorf("Error creating islands: %v", err)
 	}
 
-	return NewGameBuilder(Coordinate{10, 10}, p1, p2, pn).
+	return NewGameBuilder(Coordinate{9, 9}, p1, p2, pn).
 		AddIsland(p1Island).
 		AddIsland(p2Island).
 		AddIsland(neIsland).
