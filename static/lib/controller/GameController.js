@@ -10,7 +10,6 @@ export default class GameController {
     constructor(gameModel, gameView) {
         this._gameModel = gameModel;
         this._gameView = gameView;
-        this._playerId = '';
 
         this._ticker = new PIXI.ticker.Ticker();
         this._ticker.add(this._onTick, this);
@@ -25,7 +24,7 @@ export default class GameController {
             throw new Error("Start event when already started");
         }
         this._started = true;
-        this._playerId = data.player_id;
+        this._gameModel.playerId = data.player_id;
         // Starts the ticker, calling this._onTick
         this._ticker.start();
     }
@@ -57,13 +56,17 @@ export default class GameController {
 
     _onTick(delta) {
         this._gameModel.interpolate(delta);
-        //this._gameView.render();
+        this._gameView.render();
     }
 
     run() {
         this._onServerEvent(gameStartEvent);
         this._onServerEvent(gameTickEvent);
-        this._onServerEvent(gameTickEvent);
+        window.setTimeout(() => {
+            gameTickEvent.data.islands.pop();
+            this._onServerEvent(gameTickEvent);
+            this._gameModel.islands[2].selected = true;
+        }, 2000);
     }
 }
 
@@ -71,7 +74,7 @@ export default class GameController {
 let gameStartEvent = {
     "name": "game_start",
     "data": {
-        "player_id": "e3e0f8b2-3a0c-4576-7ac3-5af3e7091faf"
+        "player_id": "ae5d1b2d-4e84-4f26-4c37-46ba2e95adbb"
     }
 };
 
@@ -80,8 +83,8 @@ let gameTickEvent = {
     "data": {
         "id": "5019a71a-ebdd-4f7e-5242-2b3fa2cf80bb",
         "size": {
-            "x": 10,
-            "y": 10
+            "x": 9,
+            "y": 9
         },
         "player1": {
             "id": "ae5d1b2d-4e84-4f26-4c37-46ba2e95adbb",
@@ -115,8 +118,8 @@ let gameTickEvent = {
                     "strength": 27
                 },
                 "position": {
-                    "x": 9,
-                    "y": 9
+                    "x": 8,
+                    "y": 8
                 },
                 "size": 1
             },
@@ -129,6 +132,30 @@ let gameTickEvent = {
                 "position": {
                     "x": 4,
                     "y": 4
+                },
+                "size": 1
+            },
+            {
+                "id": "d4dd446f-e6b5-5f50-77dd-19cb5b36f77d",
+                "army": {
+                    "owner_id": "fa5a3d69-edb7-476d-4277-c8aa1b2509a8",
+                    "strength": 10
+                },
+                "position": {
+                    "x": 0,
+                    "y": 8
+                },
+                "size": 1
+            },
+            {
+                "id": "adadad-ad-ad",
+                "army": {
+                    "owner_id": "fa5a3d69-edb7-476d-4277-c8aa1b2509a8",
+                    "strength": 10
+                },
+                "position": {
+                    "x": 8,
+                    "y": 0
                 },
                 "size": 1
             }

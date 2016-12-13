@@ -4,14 +4,17 @@ import Army from "./Army";
 
 export default class AirplaneModel extends BaseModel {
 
-    constructor() {
-        super();
+    /**
+     * @param {GameModel} gameModel
+     */
+    constructor(gameModel) {
+        super(gameModel);
 
         /**
          * @member {Army}
          * @private
          */
-        this._army = new Army();
+        this._army = new Army(gameModel);
 
         /**
          * @member {Coordinate}
@@ -66,17 +69,17 @@ export default class AirplaneModel extends BaseModel {
     update(airplaneData) {
         let changed = super.update(airplaneData);
 
-        if(!this._army.equals(airplaneData.army)) {
+        if (!this._army.equals(airplaneData.army)) {
             this._army.set(airplaneData.army);
             changed = true;
         }
 
-        if(!this._position.equals(airplaneData.position)) {
+        if (!this._position.equals(airplaneData.position)) {
             this._position.set(airplaneData.position);
             changed = true;
         }
 
-        if(!this._destination.equals(airplaneData.destination)) {
+        if (!this._destination.equals(airplaneData.destination)) {
             this._destination.set(airplaneData.destination);
             changed = true;
         }

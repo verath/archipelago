@@ -1,9 +1,15 @@
 import BaseModel from "./BaseModel";
 
+/**
+ * @extends BaseModel
+ */
 export default class PlayerModel extends BaseModel {
 
-    constructor() {
-        super();
+    /**
+     * @param {GameModel} gameModel
+     */
+    constructor(gameModel) {
+        super(gameModel);
 
         /**
          * @member {?string}
@@ -17,6 +23,30 @@ export default class PlayerModel extends BaseModel {
      */
     get name() {
         return this._name;
+    }
+
+    /**
+     * Returns true if the PlayerModel represents our current player.
+     * @returns {boolean}
+     */
+    isSelf() {
+        return (this.id === this._gameModel.playerId)
+    }
+
+    /**
+     * Returns true if the player is the neutral player.
+     * @returns {boolean}
+     */
+    isNeutral() {
+        return (this.id === this._gameModel.playerNeutral.id)
+    }
+
+    /**
+     * Returns true if the player is the enemy player
+     * @returns {boolean}
+     */
+    isEnemy() {
+        return !(this.isSelf() || this.isNeutral());
     }
 
     /**

@@ -19,19 +19,19 @@ export default class GameModel extends BaseModel {
          * @member {PlayerModel}
          * @private
          */
-        this._player1 = new PlayerModel();
+        this._player1 = new PlayerModel(this);
 
         /**
          * @member {PlayerModel}
          * @private
          */
-        this._player2 = new PlayerModel();
+        this._player2 = new PlayerModel(this);
 
         /**
          * @member {PlayerModel}
          * @private
          */
-        this._playerNeutral = new PlayerModel();
+        this._playerNeutral = new PlayerModel(this);
 
         /**
          * @member [IslandModel]
@@ -44,24 +44,13 @@ export default class GameModel extends BaseModel {
          * @private
          */
         this._airplanes = [];
-    }
 
-    /**
-     * @param {string} airplaneId An id identifying the model
-     * @returns {AirplaneModel | undefined} The model, if found.
-     * @private
-     */
-    _airplaneById(airplaneId) {
-        return this._airplanes.find(airplaneModel => airplaneModel.id === airplaneId);
-    }
-
-    /**
-     * @param {string} islandId An id identifying the model
-     * @returns {IslandModel | undefined} The model, if found.
-     * @private
-     */
-    _islandById(islandId) {
-        return this._islands.find(islandModel => islandModel.id === islandId);
+        /**
+         * Our player's id, i.e. the player we represent.
+         * @type {?string}
+         * @private
+         */
+        this._playerId = null;
     }
 
     /**
@@ -75,9 +64,9 @@ export default class GameModel extends BaseModel {
 
         // Update each airplane, and create new ones if necessary
         this._airplanes = data.map(airplaneData => {
-            let airplane = this._airplaneById(airplaneData.id);
+            let airplane = this.airplaneById(airplaneData.id);
             if (!airplane) {
-                airplane = new AirplaneModel();
+                airplane = new AirplaneModel(this);
                 // An airplane was added
                 changed = true;
             }
@@ -102,9 +91,9 @@ export default class GameModel extends BaseModel {
 
         // Update each island, and create new ones if necessary
         this._islands = data.map(islandData => {
-            let island = this._islandById(islandData.id);
+            let island = this.islandById(islandData.id);
             if (!island) {
-                island = new IslandModel();
+                island = new IslandModel(this);
                 // An island was added
                 changed = true;
             }
@@ -158,6 +147,54 @@ export default class GameModel extends BaseModel {
      */
     get airplanes() {
         return this._airplanes;
+    }
+
+    /**
+     * @returns {?string}
+     */
+    get playerId() {
+        return this._playerId;
+    }
+
+    /**
+     * @param {?string} playerId
+     */
+    set playerId(playerId) {
+        if (this._playerId !== playerId) {
+            this._playerId = playerId;
+            this._emitChanged();
+        }
+    }
+
+    /**
+     * @param {string} airplaneId An id identifying the model
+     * @returns {?AirplaneModel} The airplane, if found.
+     */
+    airplaneById(airplaneId) {
+        return this._airplanes.find(airplaneModel => airplaneModel.id === airplaneId) || null;
+    }
+
+    /**
+     * @param {string} islandId An id identifying the model
+     * @returns {?IslandModel} The island, if found.
+     */
+    islandById(islandId) {
+        return this._islands.find(islandModel => islandModel.id === islandId) || null;
+    }
+
+    /**
+     * @param {string} playerId
+     * @returns {?PlayerModel} The player, if found.
+     */
+    playerById(playerId) {
+        if (this._player1.id === playerId) {
+            return this._player1;
+        } else if (this._player2.id === playerId) {
+            return this._player2
+        } else if (this._playerNeutral.id === playerId) {
+            return this._playerNeutral;
+        }
+        return null;
     }
 
     /**

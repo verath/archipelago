@@ -5,7 +5,16 @@ const CHANGE_EVENT = Symbol("Change Event");
 
 export default class BaseModel {
 
-    constructor() {
+    /**
+     * @param {GameModel} gameModel
+     */
+    constructor(gameModel) {
+        /**
+         * @type {GameModel}
+         * @protected
+         */
+        this._gameModel = gameModel;
+
         /**
          * @member {?string}
          * @private

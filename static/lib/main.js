@@ -4,12 +4,13 @@ import GameModel from "./model/GameModel";
 import GameView from "./view/GameView";
 
 (function main() {
-    let renderer = PIXI.autoDetectRenderer(
-        600, 600,
-        {antialias: false, transparent: true, resolution: 1});
-
     let gameModel = new GameModel();
-    let gameView = new GameView(gameModel, renderer);
+    let gameView = new GameView(gameModel);
     let gameController = new GameController(gameModel, gameView);
+
+    // Listen for window size changes
+    window.addEventListener('resize', () => gameView.resize());
+    window.addEventListener('deviceOrientation', () => gameView.resize());
+
     gameController.run();
 })();
