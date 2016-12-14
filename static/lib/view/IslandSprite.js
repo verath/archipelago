@@ -1,14 +1,11 @@
 import * as PIXI from 'pixijs'
 import BaseSprite from "./BaseSprite";
-import {OWNER_SELF, OWNER_NEUTRAL, OWNER_ENEMY} from "../model/Army";
+import {COLOR_SELF, COLOR_NEUTRAL, COLOR_ENEMY} from "./colors";
 
 const EVENT_CLICK = Symbol("EVENT_CLICK");
 
 const ISLAND_WIDTH = 128;
 const ISLAND_HEIGHT = 128;
-const STRENGTH_COLOR_SELF = 0x1010ff;
-const STRENGTH_COLOR_NEUTRAL = 0x101010;
-const STRENGTH_COLOR_ENEMY = 0xff1010;
 
 /**
  * @extends BaseSprite
@@ -57,11 +54,11 @@ export default class IslandSprite extends BaseSprite {
         this._strengthText.text = "" + island.army.strength;
 
         if (island.owner.isSelf()) {
-            this._strengthText.style.fill = STRENGTH_COLOR_SELF;
+            this._strengthText.style.fill = COLOR_SELF;
         } else if (island.owner.isNeutral()) {
-            this._strengthText.style.fill = STRENGTH_COLOR_NEUTRAL;
+            this._strengthText.style.fill = COLOR_NEUTRAL;
         } else {
-            this._strengthText.style.fill = STRENGTH_COLOR_ENEMY;
+            this._strengthText.style.fill = COLOR_ENEMY;
         }
 
         if (island.selected) {
