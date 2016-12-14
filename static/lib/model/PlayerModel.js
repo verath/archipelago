@@ -9,7 +9,13 @@ export default class PlayerModel extends BaseModel {
      * @param {GameModel} gameModel
      */
     constructor(gameModel) {
-        super(gameModel);
+        super();
+
+        /**
+         * @type {GameModel}
+         * @private
+         */
+        this._gameModel = gameModel;
 
         /**
          * @member {?string}

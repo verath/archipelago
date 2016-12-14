@@ -1,5 +1,5 @@
 System.config({
-  baseURL: "/archipelago/",
+  baseURL: "/",
   defaultJSExtensions: true,
   transpiler: "babel",
   babelOptions: {

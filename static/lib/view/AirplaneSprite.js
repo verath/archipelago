@@ -12,6 +12,7 @@ export default class AirplaneSprite extends BaseSprite {
      */
     constructor(airplaneModel) {
         super(PIXI.Texture.fromImage('assets/island.png'), airplaneModel);
+        this.scale.set(0.75, 0.75);
     }
 
     _onModelChanged() {

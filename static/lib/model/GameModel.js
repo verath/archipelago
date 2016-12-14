@@ -225,4 +225,9 @@ export default class GameModel extends BaseModel {
         }
         return changed;
     }
+
+    interpolate(delta) {
+        this._airplanes.forEach(airplane => airplane.interpolate(delta));
+        this._islands.forEach(island => island.interpolate(delta));
+    }
 }

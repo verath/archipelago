@@ -1,7 +1,3 @@
-export const OWNER_SELF = Symbol("OWNER_SELF");
-export const OWNER_NEUTRAL = Symbol("OWNER_NEUTRAL");
-export const OWNER_ENEMY = Symbol("OWNER_ENEMY");
-
 export default class Army {
     /**
      * @param gameModel {GameModel}
@@ -48,17 +44,10 @@ export default class Army {
     }
 
     /**
-     * @returns {Symbol}
+     * @returns {?PlayerModel}
      */
     get owner() {
-        let owningPlayer = this._gameModel.playerById(this._ownerId);
-        if (owningPlayer.isSelf()) {
-            return OWNER_SELF;
-        } else if (owningPlayer.isNeutral()) {
-            return OWNER_NEUTRAL;
-        } else {
-            return OWNER_ENEMY;
-        }
+        return this._gameModel.playerById(this._ownerId);
     }
 
     /**

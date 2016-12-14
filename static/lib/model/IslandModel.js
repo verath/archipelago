@@ -8,7 +8,7 @@ export default class IslandModel extends BaseModel {
      * @param {GameModel} gameModel
      */
     constructor(gameModel) {
-        super(gameModel);
+        super();
 
         /**
          * @member {Army}
@@ -54,6 +54,13 @@ export default class IslandModel extends BaseModel {
      */
     get size() {
         return this._size;
+    }
+
+    /**
+     * @returns {?PlayerModel}
+     */
+    get owner() {
+        return this._army.owner;
     }
 
     /**

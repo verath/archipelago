@@ -3,15 +3,44 @@ import * as PIXI from 'pixijs'
 export default class GameController {
 
     /**
-     *
+     * @param {Connection} connection
      * @param {GameModel} gameModel
      * @param {GameView} gameView
      */
-    constructor(gameModel, gameView) {
+    constructor(connection, gameModel, gameView) {
+        /**
+         * @member {Connection}
+         * @private
+         */
+        this._connection = connection;
+
+        /**
+         * @member {GameModel}
+         * @private
+         */
         this._gameModel = gameModel;
+
+        /**
+         * @member {GameView}
+         * @private
+         */
         this._gameView = gameView;
 
+        /**
+         * @type {PIXI.ticker.Ticker}
+         * @private
+         */
         this._ticker = new PIXI.ticker.Ticker();
+
+        /**
+         * @member {number}
+         */
+        this._lastUpdateMS = 0;
+
+        // Setup event listeners
+        this._connection.addServerEventListener(this._onServerEvent, this);
+        this._connection.addDisconnectListener(this._onDisconnect, this);
+        this._gameView.addIslandClickListener(this._onIslandClicked, this);
         this._ticker.add(this._onTick, this);
     }
 
@@ -34,6 +63,7 @@ export default class GameController {
      * @private
      */
     _onTickEvent(data) {
+        this._lastUpdateMS = performance.now();
         this._gameModel.update(data);
     }
 
@@ -54,126 +84,59 @@ export default class GameController {
         }
     }
 
-    _onTick(delta) {
+    _onDisconnect() {
+        this._ticker.stop();
+        alert("Disconnected! :(");
+    }
+
+    /**
+     * @param {string} islandId
+     * @private
+     */
+    _onIslandClicked(islandId) {
+        let clickedIsland = this._gameModel.islandById(islandId);
+        if (!clickedIsland) {
+            console.warn("_onIslandClicked: clickedIsland does not exist");
+            return;
+        }
+
+        let selectedIsland = this._gameModel.islands.find(island => island.selected);
+        if (selectedIsland) {
+            // If we already had an island selected, send an airplane to the
+            // clicked island from the selected island.
+            selectedIsland.selected = false;
+
+            if(selectedIsland.id === clickedIsland.id) {
+                // Target cannot be the same as the origin
+                return;
+            }
+
+            this._connection.sendAction({
+                "action": "launch",
+                "data": {
+                    "from": selectedIsland.id,
+                    "to": clickedIsland.id
+                }
+            });
+        } else {
+            // If we didn't have an island select already, select the clicked island
+            // if it is owned by us.
+            if (clickedIsland.owner.isSelf()) {
+                clickedIsland.selected = true;
+            }
+        }
+    }
+
+    _onTick() {
+        let now = performance.now();
+        let delta =  now - (this._lastUpdateMS || now);
+        this._lastUpdateMS = now;
+
         this._gameModel.interpolate(delta);
         this._gameView.render();
     }
 
     run() {
-        this._onServerEvent(gameStartEvent);
-        this._onServerEvent(gameTickEvent);
-        window.setTimeout(() => {
-            gameTickEvent.data.islands.pop();
-            this._onServerEvent(gameTickEvent);
-            this._gameModel.islands[2].selected = true;
-        }, 2000);
+        this._connection.connect();
     }
 }
-
-
-let gameStartEvent = {
-    "name": "game_start",
-    "data": {
-        "player_id": "ae5d1b2d-4e84-4f26-4c37-46ba2e95adbb"
-    }
-};
-
-let gameTickEvent = {
-    "name": "tick",
-    "data": {
-        "id": "5019a71a-ebdd-4f7e-5242-2b3fa2cf80bb",
-        "size": {
-            "x": 9,
-            "y": 9
-        },
-        "player1": {
-            "id": "ae5d1b2d-4e84-4f26-4c37-46ba2e95adbb",
-            "name": "player1"
-        },
-        "player2": {
-            "id": "ca2c0a00-7dc6-43d2-673d-40eddc682113",
-            "name": "player2"
-        },
-        "player_neutral": {
-            "id": "fa5a3d69-edb7-476d-4277-c8aa1b2509a8",
-            "name": "neutral"
-        },
-        "islands": [
-            {
-                "id": "6abdaae9-7533-4edf-7f2f-1d213f98dfbe",
-                "army": {
-                    "owner_id": "ae5d1b2d-4e84-4f26-4c37-46ba2e95adbb",
-                    "strength": 15
-                },
-                "position": {
-                    "x": 0,
-                    "y": 0
-                },
-                "size": 1
-            },
-            {
-                "id": "67e541e4-7be0-4607-681c-e050ebc31c43",
-                "army": {
-                    "owner_id": "ca2c0a00-7dc6-43d2-673d-40eddc682113",
-                    "strength": 27
-                },
-                "position": {
-                    "x": 8,
-                    "y": 8
-                },
-                "size": 1
-            },
-            {
-                "id": "a3cc146f-f6b5-4f50-68aa-09cb5b36f77d",
-                "army": {
-                    "owner_id": "fa5a3d69-edb7-476d-4277-c8aa1b2509a8",
-                    "strength": 10
-                },
-                "position": {
-                    "x": 4,
-                    "y": 4
-                },
-                "size": 1
-            },
-            {
-                "id": "d4dd446f-e6b5-5f50-77dd-19cb5b36f77d",
-                "army": {
-                    "owner_id": "fa5a3d69-edb7-476d-4277-c8aa1b2509a8",
-                    "strength": 10
-                },
-                "position": {
-                    "x": 0,
-                    "y": 8
-                },
-                "size": 1
-            },
-            {
-                "id": "adadad-ad-ad",
-                "army": {
-                    "owner_id": "fa5a3d69-edb7-476d-4277-c8aa1b2509a8",
-                    "strength": 10
-                },
-                "position": {
-                    "x": 8,
-                    "y": 0
-                },
-                "size": 1
-            }
-        ],
-        "airplanes": [
-            {
-                "id": "2310c7fd-c44c-415b-65c2-bdee8b0cd559",
-                "army": {
-                    "owner_id": "ae5d1b2d-4e84-4f26-4c37-46ba2e95adbb",
-                    "strength": 12
-                },
-                "position": {
-                    "x": 9.899494936611667,
-                    "y": 9.899494936611667
-                },
-                "destination": "67e541e4-7be0-4607-681c-e050ebc31c43",
-                "speed": 0.001
-            }
-        ]
-    }
-};

@@ -8,7 +8,7 @@ export default class AirplaneModel extends BaseModel {
      * @param {GameModel} gameModel
      */
     constructor(gameModel) {
-        super(gameModel);
+        super();
 
         /**
          * @member {Army}
@@ -23,10 +23,10 @@ export default class AirplaneModel extends BaseModel {
         this._position = new Coordinate();
 
         /**
-         * @member {Coordinate}
+         * @member {Number}
          * @private
          */
-        this._destination = new Coordinate();
+        this._direction = 0;
 
         /**
          * @member {Number}
@@ -50,10 +50,10 @@ export default class AirplaneModel extends BaseModel {
     }
 
     /**
-     * @returns {Coordinate}
+     * @returns {Number}
      */
-    get destination() {
-        return this._destination;
+    get direction() {
+        return this._direction;
     }
 
     /**
@@ -61,6 +61,13 @@ export default class AirplaneModel extends BaseModel {
      */
     get speed() {
         return this._speed;
+    }
+
+    /**
+     * @returns {?PlayerModel}
+     */
+    get owner() {
+        return this._army.owner;
     }
 
     /**
@@ -79,8 +86,8 @@ export default class AirplaneModel extends BaseModel {
             changed = true;
         }
 
-        if (!this._destination.equals(airplaneData.destination)) {
-            this._destination.set(airplaneData.destination);
+        if (this._direction !== airplaneData.direction) {
+            this._direction = airplaneData.direction;
             changed = true;
         }
 
@@ -93,5 +100,11 @@ export default class AirplaneModel extends BaseModel {
             this._emitChanged();
         }
         return changed;
+    }
+
+    interpolate(delta) {
+        this._position.x += delta * this._speed * Math.cos(this._direction);
+        this._position.y += delta * this._speed * Math.sin(this._direction);
+        this._emitChanged();
     }
 }

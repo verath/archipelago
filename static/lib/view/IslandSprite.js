@@ -2,6 +2,8 @@ import * as PIXI from 'pixijs'
 import BaseSprite from "./BaseSprite";
 import {OWNER_SELF, OWNER_NEUTRAL, OWNER_ENEMY} from "../model/Army";
 
+const EVENT_CLICK = Symbol("EVENT_CLICK");
+
 const ISLAND_WIDTH = 128;
 const ISLAND_HEIGHT = 128;
 const STRENGTH_COLOR_SELF = 0x1010ff;
@@ -19,6 +21,11 @@ export default class IslandSprite extends BaseSprite {
     constructor(islandModel) {
         super(PIXI.Texture.fromImage('assets/island.png'), islandModel);
 
+        // Listen for clicks
+        this.interactive = true;
+        this.on('mousedown', this._onClicked);
+        this.on('touchstart', this._onClicked);
+
         this._strengthText = IslandSprite._createStrengthText();
         this.addChild(this._strengthText);
     }
@@ -31,7 +38,7 @@ export default class IslandSprite extends BaseSprite {
     static _createStrengthText() {
         let strengthText = new PIXI.Text("", {
             fontFamily: 'Arial',
-            fontSize: 34,
+            fontSize: 50,
             align: 'center'
         });
         strengthText.anchor.set(0.5, 0.5);
@@ -41,28 +48,39 @@ export default class IslandSprite extends BaseSprite {
     }
 
     _onModelChanged() {
-        let model = /** @type {IslandModel} */ (this._model);
+        let island = /** @type {IslandModel} */ (this._model);
 
-        let x = model.position.x * ISLAND_WIDTH;
-        let y = model.position.y * ISLAND_HEIGHT;
+        let x = island.position.x * ISLAND_WIDTH;
+        let y = island.position.y * ISLAND_HEIGHT;
         this.position.set(x, y);
 
-        this._strengthText.text = "" + model.army.strength;
+        this._strengthText.text = "" + island.army.strength;
 
-        switch(model.army.owner) {
-            case OWNER_SELF:
-                this._strengthText.style.fill = STRENGTH_COLOR_SELF;
-                break;
-            case OWNER_NEUTRAL:
-                this._strengthText.style.fill = STRENGTH_COLOR_NEUTRAL;
-                break;
-            case OWNER_ENEMY:
-                this._strengthText.style.fill = STRENGTH_COLOR_ENEMY;
-                break;
+        if (island.owner.isSelf()) {
+            this._strengthText.style.fill = STRENGTH_COLOR_SELF;
+        } else if (island.owner.isNeutral()) {
+            this._strengthText.style.fill = STRENGTH_COLOR_NEUTRAL;
+        } else {
+            this._strengthText.style.fill = STRENGTH_COLOR_ENEMY;
         }
 
-        if (model.selected) {
+        if (island.selected) {
             this.alpha = 0.5;
+        } else {
+            this.alpha = 1;
         }
+    }
+
+    _onClicked() {
+        let island = /** @type {IslandModel} */ (this._model);
+        this.emit(EVENT_CLICK, island);
+    }
+
+    addClickListener(listener, context = null) {
+        this.on(EVENT_CLICK, listener, context);
+    }
+
+    removeClickListener(listener, context = null) {
+        this.off(EVENT_CLICK, listener, context);
     }
 }

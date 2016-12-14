@@ -1,15 +1,20 @@
 import * as PIXI from 'pixijs'
 import IslandSprite from './IslandSprite'
 import AirplaneSprite from "./AirplaneSprite";
+import EventEmitter from 'eventemitter3';
+
+/** @type {Symbol}*/
+const EVENT_ISLAND_CLICKED = Symbol("EVENT_ISLAND_CLICKED");
 
 export const TILE_WIDTH = 128;
 export const TILE_HEIGHT = 128;
 
 export default class GameView {
     /**
+     * @param {WebGLRenderer|CanvasRenderer} renderer
      * @param {GameModel} gameModel
      */
-    constructor(gameModel) {
+    constructor(renderer, gameModel) {
         /**
          * @member {GameModel}
          * @private
@@ -32,8 +37,7 @@ export default class GameView {
          * @member {WebGLRenderer|CanvasRenderer}
          * @private
          */
-        this._renderer = PIXI.autoDetectRenderer(128 * 9, 128 * 9, {transparent: true});
-        document.body.appendChild(this._renderer.view);
+        this._renderer = renderer;
 
         /**
          * @member {Container}
@@ -41,10 +45,23 @@ export default class GameView {
          */
         this._stage = new PIXI.Container();
 
+        /**
+         * @member EventEmitter
+         * @private
+         */
+        this._eventEmitter = new EventEmitter();
+
         // Start listening for model changes
         this._gameModel.addChangeListener(this._onModelChange, this);
     }
 
+    /**
+     * @param {IslandModel} islandModel
+     * @private
+     */
+    _onIslandClicked(islandModel) {
+        this._eventEmitter.emit(EVENT_ISLAND_CLICKED, islandModel.id);
+    }
 
     _onModelChange() {
         // Clear all current elements on the stage and re-create it
@@ -55,7 +72,11 @@ export default class GameView {
         this._stageHeight = this._gameModel.size.y * TILE_HEIGHT;
 
         this._gameModel.islands
-            .map(islandModel => new IslandSprite(islandModel))
+            .map(islandModel => {
+                let islandSprite = new IslandSprite(islandModel);
+                islandSprite.addClickListener(this._onIslandClicked, this);
+                return islandSprite;
+            })
             .forEach(sprite => this._stage.addChild(sprite));
 
         this._gameModel.airplanes
@@ -63,6 +84,14 @@ export default class GameView {
             .forEach(sprite => this._stage.addChild(sprite));
 
         this.resize();
+    }
+
+    addIslandClickListener(listener, context = null) {
+        this._eventEmitter.on(EVENT_ISLAND_CLICKED, listener, context);
+    }
+
+    removeIslandClickListener(listener, context = null) {
+        this._eventEmitter.off(EVENT_ISLAND_CLICKED, listener, context);
     }
 
     resize() {

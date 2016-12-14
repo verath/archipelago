@@ -1,20 +1,11 @@
 import EventEmitter from 'eventemitter3';
 
 /** @type {Symbol}*/
-const CHANGE_EVENT = Symbol("Change Event");
+const EVENT_CHANGE = Symbol("Change Event");
 
 export default class BaseModel {
 
-    /**
-     * @param {GameModel} gameModel
-     */
-    constructor(gameModel) {
-        /**
-         * @type {GameModel}
-         * @protected
-         */
-        this._gameModel = gameModel;
-
+    constructor() {
         /**
          * @member {?string}
          * @private
@@ -36,11 +27,11 @@ export default class BaseModel {
     }
 
     addChangeListener(listener, context = null) {
-        this._eventEmitter.addListener(CHANGE_EVENT, listener, context);
+        this._eventEmitter.on(EVENT_CHANGE, listener, context);
     }
 
     removeChangeListener(listener, context = null) {
-        this._eventEmitter.removeListener(CHANGE_EVENT, listener, context)
+        this._eventEmitter.off(EVENT_CHANGE, listener, context)
     }
 
     /**
@@ -48,8 +39,7 @@ export default class BaseModel {
      * @protected
      */
     _emitChanged(...args) {
-        console.log("Changed", this);
-        this._eventEmitter.emit(CHANGE_EVENT, args)
+        this._eventEmitter.emit(EVENT_CHANGE, args)
     }
 
     /**
