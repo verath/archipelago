@@ -59,6 +59,6 @@
  * @property {string} id
  * @property {ArmyData} army
  * @property {CoordinateData} position
- * @property {CoordinateData} destination
+ * @property {number} direction
  * @property {number} speed
  */

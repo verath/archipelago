@@ -12,7 +12,7 @@ import (
 	"time"
 )
 
-const defaultTickInterval time.Duration = (time.Second * 2)
+const defaultTickInterval time.Duration = (time.Second / 2)
 
 // The gameLoop is what updates the game model instance that it is
 // associated with. The updates are performed in ticks. Each tick

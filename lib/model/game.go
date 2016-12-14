@@ -67,6 +67,21 @@ func (g *Game) AddAirplane(airplane *Airplane) {
 	g.airplanes = append(g.airplanes, airplane)
 }
 
+func (g *Game) RemoveAirplane(airplane *Airplane) {
+	if airplane == nil {
+		panic("RemoveAirplane: airplane cannot be nil")
+	}
+	airplanesLen := len(g.airplanes)
+	for i := 0; i < airplanesLen; i++ {
+		if g.airplanes[i] == airplane {
+			g.airplanes[i] = g.airplanes[airplanesLen-1]
+			g.airplanes[airplanesLen-1] = nil
+			g.airplanes = g.airplanes[:airplanesLen-1]
+			break
+		}
+	}
+}
+
 func (g *Game) MarshalJSON() ([]byte, error) {
 	return json.Marshal(&struct {
 		ID            Identifier  `json:"id"`

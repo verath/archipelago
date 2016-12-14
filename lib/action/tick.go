@@ -13,23 +13,57 @@ type tickAction struct {
 }
 
 func updateAirplanes(g *model.Game, delta time.Duration) error {
+	arrivals := make([]*model.Airplane, 0)
+
 	for _, airplane := range g.Airplanes() {
 		speed := airplane.Speed()
 		pos := airplane.Position()
+		dir := airplane.Direction()
 		// Our target is an island, look up its position
 		dest := g.Island(airplane.Destination()).Position().ToFloatCoordinate()
 
-		thrust := speed * float64(delta)
-		dx := dest.X - pos.X
-		dy := dest.Y - pos.Y
-		dist := math.Sqrt(dx*dx + dy*dy)
-
-		moveX := thrust * (dx / dist)
-		moveY := thrust * (dy / dist)
-
-		pos.X += moveX
-		pos.Y += moveY
+		// Update the position
+		pos.X += float64(delta) * speed * math.Cos(dir)
+		pos.Y += float64(delta) * speed * math.Sin(dir)
 		airplane.SetPosition(pos)
+
+		// Re-calculate the direction. We do this to detect if we have
+		// passed our target (=reached the island), and also to correct
+		// any rounding errors
+		newDir := math.Atan2(dest.Y-pos.Y, dest.X-pos.X)
+		if math.Signbit(newDir) != math.Signbit(dir) {
+			arrivals = append(arrivals, airplane)
+		} else {
+			airplane.SetDirection(dir)
+		}
+	}
+
+	// Handle arrivals
+	for _, airplane := range arrivals {
+		target := g.Island(airplane.Destination())
+		airplaneStr := airplane.Strength()
+		targetStr := target.Strength()
+
+		if target.IsOwnedBy(airplane.Owner()) {
+			target.SetStrength(targetStr + airplaneStr)
+		} else {
+			if targetStr > airplaneStr {
+				// If island str is greater, the the island remains
+				// controlled by its previous owner
+				target.SetStrength(targetStr - airplaneStr)
+			} else if airplaneStr > targetStr {
+				// If the airplane str is greater, then the airplane
+				// owner takes control of the island
+				target.SetStrength(airplaneStr - targetStr)
+				target.SetOwner(airplane.Owner())
+			} else {
+				// If they are equal, the owner is set to the neutral player
+				target.SetStrength(0)
+				target.SetOwner(g.PlayerNeutral())
+			}
+		}
+
+		g.RemoveAirplane(airplane)
 	}
 	return nil
 }

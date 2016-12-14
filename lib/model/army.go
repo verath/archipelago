@@ -11,6 +11,10 @@ func (a *army) Owner() *Player {
 	return a.owner
 }
 
+func (a *army) SetOwner(owner *Player) {
+	a.owner = owner
+}
+
 func (a *army) Strength() int {
 	return a.strength
 }
