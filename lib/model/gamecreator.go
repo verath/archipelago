@@ -23,23 +23,31 @@ func createPlayers() (p1, p2, pn *Player, err error) {
 	return
 }
 
-func createIslands(p1, p2, pn *Player) (p1Island, p2Island, neIsland *Island, err error) {
-	p1Island, err = NewIsland(Coordinate{0, 0}, IslandSizeMedium, p1, 10)
-	if err != nil {
-		err = fmt.Errorf("Error creating p1Island: %v", err)
-		return
+func createIslands(p1, p2, pn *Player) ([]*Island, error) {
+	islandData := []struct {
+		Pos      Coordinate
+		Size     IslandSize
+		Strength int
+		Player   *Player
+	}{
+		{Coordinate{0, 0}, IslandSizeMedium, 10, p1},
+		{Coordinate{6, 6}, IslandSizeMedium, 10, p2},
+		{Coordinate{4, 4}, IslandSizeMedium, 10, pn},
+		{Coordinate{6, 2}, IslandSizeMedium, 10, pn},
+		{Coordinate{2, 6}, IslandSizeMedium, 10, pn},
+		{Coordinate{0, 3}, IslandSizeMedium, 10, pn},
+		{Coordinate{3, 0}, IslandSizeMedium, 10, pn},
 	}
-	p2Island, err = NewIsland(Coordinate{8, 8}, IslandSizeMedium, p2, 10)
-	if err != nil {
-		err = fmt.Errorf("Error creating p2Island: %v", err)
-		return
+
+	islands := make([]*Island, 0)
+	for _, data := range islandData {
+		island, err := NewIsland(data.Pos, data.Size, data.Strength, data.Player)
+		if err != nil {
+			return nil, fmt.Errorf("Error creating island (data: %v): %v", data, err)
+		}
+		islands = append(islands, island)
 	}
-	neIsland, err = NewIsland(Coordinate{4, 4}, IslandSizeMedium, pn, 10, )
-	if err != nil {
-		err = fmt.Errorf("Error creating neIsland: %v", err)
-		return
-	}
-	return
+	return islands, nil
 }
 
 // TODO: this function should be moved somewhere and made configurable
@@ -49,14 +57,14 @@ func CreateBasicGame() (*Game, error) {
 		return nil, fmt.Errorf("Error creating players: %v", err)
 	}
 
-	p1Island, p2Island, neIsland, err := createIslands(p1, p2, pn)
+	islands, err := createIslands(p1, p2, pn)
 	if err != nil {
 		return nil, fmt.Errorf("Error creating islands: %v", err)
 	}
 
-	return NewGameBuilder(Coordinate{9, 9}, p1, p2, pn).
-		AddIsland(p1Island).
-		AddIsland(p2Island).
-		AddIsland(neIsland).
-		Build()
+	gameBuilder := NewGameBuilder(Coordinate{7, 7}, p1, p2, pn)
+	for _, island := range islands {
+		gameBuilder.AddIsland(island)
+	}
+	return gameBuilder.Build()
 }

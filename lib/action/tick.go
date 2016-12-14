@@ -20,21 +20,21 @@ func updateAirplanes(g *model.Game, delta time.Duration) error {
 		pos := airplane.Position()
 		dir := airplane.Direction()
 		// Our target is an island, look up its position
-		dest := g.Island(airplane.Destination()).Position().ToFloatCoordinate()
+		target := g.Island(airplane.Destination()).Position().ToFloatCoordinate()
 
-		// Update the position
-		pos.X += float64(delta) * speed * math.Cos(dir)
-		pos.Y += float64(delta) * speed * math.Sin(dir)
-		airplane.SetPosition(pos)
+		newPos := pos
+		newPos.X = pos.X + float64(delta) * speed * math.Cos(dir)
+		newPos.Y = pos.Y + float64(delta) * speed * math.Sin(dir)
 
-		// Re-calculate the direction. We do this to detect if we have
-		// passed our target (=reached the island), and also to correct
-		// any rounding errors
-		newDir := math.Atan2(dest.Y-pos.Y, dest.X-pos.X)
-		if math.Signbit(newDir) != math.Signbit(dir) {
+		// If the distance to the target increased, we have already reached it,
+		// add us to arrivals.
+		// TODO: This is not great hit-detection
+		dist := math.Hypot(pos.X - target.X, pos.Y - target.Y)
+		newDist := math.Hypot(newPos.X - target.X, newPos.Y - target.Y)
+		if newDist > dist {
 			arrivals = append(arrivals, airplane)
 		} else {
-			airplane.SetDirection(dir)
+			airplane.SetPosition(newPos)
 		}
 	}
 

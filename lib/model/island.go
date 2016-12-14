@@ -5,15 +5,17 @@ import (
 	"time"
 )
 
+type IslandSize float64
+
 const (
-	IslandSizeSmall  = 0.5
-	IslandSizeMedium = 1.0
-	IslandSizeLarge  = 2.0
+	IslandSizeSmall  IslandSize = 0.5
+	IslandSizeMedium IslandSize = 1.0
+	IslandSizeLarge  IslandSize = 1.5
 )
 
 // Time interval between army size growth, without accounting for
 // size of the island.
-const IslandGrowthInterval = 10 * time.Second
+const IslandGrowthInterval = 5 * time.Second
 
 type Island struct {
 	Identifier
@@ -56,8 +58,6 @@ func (i *Island) SetGrowthRemainder(growthRemainder time.Duration) {
 	i.growthRemainder = growthRemainder
 }
 
-
-
 func (i *Island) MarshalJSON() ([]byte, error) {
 	return json.Marshal(&struct {
 		ID       Identifier `json:"id"`
@@ -82,19 +82,19 @@ func (i *Island) Copy() *Island {
 	}
 }
 
-func NewIsland(position Coordinate, size float64, owner *Player, strength int) (*Island, error) {
+func NewIsland(position Coordinate, size IslandSize, strength int, owner *Player) (*Island, error) {
 	identifier, err := NewIdentifier()
 	if err != nil {
 		return nil, err
 	}
-	return NewIslandWithID(identifier, position, size, owner, strength)
+	return NewIslandWithID(identifier, position, size, strength, owner)
 }
 
-func NewIslandWithID(identifier Identifier, position Coordinate, size float64, owner *Player, strength int) (*Island, error) {
+func NewIslandWithID(identifier Identifier, position Coordinate, size IslandSize, strength int, owner *Player) (*Island, error) {
 	return &Island{
 		Identifier: identifier,
 		army:       newArmy(owner, strength),
 		position:   position,
-		size:       size,
+		size:       float64(size),
 	}, nil
 }
