@@ -17,20 +17,27 @@ export default class AirplaneSprite extends BaseSprite {
         super(PIXI.Texture.fromImage('assets/airplane.png'), airplaneModel);
         // Center our position anchor to the middle of the tile
         this.pivot.set(TILE_WIDTH / 2, TILE_HEIGHT / 2);
-        this.scale.set(AIRPLANE_WIDTH / TILE_WIDTH, AIRPLANE_HEIGHT / TILE_HEIGHT);
     }
 
     _onModelChanged() {
-        let model = /** @type {AirplaneModel} */ (this._model);
+        let airplane = /** @type {AirplaneModel} */ (this._model);
 
-        this.rotation = model.direction;
-        // Scale the model position to the tile size, accounting for our
-        // anchor being in the middle rather than top left.
-        let x = (model.position.x * TILE_WIDTH) + (TILE_WIDTH / 2);
-        let y = (model.position.y * TILE_HEIGHT) + (TILE_HEIGHT / 2);
+        // Set our scale depending on the strength we are carrying.
+        // The scaling is capped to strength 60, and a scale factor
+        // between 0.25 to 0.8.
+        let strength = airplane.army.strength;
+        let size = Math.min(strength, 60) / 60;
+        let scale = size * (0.8 - 0.25) + 0.25;
+        this.scale.set(scale, scale);
+
+        this.rotation = airplane.direction;
+
+        // Update our position, account for anchor being in the center
+        let x = airplane.position.x * TILE_WIDTH + TILE_WIDTH / 2;
+        let y = airplane.position.y * TILE_HEIGHT + TILE_HEIGHT / 2;
         this.position.set(x, y);
 
-        if(model.owner.isSelf()) {
+        if (airplane.owner.isSelf()) {
             this.tint = 0x1010FF;
         } else {
             this.tint = 0xFF1010;
