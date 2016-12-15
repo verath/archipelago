@@ -17,7 +17,7 @@ const (
 
 // Time interval between army size growth, without factoring in
 // the island size.
-const IslandGrowthInterval = 5 * time.Second
+const IslandGrowthInterval = (2 * time.Second)
 
 // The army size where the island army stops growing, without
 // factoring in the island size.
