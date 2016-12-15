@@ -2,8 +2,8 @@ package model
 
 import (
 	"fmt"
-	"time"
 	"math/rand"
+	"time"
 )
 
 func createPlayers() (p1, p2, pn *Player, err error) {
@@ -28,28 +28,28 @@ func createPlayers() (p1, p2, pn *Player, err error) {
 func createIslands(p1, p2, pn *Player, size Coordinate, gameRand *rand.Rand) ([]*Island, error) {
 	type islandData struct {
 		Size     IslandSize
-		Strength int
+		Strength int64
 		Player   *Player
 	}
 	islandMap := make(map[Coordinate]islandData)
 
-	islandSizes := []IslandSize{IslandSizeSmall, IslandSizeMedium, IslandSizeLarge}
 	// Randomize the neutral islands
+	neutralSizes := []IslandSize{IslandSizeTiny, IslandSizeSmall, IslandSizeMedium}
 	for x := 0; x < size.X; x++ {
-		for y := 0; y < size.Y; y ++ {
+		for y := 0; y < size.Y; y++ {
 			if gameRand.Intn(100) >= 20 {
 				continue
 			}
 			pos := Coordinate{x, y}
-			size := islandSizes[gameRand.Intn(len(islandSizes))]
-			strength := gameRand.Intn(22) + 4 // 4-25
+			size := neutralSizes[gameRand.Intn(len(neutralSizes))]
+			strength := gameRand.Int63n(22) + 4 // 4-25
 			islandMap[pos] = islandData{size, strength, pn}
 		}
 	}
 
 	// Set top left to player 1 island, bottom right to player 2 island
-	islandMap[Coordinate{0,0}] = islandData{IslandSizeLarge, 20, p1}
-	islandMap[Coordinate{size.X-1,size.Y-1}] = islandData{IslandSizeLarge, 20, p2}
+	islandMap[Coordinate{0, 0}] = islandData{IslandSizeLarge, 20, p1}
+	islandMap[Coordinate{size.X - 1, size.Y - 1}] = islandData{IslandSizeLarge, 20, p2}
 
 	// Transform the map to a slice of islands
 	islands := make([]*Island, 0)

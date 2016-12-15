@@ -80,7 +80,7 @@ func (a *Airplane) Copy() *Airplane {
 	}
 }
 
-func NewAirplane(origin *Island, destination *Island, owner *Player, strength int) (*Airplane, error) {
+func NewAirplane(origin *Island, destination *Island, owner *Player, strength int64) (*Airplane, error) {
 	identifier, err := NewIdentifier()
 	if err != nil {
 		return nil, err

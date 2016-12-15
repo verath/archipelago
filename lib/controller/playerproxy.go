@@ -3,10 +3,10 @@ package controller
 import (
 	"context"
 	"errors"
+	"github.com/verath/archipelago/lib/action"
 	"github.com/verath/archipelago/lib/event"
 	"github.com/verath/archipelago/lib/model"
 	"github.com/verath/archipelago/lib/network"
-	"github.com/verath/archipelago/lib/action"
 )
 
 // The playerProxy represents a player connection as a single player part

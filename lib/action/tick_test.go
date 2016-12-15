@@ -18,7 +18,6 @@ func TestNewTickAction(t *stdtesting.T) {
 	}
 }
 
-
 func TestTickAction_Apply_Islands(t *stdtesting.T) {
 	game := testing.CreateSimpleGame()
 

@@ -1,9 +1,9 @@
 package event
 
 import (
-	stdtesting "testing"
-	"github.com/verath/archipelago/lib/testing"
 	"encoding/json"
+	"github.com/verath/archipelago/lib/testing"
+	stdtesting "testing"
 )
 
 func TestNewTickEvent(t *stdtesting.T) {

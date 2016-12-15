@@ -23,14 +23,14 @@ func updateAirplanes(g *model.Game, delta time.Duration) error {
 		target := g.Island(airplane.Destination()).Position().ToFloatCoordinate()
 
 		newPos := pos
-		newPos.X = pos.X + float64(delta) * speed * math.Cos(dir)
-		newPos.Y = pos.Y + float64(delta) * speed * math.Sin(dir)
+		newPos.X = pos.X + float64(delta)*speed*math.Cos(dir)
+		newPos.Y = pos.Y + float64(delta)*speed*math.Sin(dir)
 
 		// If the distance to the target increased, we have already reached it,
 		// add us to arrivals.
 		// TODO: This is not great hit-detection
-		dist := math.Hypot(pos.X - target.X, pos.Y - target.Y)
-		newDist := math.Hypot(newPos.X - target.X, newPos.Y - target.Y)
+		dist := math.Hypot(pos.X-target.X, pos.Y-target.Y)
+		newDist := math.Hypot(newPos.X-target.X, newPos.Y-target.Y)
 		if newDist > dist {
 			arrivals = append(arrivals, airplane)
 		} else {
@@ -69,16 +69,24 @@ func updateAirplanes(g *model.Game, delta time.Duration) error {
 }
 
 func updateIslands(g *model.Game, delta time.Duration) error {
-	growthInterval := model.IslandGrowthInterval
+	islandGrowthInterval := model.IslandGrowthInterval
+	islandGrowthCap := model.IslandGrowthCap
+
 	for _, island := range g.Islands() {
 		if island.Owner().Equals(g.PlayerNeutral()) {
 			// Neutral islands does not grow in strength
 			continue
 		}
 
-		// The larger the island the more it grows per tick
-		// TODO: Should not be linear growth?
 		size := island.Size()
+		if float64(island.Strength()) >= (islandGrowthCap * size) {
+			continue
+		}
+
+		// Account for the island size. We do this by scaling the
+		// time delta by the size factor of the island. I.e. a size
+		// factor of 0.5 means the "time will move" at half the pace
+		// for that island.
 		increment := time.Duration(size * float64(delta))
 
 		// Calculate the whole number of added strength, storing
@@ -86,11 +94,11 @@ func updateIslands(g *model.Game, delta time.Duration) error {
 		// that we are doing calculations on time.Duration(=int64)
 		// here, but the reasoning stays the same.
 		remainder := island.GrowthRemainder()
-		addedStrength := (remainder + increment) / growthInterval
-		remainder = (remainder + increment) % growthInterval
+		addedStrength := (remainder + increment) / islandGrowthInterval
+		remainder = (remainder + increment) % islandGrowthInterval
+		newStrength := island.Strength() + int64(addedStrength)
 
-		// TODO: limit max strength depending on island size
-		island.SetStrength(island.Strength() + int(addedStrength))
+		island.SetStrength(newStrength)
 		island.SetGrowthRemainder(remainder)
 	}
 	return nil

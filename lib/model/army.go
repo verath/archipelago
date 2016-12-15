@@ -4,7 +4,7 @@ import "encoding/json"
 
 type army struct {
 	owner    *Player
-	strength int
+	strength int64
 }
 
 func (a *army) Owner() *Player {
@@ -15,11 +15,11 @@ func (a *army) SetOwner(owner *Player) {
 	a.owner = owner
 }
 
-func (a *army) Strength() int {
+func (a *army) Strength() int64 {
 	return a.strength
 }
 
-func (a *army) SetStrength(strength int) {
+func (a *army) SetStrength(strength int64) {
 	a.strength = strength
 }
 
@@ -30,7 +30,7 @@ func (a *army) IsOwnedBy(player *Player) bool {
 func (a *army) MarshalJSON() ([]byte, error) {
 	return json.Marshal(&struct {
 		OwnerID  PlayerID `json:"owner_id"`
-		Strength int      `json:"strength"`
+		Strength int64    `json:"strength"`
 	}{
 		OwnerID:  a.owner.ID(),
 		Strength: a.strength,
@@ -44,7 +44,7 @@ func (a *army) Copy() *army {
 	}
 }
 
-func newArmy(owner *Player, strength int) *army {
+func newArmy(owner *Player, strength int64) *army {
 	if owner == nil {
 		panic("Owner cannot be nil!")
 	}

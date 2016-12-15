@@ -5,23 +5,34 @@ import (
 	"time"
 )
 
+// A size factor of an island, between 0.0 and 1.0.
 type IslandSize float64
 
 const (
-	IslandSizeSmall  IslandSize = 0.5
-	IslandSizeMedium IslandSize = 1.0
-	IslandSizeLarge  IslandSize = 1.5
+	IslandSizeTiny   IslandSize = 0.4
+	IslandSizeSmall  IslandSize = 0.6
+	IslandSizeMedium IslandSize = 0.8
+	IslandSizeLarge  IslandSize = 1
 )
 
-// Time interval between army size growth, without accounting for
-// size of the island.
+// Time interval between army size growth, without factoring in
+// the island size.
 const IslandGrowthInterval = 5 * time.Second
+
+// The army size where the island army stops growing, without
+// factoring in the island size.
+const IslandGrowthCap = 100.0
 
 type Island struct {
 	Identifier
 	*army
 
-	position        Coordinate
+	position Coordinate
+
+	// The size of the island, between 0.0 and 1.0.
+	// The size factor is used to determine the growth rate of
+	// the army on the island, as well as the threshold for army
+	// size where the army no longer grows.
 	size            float64
 	growthRemainder time.Duration
 }
@@ -82,7 +93,7 @@ func (i *Island) Copy() *Island {
 	}
 }
 
-func NewIsland(position Coordinate, size IslandSize, strength int, owner *Player) (*Island, error) {
+func NewIsland(position Coordinate, size IslandSize, strength int64, owner *Player) (*Island, error) {
 	identifier, err := NewIdentifier()
 	if err != nil {
 		return nil, err
@@ -90,7 +101,7 @@ func NewIsland(position Coordinate, size IslandSize, strength int, owner *Player
 	return NewIslandWithID(identifier, position, size, strength, owner)
 }
 
-func NewIslandWithID(identifier Identifier, position Coordinate, size IslandSize, strength int, owner *Player) (*Island, error) {
+func NewIslandWithID(identifier Identifier, position Coordinate, size IslandSize, strength int64, owner *Player) (*Island, error) {
 	return &Island{
 		Identifier: identifier,
 		army:       newArmy(owner, strength),
