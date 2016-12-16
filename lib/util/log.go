@@ -1,4 +1,4 @@
-package logutil
+package util
 
 import (
 	"github.com/Sirupsen/logrus"
@@ -7,11 +7,11 @@ import (
 
 var ModuleNameKey = "module"
 
-func ModuleEntry(log *logrus.Logger, moduleName string) *logrus.Entry {
+func ModuleLogEntry(log *logrus.Logger, moduleName string) *logrus.Entry {
 	return log.WithField(ModuleNameKey, moduleName)
 }
 
-func ModuleEntryWithID(log *logrus.Logger, moduleName string) *logrus.Entry {
+func ModuleLogEntryWithID(log *logrus.Logger, moduleName string) *logrus.Entry {
 	id := ""
 	u, err := uuid.NewV4()
 	if err != nil {

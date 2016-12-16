@@ -5,14 +5,14 @@ import (
 	"fmt"
 	"github.com/Sirupsen/logrus"
 	"github.com/verath/archipelago/lib/controller"
-	"github.com/verath/archipelago/lib/logutil"
 	"github.com/verath/archipelago/lib/network"
 	"github.com/verath/archipelago/lib/network/websocket"
+	"github.com/verath/archipelago/lib/util"
 	"net/http"
 )
 
 type archipelago struct {
-	log *logrus.Logger
+	logEntry *logrus.Entry
 
 	clientPool      *network.ClientPool
 	gameCoordinator *controller.GameCoordinator
@@ -20,44 +20,18 @@ type archipelago struct {
 }
 
 func (a *archipelago) Run(ctx context.Context) error {
-	logEntry := logutil.ModuleEntry(a.log, "archipelago")
-	logEntry.Info("Starting")
-	defer logEntry.Info("Stopped")
+	a.logEntry.Info("Starting")
+	defer a.logEntry.Info("Stopped")
 
-	ctx, cancel := context.WithCancel(ctx)
-	errCh := make(chan error, 0)
-
-	go func() {
-		// TODO: Move client pool inside game coordinator?
-		err := a.clientPool.Run(ctx)
-		if err != nil && err != context.Canceled {
-			logEntry.WithError(err).Error("Client pool quit")
-		}
-		errCh <- err
-	}()
-	go func() {
-		err := a.gameCoordinator.Run(ctx)
-		if err != nil && err != context.Canceled {
-			logEntry.WithError(err).Error("Game coordinator quit")
-		}
-		errCh <- err
-	}()
-	go func() {
-		err := a.httpServer.Serve(ctx)
-		if err != nil && err != context.Canceled {
-			logEntry.WithError(err).Error("HTTP server quit")
-		}
-		errCh <- err
-	}()
-
-	err := <-errCh
-	cancel()
-	<-errCh
-	<-errCh
-	return err
+	return util.RunWithContext(ctx,
+		a.gameCoordinator.Run,
+		a.httpServer.Run,
+	)
 }
 
 func New(log *logrus.Logger, staticRoot http.FileSystem, httpServerAddr string) (*archipelago, error) {
+	logEntry := util.ModuleLogEntry(log, "archipelago")
+
 	clientPool, err := network.NewClientPool(log)
 	if err != nil {
 		return nil, fmt.Errorf("Error creating client pool: %v", err)
@@ -79,7 +53,7 @@ func New(log *logrus.Logger, staticRoot http.FileSystem, httpServerAddr string) 
 	}
 
 	return &archipelago{
-		log:             log,
+		logEntry:        logEntry,
 		clientPool:      clientPool,
 		gameCoordinator: gameCoordinator,
 		httpServer:      httpServer,

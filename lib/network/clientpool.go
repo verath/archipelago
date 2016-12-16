@@ -5,7 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/Sirupsen/logrus"
-	"github.com/verath/archipelago/lib/logutil"
+	"github.com/verath/archipelago/lib/util"
 	"sync"
 )
 
@@ -22,7 +22,7 @@ const (
 // done so that the lifetime of the Clients are bound to the lifetime of
 // the ClientPool.
 type ClientPool struct {
-	log *logrus.Logger
+	logEntry *logrus.Entry
 
 	// The addCh holds Connections that has been added to the pool, but
 	// that has not been started yet.
@@ -55,48 +55,46 @@ func (pool *ClientPool) broadcastClient(ctx context.Context, getCh chan<- *Clien
 }
 
 func (pool *ClientPool) runLoop(ctx context.Context) error {
-	logEntry := logutil.ModuleEntryWithID(pool.log, "clientPool")
-	logEntry.Info("Starting")
-	defer logEntry.Info("Stopped")
+	pool.logEntry.Info("Starting")
+	defer pool.logEntry.Info("Stopped")
 
-	var err error
-	var conn Connection
+	ctx, cancel := context.WithCancel(ctx)
 	var connWG sync.WaitGroup
+	defer func() {
+		// Close the getCh, as we will not be posting any more
+		// new connections.
+		close(pool.getCh)
+		// Signal to the connections we have started to finish,
+		// and wait until they have all stopped
+		cancel()
+		connWG.Wait()
+	}()
 
 	for {
-		conn, err = pool.waitForNewConn(ctx, pool.addCh)
+		// Wait for a new connection to be made. Once we have on
+		// we start it with our current context, essentially making
+		// us the owner of its lifetime
+		conn, err := pool.waitForNewConn(ctx, pool.addCh)
 		if err != nil {
-			err = fmt.Errorf("Error waiting for new connection: %v", err)
-			break
+			return fmt.Errorf("Error waiting for new connection: %v", err)
 		}
-
-		// Start the connection with our current context
 		connWG.Add(1)
 		go func() {
 			defer connWG.Done()
-			err := conn.Run(ctx)
-			if err != nil && err != context.Canceled {
-				logEntry.WithError(err).Error("Connection quit")
+			if err := conn.Run(ctx); err != nil && err != context.Canceled {
+				pool.logEntry.WithError(err).Error("Connection quit")
 			}
 		}()
 
-		// Create a Client wrapping the connection
-		client, err := NewClient(pool.log, conn)
+		// Create a Client wrapping the connection and broadcast it
+		client, err := NewClient(pool.logEntry.Logger, conn)
 		if err != nil {
-			err = fmt.Errorf("Error creating client: %v", err)
-			break
+			return fmt.Errorf("Error creating client: %v", err)
 		}
-
-		err = pool.broadcastClient(ctx, pool.getCh, client)
-		if err != nil {
-			err = fmt.Errorf("Error broadcasting client: %v", err)
-			break
+		if err := pool.broadcastClient(ctx, pool.getCh, client); err != nil {
+			return fmt.Errorf("Error broadcasting client: %v", err)
 		}
 	}
-
-	close(pool.getCh)
-	connWG.Wait()
-	return err
 }
 
 // Returns the channel for adding new clients to the pool.
@@ -114,9 +112,11 @@ func (pool *ClientPool) Run(ctx context.Context) error {
 }
 
 func NewClientPool(log *logrus.Logger) (*ClientPool, error) {
+	logEntry := util.ModuleLogEntryWithID(log, "clientPool")
+
 	return &ClientPool{
-		log:   log,
-		addCh: make(chan Connection, poolAddChannelBufferSize),
-		getCh: make(chan *Client, poolGetChannelBufferSize),
+		logEntry: logEntry,
+		addCh:    make(chan Connection, poolAddChannelBufferSize),
+		getCh:    make(chan *Client, poolGetChannelBufferSize),
 	}, nil
 }

@@ -7,11 +7,12 @@ import (
 	"github.com/Sirupsen/logrus"
 	"github.com/verath/archipelago/lib/action"
 	"github.com/verath/archipelago/lib/event"
+	"github.com/verath/archipelago/lib/util"
 )
 
 type Client struct {
-	log  *logrus.Logger
-	conn Connection
+	logEntry *logrus.Entry
+	conn     Connection
 }
 
 func (c *Client) SendEvent(ctx context.Context, evt *event.Event) error {
@@ -58,8 +59,10 @@ func (c *Client) Disconnect() {
 }
 
 func NewClient(log *logrus.Logger, conn Connection) (*Client, error) {
+	logEntry := util.ModuleLogEntryWithID(log, "client")
+
 	return &Client{
-		log:  log,
-		conn: conn,
+		logEntry: logEntry,
+		conn:     conn,
 	}, nil
 }

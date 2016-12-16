@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"github.com/Sirupsen/logrus"
 	"github.com/gorilla/websocket"
-	"github.com/verath/archipelago/lib/logutil"
 	"github.com/verath/archipelago/lib/network"
+	"github.com/verath/archipelago/lib/util"
 	"net/http"
 )
 
@@ -32,7 +32,7 @@ func handleWSConn(log *logrus.Logger, clientPool *network.ClientPool, wsConn *we
 // Returns an http handler that connects websockets requests
 // to the client pool
 func ConnectHandler(log *logrus.Logger, clientPool *network.ClientPool) http.Handler {
-	logEntry := logutil.ModuleEntry(log, "ws/ConnectHandler")
+	logEntry := util.ModuleLogEntry(log, "ws/ConnectHandler")
 
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		wsConn, err := upgrader.Upgrade(w, r, nil)

@@ -6,8 +6,8 @@ import (
 	"github.com/Sirupsen/logrus"
 	"github.com/verath/archipelago/lib/action"
 	"github.com/verath/archipelago/lib/event"
-	"github.com/verath/archipelago/lib/logutil"
 	"github.com/verath/archipelago/lib/model"
+	"github.com/verath/archipelago/lib/util"
 	"sync"
 	"time"
 )
@@ -24,8 +24,9 @@ const defaultTickInterval time.Duration = (time.Second / 2)
 // Notice that any reads or writes (outside of actions) on the model
 // once the gameLoop is started is not safe.
 type gameLoop struct {
+	logEntry *logrus.Entry
+
 	tickInterval time.Duration
-	log          *logrus.Logger
 	game         *model.Game
 
 	// A signaling channel that is sent a value each time
@@ -143,9 +144,8 @@ func (gl *gameLoop) NextEvent(ctx context.Context) (event.EventBuilder, error) {
 // Runs the game loop. Run blocks until the context is cancelled and
 // always returns a non-nil error.
 func (gl *gameLoop) Run(ctx context.Context) error {
-	logEntry := logutil.ModuleEntryWithID(gl.log, "gameLoop")
-	logEntry.Info("Starting")
-	defer logEntry.Info("Stopped")
+	gl.logEntry.Debug("Starting")
+	defer gl.logEntry.Debug("Stopped")
 
 	// Add a game start event as the first event
 	// TODO: should probably move this somewhere else
@@ -155,17 +155,15 @@ func (gl *gameLoop) Run(ctx context.Context) error {
 	gl.eventsMu.Unlock()
 
 	err := gl.tickLoop(ctx)
-	if err != nil && err != context.Canceled {
-		logEntry.WithError(err).Error("tickLoop quit")
-	}
-
-	return err
+	return fmt.Errorf("tickLoop quit: %v", err)
 }
 
 func newGameLoop(log *logrus.Logger, game *model.Game) (*gameLoop, error) {
+	logEntry := util.ModuleLogEntryWithID(log, "gameLoop")
+
 	return &gameLoop{
+		logEntry:     logEntry,
 		tickInterval: defaultTickInterval,
-		log:          log,
 		game:         game,
 		eventsSCh:    make(chan bool, 0),
 		events:       make([]event.EventBuilder, 0),

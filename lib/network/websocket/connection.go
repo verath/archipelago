@@ -5,9 +5,8 @@ import (
 	"errors"
 	"github.com/Sirupsen/logrus"
 	"github.com/gorilla/websocket"
-	"github.com/verath/archipelago/lib/logutil"
 	"github.com/verath/archipelago/lib/network"
-	"sync"
+	"github.com/verath/archipelago/lib/util"
 	"time"
 )
 
@@ -34,8 +33,8 @@ var newline = []byte{'\n'}
 // with some minor modifications. See:
 // https://github.com/gorilla/websocket/blob/master/examples/chat/client.go
 type connection struct {
-	log  *logrus.Logger
-	conn *websocket.Conn
+	logEntry *logrus.Entry
+	conn     *websocket.Conn
 
 	// Channel closed when we have been asked to disconnect
 	disconnectCh chan struct{}
@@ -145,37 +144,24 @@ func (c *connection) Disconnect() {
 // disconnected. Canceling the context will force the connection
 // to shutdown. Run always returns a non-nil error
 func (c *connection) Run(ctx context.Context) error {
-	logEntry := logutil.ModuleEntryWithID(c.log, "ws/connection")
-	logEntry.Info("Started")
-	defer logEntry.Info("Stopped")
+	c.logEntry.Debug("Started")
+	defer c.logEntry.Debug("Stopped")
 
-	ctx, cancel := context.WithCancel(ctx)
-	var wg sync.WaitGroup
-
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
-		defer cancel()
-		err := c.writePump(ctx, c.disconnectCh, c.sendCh)
-		if err != nil && err != context.Canceled {
-			logEntry.WithError(err).Error("writePump quit")
-		}
-	}()
-
-	err := c.readPump(ctx, c.receiveCh)
-	if err != nil && err != context.Canceled {
-		logEntry.WithError(err).Error("readPump quit")
-	}
-	cancel()
-
-	logEntry.Debug("Waiting for writePump to quit")
-	wg.Wait()
-	return err
+	return util.RunWithContext(ctx,
+		func(ctx context.Context) error {
+			return c.writePump(ctx, c.disconnectCh, c.sendCh)
+		},
+		func(ctx context.Context) error {
+			return c.readPump(ctx, c.receiveCh)
+		},
+	)
 }
 
 func newConnection(log *logrus.Logger, conn *websocket.Conn) (*connection, error) {
+	logEntry := util.ModuleLogEntryWithID(log, "ws/connection")
+
 	return &connection{
-		log:          log,
+		logEntry:     logEntry,
 		conn:         conn,
 		disconnectCh: make(chan struct{}),
 		sendCh:       make(chan []byte),

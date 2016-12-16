@@ -3,7 +3,7 @@ package network
 import (
 	"context"
 	"github.com/Sirupsen/logrus"
-	"github.com/verath/archipelago/lib/logutil"
+	"github.com/verath/archipelago/lib/util"
 	"log"
 	"net"
 	"net/http"
@@ -18,21 +18,20 @@ const (
 // Server is a thin wrapper around http.Server that can be shut
 // down by context cancellation
 type HTTPServer struct {
-	log *logrus.Logger
-	mux *http.ServeMux
+	logEntry *logrus.Entry
+	mux      *http.ServeMux
 
 	serverAddr string
 }
 
 // Run starts the http server and blocks until it has finished.
 // Run always returns a non-nil error.
-func (srv *HTTPServer) Serve(ctx context.Context) error {
-	logEntry := logutil.ModuleEntry(srv.log, "http")
-	logEntry.Info("Starting")
-	defer logEntry.Info("Stopped")
+func (srv *HTTPServer) Run(ctx context.Context) error {
+	srv.logEntry.Info("Starting")
+	defer srv.logEntry.Info("Stopped")
 
 	// Create a std logger that writes to the logrus instance
-	logWriter := srv.log.Writer()
+	logWriter := srv.logEntry.Logger.Writer()
 	defer logWriter.Close()
 	errorLog := log.New(logWriter, "", 0)
 
@@ -62,8 +61,10 @@ func (srv *HTTPServer) Serve(ctx context.Context) error {
 }
 
 func NewServer(log *logrus.Logger, mux *http.ServeMux, serverAddr string) (*HTTPServer, error) {
+	logEntry := util.ModuleLogEntry(log, "http")
+
 	return &HTTPServer{
-		log:        log,
+		logEntry:   logEntry,
 		mux:        mux,
 		serverAddr: serverAddr,
 	}, nil

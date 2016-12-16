@@ -5,20 +5,21 @@ import (
 	"errors"
 	"fmt"
 	"github.com/Sirupsen/logrus"
-	"github.com/verath/archipelago/lib/logutil"
 	"github.com/verath/archipelago/lib/model"
 	"github.com/verath/archipelago/lib/network"
+	"github.com/verath/archipelago/lib/util"
 	"sync"
 )
 
 // The game coordinator is responsible for connecting players to
 // a game. Once enough players has been found so that a game can
-// be created, the game coordinator hands these players of to the
-// game manager to start the game. The lifetime of the game
-// coordinator is not tied to a single game but rather the entire
-// lifetime of the game server.
+// be created, the game coordinator creates and starts a new game
+// manager with the given players.
+//
+// The lifetime of the game coordinator is not tied to a single
+// game but rather the entire lifetime of the game server.
 type GameCoordinator struct {
-	log        *logrus.Logger
+	logEntry   *logrus.Entry
 	clientPool *network.ClientPool
 }
 
@@ -36,31 +37,46 @@ func (gc *GameCoordinator) startNewGame(ctx context.Context, p1Client, p2Client 
 		return fmt.Errorf("Error creating game: %v", err)
 	}
 
-	gm, err := newGameManager(gc.log, game, p1Client, p2Client)
+	gameLoop, err := newGameLoop(gc.logEntry.Logger, game)
+	if err != nil {
+		return fmt.Errorf("Error creating gameLoop: %v", err)
+	}
+
+	p1Proxy, err := newPlayerProxy(game.Player1(), p1Client)
+	if err != nil {
+		return fmt.Errorf("Error creating player1 proxy: %v", err)
+	}
+
+	p2Proxy, err := newPlayerProxy(game.Player2(), p2Client)
+	if err != nil {
+		return fmt.Errorf("Error creating player2 proxy: %v", err)
+	}
+
+	gm, err := newGameManager(gc.logEntry.Logger, gameLoop, p1Proxy, p2Proxy)
 	if err != nil {
 		return fmt.Errorf("Error creating gameManager: %v", err)
 	}
 
-	return gm.RunGame(ctx)
+	return gm.Run(ctx)
 }
 
 // Waits for two player connections to be made.
 // TODO: waiting for any 2 connections is not great "match making"...
-func (gc *GameCoordinator) waitForPlayers(ctx context.Context, logEntry *logrus.Entry) (*network.Client, *network.Client, error) {
+func (gc *GameCoordinator) waitForPlayers(ctx context.Context) (*network.Client, *network.Client, error) {
 	clientCh := gc.clientPool.GetCh()
 
 	for {
 		var p1Client, p2Client *network.Client
 		var ok bool
 
-		logEntry.Debug("Waiting for player connections...")
+		gc.logEntry.Debug("Waiting for player connections...")
 		select {
 		case <-ctx.Done():
 			return nil, nil, ctx.Err()
 		case p1Client = <-clientCh:
 		}
 
-		logEntry.Debug("p1Client established")
+		gc.logEntry.Debug("p1Client established")
 		// TODO: Listen for p1Client disconnect
 		select {
 		case <-ctx.Done():
@@ -69,53 +85,62 @@ func (gc *GameCoordinator) waitForPlayers(ctx context.Context, logEntry *logrus.
 			if !ok {
 				return nil, nil, errors.New("clientCh closed")
 			}
-			logEntry.Debug("p2Conn established")
+			gc.logEntry.Debug("p2Conn established")
 			return p1Client, p2Client, nil
 		}
 	}
 }
 
+// runLoop runs the main "loop" of the game coordinator. The loop waits for
+// two players, creates a new games for these players, and wait for another
+// pair of players. This method blocks until the context is cancelled or
+// an error occurs. Always returns a non-nil error.
 func (gc *GameCoordinator) runLoop(ctx context.Context) error {
-	logEntry := logutil.ModuleEntry(gc.log, "gameCoordinator")
-	logEntry.Info("Starting")
-	defer logEntry.Info("Stopped")
-
 	ctx, cancel := context.WithCancel(ctx)
 	var gamesWG sync.WaitGroup
+	defer func() {
+		// Before we return control, signal to all spawned games to
+		// quit and wait until they do.
+		cancel()
+		gamesWG.Wait()
+	}()
 
-	var p1Client, p2Client *network.Client
-	var err error
 	for {
-		p1Client, p2Client, err = gc.waitForPlayers(ctx, logEntry)
+		p1Client, p2Client, err := gc.waitForPlayers(ctx)
 		if err != nil {
-			break
+			return fmt.Errorf("Error waiting for players: %v", err)
 		}
 
+		gc.logEntry.Debug("Starting a new game")
 		gamesWG.Add(1)
-		logEntry.Info("Starting a new game")
 		go func() {
+			defer gamesWG.Done()
 			err := gc.startNewGame(ctx, p1Client, p2Client)
 			if err != nil && err != context.Canceled {
-				logEntry.WithError(err).Error("Game stopped with an error")
+				// Note that coordinator does not quit when a game
+				// stops with an error.
+				// TODO: perhaps we should, at least for some types of errors?
+				gc.logEntry.WithError(err).Error("Game stopped with an error")
 			}
-			gamesWG.Done()
 		}()
 	}
-
-	logEntry.Debug("cancelling")
-	cancel()
-	logEntry.Debug("waiting for gamesWG")
-	gamesWG.Wait()
-	return err
 }
 
 func (gc *GameCoordinator) Run(ctx context.Context) error {
-	return gc.runLoop(ctx)
+	gc.logEntry.Info("Starting")
+	defer gc.logEntry.Info("Stopped")
+
+	return util.RunWithContext(ctx,
+		gc.clientPool.Run,
+		gc.runLoop,
+	)
 }
 
 func NewGameCoordinator(log *logrus.Logger, clientPool *network.ClientPool) (*GameCoordinator, error) {
+	logEntry := util.ModuleLogEntry(log, "gameCoordinator")
+
 	return &GameCoordinator{
-		log:        log,
+		logEntry:   logEntry,
 		clientPool: clientPool,
 	}, nil
 }
