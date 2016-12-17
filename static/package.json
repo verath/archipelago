@@ -2,7 +2,6 @@
   "jspm": {
     "dependencies": {
       "eventemitter3": "npm:eventemitter3@^2.0.2",
-      "jquery": "npm:jquery@^3.1.1",
       "pixijs": "npm:pixi.js@^4.2.3"
     },
     "devDependencies": {
