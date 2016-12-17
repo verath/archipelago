@@ -5,16 +5,19 @@ import {TILE_WIDTH, TILE_HEIGHT} from "./GameView";
 
 const EVENT_CLICK = Symbol("EVENT_CLICK");
 
+const ISLAND_TEXTURES = [
+    'assets/island.png',
+];
+
 /**
  * @extends BaseSprite
  */
 export default class IslandSprite extends BaseSprite {
 
-    /**
-     * @param {IslandModel} islandModel
-     */
-    constructor(islandModel) {
-        super(PIXI.Texture.fromImage('assets/island.png'), islandModel);
+    constructor() {
+        let textureIdx = Math.floor(Math.random() * ISLAND_TEXTURES.length);
+        let texture = PIXI.Texture.fromImage(ISLAND_TEXTURES[textureIdx]);
+        super(texture);
 
         // Center our anchor to the middle of the tile
         this.pivot.set(TILE_WIDTH / 2, TILE_HEIGHT / 2);

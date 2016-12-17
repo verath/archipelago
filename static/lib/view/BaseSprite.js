@@ -4,16 +4,15 @@ export default class BaseSprite extends PIXI.Sprite {
 
     /**
      * @param {PIXI.Texture} texture
-     * @param {BaseModel} model
      */
-    constructor(texture, model) {
+    constructor(texture) {
         super(texture);
 
         /**
-         * @member {BaseModel}
+         * @member {?BaseModel}
          * @protected
          */
-        this._model = model;
+        this._model = null;
 
         this.once('added', this._onAdded.bind(this));
     }
@@ -33,6 +32,13 @@ export default class BaseSprite extends PIXI.Sprite {
     _onRemoved() {
         this._model.removeChangeListener(this._onModelChanged, this);
         this.once('added', this._onAdded.bind(this));
+    }
+
+    /**
+     * @param {BaseModel} model
+     */
+    set model(model) {
+        this._model = model;
     }
 
     /**

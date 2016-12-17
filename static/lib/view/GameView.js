@@ -2,6 +2,7 @@ import * as PIXI from 'pixijs'
 import IslandSprite from './IslandSprite'
 import AirplaneSprite from "./AirplaneSprite";
 import EventEmitter from 'eventemitter3';
+import AirplanePool from "./AirplanePool";
 
 /** @type {Symbol}*/
 const EVENT_ISLAND_CLICKED = Symbol("EVENT_ISLAND_CLICKED");
@@ -51,6 +52,26 @@ export default class GameView {
          */
         this._eventEmitter = new EventEmitter();
 
+        /**
+         * @type {AirplanePool}
+         * @private
+         */
+        this._airplanePool = new AirplanePool(10);
+
+        /**
+         * A map between island id and the island sprite representing it.
+         * @type {Map<String, IslandSprite>}
+         * @private
+         */
+        this._islands = new Map();
+
+        /**
+         * A map between airplane id and the airplane sprite representing it.
+         * @type {Map<String, AirplaneSprite>}
+         * @private
+         */
+        this._airplanes = new Map();
+
         // Start listening for model changes
         this._gameModel.addChangeListener(this._onModelChange, this);
     }
@@ -63,27 +84,69 @@ export default class GameView {
         this._eventEmitter.emit(EVENT_ISLAND_CLICKED, islandModel.id);
     }
 
+    /**
+     * @param {AirplaneModel} airplaneModel
+     * @private
+     */
+    _addAirplane(airplaneModel) {
+        let airplane = this._airplanePool.get();
+        airplane.model = airplaneModel;
+        this._stage.addChild(airplane);
+        this._airplanes.set(airplaneModel.id, airplane);
+    }
+
+    _removeAirplane(id) {
+        if (!this._airplanes.has(id)) {
+            return;
+        }
+        let airplane = this._airplanes.get(id);
+        this._stage.removeChild(airplane);
+        this._airplanes.delete(id);
+        this._airplanePool.put(airplane);
+    }
+
+    /**
+     * @param {IslandModel} islandModel
+     * @private
+     */
+    _addIsland(islandModel) {
+        let island = new IslandSprite();
+        island.model = islandModel;
+        island.addClickListener(this._onIslandClicked, this);
+        this._stage.addChild(island);
+        this._islands.set(islandModel.id, island)
+    }
+
     _onModelChange() {
-        // Clear all current elements on the stage and re-create it
-        // TODO: this just might be slightly inefficient... :)
-        this._stage.removeChildren();
-
-        this._stageWidth = this._gameModel.size.x * TILE_WIDTH;
-        this._stageHeight = this._gameModel.size.y * TILE_HEIGHT;
-
+        // Create island and airplane sprites for any islands or airplanes
+        // that has not been added already.
         this._gameModel.islands
-            .map(islandModel => {
-                let islandSprite = new IslandSprite(islandModel);
-                islandSprite.addClickListener(this._onIslandClicked, this);
-                return islandSprite;
-            })
-            .forEach(sprite => this._stage.addChild(sprite));
-
+            .filter(islandModel => !this._islands.has(islandModel.id))
+            .forEach(islandModel => this._addIsland(islandModel));
         this._gameModel.airplanes
-            .map(airplaneModel => new AirplaneSprite(airplaneModel))
-            .forEach(sprite => this._stage.addChild(sprite));
+            .filter(airplaneModel => !this._airplanes.has(airplaneModel.id))
+            .forEach(airplaneModel => this._addAirplane(airplaneModel));
 
-        this.resize();
+
+        // Remove any airplanes that are no longer part of the model
+        if (this._airplanes.size > this._gameModel.airplanes.length) {
+            let idsToRemove = [];
+            for (let id of this._airplanes.keys()) {
+                if (!this._gameModel.airplaneById(id)) {
+                    idsToRemove.push(id);
+                }
+            }
+            idsToRemove.forEach(id => this._removeAirplane(id));
+        }
+
+        // Check if the game has changed size, if so we resize ourselves
+        let newStageWidth = this._gameModel.size.x * TILE_WIDTH;
+        let newStageHeight = this._gameModel.size.x * TILE_WIDTH;
+        if (newStageWidth !== this._stageWidth || newStageHeight !== this._stageHeight) {
+            this._stageWidth = this._gameModel.size.x * TILE_WIDTH;
+            this._stageHeight = this._gameModel.size.y * TILE_HEIGHT;
+            this.resize();
+        }
     }
 
     addIslandClickListener(listener, context = null) {
