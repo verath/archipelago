@@ -1,4 +1,4 @@
-import * as PIXI from 'pixijs'
+import * as PIXI from "pixijs";
 import BaseSprite from "./BaseSprite";
 import {COLOR_SELF, COLOR_NEUTRAL, COLOR_ENEMY} from "./colors";
 import {TILE_WIDTH, TILE_HEIGHT} from "./GameView";

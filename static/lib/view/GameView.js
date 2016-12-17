@@ -1,7 +1,7 @@
-import * as PIXI from 'pixijs'
-import IslandSprite from './IslandSprite'
+import * as PIXI from "pixijs";
+import IslandSprite from "./IslandSprite";
 import AirplaneSprite from "./AirplaneSprite";
-import EventEmitter from 'eventemitter3';
+import EventEmitter from "eventemitter3";
 import AirplanePool from "./AirplanePool";
 
 /** @type {Symbol}*/

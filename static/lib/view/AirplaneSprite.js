@@ -1,4 +1,4 @@
-import * as PIXI from 'pixijs'
+import * as PIXI from "pixijs";
 import {TILE_WIDTH, TILE_HEIGHT} from "./GameView";
 import BaseSprite from "./BaseSprite";
 

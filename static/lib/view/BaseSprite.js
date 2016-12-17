@@ -1,4 +1,4 @@
-import * as PIXI from 'pixijs'
+import * as PIXI from "pixijs";
 
 export default class BaseSprite extends PIXI.Sprite {
 
