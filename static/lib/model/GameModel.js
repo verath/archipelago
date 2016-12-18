@@ -3,6 +3,7 @@ import AirplaneModel from "./AirplaneModel";
 import Coordinate from "./Coordinate";
 import PlayerModel from "./PlayerModel";
 import IslandModel from "./IslandModel";
+import LocalAirplaneModel from "./LocalAirplaneModel";
 
 export default class GameModel extends BaseModel {
 
@@ -108,6 +109,33 @@ export default class GameModel extends BaseModel {
     }
 
     /**
+     * @param gameData {GameData}
+     * @override
+     * @inheritDoc
+     */
+    _update(gameData) {
+        let changed = super._update(gameData);
+
+        if (!this._size.equals(gameData.size)) {
+            this._size.set(gameData.size);
+            changed = true;
+        }
+
+        if (this._updateAirplanes(gameData.airplanes)) {
+            changed = true;
+        }
+        if (this._updateIslands(gameData.islands)) {
+            changed = true;
+        }
+
+        this._player1.update(gameData.player1);
+        this._player2.update(gameData.player2);
+        this._playerNeutral.update(gameData.player_neutral);
+
+        return changed;
+    }
+
+    /**
      * @returns {Coordinate}
      */
     get size() {
@@ -198,32 +226,21 @@ export default class GameModel extends BaseModel {
     }
 
     /**
-     * @param gameData {GameData}
-     * @inheritDoc
+     * @param {IslandModel} origin
+     * @param {IslandModel} target
      */
-    update(gameData) {
-        let changed = super.update(gameData);
+    launchAirplane(origin, target) {
+        // Take strength from the island
+        let airplaneStrength = Math.floor(origin.strength / 2);
+        origin.strength -= airplaneStrength;
 
-        if (!this._size.equals(gameData.size)) {
-            this._size.set(gameData.size);
-            changed = true;
-        }
+        // Create a new "local" airplane
+        let airplane = new LocalAirplaneModel(this, origin, target, airplaneStrength);
+        this._airplanes.push(airplane);
 
-        if (this._updateAirplanes(gameData.airplanes)) {
-            changed = true;
-        }
-        if (this._updateIslands(gameData.islands)) {
-            changed = true;
-        }
-
-        this._player1.update(gameData.player1);
-        this._player2.update(gameData.player2);
-        this._playerNeutral.update(gameData.player_neutral);
-
-        if (changed) {
-            this._emitChanged();
-        }
-        return changed;
+        // Since we changed the airplane array, we notify
+        // our change listeners
+        this._emitChanged();
     }
 
     interpolate(delta) {

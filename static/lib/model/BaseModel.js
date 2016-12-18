@@ -1,4 +1,4 @@
-import EventEmitter from 'eventemitter3';
+import EventEmitter from "eventemitter3";
 
 /** @type {Symbol}*/
 const EVENT_CHANGE = Symbol("Change Event");
@@ -8,7 +8,7 @@ export default class BaseModel {
     constructor() {
         /**
          * @member {?string}
-         * @private
+         * @protected
          */
         this._id = null;
 
@@ -42,20 +42,32 @@ export default class BaseModel {
         this._eventEmitter.emit(EVENT_CHANGE, args)
     }
 
+
     /**
-     * Updates the model from the given data. A change event
-     * is emitted if the model was changed.
-     *
+     * Updates the model from the given data.
      * @param {{id: string}} data
      * @returns {boolean} True if the model was changed
+     * @protected
      */
-    update(data) {
+    _update(data) {
         let changed = false;
         if (this._id !== data.id) {
             this._id = data.id;
             changed = true;
         }
         return changed;
+    }
+
+    /**
+     * Updates the model from the given data. A change event
+     * is emitted if the model was changed.
+     *
+     * @param {*} data
+     */
+    update(data) {
+        if (this._update(data)) {
+            this._emitChanged();
+        }
     }
 
     /**

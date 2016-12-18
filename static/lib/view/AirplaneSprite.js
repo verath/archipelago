@@ -23,8 +23,7 @@ export default class AirplaneSprite extends BaseSprite {
         // Set our scale depending on the strength we are carrying.
         // The scaling is capped to strength 60, and a scale factor
         // between 0.25 to 0.8.
-        let strength = airplane.army.strength;
-        let size = Math.min(strength, 60) / 60;
+        let size = Math.min(airplane.strength, 60) / 60;
         let scale = size * (0.8 - 0.25) + 0.25;
         this.scale.set(scale, scale);
 

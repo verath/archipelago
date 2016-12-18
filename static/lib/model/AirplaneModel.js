@@ -1,45 +1,34 @@
-import BaseModel from "./BaseModel";
 import Coordinate from "./Coordinate";
-import Army from "./Army";
+import OwnableModel from "./OwnableModel";
 
-export default class AirplaneModel extends BaseModel {
+/**
+ * @extends OwnableModel
+ */
+export default class AirplaneModel extends OwnableModel {
 
     /**
      * @param {GameModel} gameModel
      */
     constructor(gameModel) {
-        super();
-
-        /**
-         * @member {Army}
-         * @private
-         */
-        this._army = new Army(gameModel);
+        super(gameModel);
 
         /**
          * @member {Coordinate}
-         * @private
+         * @protected
          */
         this._position = new Coordinate();
 
         /**
          * @member {Number}
-         * @private
+         * @protected
          */
         this._direction = 0;
 
         /**
          * @member {Number}
-         * @private
+         * @protected
          */
         this._speed = 0;
-    }
-
-    /**
-     * @returns {Army}
-     */
-    get army() {
-        return this._army;
     }
 
     /**
@@ -64,22 +53,11 @@ export default class AirplaneModel extends BaseModel {
     }
 
     /**
-     * @returns {?PlayerModel}
-     */
-    get owner() {
-        return this._army.owner;
-    }
-
-    /**
      * @param {AirplaneData} airplaneData
+     * @override
      */
-    update(airplaneData) {
-        let changed = super.update(airplaneData);
-
-        if (!this._army.equals(airplaneData.army)) {
-            this._army.set(airplaneData.army);
-            changed = true;
-        }
+    _update(airplaneData) {
+        let changed = super._update(airplaneData);
 
         if (!this._position.equals(airplaneData.position)) {
             this._position.set(airplaneData.position);
@@ -96,9 +74,6 @@ export default class AirplaneModel extends BaseModel {
             changed = true;
         }
 
-        if (changed) {
-            this._emitChanged();
-        }
         return changed;
     }
 

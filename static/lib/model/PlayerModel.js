@@ -57,17 +57,13 @@ export default class PlayerModel extends BaseModel {
 
     /**
      * @param {PlayerData} playerData
+     * @override
      */
-    update(playerData) {
-        let changed = super.update(playerData);
-
+    _update(playerData) {
+        let changed = super._update(playerData);
         if (this._name !== playerData.name) {
             this._name = playerData.name;
             changed = true;
-        }
-
-        if (changed) {
-            this._emitChanged();
         }
         return changed;
     }

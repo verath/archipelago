@@ -1,4 +1,4 @@
-import * as PIXI from 'pixijs'
+import * as PIXI from "pixijs";
 
 export default class GameController {
 
@@ -42,6 +42,31 @@ export default class GameController {
         this._connection.addDisconnectListener(this._onDisconnect, this);
         this._gameView.addIslandClickListener(this._onIslandClicked, this);
         this._ticker.add(this._onTick, this);
+    }
+
+
+    /**
+     * @param {IslandModel} originIsland
+     * @param {IslandModel} targetIsland
+     * @private
+     */
+    _launchAirplane(originIsland, targetIsland) {
+        if (originIsland.id === targetIsland.id) {
+            // Target cannot be the same as the origin
+            return;
+        }
+
+        // Launch a local dummy airplane, which will be replaced
+        // once we hear back from the server.
+        this._gameModel.launchAirplane(originIsland, targetIsland);
+
+        this._connection.sendAction({
+            "action": "launch",
+            "data": {
+                "from": originIsland.id,
+                "to": targetIsland.id
+            }
+        });
     }
 
     /**
@@ -102,22 +127,8 @@ export default class GameController {
 
         let selectedIsland = this._gameModel.islands.find(island => island.selected);
         if (selectedIsland) {
-            // If we already had an island selected, send an airplane to the
-            // clicked island from the selected island.
             selectedIsland.selected = false;
-
-            if(selectedIsland.id === clickedIsland.id) {
-                // Target cannot be the same as the origin
-                return;
-            }
-
-            this._connection.sendAction({
-                "action": "launch",
-                "data": {
-                    "from": selectedIsland.id,
-                    "to": clickedIsland.id
-                }
-            });
+            this._launchAirplane(selectedIsland, clickedIsland);
         } else {
             // If we didn't have an island select already, select the clicked island
             // if it is owned by us.
@@ -129,7 +140,7 @@ export default class GameController {
 
     _onTick() {
         let now = performance.now();
-        let delta =  now - (this._lastUpdateMS || now);
+        let delta = now - (this._lastUpdateMS || now);
         this._lastUpdateMS = now;
 
         this._gameModel.interpolate(delta);

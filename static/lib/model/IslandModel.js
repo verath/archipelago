@@ -1,20 +1,13 @@
-import BaseModel from "./BaseModel";
 import Coordinate from "./Coordinate";
-import Army from "./Army";
+import OwnableModel from "./OwnableModel";
 
-export default class IslandModel extends BaseModel {
+export default class IslandModel extends OwnableModel {
 
     /**
      * @param {GameModel} gameModel
      */
     constructor(gameModel) {
-        super();
-
-        /**
-         * @member {Army}
-         * @private
-         */
-        this._army = new Army(gameModel);
+        super(gameModel);
 
         /**
          * @member {Coordinate}
@@ -36,13 +29,6 @@ export default class IslandModel extends BaseModel {
     }
 
     /**
-     * @returns {Army}
-     */
-    get army() {
-        return this._army;
-    }
-
-    /**
      * @returns {Coordinate}
      */
     get position() {
@@ -54,13 +40,6 @@ export default class IslandModel extends BaseModel {
      */
     get size() {
         return this._size;
-    }
-
-    /**
-     * @returns {?PlayerModel}
-     */
-    get owner() {
-        return this._army.owner;
     }
 
     /**
@@ -82,14 +61,10 @@ export default class IslandModel extends BaseModel {
 
     /**
      * @param {IslandData} islandData
+     * @override
      */
-    update(islandData) {
-        let changed = super.update(islandData);
-
-        if (!this._army.equals(islandData.army)) {
-            this._army.set(islandData.army);
-            changed = true;
-        }
+    _update(islandData) {
+        let changed = super._update(islandData);
 
         if (!this._position.equals(islandData.position)) {
             this._position.set(islandData.position);
@@ -101,9 +76,6 @@ export default class IslandModel extends BaseModel {
             changed = true;
         }
 
-        if (changed) {
-            this._emitChanged();
-        }
         return changed;
     }
 }

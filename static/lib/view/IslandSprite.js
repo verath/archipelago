@@ -63,7 +63,7 @@ export default class IslandSprite extends BaseSprite {
 
         // Update the strength text number, and set its color depending
         // on who owns the island
-        this._strengthText.text = "" + island.army.strength;
+        this._strengthText.text = "" + island.strength;
         if (island.owner.isSelf()) {
             this._strengthText.style.fill = COLOR_SELF;
         } else if (island.owner.isNeutral()) {
