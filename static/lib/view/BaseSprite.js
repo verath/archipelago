@@ -3,10 +3,11 @@ import * as PIXI from "pixijs";
 export default class BaseSprite extends PIXI.Sprite {
 
     /**
-     * @param {PIXI.Texture} texture
+     * @param {ResourceHolder} resourceHolder
+     * @param {string} textureId
      */
-    constructor(texture) {
-        super(texture);
+    constructor(resourceHolder, textureId) {
+        super(resourceHolder.getTexture(textureId));
 
         /**
          * @member {?BaseModel}

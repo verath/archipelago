@@ -12,10 +12,24 @@ export const TILE_HEIGHT = 128;
 
 export default class GameView {
     /**
+     * @param {ResourceHolder} resourceHolder
      * @param {WebGLRenderer|CanvasRenderer} renderer
      * @param {GameModel} gameModel
      */
-    constructor(renderer, gameModel) {
+    constructor(resourceHolder, renderer, gameModel) {
+
+        /**
+         * @type {ResourceHolder}
+         * @private
+         */
+        this._resourceHolder = resourceHolder;
+
+        /**
+         * @member {WebGLRenderer|CanvasRenderer}
+         * @private
+         */
+        this._renderer = renderer;
+
         /**
          * @member {GameModel}
          * @private
@@ -35,12 +49,6 @@ export default class GameView {
         this._stageHeight = 0;
 
         /**
-         * @member {WebGLRenderer|CanvasRenderer}
-         * @private
-         */
-        this._renderer = renderer;
-
-        /**
          * @member {Container}
          * @private
          */
@@ -56,7 +64,7 @@ export default class GameView {
          * @type {AirplanePool}
          * @private
          */
-        this._airplanePool = new AirplanePool(10);
+        this._airplanePool = new AirplanePool(10, () => new AirplaneSprite(resourceHolder));
 
         /**
          * A map between island id and the island sprite representing it.
@@ -110,7 +118,7 @@ export default class GameView {
      * @private
      */
     _addIsland(islandModel) {
-        let island = new IslandSprite();
+        let island = new IslandSprite(this._resourceHolder);
         island.model = islandModel;
         island.addClickListener(this._onIslandClicked, this);
         this._stage.addChild(island);

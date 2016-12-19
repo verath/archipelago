@@ -14,10 +14,13 @@ const ISLAND_TEXTURES = [
  */
 export default class IslandSprite extends BaseSprite {
 
-    constructor() {
+    /**
+     * @param {ResourceHolder} resourceHolder
+     */
+    constructor(resourceHolder) {
         let textureIdx = Math.floor(Math.random() * ISLAND_TEXTURES.length);
-        let texture = PIXI.Texture.fromImage(ISLAND_TEXTURES[textureIdx]);
-        super(texture);
+        let textureId = ISLAND_TEXTURES[textureIdx];
+        super(resourceHolder, textureId);
 
         // Center our anchor to the middle of the tile
         this.pivot.set(TILE_WIDTH / 2, TILE_HEIGHT / 2);

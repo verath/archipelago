@@ -10,9 +10,11 @@ const AIRPLANE_HEIGHT = 64;
  */
 export default class AirplaneSprite extends BaseSprite {
 
-    constructor() {
-        let texture = PIXI.Texture.fromImage('assets/airplane.png');
-        super(texture);
+    /**
+     * @param {ResourceHolder} resourceHolder
+     */
+    constructor(resourceHolder) {
+        super(resourceHolder, 'assets/airplane.png');
         // Center our position anchor to the middle of the tile
         this.pivot.set(TILE_WIDTH / 2, TILE_HEIGHT / 2);
     }

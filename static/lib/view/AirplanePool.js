@@ -1,15 +1,30 @@
 import AirplaneSprite from "./AirplaneSprite";
-export default class AirplanePool {
 
-    constructor(initialSize) {
+/**
+ * @typedef {function} AirplaneCreatorFunc
+ * @returns {AirplaneSprite}
+ */
+
+export default class AirplanePool {
+    /**
+     * @param {Number} initialSize
+     * @param {AirplaneCreatorFunc} creatorFunc
+     */
+    constructor(initialSize, creatorFunc) {
         /**
          * @type {[AirplaneSprite]}
          * @private
          */
         this._sprites = [];
 
+        /**
+         * @type {AirplaneCreatorFunc}
+         * @private
+         */
+        this._creatorFunc = creatorFunc;
+
         for (let i = 0; i < initialSize; i++) {
-            this._sprites.push(new AirplaneSprite());
+            this._sprites.push(creatorFunc.call(null));
         }
     }
 
@@ -17,7 +32,7 @@ export default class AirplanePool {
      * @returns {AirplaneSprite}
      */
     get() {
-        return this._sprites.pop() || new AirplaneSprite();
+        return this._sprites.pop() || this._creatorFunc.call(null);
     }
 
     /**
