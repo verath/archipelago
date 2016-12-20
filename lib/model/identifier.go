@@ -1,6 +1,6 @@
 package model
 
-import "github.com/nu7hatch/gouuid"
+import "github.com/verath/archipelago/lib/id"
 
 type Identifier string
 
@@ -13,9 +13,5 @@ func (id Identifier) Equals(other Identifier) bool {
 }
 
 func NewIdentifier() (Identifier, error) {
-	id, err := uuid.NewV4()
-	if err != nil {
-		return "", err
-	}
-	return Identifier(id.String()), nil
+	return Identifier(id.Next()), nil
 }

@@ -2,7 +2,7 @@ package util
 
 import (
 	"github.com/Sirupsen/logrus"
-	"github.com/nu7hatch/gouuid"
+	"github.com/verath/archipelago/lib/id"
 )
 
 var ModuleNameKey = "module"
@@ -12,16 +12,8 @@ func ModuleLogEntry(log *logrus.Logger, moduleName string) *logrus.Entry {
 }
 
 func ModuleLogEntryWithID(log *logrus.Logger, moduleName string) *logrus.Entry {
-	id := ""
-	u, err := uuid.NewV4()
-	if err != nil {
-		log.WithError(err).Error("could not generate uuid for log entry")
-	} else {
-		id = u.String()
-	}
-
 	return log.WithFields(logrus.Fields{
 		ModuleNameKey: moduleName,
-		"id":          id,
+		"id":          id.Next(),
 	})
 }
