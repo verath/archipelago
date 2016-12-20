@@ -52,6 +52,12 @@ func (c *Client) NextActionBuilder(ctx context.Context) (action.ActionBuilder, e
 	return actionBuilder, nil
 }
 
+// Returns the disconnected channel, a channel that is closed
+// when the client is disconnected.
+func (c *Client) DisconnectedCh() <-chan struct{} {
+	return c.conn.DisconnectedCh()
+}
+
 // Disconnect asks the Client to disconnect. This in turn will
 // close the underlying connection.
 func (c *Client) Disconnect() {

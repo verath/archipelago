@@ -77,15 +77,17 @@ func (gc *GameCoordinator) waitForPlayers(ctx context.Context) (*network.Client,
 		}
 
 		gc.logEntry.Debug("p1Client established")
-		// TODO: Listen for p1Client disconnect
 		select {
 		case <-ctx.Done():
 			return nil, nil, ctx.Err()
+		case <-p1Client.DisconnectedCh():
+			gc.logEntry.Debug("p1Client disconnected while waiting for p2")
+			continue
 		case p2Client, ok = <-clientCh:
 			if !ok {
 				return nil, nil, errors.New("clientCh closed")
 			}
-			gc.logEntry.Debug("p2Conn established")
+			gc.logEntry.Debug("p2Client established")
 			return p1Client, p2Client, nil
 		}
 	}

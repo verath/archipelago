@@ -15,6 +15,8 @@ type Connection interface {
 
 	WriteMessage(ctx context.Context, message []byte) error
 
+	DisconnectedCh() <-chan struct{}
+
 	Disconnect()
 
 	// Starts the connection and blocks until the connection is

@@ -7,6 +7,7 @@ import (
 	"github.com/gorilla/websocket"
 	"github.com/verath/archipelago/lib/network"
 	"github.com/verath/archipelago/lib/util"
+	"sync"
 	"time"
 )
 
@@ -22,9 +23,10 @@ const (
 
 	// Maximum message size allowed from peer.
 	connMaxMessageSize = 512
-)
 
-var newline = []byte{'\n'}
+	// Size of the buffer used for received messages.
+	connReceiveBufferSize = 16
+)
 
 // connection represents a websocket connection and handles reading
 // and writing bytes to that connection.
@@ -36,10 +38,15 @@ type connection struct {
 	logEntry *logrus.Entry
 	conn     *websocket.Conn
 
+	// "Lock" around disconnectCh, to close it only once
+	dcOnce sync.Once
 	// Channel closed when we have been asked to disconnect
-	disconnectCh chan struct{}
+	disconnectedCh chan struct{}
 
-	sendCh    chan []byte
+	// A channel where messages that should be written to the client
+	// is sent
+	sendCh chan []byte
+	// A channel where messages read from the client is sent
 	receiveCh chan []byte
 }
 
@@ -65,6 +72,12 @@ func (c *connection) readPump(ctx context.Context, receiveCh chan<- []byte) erro
 		case <-ctx.Done():
 			return ctx.Err()
 		case receiveCh <- message:
+		default:
+			// receiveCh was full. This either means we are getting
+			// messages when they are not expected, or getting more
+			// messages than the server can handle. In both cases
+			// we close the connection.
+			return errors.New("Could not send to receiveCh without blocking")
 		}
 	}
 }
@@ -130,14 +143,14 @@ func (c *connection) WriteMessage(ctx context.Context, message []byte) error {
 	}
 }
 
+func (c *connection) DisconnectedCh() <-chan struct{} {
+	return c.disconnectedCh
+}
+
 func (c *connection) Disconnect() {
-	select {
-	case <-c.disconnectCh:
-		// Already signaled to disconnect
-	default:
-		// TODO: race, fix
-		close(c.disconnectCh)
-	}
+	c.dcOnce.Do(func() {
+		close(c.disconnectedCh)
+	})
 }
 
 // Starts the connection and blocks until the connection is
@@ -147,9 +160,12 @@ func (c *connection) Run(ctx context.Context) error {
 	c.logEntry.Debug("Started")
 	defer c.logEntry.Debug("Stopped")
 
+	// Signal that we disconnected if we stopped for any reason
+	defer c.Disconnect()
+
 	return util.RunWithContext(ctx,
 		func(ctx context.Context) error {
-			return c.writePump(ctx, c.disconnectCh, c.sendCh)
+			return c.writePump(ctx, c.disconnectedCh, c.sendCh)
 		},
 		func(ctx context.Context) error {
 			return c.readPump(ctx, c.receiveCh)
@@ -161,10 +177,10 @@ func newConnection(log *logrus.Logger, conn *websocket.Conn) (*connection, error
 	logEntry := util.ModuleLogEntryWithID(log, "ws/connection")
 
 	return &connection{
-		logEntry:     logEntry,
-		conn:         conn,
-		disconnectCh: make(chan struct{}),
-		sendCh:       make(chan []byte),
-		receiveCh:    make(chan []byte),
+		logEntry:       logEntry,
+		conn:           conn,
+		disconnectedCh: make(chan struct{}),
+		sendCh:         make(chan []byte),
+		receiveCh:      make(chan []byte, connReceiveBufferSize),
 	}, nil
 }
