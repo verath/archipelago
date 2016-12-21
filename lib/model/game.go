@@ -7,8 +7,7 @@ import (
 )
 
 type Game struct {
-	Identifier
-
+	id            GameID
 	size          Coordinate
 	player1       *Player
 	player2       *Player
@@ -30,13 +29,13 @@ func (g *Game) PlayerNeutral() *Player {
 }
 
 func (g *Game) Player(id PlayerID) *Player {
-	if g.player1.ID().Equals(id) {
+	if g.player1.id == id {
 		return g.player1
 	}
-	if g.player2.ID().Equals(id) {
+	if g.player2.id == id {
 		return g.player2
 	}
-	if g.playerNeutral.ID().Equals(id) {
+	if g.playerNeutral.id == id {
 		return g.playerNeutral
 	}
 	return nil
@@ -45,7 +44,7 @@ func (g *Game) Player(id PlayerID) *Player {
 // Returns an island by id, or nil if the island does not exist.
 func (g *Game) Island(id IslandID) *Island {
 	for _, island := range g.islands {
-		if island.ID().Equals(id) {
+		if island.id == id {
 			return island
 		}
 	}
@@ -84,7 +83,7 @@ func (g *Game) RemoveAirplane(airplane *Airplane) {
 
 func (g *Game) MarshalJSON() ([]byte, error) {
 	return json.Marshal(&struct {
-		ID            Identifier  `json:"id"`
+		ID            GameID      `json:"id"`
 		Size          Coordinate  `json:"size"`
 		Player1       *Player     `json:"player1"`
 		Player2       *Player     `json:"player2"`
@@ -92,7 +91,7 @@ func (g *Game) MarshalJSON() ([]byte, error) {
 		Islands       []*Island   `json:"islands"`
 		Airplanes     []*Airplane `json:"airplanes"`
 	}{
-		ID:            g.Identifier,
+		ID:            g.id,
 		Size:          g.size,
 		Player1:       g.player1,
 		Player2:       g.player2,
@@ -112,7 +111,7 @@ func (g *Game) Copy() *Game {
 		islandsCopy[i] = island.Copy()
 	}
 	return &Game{
-		Identifier:    g.Identifier,
+		id:            g.id,
 		size:          g.size,
 		player1:       g.player1.Copy(),
 		player2:       g.player2.Copy(),
@@ -123,12 +122,9 @@ func (g *Game) Copy() *Game {
 }
 
 func newGame(size Coordinate, player1, player2, playerNeutral *Player, islands []*Island, airplanes []*Airplane) (*Game, error) {
-	identifier, err := NewIdentifier()
-	if err != nil {
-		return nil, err
-	}
+	id := GameID(NewModelID())
 	return &Game{
-		Identifier:    identifier,
+		id:            id,
 		size:          size,
 		player1:       player1,
 		player2:       player2,

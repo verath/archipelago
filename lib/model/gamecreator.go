@@ -7,17 +7,17 @@ import (
 )
 
 func createPlayers() (p1, p2, pn *Player, err error) {
-	p1, err = NewPlayer("player1")
+	p1, err = NewPlayer()
 	if err != nil {
 		err = fmt.Errorf("Error creating p1: %v", err)
 		return
 	}
-	p2, err = NewPlayer("player2")
+	p2, err = NewPlayer()
 	if err != nil {
 		err = fmt.Errorf("Error creating p2: %v", err)
 		return
 	}
-	pn, err = NewPlayer("neutral")
+	pn, err = NewPlayer()
 	if err != nil {
 		err = fmt.Errorf("Error creating pn: %v", err)
 		return

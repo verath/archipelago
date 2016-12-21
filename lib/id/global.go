@@ -7,7 +7,7 @@ import (
 
 var idCount uint64 = 0
 
-func Next() string {
+func NextGlobalID() string {
 	val := atomic.AddUint64(&idCount, uint64(1))
 	return strconv.FormatUint(val, 16)
 }

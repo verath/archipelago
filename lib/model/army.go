@@ -32,7 +32,7 @@ func (a *army) MarshalJSON() ([]byte, error) {
 		OwnerID  PlayerID `json:"owner_id"`
 		Strength int64    `json:"strength"`
 	}{
-		OwnerID:  a.owner.ID(),
+		OwnerID:  a.owner.id,
 		Strength: a.strength,
 	})
 }

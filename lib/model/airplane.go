@@ -7,13 +7,12 @@ import (
 )
 
 type Airplane struct {
-	Identifier
 	*army
 
+	id          AirplaneID
 	destination IslandID
-
-	position  FloatCoordinate
-	direction float64
+	position    FloatCoordinate
+	direction   float64
 	// Speed in tiles/nanosecond
 	speed float64
 }
@@ -53,15 +52,15 @@ func (a *Airplane) MarshalJSON() ([]byte, error) {
 	speedMillis := a.speed * float64(time.Millisecond)
 
 	return json.Marshal(&struct {
-		ID          Identifier      `json:"id"`
 		Army        *army           `json:"army"`
+		ID          AirplaneID      `json:"id"`
 		Destination IslandID        `json:"-"`
 		Position    FloatCoordinate `json:"position"`
 		Direction   float64         `json:"direction"`
 		Speed       float64         `json:"speed"`
 	}{
-		ID:          a.Identifier,
 		Army:        a.army,
+		ID:          a.id,
 		Destination: a.destination,
 		Position:    a.position,
 		Direction:   a.direction,
@@ -71,8 +70,8 @@ func (a *Airplane) MarshalJSON() ([]byte, error) {
 
 func (a *Airplane) Copy() *Airplane {
 	return &Airplane{
-		Identifier:  a.Identifier,
 		army:        a.army.Copy(),
+		id:          a.id,
 		destination: a.destination,
 		position:    a.position,
 		direction:   a.direction,
@@ -81,10 +80,7 @@ func (a *Airplane) Copy() *Airplane {
 }
 
 func NewAirplane(origin *Island, destination *Island, owner *Player, strength int64) (*Airplane, error) {
-	identifier, err := NewIdentifier()
-	if err != nil {
-		return nil, err
-	}
+	id := AirplaneID(NewModelID())
 
 	// Calculate the bearing of the airplane
 	originPos := origin.Position().ToFloatCoordinate()
@@ -92,9 +88,9 @@ func NewAirplane(origin *Island, destination *Island, owner *Player, strength in
 	direction := math.Atan2(destPos.Y-originPos.Y, destPos.X-originPos.X)
 
 	return &Airplane{
-		Identifier:  identifier,
 		army:        newArmy(owner, strength),
-		destination: destination.ID(),
+		id:          id,
+		destination: destination.id,
 		position:    originPos,
 		direction:   direction,
 		speed:       airplaneDefaultSpeed,

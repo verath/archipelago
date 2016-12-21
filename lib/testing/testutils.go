@@ -7,9 +7,9 @@ import (
 
 // Creates an empty 9x9 board
 func CreateEmptyGame() *Game {
-	p1, _ := NewPlayer("player1")
-	p2, _ := NewPlayer("player2")
-	pn, _ := NewPlayer("neutral")
+	p1, _ := NewPlayer()
+	p2, _ := NewPlayer()
+	pn, _ := NewPlayer()
 	return NewGameBuilder(Coordinate{9, 9}, p1, p2, pn).BuildOrPanic()
 }
 
@@ -20,13 +20,13 @@ func CreateEmptyGame() *Game {
 // All starting with a strength of 10 and a growth
 // interval of 1/second
 func CreateSimpleGame() *Game {
-	p1, _ := NewPlayer("player1")
-	p2, _ := NewPlayer("player2")
-	pn, _ := NewPlayer("neutral")
-	p1Island, _ := NewIslandWithID(Identifier("p1"), Coordinate{0, 0}, IslandSizeMedium, 10, p1)
-	p2Island, _ := NewIslandWithID(Identifier("p2"), Coordinate{8, 8}, IslandSizeMedium, 10, p2)
-	neIsland, _ := NewIslandWithID(Identifier("pn"), Coordinate{4, 4}, IslandSizeMedium, 10, pn)
-	ne2Island, _ := NewIslandWithID(Identifier("bottom-left"), Coordinate{0, 8}, IslandSizeMedium, 10, pn)
+	p1, _ := NewPlayer()
+	p2, _ := NewPlayer()
+	pn, _ := NewPlayer()
+	p1Island, _ := NewIslandWithID(IslandID("p1"), Coordinate{0, 0}, IslandSizeMedium, 10, p1)
+	p2Island, _ := NewIslandWithID(IslandID("p2"), Coordinate{8, 8}, IslandSizeMedium, 10, p2)
+	neIsland, _ := NewIslandWithID(IslandID("pn"), Coordinate{4, 4}, IslandSizeMedium, 10, pn)
+	ne2Island, _ := NewIslandWithID(IslandID("bottom-left"), Coordinate{0, 8}, IslandSizeMedium, 10, pn)
 
 	return NewGameBuilder(Coordinate{9, 9}, p1, p2, pn).
 		AddIsland(p1Island).

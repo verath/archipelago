@@ -4,56 +4,35 @@ import (
 	"encoding/json"
 )
 
-// We wrap the identifier type in a PlayerID type to add
-// stronger type-support when working with player ids.
-type PlayerID Identifier
-
-func (playerID PlayerID) Equals(otherID PlayerID) bool {
-	return Identifier(playerID).Equals(Identifier(otherID))
-}
-
 type Player struct {
-	Identifier
-
-	name string
+	id PlayerID
 }
 
 func (p *Player) ID() PlayerID {
-	return PlayerID(p.Identifier)
-}
-
-func (p *Player) Name() string {
-	return p.name
+	return p.id
 }
 
 func (p *Player) Equals(other *Player) bool {
-	return (other != nil && p.Identifier.Equals(other.Identifier))
+	return other != nil && p.id == other.id
 }
 
 func (p *Player) MarshalJSON() ([]byte, error) {
 	return json.Marshal(&struct {
-		ID   Identifier `json:"id"`
-		Name string     `json:"name"`
+		ID PlayerID `json:"id"`
 	}{
-		ID:   p.Identifier,
-		Name: p.name,
+		ID: p.id,
 	})
 }
 
 func (p *Player) Copy() *Player {
 	return &Player{
-		Identifier: p.Identifier,
-		name:       p.name,
+		id: p.id,
 	}
 }
 
-func NewPlayer(name string) (*Player, error) {
-	identifier, err := NewIdentifier()
-	if err != nil {
-		return nil, err
-	}
+func NewPlayer() (*Player, error) {
+	id := PlayerID(NewModelID())
 	return &Player{
-		Identifier: identifier,
-		name:       name,
+		id: id,
 	}, nil
 }

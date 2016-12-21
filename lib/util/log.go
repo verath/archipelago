@@ -14,6 +14,6 @@ func ModuleLogEntry(log *logrus.Logger, moduleName string) *logrus.Entry {
 func ModuleLogEntryWithID(log *logrus.Logger, moduleName string) *logrus.Entry {
 	return log.WithFields(logrus.Fields{
 		ModuleNameKey: moduleName,
-		"id":          id.Next(),
+		"id":          id.NextGlobalID(),
 	})
 }
