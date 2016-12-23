@@ -39,5 +39,4 @@ func main() {
 	if err != nil && err != context.Canceled {
 		log.WithError(err).Error("Error during Run")
 	}
-	os.Exit(0)
 }
