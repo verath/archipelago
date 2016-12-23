@@ -2,7 +2,11 @@ import ResourceHolder from "./ResourceHolder";
 
 const TEXTURES = [
     'assets/airplane.png',
-    'assets/island.png'
+    'assets/island1.png',
+    'assets/island2.png',
+    'assets/island3.png',
+    'assets/island4.png',
+    'assets/selected.png'
 ];
 
 

@@ -5,9 +5,13 @@ import {TILE_WIDTH, TILE_HEIGHT} from "./GameView";
 
 const EVENT_CLICK = Symbol("EVENT_CLICK");
 
-const ISLAND_TEXTURES = [
-    'assets/island.png',
+const ISLAND_TEXTURE_IDS = [
+    'assets/island1.png',
+    'assets/island2.png',
+    'assets/island3.png',
+    'assets/island4.png',
 ];
+const SELECTED_TEXTURE_ID = 'assets/selected.png';
 
 /**
  * @extends BaseSprite
@@ -18,15 +22,27 @@ export default class IslandSprite extends BaseSprite {
      * @param {ResourceHolder} resourceHolder
      */
     constructor(resourceHolder) {
-        let textureIdx = Math.floor(Math.random() * ISLAND_TEXTURES.length);
-        let textureId = ISLAND_TEXTURES[textureIdx];
+        let textureIdx = Math.floor(Math.random() * ISLAND_TEXTURE_IDS.length);
+        let textureId = ISLAND_TEXTURE_IDS[textureIdx];
         super(resourceHolder, textureId);
 
         // Center our anchor to the middle of the tile
         this.pivot.set(TILE_WIDTH / 2, TILE_HEIGHT / 2);
 
+        /**
+         * @type {PIXI.Text}
+         * @private
+         */
         this._strengthText = IslandSprite._createStrengthText();
         this.addChild(this._strengthText);
+
+        /**
+         * @type {PIXI.Sprite}
+         * @private
+         */
+        this._selectedIndicator = IslandSprite._createSelectedIndicator(resourceHolder);
+        this._selectedIndicator.alpha = 0;
+        this.addChild(this._selectedIndicator);
 
         // Listen for clicks
         this.interactive = true;
@@ -49,6 +65,15 @@ export default class IslandSprite extends BaseSprite {
         strengthText.x = (TILE_WIDTH / 2);
         strengthText.y = (TILE_HEIGHT / 2);
         return strengthText;
+    }
+
+    /**
+     * @param {ResourceHolder} resourceHolder
+     * @returns {PIXI.Sprite}
+     * @private
+     */
+    static _createSelectedIndicator(resourceHolder) {
+        return new PIXI.Sprite(resourceHolder.getTexture(SELECTED_TEXTURE_ID));
     }
 
     _onModelChanged() {
@@ -76,11 +101,10 @@ export default class IslandSprite extends BaseSprite {
         }
 
         // Show island selected indicator
-        // TODO: indicator...
         if (island.selected) {
-            this.alpha = 0.5;
+            this._selectedIndicator.alpha = 1;
         } else {
-            this.alpha = 1;
+            this._selectedIndicator.alpha = 0;
         }
     }
 
