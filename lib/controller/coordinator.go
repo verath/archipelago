@@ -68,15 +68,21 @@ func (gc *GameCoordinator) waitForPlayers(ctx context.Context) (*network.Client,
 	for {
 		var p1Client, p2Client *network.Client
 		var ok bool
-
 		gc.logEntry.Debug("Waiting for player connections...")
-		select {
-		case <-ctx.Done():
-			return nil, nil, ctx.Err()
-		case p1Client = <-clientCh:
-		}
 
+		p1Client, err := gc.clientPool.NextClient(ctx)
+		if err != nil {
+			return nil, nil, err
+		}
 		gc.logEntry.Debug("p1Client established")
+
+		p2WaitCtx, cancel := context.WithCancel(ctx)
+		go func() {
+
+		}()
+
+		p2Client, err := gc.clientPool.NextClient(ctx)
+
 		select {
 		case <-ctx.Done():
 			return nil, nil, ctx.Err()
@@ -93,11 +99,11 @@ func (gc *GameCoordinator) waitForPlayers(ctx context.Context) (*network.Client,
 	}
 }
 
-// runLoop runs the main "loop" of the game coordinator. The loop waits for
+// run runs the main "loop" of the game coordinator. The loop waits for
 // two players, creates a new games for these players, and wait for another
 // pair of players. This method blocks until the context is cancelled or
 // an error occurs. Always returns a non-nil error.
-func (gc *GameCoordinator) runLoop(ctx context.Context) error {
+func (gc *GameCoordinator) run(ctx context.Context) error {
 	ctx, cancel := context.WithCancel(ctx)
 	var gamesWG sync.WaitGroup
 	defer func() {
@@ -132,10 +138,7 @@ func (gc *GameCoordinator) Run(ctx context.Context) error {
 	gc.logEntry.Info("Starting")
 	defer gc.logEntry.Info("Stopped")
 
-	return util.RunWithContext(ctx,
-		gc.clientPool.Run,
-		gc.runLoop,
-	)
+	return gc.run(ctx)
 }
 
 func NewGameCoordinator(log *logrus.Logger, clientPool *network.ClientPool) (*GameCoordinator, error) {

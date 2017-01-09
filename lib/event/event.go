@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"github.com/verath/archipelago/lib/model"
 	"sync"
+	"github.com/verath/archipelago/lib/network"
 )
 
 type EventBuilder interface {

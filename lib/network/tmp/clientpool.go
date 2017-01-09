@@ -1,5 +1,5 @@
 package network
-
+/*
 import (
 	"context"
 	"errors"
@@ -23,10 +23,6 @@ const (
 // the ClientPool.
 type ClientPool struct {
 	logEntry *logrus.Entry
-
-	// The addCh holds Connections that has been added to the pool, but
-	// that has not been started yet.
-	addCh chan Connection
 
 	// The clientCh is a buffered channel of started Clients that are
 	// ready to be used.
@@ -54,7 +50,7 @@ func (pool *ClientPool) broadcastClient(ctx context.Context, getCh chan<- *Clien
 	}
 }
 
-func (pool *ClientPool) runLoop(ctx context.Context) error {
+func (pool *ClientPool) run(ctx context.Context) error {
 	pool.logEntry.Info("Starting")
 	defer pool.logEntry.Info("Stopped")
 
@@ -97,7 +93,16 @@ func (pool *ClientPool) runLoop(ctx context.Context) error {
 	}
 }
 
-// Returns the channel for adding new clients to the pool.
+func (pool *ClientPool) Run(ctx context.Context) error {
+	return pool.run(ctx)
+}
+
+// Adds a connection to the connection pool
+func (pool *ClientPool) AddConnection(conn Connection) error {
+	client, err := NewClient(pool.logEntry.Logger, conn)
+}
+
+// Returns the channel where clients are posted to.
 func (pool *ClientPool) AddCh() chan<- Connection {
 	return pool.addCh
 }
@@ -107,16 +112,12 @@ func (pool *ClientPool) GetCh() <-chan *Client {
 	return pool.getCh
 }
 
-func (pool *ClientPool) Run(ctx context.Context) error {
-	return pool.runLoop(ctx)
-}
-
 func NewClientPool(log *logrus.Logger) (*ClientPool, error) {
 	logEntry := util.ModuleLogEntryWithID(log, "clientPool")
 
 	return &ClientPool{
 		logEntry: logEntry,
-		addCh:    make(chan Connection, poolAddChannelBufferSize),
 		getCh:    make(chan *Client, poolGetChannelBufferSize),
 	}, nil
 }
+*/

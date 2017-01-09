@@ -1,26 +1,22 @@
 package network
 
-import (
-	"context"
-	"errors"
-)
+// A connection is an abstraction of a connection to a peer that
+// supports sending and receiving text messages, represented as
+// byte slices.
+type connection interface {
+	// Reads a message from the connection. This method must
+	// be continuously polled in order to detect connection
+	// state changes. If ReadMessage returns an error, it is
+	// assumed that the connection will never return a message
+	// again and should be considered disconnected. Only one
+	// goroutine may call this method at once.
+	ReadMessage() ([]byte, error)
 
-// The error returned when a Connection has been disconnected
-var Disconnected = errors.New("Connection was disconnected")
+	// Writes a message to the connection. Only one goroutine
+	// may call this method at once.
+	WriteMessage(message []byte) error
 
-// A connection is an abstraction of a connection to a player
-// that supports sending and receiving bytes of data.
-type Connection interface {
-	ReadMessage(ctx context.Context) ([]byte, error)
-
-	WriteMessage(ctx context.Context, message []byte) error
-
-	DisconnectedCh() <-chan struct{}
-
-	Disconnect()
-
-	// Starts the connection and blocks until the connection is
-	// disconnected. Canceling the context will force the connection
-	// to shutdown. Run always returns a non-nil error
-	Run(ctx context.Context) error
+	// Closes the connection. This method must unblock any current
+	// reader or writers.
+	Close() error
 }

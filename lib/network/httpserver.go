@@ -15,13 +15,12 @@ const (
 	httpWriteTimeout = 10 * time.Second
 )
 
-// Server is a thin wrapper around http.Server that can be shut
-// down by context cancellation
+// Server is a thin wrapper around http.Server that can be
+// shut-down by context cancellation
 type HTTPServer struct {
-	logEntry *logrus.Entry
-	mux      *http.ServeMux
-
-	serverAddr string
+	LogEntry *logrus.Entry
+	Handler      *http.ServeMux
+	Addr string
 }
 
 // Run starts the http server and blocks until it has finished.
@@ -54,7 +53,8 @@ func (srv *HTTPServer) Run(ctx context.Context) error {
 		errCh <- httpServer.Serve(listener)
 		cancel()
 	}()
-
+	// As the context is finished, we close the listener used by the
+	// httpServer, which in turn forcefully stops the httpServer.
 	<-ctx.Done()
 	listener.Close()
 	return <-errCh
@@ -62,7 +62,6 @@ func (srv *HTTPServer) Run(ctx context.Context) error {
 
 func NewServer(log *logrus.Logger, mux *http.ServeMux, serverAddr string) (*HTTPServer, error) {
 	logEntry := util.ModuleLogEntry(log, "http")
-
 	return &HTTPServer{
 		logEntry:   logEntry,
 		mux:        mux,
