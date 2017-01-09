@@ -4,64 +4,37 @@ import (
 	"encoding/json"
 )
 
-type (
-	// Envelope is the "container" type wrapping all messages.
-	envelope struct {
-		// The type this Envelope represents
-		envType string
-		// The actual data, sent or received.
-		envData interface{}
-	}
-
-	// ReceivedEnvelope is an enveloped received, unmarshalling the data as
-	// a json.RawMessage so that it can be appropriately handled later.
-	receivedEnvelope struct {
-		envelope
-		envData json.RawMessage
-	}
-)
-
-// Getter for the type of the envelope. This is a user-defined string,
-// used to identify the type of data contained in the envelope.
-func (env *envelope) Type() string {
-	return env.envType
+// Envelope is a "container" type wrapping all messages sent
+// to a peer.
+type Envelope struct {
+	EnvType string      `json:"type"`
+	EnvData interface{} `json:"data"`
 }
 
-func (env *envelope) MarshalJSON() ([]byte, error) {
-	// We implement MarshalJSON to keep the envType and envData
-	// fields hidden in the API.
-	return json.Marshal(&struct {
-		EnvType string      `json:"type"`
-		EnvData interface{} `json:"data"`
-	}{
-		EnvType: env.envType,
-		EnvData: env.envData,
-	})
+func (env *Envelope) Type() string {
+	return env.EnvType
 }
 
-// Creates a new envelope, used to encapsulate some data to send
-// to a client.
-func NewEnvelope(envType string, envData interface{}) *envelope {
-	return &envelope{
-		envType: envType,
-		envData: envData,
-	}
+// ReceivedEnvelope is an interface for an envelope received from a peer.
+type ReceivedEnvelope interface {
+	// Getter for the type of the envelope. This is a user-defined string,
+	// used to identify the type of data contained in the envelope.
+	Type() string
+
+	// UnmarshalData unmarshals the data held in the envelop into
+	// the provided data structure.
+	UnmarshalData(v interface{}) error
 }
 
-// UnmarshalData unmarshals the data held in the envelop into
-// the provided data structure.
-func (recvEnv *receivedEnvelope) UnmarshalData(v interface{}) error {
-	return json.Unmarshal(recvEnv.envData, v)
+// A JSON-based implementation of the ReceivedEnvelope interface
+type receivedEnvelopeImpl struct {
+	Envelope
+	// The data received, stored as a json.RawMessage so that
+	// it can be marshalled into the appropriate data structure
+	// later.
+	EnvData json.RawMessage `json:"data"`
 }
 
-func (recvEnv *receivedEnvelope) UnmarshalJSON(data []byte) error {
-	decodeEnv := struct {
-		EnvType string          `json:"type"`
-		EnvData json.RawMessage `json:"data"`
-	}{}
-	err := json.Unmarshal(data, &decodeEnv)
-	recvEnv.envType = decodeEnv.EnvType
-	recvEnv.envData = decodeEnv.EnvData
-	return err
+func (recvEnv *receivedEnvelopeImpl) UnmarshalData(v interface{}) error {
+	return json.Unmarshal(recvEnv.EnvData, v)
 }
-

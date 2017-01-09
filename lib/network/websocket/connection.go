@@ -35,8 +35,8 @@ type wsConnection struct {
 	readError error
 }
 
-// Creates a new connection, wrapping the provided wsConn.
-func newConnection(wsConn *websocket.Conn) (*wsConnection, error) {
+// Creates a new wsConnection, wrapping the provided wsConn.
+func newWSConnection(wsConn *websocket.Conn) (*wsConnection, error) {
 	if wsConn == nil {
 		return nil, errors.New("wsConn cannot be nil")
 	}
