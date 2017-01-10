@@ -18,7 +18,7 @@ System.config({
     "babel-runtime": "npm:babel-runtime@5.8.38",
     "core-js": "npm:core-js@1.2.7",
     "eventemitter3": "npm:eventemitter3@2.0.2",
-    "pixijs": "npm:pixi.js@4.2.3",
+    "pixijs": "npm:pixi.js@4.3.2",
     "github:jspm/nodelibs-assert@0.1.0": {
       "assert": "npm:assert@1.4.1"
     },
@@ -81,7 +81,7 @@ System.config({
     "npm:pixi-gl-core@1.0.3": {
       "buffer": "github:jspm/nodelibs-buffer@0.1.0"
     },
-    "npm:pixi.js@4.2.3": {
+    "npm:pixi.js@4.3.2": {
       "bit-twiddle": "npm:bit-twiddle@1.0.2",
       "buffer": "github:jspm/nodelibs-buffer@0.1.0",
       "earcut": "npm:earcut@2.1.1",
@@ -93,7 +93,7 @@ System.config({
       "process": "github:jspm/nodelibs-process@0.1.2",
       "punycode": "github:jspm/nodelibs-punycode@0.1.0",
       "querystring": "github:jspm/nodelibs-querystring@0.1.0",
-      "resource-loader": "npm:resource-loader@1.8.0",
+      "resource-loader": "npm:resource-loader@2.0.3",
       "url": "github:jspm/nodelibs-url@0.1.0"
     },
     "npm:process@0.11.9": {
@@ -104,8 +104,8 @@ System.config({
     "npm:punycode@1.3.2": {
       "process": "github:jspm/nodelibs-process@0.1.2"
     },
-    "npm:resource-loader@1.8.0": {
-      "eventemitter3": "npm:eventemitter3@2.0.2",
+    "npm:resource-loader@2.0.3": {
+      "mini-signals": "npm:mini-signals@1.1.1",
       "parse-uri": "npm:parse-uri@1.0.0",
       "process": "github:jspm/nodelibs-process@0.1.2"
     },
