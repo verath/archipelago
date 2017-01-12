@@ -1,6 +1,7 @@
 package websocket
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"github.com/gorilla/websocket"
@@ -66,12 +67,26 @@ func (c *wsConnection) ReadMessage() (msg []byte, err error) {
 }
 
 // Writes a text message to the websocket connection. Blocks until the
-// message is sent, or the context has been cancelled. Only a single
-// goroutine may call WriteMessage at a time.
+// message is sent. Only a single goroutine may call WriteMessage at
+// the same time.
 func (c *wsConnection) WriteMessage(message []byte) (err error) {
 	c.writeMu.Lock()
 	defer c.writeMu.Unlock()
 	return c.writeMessage(websocket.TextMessage, message)
+}
+
+// Attempts to cleanly shutdown the connection, sending a websocket
+// close frame to the client and then closing the connection. If the
+// provided context expires, then the context's error is returned.
+func (c *wsConnection) Shutdown(ctx context.Context) error {
+	errCh := make(chan error, 1)
+	go func() { errCh <- c.shutdown() }()
+	select {
+	case err := <-errCh:
+		return err
+	case <-ctx.Done():
+		return ctx.Err()
+	}
 }
 
 // Closes the connection, without sending a close message. Closing the
@@ -81,8 +96,8 @@ func (c *wsConnection) Close() error {
 }
 
 // pingLoop writes a ping message to the websocket connection
-// every connPingPeriod. The pingLoop is stopped if the context
-// is cancelled, or if writing a ping message fails.
+// every connPingPeriod. The pingLoop is stopped if the stop
+// channel is closed, or if writing a ping message fails.
 func (c *wsConnection) pingLoop(stop <-chan struct{}) error {
 	ticker := time.NewTicker(connPingPeriod)
 	defer ticker.Stop()
@@ -135,4 +150,16 @@ func (c *wsConnection) writePing() error {
 	c.writeMu.Lock()
 	defer c.writeMu.Unlock()
 	return c.writeMessage(websocket.PingMessage, []byte{})
+}
+
+// Writes a websocket close message to the client and, if successful,
+// closes the connection.
+func (c *wsConnection) shutdown() error {
+	c.writeMu.Lock()
+	defer c.writeMu.Unlock()
+	err := c.writeMessage(websocket.CloseMessage, []byte{})
+	if err != nil {
+		return err
+	}
+	return c.wsConn.Close()
 }

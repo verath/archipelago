@@ -15,7 +15,7 @@ type closableHTTPServer struct {
 	listener net.Listener
 }
 
-func newClosableHTTPServer(server *http.Server) (*closableHTTPServer, error) {
+func NewClosableHTTPServer(server *http.Server) (*closableHTTPServer, error) {
 	listener, err := net.Listen("tcp", server.Addr)
 	if err != nil {
 		return nil, fmt.Errorf("Could not create listener: %v", err)

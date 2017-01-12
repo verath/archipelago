@@ -37,7 +37,8 @@ func (cq *clientQueue) NextClient(ctx context.Context) (Client, error) {
 	}
 }
 
-// Implementation the ConnectionHandler interface
+// Creates a Client from the connection, and adds the client to the
+// queue. If the queue is full, the connection is discarded.
 func (cq *clientQueue) HandleConnection(conn connection) error {
 	client, err := NewClient(cq.log, conn)
 	if err != nil {

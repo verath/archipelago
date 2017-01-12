@@ -35,6 +35,8 @@ type receivedEnvelopeImpl struct {
 	EnvData json.RawMessage `json:"data"`
 }
 
+// JSON Unmarshals the data contained in the envelope into the
+// provided interface v.
 func (recvEnv *receivedEnvelopeImpl) UnmarshalData(v interface{}) error {
 	return json.Unmarshal(recvEnv.EnvData, v)
 }
