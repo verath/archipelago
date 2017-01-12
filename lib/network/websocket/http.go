@@ -20,19 +20,21 @@ var wsUpgrader = websocket.Upgrader{
 // the connection is wrapped in a client and posted to the
 // registered ClientConnectListener.
 type upgradeHandler struct {
-	logEntry        *logrus.Entry
-	connectListener network.ClientConnectListener
+	logEntry    *logrus.Entry
+	connHandler network.ConnectionHandler
 }
 
 // Creates a new UpgradeHandler, notifying the connectListener for clients
 // successfully created.
-func NewUpgradeHandler(log *logrus.Logger, connectListener network.ClientConnectListener) *upgradeHandler {
+func NewUpgradeHandler(log *logrus.Logger, connListener network.ConnectionHandler) *upgradeHandler {
 	return &upgradeHandler{
-		logEntry:        util.ModuleLogEntry(log, "websocket/wsConnHandler"),
-		connectListener: connectListener,
+		logEntry:    util.ModuleLogEntry(log, "websocket/wsConnHandler"),
+		connHandler: connListener,
 	}
 }
 
+// ServeHTTP is called on each http request that matches our handler.
+// We try to upgrade each such request to a websocket connection.
 func (h *upgradeHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	wsConn, err := wsUpgrader.Upgrade(w, r, nil)
 	if err != nil {
@@ -47,17 +49,15 @@ func (h *upgradeHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}()
 }
 
+// handleWSConn wraps the gorilla websocket in our own wsConnection
+// and forwards the connection to the connection handler.
 func (h *upgradeHandler) handleWSConn(wsConn *websocket.Conn) error {
-	// Wrap the gorilla websocket in our wsConnection, wrap
-	// that in a Client, then notify the listener
 	conn, err := newWSConnection(wsConn)
 	if err != nil {
 		return fmt.Errorf("Failed creating connection: %v", err)
 	}
-	client, err := network.NewClient(h.logEntry.Logger, conn)
-	if err != nil {
-		return fmt.Errorf("Failed creating client: %v", err)
+	if err := h.connHandler.HandleConnection(conn); err != nil {
+		return err
 	}
-	h.connectListener.OnClientConnected(client)
 	return nil
 }
