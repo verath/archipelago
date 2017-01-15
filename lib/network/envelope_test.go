@@ -10,7 +10,7 @@ func TestEnvelope_MarshalUnmarshalJSON(t *testing.T) {
 
 	// Create a new envelope and marshal it to json
 	data := envDataType{Foo: "bar"}
-	env := &Envelope{"test", data}
+	env := &envelope{"test", data}
 	envJson, err := json.Marshal(env)
 	if err != nil {
 		t.Fatalf("Error when marshaling envelope: %v", err)

@@ -1,8 +1,8 @@
-package action
+package actions
 
 import (
-	"github.com/verath/archipelago/lib/event"
-	. "github.com/verath/archipelago/lib/model"
+	"github.com/verath/archipelago/lib/game/events"
+	"github.com/verath/archipelago/lib/game/model"
 	"github.com/verath/archipelago/lib/testing"
 	stdtesting "testing"
 	"time"
@@ -28,7 +28,7 @@ func TestTickAction_Apply_Islands(t *stdtesting.T) {
 	i2.SetSize(2)
 
 	// Tick for IslandGrowthInterval seconds
-	ta, _ := NewTickAction(IslandGrowthInterval)
+	ta, _ := NewTickAction(model.IslandGrowthInterval)
 	if _, err := ta.Apply(game); err != nil {
 		t.Errorf("Expected no error, got: %v", err)
 	}
@@ -52,7 +52,7 @@ func TestTickAction_Apply_Airplanes(t *stdtesting.T) {
 	toIsland := game.Island("bottom-left")
 
 	// Add an airplane from 0,0 -> 0,9, moving at a speed of one coordinate/sec
-	airplane, _ := NewAirplane(fromIsland, toIsland, game.Player1(), 10)
+	airplane, _ := model.NewAirplane(fromIsland, toIsland, game.Player1(), 10)
 	airplane.SetSpeed(1 / float64(time.Second))
 	game.AddAirplane(airplane)
 
@@ -62,7 +62,7 @@ func TestTickAction_Apply_Airplanes(t *stdtesting.T) {
 		t.Errorf("Expected no error, got: %v", err)
 	}
 
-	expectedPos := FloatCoordinate{X: 0, Y: 1}
+	expectedPos := model.FloatCoordinate{X: 0, Y: 1}
 	actualPos := game.Airplanes()[0].Position()
 	if !testing.CoordsAlmostEqual(actualPos, expectedPos) {
 		t.Errorf("Expected airplane pos to be %v was %v", expectedPos, actualPos)
@@ -73,18 +73,18 @@ func TestTickAction_Apply_AddsTickEvent(t *stdtesting.T) {
 	game := testing.CreateSimpleGame()
 
 	ta, _ := NewTickAction(1 * time.Second)
-	events, err := ta.Apply(game)
+	evts, err := ta.Apply(game)
 	if err != nil {
 		t.Errorf("Expected no error, got: %v", err)
 	}
 
-	if len(events) != 1 {
+	if len(evts) != 1 {
 		t.Error("Expected exactly one event to have been created")
 	}
 
-	evt := events[0]
-	if _, ok := evt.(*event.TickEventBuilder); !ok {
-		t.Error("Expected a TickEventBuilder to have been created")
+	evt := evts[0]
+	if evt.ToPlayerEvent("").Type() != events.EventTypeTick {
+		t.Error("Expected a TickEvent to have been created")
 	}
 }
 

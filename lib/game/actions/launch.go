@@ -1,26 +1,27 @@
-package action
+package actions
 
 import (
 	"errors"
 	"fmt"
-	"github.com/verath/archipelago/lib/event"
-	"github.com/verath/archipelago/lib/model"
+	"github.com/verath/archipelago/lib/game/events"
+	"github.com/verath/archipelago/lib/game/model"
 )
 
 type launchAction struct {
-	from  model.IslandID
-	to    model.IslandID
-	owner model.PlayerID
+	playerActionBase
+
+	from model.IslandID `json:"from"`
+	to   model.IslandID `json:"to"`
 }
 
-func (a *launchAction) Apply(g *model.Game) ([]event.EventBuilder, error) {
+func (a *launchAction) Apply(g *model.Game) ([]events.Event, error) {
 	if a.from == a.to {
 		return nil, errors.New("from == to")
 	}
 
 	fromIsland := g.Island(a.from)
 	toIsland := g.Island(a.to)
-	owningPlayer := g.Player(a.owner)
+	owningPlayer := g.Player(a.playerID)
 
 	if fromIsland == nil {
 		return nil, errors.New("from island does not exist")
@@ -51,22 +52,4 @@ func (a *launchAction) Apply(g *model.Game) ([]event.EventBuilder, error) {
 	}
 	g.AddAirplane(airplane)
 	return nil, nil
-}
-
-func newLaunchAction(from model.IslandID, to model.IslandID, owner model.PlayerID) (*launchAction, error) {
-	la := &launchAction{
-		from:  from,
-		to:    to,
-		owner: owner,
-	}
-	return la, nil
-}
-
-type launchActionBuilder struct {
-	From model.IslandID `json:"from"`
-	To   model.IslandID `json:"to"`
-}
-
-func (la *launchActionBuilder) Build(playerID model.PlayerID) (Action, error) {
-	return newLaunchAction(la.From, la.To, playerID)
 }

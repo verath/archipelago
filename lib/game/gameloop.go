@@ -1,13 +1,13 @@
-package controller
+package game
 
 import (
 	"context"
 	"fmt"
 	"github.com/Sirupsen/logrus"
-	"github.com/verath/archipelago/lib/action"
-	"github.com/verath/archipelago/lib/event"
-	"github.com/verath/archipelago/lib/model"
-	"github.com/verath/archipelago/lib/util"
+	"github.com/verath/archipelago/lib/common"
+	"github.com/verath/archipelago/lib/game/actions"
+	"github.com/verath/archipelago/lib/game/events"
+	"github.com/verath/archipelago/lib/game/model"
 	"sync"
 	"time"
 )
@@ -17,7 +17,7 @@ const defaultTickInterval time.Duration = (time.Second / 2)
 // The gameLoop is what updates the game model instance that it is
 // associated with. The updates are performed in ticks. Each tick
 // applies all actions that has been added since the last tick
-// sequentially on the model. For each such action, zero or more
+// sequentially on the model. For each such actions, zero or more
 // events are created. Those events are dispatched as the last stage
 // of the tick.
 //
@@ -33,44 +33,44 @@ type gameLoop struct {
 	// the events *might* have been updated.
 	eventsSCh chan bool
 	eventsMu  sync.Mutex
-	events    []event.EventBuilder
+	events    []events.Event
 
 	actionsMu sync.Mutex
-	actions   []action.Action
+	actions   []actions.Action
 }
 
 // Perform a tick on the game; Applies all queued actions on the game
 // sequentially, making it safe for the applied actions to modify the
 // game state. An additional TickAction is always performed as the
-// last action.
+// last actions.
 func (gl *gameLoop) tick(delta time.Duration) error {
 	// We make a copy of the current gl.actions and replace gl.actions
 	// with a new array so that we can release the lock asap
 	gl.actionsMu.Lock()
-	actions := gl.actions
-	gl.actions = make([]action.Action, 0, len(actions))
+	acts := gl.actions
+	gl.actions = make([]actions.Action, 0, len(acts))
 	gl.actionsMu.Unlock()
 
-	// Add a tick action as the last action
-	tickAction, err := action.NewTickAction(delta)
+	// Add a tick actions as the last actions
+	tickAction, err := actions.NewTickAction(delta)
 	if err != nil {
 		return fmt.Errorf("Error creating tick action: %v", err)
 	}
-	actions = append(actions, tickAction)
+	acts = append(acts, tickAction)
 
 	// Process actions
-	events := make([]event.EventBuilder, 0)
-	for _, act := range actions {
-		evts, err := act.Apply(gl.game)
+	evts := make([]events.Event, 0)
+	for _, act := range acts {
+		actionEvts, err := act.Apply(gl.game)
 		if err != nil {
-			return fmt.Errorf("Error applying action: %v", err)
+			return fmt.Errorf("Error applying actions: %v", err)
 		}
-		events = append(events, evts...)
+		evts = append(evts, actionEvts...)
 	}
 
 	// Append the new events to the gl.events slice
 	gl.eventsMu.Lock()
-	gl.events = append(gl.events, events...)
+	gl.events = append(gl.events, evts...)
 	gl.eventsMu.Unlock()
 
 	// Signal that events (might have) been added
@@ -100,25 +100,18 @@ func (gl *gameLoop) tickLoop(ctx context.Context) error {
 	}
 }
 
-// Helper method for adding actions without using a context.
-func (gl *gameLoop) addAction(action action.Action) {
+// Adds an actions to the actions to be processed.
+func (gl *gameLoop) AddAction(action actions.Action) {
 	gl.actionsMu.Lock()
+	gl.logEntry.Debug("Adding action: %v", action)
 	gl.actions = append(gl.actions, action)
 	gl.actionsMu.Unlock()
 }
 
-// Adds an action to the actions to be processed. This method should never
-// block.
-func (gl *gameLoop) AddAction(ctx context.Context, action action.Action) error {
-	// Should never block for long, so we don't care about the ctx
-	gl.addAction(action)
-	return nil
-}
-
 // Returns the next event from the list of events. Blocks until an event
 // can be returned or the context is cancelled.
-func (gl *gameLoop) NextEvent(ctx context.Context) (event.EventBuilder, error) {
-	var evt event.EventBuilder
+func (gl *gameLoop) NextEvent(ctx context.Context) (events.Event, error) {
+	var evt events.Event
 	for {
 		// Try get the first event
 		gl.eventsMu.Lock()
@@ -149,7 +142,7 @@ func (gl *gameLoop) Run(ctx context.Context) error {
 
 	// Add a game start event as the first event
 	// TODO: should probably move this somewhere else
-	createdEvt := event.NewGameStartEventBuilder()
+	createdEvt := events.NewGameStartEvent()
 	gl.eventsMu.Lock()
 	gl.events = append(gl.events, createdEvt)
 	gl.eventsMu.Unlock()
@@ -159,14 +152,14 @@ func (gl *gameLoop) Run(ctx context.Context) error {
 }
 
 func newGameLoop(log *logrus.Logger, game *model.Game) (*gameLoop, error) {
-	logEntry := util.ModuleLogEntryWithID(log, "gameLoop")
+	logEntry := common.ModuleLogEntryWithID(log, "gameLoop")
 
 	return &gameLoop{
 		logEntry:     logEntry,
 		tickInterval: defaultTickInterval,
 		game:         game,
 		eventsSCh:    make(chan bool, 0),
-		events:       make([]event.EventBuilder, 0),
-		actions:      make([]action.Action, 0),
+		events:       make([]events.Event, 0),
+		actions:      make([]actions.Action, 0),
 	}, nil
 }

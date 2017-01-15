@@ -4,14 +4,18 @@ import (
 	"encoding/json"
 )
 
-// Envelope is a "container" type wrapping all messages sent
+// envelope is a "container" type wrapping all messages sent
 // to a peer.
-type Envelope struct {
+type envelope struct {
 	EnvType string      `json:"type"`
 	EnvData interface{} `json:"data"`
 }
 
-func (env *Envelope) Type() string {
+func NewEnvelope(envType string, envData interface{}) (*envelope, error) {
+	return &envelope{EnvType: envType, EnvData: envData}, nil
+}
+
+func (env *envelope) Type() string {
 	return env.EnvType
 }
 
@@ -28,7 +32,7 @@ type ReceivedEnvelope interface {
 
 // A JSON-based implementation of the ReceivedEnvelope interface
 type receivedEnvelopeImpl struct {
-	Envelope
+	envelope
 	// The data received, stored as a json.RawMessage so that
 	// it can be marshalled into the appropriate data structure
 	// later.

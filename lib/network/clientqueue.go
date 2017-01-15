@@ -9,9 +9,9 @@ import (
 
 var ErrQueueFull = errors.New("Queue is full")
 
-// The clientQueue is a simple implementation of the ConnectionHandler interface
+// The ClientQueue is a simple implementation of the ConnectionHandler interface
 // that creates a client from the connection and puts the client in a queue.
-type clientQueue struct {
+type ClientQueue struct {
 	log   *logrus.Logger
 	queue chan Client
 }
@@ -19,8 +19,8 @@ type clientQueue struct {
 // Creates a new client queue. The log is given to each client created by
 // the queue. The queueSize is the maximum number of clients held by the
 // queue. Connections that would exceed the queue size are dropped.
-func NewClientQueue(log *logrus.Logger, queueSize int) (*clientQueue, error) {
-	return &clientQueue{
+func NewClientQueue(log *logrus.Logger, queueSize int) (*ClientQueue, error) {
+	return &ClientQueue{
 		log:   log,
 		queue: make(chan Client, queueSize),
 	}, nil
@@ -28,7 +28,7 @@ func NewClientQueue(log *logrus.Logger, queueSize int) (*clientQueue, error) {
 
 // Returns the first client in the queue. Blocks until a client can be
 // provided, or the context expires.
-func (cq *clientQueue) NextClient(ctx context.Context) (Client, error) {
+func (cq *ClientQueue) NextClient(ctx context.Context) (Client, error) {
 	select {
 	case client := <-cq.queue:
 		return client, nil
@@ -39,7 +39,7 @@ func (cq *clientQueue) NextClient(ctx context.Context) (Client, error) {
 
 // Creates a Client from the connection, and adds the client to the
 // queue. If the queue is full, the connection is discarded.
-func (cq *clientQueue) HandleConnection(conn connection) error {
+func (cq *ClientQueue) HandleConnection(conn connection) error {
 	client, err := NewClient(cq.log, conn)
 	if err != nil {
 		return fmt.Errorf("Failed creating client: %v", err)

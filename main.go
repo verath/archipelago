@@ -14,8 +14,6 @@ func main() {
 	log.Level = logrus.DebugLevel
 	log.Formatter = &logrus.TextFormatter{}
 
-	log.Info("Starting")
-	defer log.Info("Stopped")
 	ctx, cancel := context.WithCancel(context.Background())
 
 	// Listen for interrupts
@@ -27,7 +25,7 @@ func main() {
 		cancel()
 		// If we get another interrupt, we force shut down
 		<-sigs
-		os.Exit(-1)
+		os.Exit(1)
 	}()
 
 	archipelagoGame, err := archipelago.New(log, http.Dir("static"), ":8080")
@@ -35,8 +33,5 @@ func main() {
 		log.WithError(err).Error("Error creating game")
 	}
 
-	err = archipelagoGame.Run(ctx)
-	if err != nil && err != context.Canceled {
-		log.WithError(err).Error("Error during Run")
-	}
+	log.Fatal(archipelagoGame.Run(ctx))
 }

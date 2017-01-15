@@ -1,7 +1,7 @@
 package testing
 
 import (
-	. "github.com/verath/archipelago/lib/model"
+	. "github.com/verath/archipelago/lib/game/model"
 	"math"
 )
 

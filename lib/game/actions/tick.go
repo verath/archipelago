@@ -1,9 +1,9 @@
-package action
+package actions
 
 import (
 	"errors"
-	"github.com/verath/archipelago/lib/event"
-	"github.com/verath/archipelago/lib/model"
+	"github.com/verath/archipelago/lib/game/events"
+	"github.com/verath/archipelago/lib/game/model"
 	"math"
 	"time"
 )
@@ -104,7 +104,7 @@ func updateIslands(g *model.Game, delta time.Duration) error {
 	return nil
 }
 
-func (ta *tickAction) Apply(game *model.Game) ([]event.EventBuilder, error) {
+func (ta *tickAction) Apply(game *model.Game) ([]events.Event, error) {
 	if ta.delta < 0 {
 		return nil, errors.New("delta must be positive")
 	}
@@ -115,8 +115,12 @@ func (ta *tickAction) Apply(game *model.Game) ([]event.EventBuilder, error) {
 		return nil, err
 	}
 
-	tickEvtBuilder := event.NewTickEventBuilder(game)
-	return []event.EventBuilder{tickEvtBuilder}, nil
+	tickEvt, err := events.NewTickEvent(game)
+	if err != nil {
+		return nil, err
+	}
+
+	return []events.Event{tickEvt}, nil
 }
 
 func NewTickAction(delta time.Duration) (*tickAction, error) {

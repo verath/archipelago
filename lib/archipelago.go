@@ -4,58 +4,80 @@ import (
 	"context"
 	"fmt"
 	"github.com/Sirupsen/logrus"
-	"github.com/verath/archipelago/lib/controller"
+	"github.com/verath/archipelago/lib/common"
+	"github.com/verath/archipelago/lib/game"
 	"github.com/verath/archipelago/lib/network"
 	"github.com/verath/archipelago/lib/network/websocket"
-	"github.com/verath/archipelago/lib/util"
 	"net/http"
+	"time"
 )
 
+const (
+	// The max number of clients in the client queue
+	// TODO(2017-01-13): What is an appropriate number here?
+	clientQueueSize = 2
+
+	httpReadTimeout  = 10 * time.Second
+	httpWriteTimeout = 10 * time.Second
+)
+
+// archipelago is the main entry point to the game server. It is responsible for
+// starting the http server, the game coordinator and connecting them.
 type archipelago struct {
 	logEntry *logrus.Entry
 
-	clientPool      *network.ClientPool
-	gameCoordinator *controller.GameCoordinator
-	httpServer      *network.HTTPServer
-}
+	clientQueue     *network.ClientQueue
+	gameCoordinator *game.Coordinator
+	httpServer      *network.ClosableHTTPServer
 
-func (a *archipelago) Run(ctx context.Context) error {
-	a.logEntry.Info("Starting")
-	defer a.logEntry.Info("Stopped")
-
-	return util.RunWithContext(ctx,
-		a.gameCoordinator.Run,
-		a.httpServer.Run,
-	)
+	// Flag for if Start has been called.
+	started int32
 }
 
 func New(log *logrus.Logger, staticRoot http.FileSystem, httpServerAddr string) (*archipelago, error) {
-	logEntry := util.ModuleLogEntry(log, "archipelago")
+	logEntry := common.ModuleLogEntry(log, "archipelago")
 
-	clientPool, err := network.NewClientPool(log)
+	clientQueue, err := network.NewClientQueue(log, clientQueueSize)
 	if err != nil {
 		return nil, fmt.Errorf("Error creating client pool: %v", err)
 	}
 
-	gameCoordinator, err := controller.NewGameCoordinator(log, clientPool)
+	gameCoordinator, err := game.NewCoordinator(log, clientQueue)
 	if err != nil {
 		return nil, fmt.Errorf("Error creating game coordinator: %v", err)
 	}
 
 	mux := http.NewServeMux()
-	mux.Handle("/ws", websocket.ConnectHandler(log, clientPool))
+	mux.Handle("/ws", websocket.NewUpgradeHandler(log, clientQueue))
 	mux.Handle("/", http.FileServer(staticRoot))
+	server := &http.Server{
+		Addr:         httpServerAddr,
+		Handler:      mux,
+		ReadTimeout:  httpReadTimeout,
+		WriteTimeout: httpWriteTimeout,
+	}
 
-	httpServer, err := network.NewServer(log, mux, httpServerAddr)
+	httpServer, err := network.NewClosableHTTPServer(server)
 	if err != nil {
-		return nil, fmt.Errorf("Error creating server: %v", err)
-
+		return nil, fmt.Errorf("Error creating http server: %v", err)
 	}
 
 	return &archipelago{
 		logEntry:        logEntry,
-		clientPool:      clientPool,
+		clientQueue:     clientQueue,
 		gameCoordinator: gameCoordinator,
 		httpServer:      httpServer,
 	}, nil
+}
+
+func (a *archipelago) Run(ctx context.Context) error {
+	httpErrCh := make(chan error)
+	// Run the http server and the game coordinator
+	go func() { httpErrCh <- a.httpServer.ListenAndServe() }()
+	err := a.gameCoordinator.Run(ctx)
+	// Once the game coordinator stops, also close the http server
+	// connection and wait for the server to stop
+	a.httpServer.Close()
+	a.logEntry.WithError(<-httpErrCh).Error("httpServer stopped")
+	return err
 }

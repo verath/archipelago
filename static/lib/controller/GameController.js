@@ -61,7 +61,7 @@ export default class GameController {
         this._gameModel.launchAirplane(originIsland, targetIsland);
 
         this._connection.sendAction({
-            "action": "launch",
+            "type": "act_launch",
             "data": {
                 "from": originIsland.id,
                 "to": targetIsland.id
@@ -93,19 +93,19 @@ export default class GameController {
     }
 
     /**
-     * @param {ServerEvent} event
+     * @param {ServerPayload} payload
      * @private
      */
-    _onServerEvent(event) {
-        switch (event.name) {
-            case "game_start":
-                this._onGameStartEvent(event.data);
+    _onServerEvent(payload) {
+        switch (payload.type) {
+            case "evt_game_start":
+                this._onGameStartEvent(payload.data);
                 break;
-            case "tick":
-                this._onTickEvent(event.data);
+            case "evt_tick":
+                this._onTickEvent(payload.data);
                 break;
             default:
-                console.log("Unknown event:", event.name, event);
+                console.log("Unknown event:", payload.type, payload);
         }
     }
 

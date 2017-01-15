@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"github.com/Sirupsen/logrus"
 	"github.com/gorilla/websocket"
+	"github.com/verath/archipelago/lib/common"
 	"github.com/verath/archipelago/lib/network"
-	"github.com/verath/archipelago/lib/util"
 	"net/http"
 )
 
@@ -28,7 +28,7 @@ type upgradeHandler struct {
 // successfully created.
 func NewUpgradeHandler(log *logrus.Logger, connListener network.ConnectionHandler) *upgradeHandler {
 	return &upgradeHandler{
-		logEntry:    util.ModuleLogEntry(log, "websocket/wsConnHandler"),
+		logEntry:    common.ModuleLogEntry(log, "websocket/wsConnHandler"),
 		connHandler: connListener,
 	}
 }

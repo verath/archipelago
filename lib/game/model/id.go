@@ -1,6 +1,6 @@
 package model
 
-import "github.com/verath/archipelago/lib/id"
+import "github.com/verath/archipelago/lib/common"
 
 type ModelID string
 
@@ -10,5 +10,5 @@ type IslandID ModelID
 type PlayerID ModelID
 
 func NewModelID() ModelID {
-	return ModelID(id.NextGlobalID())
+	return ModelID(common.NextGlobalID())
 }

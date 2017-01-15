@@ -54,10 +54,10 @@ export default class Connection {
     }
 
     /**
-     * @param {Object} actionObj
+     * @param {ServerPayload} payloadObj
      */
-    sendAction(actionObj) {
-        let message = JSON.stringify(actionObj);
+    sendAction(payloadObj) {
+        let message = JSON.stringify(payloadObj);
         this._conn.send(message);
     }
 

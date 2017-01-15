@@ -1,8 +1,7 @@
-package util
+package common
 
 import (
 	"github.com/Sirupsen/logrus"
-	"github.com/verath/archipelago/lib/id"
 )
 
 var ModuleNameKey = "module"
@@ -14,6 +13,6 @@ func ModuleLogEntry(log *logrus.Logger, moduleName string) *logrus.Entry {
 func ModuleLogEntryWithID(log *logrus.Logger, moduleName string) *logrus.Entry {
 	return log.WithFields(logrus.Fields{
 		ModuleNameKey: moduleName,
-		"id":          id.NextGlobalID(),
+		"id":          NextGlobalID(),
 	})
 }

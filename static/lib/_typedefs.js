@@ -2,8 +2,8 @@
 // Note that the data is never enforced to follow these.
 
 /**
- * @typedef {object} ServerEvent
- * @property {string} name
+ * @typedef {object} ServerPayload
+ * @property {string} type
  * @property {*} data
  */
 
