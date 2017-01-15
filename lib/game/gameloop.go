@@ -103,7 +103,6 @@ func (gl *gameLoop) tickLoop(ctx context.Context) error {
 // Adds an actions to the actions to be processed.
 func (gl *gameLoop) AddAction(action actions.Action) {
 	gl.actionsMu.Lock()
-	gl.logEntry.Debug("Adding action: %v", action)
 	gl.actions = append(gl.actions, action)
 	gl.actionsMu.Unlock()
 }
