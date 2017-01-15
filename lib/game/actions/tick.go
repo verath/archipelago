@@ -12,6 +12,33 @@ type tickAction struct {
 	delta time.Duration
 }
 
+
+func NewTickAction(delta time.Duration) (*tickAction, error) {
+	ta := &tickAction{
+		delta: delta,
+	}
+	return ta, nil
+}
+
+func (ta *tickAction) Apply(game *model.Game) ([]events.Event, error) {
+	if ta.delta < 0 {
+		return nil, errors.New("delta must be positive")
+	}
+	if err := updateAirplanes(game, ta.delta); err != nil {
+		return nil, err
+	}
+	if err := updateIslands(game, ta.delta); err != nil {
+		return nil, err
+	}
+
+	tickEvt, err := events.NewTickEvent(game)
+	if err != nil {
+		return nil, err
+	}
+
+	return []events.Event{tickEvt}, nil
+}
+
 func updateAirplanes(g *model.Game, delta time.Duration) error {
 	arrivals := make([]*model.Airplane, 0)
 
@@ -102,30 +129,4 @@ func updateIslands(g *model.Game, delta time.Duration) error {
 		island.SetGrowthRemainder(remainder)
 	}
 	return nil
-}
-
-func (ta *tickAction) Apply(game *model.Game) ([]events.Event, error) {
-	if ta.delta < 0 {
-		return nil, errors.New("delta must be positive")
-	}
-	if err := updateAirplanes(game, ta.delta); err != nil {
-		return nil, err
-	}
-	if err := updateIslands(game, ta.delta); err != nil {
-		return nil, err
-	}
-
-	tickEvt, err := events.NewTickEvent(game)
-	if err != nil {
-		return nil, err
-	}
-
-	return []events.Event{tickEvt}, nil
-}
-
-func NewTickAction(delta time.Duration) (*tickAction, error) {
-	ta := &tickAction{
-		delta: delta,
-	}
-	return ta, nil
 }
