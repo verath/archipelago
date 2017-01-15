@@ -8,9 +8,9 @@ import (
 
 func newLaunchAction(from, to model.IslandID, ownerID model.PlayerID) *launchAction {
 	return &launchAction{
-		playerActionBase: playerActionBase{playerID: ownerID},
-		from:             from,
-		to:               to,
+		From:     from,
+		To:       to,
+		playerID: ownerID,
 	}
 }
 

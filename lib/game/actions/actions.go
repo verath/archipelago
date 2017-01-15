@@ -18,26 +18,7 @@ type (
 	PlayerAction interface {
 		ToAction(playerID model.PlayerID) Action
 	}
-
-	actionBase struct{}
-
-	playerActionBase struct {
-		actionBase
-		playerID model.PlayerID
-	}
 )
-
-// Default implementation of Apply is to successfully do nothing.
-func (action *actionBase) Apply(game *model.Game) ([]events.Event, error) {
-	return nil, nil
-}
-
-// Default implementation of ToAction is to set the playerID property
-// and return ourselves, as we already implement the Action interface.
-func (playerAction *playerActionBase) ToAction(playerID model.PlayerID) Action {
-	playerAction.playerID = playerID
-	return playerAction
-}
 
 // Map between a string identifier for an actions and a creator for
 // creating an instance of the identified actions type. Used to lookup

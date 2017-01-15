@@ -8,19 +8,26 @@ import (
 )
 
 type launchAction struct {
-	playerActionBase
+	From model.IslandID `json:"from"`
+	To   model.IslandID `json:"to"`
 
-	from model.IslandID `json:"from"`
-	to   model.IslandID `json:"to"`
+	playerID model.PlayerID
+}
+
+// We implement ToAction by setting the playerID property and returning
+// ourselves, as we already implement the Action interface.
+func (a *launchAction) ToAction(playerID model.PlayerID) Action {
+	a.playerID = playerID
+	return a
 }
 
 func (a *launchAction) Apply(g *model.Game) ([]events.Event, error) {
-	if a.from == a.to {
+	if a.From == a.To {
 		return nil, errors.New("from == to")
 	}
 
-	fromIsland := g.Island(a.from)
-	toIsland := g.Island(a.to)
+	fromIsland := g.Island(a.From)
+	toIsland := g.Island(a.To)
 	owningPlayer := g.Player(a.playerID)
 
 	if fromIsland == nil {
