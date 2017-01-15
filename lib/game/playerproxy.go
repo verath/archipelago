@@ -24,8 +24,8 @@ func newPlayerProxy(player *model.Player, playerClient network.Client) (*playerP
 		return nil, errors.New("player cannot be nil")
 	}
 	return &playerProxy{
-		playerID:     player.ID(),
-		client: playerClient,
+		playerID: player.ID(),
+		client:   playerClient,
 	}, nil
 }
 

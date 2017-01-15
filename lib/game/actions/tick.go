@@ -12,7 +12,6 @@ type tickAction struct {
 	delta time.Duration
 }
 
-
 func NewTickAction(delta time.Duration) (*tickAction, error) {
 	ta := &tickAction{
 		delta: delta,

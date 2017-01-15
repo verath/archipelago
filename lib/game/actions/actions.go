@@ -7,7 +7,7 @@ import (
 )
 
 const (
-	ActionTypeLaunch  = "act_launch"
+	ActionTypeLaunch = "act_launch"
 )
 
 type (
