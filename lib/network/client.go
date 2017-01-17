@@ -8,6 +8,7 @@ import (
 	"github.com/Sirupsen/logrus"
 	"github.com/verath/archipelago/lib/common"
 	"sync"
+	"sync/atomic"
 	"time"
 )
 
@@ -98,7 +99,10 @@ func NewClient(log *logrus.Logger, conn connection) (Client, error) {
 }
 
 func (c *clientImpl) Start() {
-	common.SetStarted(&c.started)
+	if !c.setStarted() {
+		c.logEntry.Warn("Start called when already started")
+		return
+	}
 	c.startWG.Add(2)
 	c.shutdownWG.Add(2)
 	go c.readPump()
@@ -140,6 +144,11 @@ func (c *clientImpl) ReadEnvelope(ctx context.Context) (ReceivedEnvelope, error)
 	case <-ctx.Done():
 		return nil, ctx.Err()
 	}
+}
+
+// Sets the started flag, returning true if it had not been set previously.
+func (c *clientImpl) setStarted() bool {
+	return atomic.CompareAndSwapInt32(&c.started, 0, 1)
 }
 
 // Disconnects the client by closing the disconnectCh, as well as the

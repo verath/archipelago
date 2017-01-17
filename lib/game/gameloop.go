@@ -138,14 +138,6 @@ func (gl *gameLoop) NextEvent(ctx context.Context) (events.Event, error) {
 func (gl *gameLoop) Run(ctx context.Context) error {
 	gl.logEntry.Debug("Starting")
 	defer gl.logEntry.Debug("Stopped")
-
-	// Add a game start event as the first event
-	// TODO: should probably move this somewhere else
-	createdEvt := events.NewGameStartEvent()
-	gl.eventsMu.Lock()
-	gl.events = append(gl.events, createdEvt)
-	gl.eventsMu.Unlock()
-
 	err := gl.tickLoop(ctx)
 	return fmt.Errorf("tickLoop quit: %v", err)
 }

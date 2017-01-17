@@ -6,6 +6,7 @@ import (
 	"github.com/Sirupsen/logrus"
 	"github.com/verath/archipelago/lib/common"
 	"github.com/verath/archipelago/lib/game/actions"
+	"github.com/verath/archipelago/lib/game/events"
 	"github.com/verath/archipelago/lib/game/model"
 	"github.com/verath/archipelago/lib/network"
 )
@@ -50,9 +51,22 @@ func newController(log *logrus.Logger, game *model.Game, p1Client, p2Client netw
 // the game controller start listening for player actions. Blocks until an
 // error occurs or the context is canceled. Always returns a non-nil error.
 func (ctrl *controller) Run(ctx context.Context) error {
+	defer func() {
+		ctrl.logEntry.Debug("Stopping clients")
+		ctrl.p1Proxy.Disconnect()
+		ctrl.p2Proxy.Disconnect()
+		ctrl.logEntry.Debug("Stopped")
+	}()
+
 	ctrl.logEntry.Debug("Starting")
 	errCh := make(chan error)
 	ctx, cancel := context.WithCancel(ctx)
+
+	// Notify the players that the game is starting
+	startEvt := events.NewGameStartEvent()
+	if err := ctrl.broadcastEvent(ctx, startEvt); err != nil {
+		return err
+	}
 
 	// TODO: Better way than having 3 go-routines here?
 	go func() { errCh <- ctrl.eventLoop(ctx) }()
@@ -66,12 +80,18 @@ func (ctrl *controller) Run(ctx context.Context) error {
 	<-errCh
 	<-errCh
 
-	ctrl.logEntry.Debug("Stopping clients")
-	ctrl.p1Proxy.Disconnect()
-	ctrl.p2Proxy.Disconnect()
-
-	ctrl.logEntry.Debug("Stopped")
 	return err
+}
+
+// Broadcast an event to both the player proxies.
+func (ctrl *controller) broadcastEvent(ctx context.Context, evt events.Event) error {
+	if err := ctrl.p1Proxy.SendEvent(ctx, evt); err != nil {
+		return err
+	}
+	if err := ctrl.p2Proxy.SendEvent(ctx, evt); err != nil {
+		return err
+	}
+	return nil
 }
 
 // eventLoop reads from the eventCh and forwards each event to both
@@ -83,10 +103,7 @@ func (ctrl *controller) eventLoop(ctx context.Context) error {
 		if err != nil {
 			return err
 		}
-		if err := ctrl.p1Proxy.SendEvent(ctx, evt); err != nil {
-			return err
-		}
-		if err := ctrl.p2Proxy.SendEvent(ctx, evt); err != nil {
+		if err := ctrl.broadcastEvent(ctx, evt); err != nil {
 			return err
 		}
 	}

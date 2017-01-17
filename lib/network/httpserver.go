@@ -1,7 +1,6 @@
 package network
 
 import (
-	"context"
 	"fmt"
 	"net"
 	"net/http"
@@ -28,11 +27,6 @@ func NewClosableHTTPServer(server *http.Server) (*ClosableHTTPServer, error) {
 
 func (srv *ClosableHTTPServer) ListenAndServe() error {
 	return srv.server.Serve(srv.listener)
-}
-
-func (srv *ClosableHTTPServer) Shutdown(ctx context.Context) error {
-	// TODO: we are not graceful atm, go 1.8 fixes
-	return srv.listener.Close()
 }
 
 func (srv *ClosableHTTPServer) Close() error {

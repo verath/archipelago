@@ -29,9 +29,6 @@ type archipelago struct {
 	clientQueue     *network.ClientQueue
 	gameCoordinator *game.Coordinator
 	httpServer      *network.ClosableHTTPServer
-
-	// Flag for if Start has been called.
-	started int32
 }
 
 func New(log *logrus.Logger, staticRoot http.FileSystem, httpServerAddr string) (*archipelago, error) {
@@ -47,6 +44,8 @@ func New(log *logrus.Logger, staticRoot http.FileSystem, httpServerAddr string) 
 		return nil, fmt.Errorf("Error creating game coordinator: %v", err)
 	}
 
+	// Http server to server both the websocket upgrade route and the static
+	// assets.
 	mux := http.NewServeMux()
 	mux.Handle("/ws", websocket.NewUpgradeHandler(log, clientQueue))
 	mux.Handle("/", http.FileServer(staticRoot))
@@ -72,12 +71,11 @@ func New(log *logrus.Logger, staticRoot http.FileSystem, httpServerAddr string) 
 
 func (a *archipelago) Run(ctx context.Context) error {
 	httpErrCh := make(chan error)
-	// Run the http server and the game coordinator
 	go func() { httpErrCh <- a.httpServer.ListenAndServe() }()
 	err := a.gameCoordinator.Run(ctx)
 	// Once the game coordinator stops, also close the http server
 	// connection and wait for the server to stop
 	a.httpServer.Close()
 	a.logEntry.WithError(<-httpErrCh).Error("httpServer stopped")
-	return err
+	return fmt.Errorf("gameCoorddinator stopped: %v", err)
 }
