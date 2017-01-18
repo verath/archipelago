@@ -23,22 +23,26 @@ func (ta *tickAction) Apply(game *model.Game) ([]events.Event, error) {
 	if ta.delta < 0 {
 		return nil, errors.New("delta must be positive")
 	}
-	if err := updateAirplanes(game, ta.delta); err != nil {
+	if err := ta.updateAirplanes(game, ta.delta); err != nil {
 		return nil, err
 	}
-	if err := updateIslands(game, ta.delta); err != nil {
-		return nil, err
-	}
-
-	tickEvt, err := events.NewTickEvent(game)
-	if err != nil {
+	if err := ta.updateIslands(game, ta.delta); err != nil {
 		return nil, err
 	}
 
-	return []events.Event{tickEvt}, nil
+	if isGameOver, winner := ta.isGameOver(game); isGameOver {
+		gameOverEvent := events.NewGameOverEvent(winner)
+		return []events.Event{gameOverEvent}, nil
+	} else {
+		tickEvt, err := events.NewTickEvent(game)
+		if err != nil {
+			return nil, err
+		}
+		return []events.Event{tickEvt}, nil
+	}
 }
 
-func updateAirplanes(g *model.Game, delta time.Duration) error {
+func (ta *tickAction) updateAirplanes(g *model.Game, delta time.Duration) error {
 	arrivals := make([]*model.Airplane, 0)
 
 	for _, airplane := range g.Airplanes() {
@@ -94,7 +98,7 @@ func updateAirplanes(g *model.Game, delta time.Duration) error {
 	return nil
 }
 
-func updateIslands(g *model.Game, delta time.Duration) error {
+func (ta *tickAction) updateIslands(g *model.Game, delta time.Duration) error {
 	islandGrowthInterval := model.IslandGrowthInterval
 	islandGrowthCap := model.IslandGrowthCap
 
@@ -128,4 +132,44 @@ func updateIslands(g *model.Game, delta time.Duration) error {
 		island.SetGrowthRemainder(remainder)
 	}
 	return nil
+}
+
+// Checks if the current game is over. A game is over when a player
+// no longer controls any islands or airplanes. If the game is over,
+// the winner is also returned. For a tie, the returned player is nil.
+func (ta *tickAction) isGameOver(g *model.Game) (bool, *model.Player) {
+	player1Alive := false
+	player2Alive := false
+
+	for _, airplane := range g.Airplanes() {
+		if airplane.Owner().Equals(g.Player1()) {
+			player1Alive = true
+		} else if airplane.Owner().Equals(g.Player2()) {
+			player2Alive = true
+		}
+
+		if player1Alive && player2Alive {
+			return false, nil
+		}
+	}
+
+	for _, island := range g.Islands() {
+		if island.Owner().Equals(g.Player1()) {
+			player1Alive = true
+		} else if island.Owner().Equals(g.Player2()) {
+			player2Alive = true
+		}
+
+		if player1Alive && player2Alive {
+			return false, nil
+		}
+	}
+
+	if player1Alive {
+		return true, g.Player1()
+	} else if player2Alive {
+		return true, g.Player2()
+	} else {
+		return true, nil
+	}
 }
