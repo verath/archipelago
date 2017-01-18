@@ -1,7 +1,6 @@
 package actions
 
 import (
-	"errors"
 	"fmt"
 	"github.com/verath/archipelago/lib/game/events"
 	"github.com/verath/archipelago/lib/game/model"
@@ -22,30 +21,31 @@ func (a *launchAction) ToAction(playerID model.PlayerID) Action {
 }
 
 func (a *launchAction) Apply(g *model.Game) ([]events.Event, error) {
-	if a.From == a.To {
-		return nil, errors.New("from == to")
-	}
-
 	fromIsland := g.Island(a.From)
 	toIsland := g.Island(a.To)
 	owningPlayer := g.Player(a.ownerID)
 
+	if owningPlayer == nil {
+		return nil, newIllegalActionError(owningPlayer, "owning player does not exist")
+	}
 	if fromIsland == nil {
-		return nil, errors.New("from island does not exist")
+		return nil, newIllegalActionError(owningPlayer, "from island does not exist")
 	}
 	if toIsland == nil {
-		return nil, errors.New("to island does not exist")
+		return nil, newIllegalActionError(owningPlayer, "to island does not exist")
 	}
-	if owningPlayer == nil {
-		return nil, errors.New("owning player does not exist")
+
+	if fromIsland.ID() == toIsland.ID() {
+		return nil, newIllegalActionError(owningPlayer, "fromIsland == toIsland")
 	}
 
 	if !fromIsland.IsOwnedBy(owningPlayer) {
-		return nil, errors.New("owner does not own from island")
+		return nil, newInvalidActionError(owningPlayer, "to island does not exist")
+
 	}
 
 	if fromIsland.Strength() < 2 {
-		return nil, errors.New("from island strength < 2")
+		return nil, newIllegalActionError(owningPlayer, "from island strength < 2")
 	}
 
 	// Launch an airplane with half the army of the island

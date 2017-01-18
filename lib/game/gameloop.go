@@ -85,8 +85,7 @@ func (gl *gameLoop) AddAction(action actions.Action) {
 func (gl *gameLoop) Run(ctx context.Context) error {
 	gl.logEntry.Debug("Starting")
 	defer gl.logEntry.Debug("Stopped")
-	err := gl.tickLoop(ctx)
-	return fmt.Errorf("tickLoop quit: %v", err)
+	return gl.tickLoop(ctx)
 }
 
 // Performs a "tick" each tickInterval. The tick is what updates the game, by applying
@@ -154,7 +153,7 @@ func (gl *gameLoop) getActions() []actions.Action {
 func (gl *gameLoop) applyAction(ctx context.Context, act actions.Action) error {
 	evts, err := act.Apply(gl.game)
 	if err != nil {
-		return fmt.Errorf("Error applying actions: %v", err)
+		return gl.handleActionError(ctx, err)
 	}
 	if err := gl.handleEvents(ctx, evts); err != nil {
 		if err == ErrGameOver {
@@ -168,6 +167,32 @@ func (gl *gameLoop) applyAction(ctx context.Context, act actions.Action) error {
 	return nil
 }
 
+// Handles an error returned from applying an action. Non-fatal errors
+// are logged and ignored. Fatal action errors results in a game over event
+// being sent. Both fatal action errors and other errors are returned
+// to the caller.
+func (gl *gameLoop) handleActionError(ctx context.Context, err error) error {
+	switch err := err.(type) {
+	case actions.ActionError:
+		if err.IsFatal() {
+			gl.logEntry.WithError(err).Debug("handle fatal ActionError")
+			var winner *model.Player
+			if err.Player() != nil {
+				winner = gl.game.Opponent(err.Player().ID())
+			}
+			gameOverEvent := events.NewGameOverEvent(winner)
+			gl.eventHandler.handleEvent(ctx, gameOverEvent)
+			return fmt.Errorf("Encountered a fatal ActionError: %v", err)
+		} else {
+			gl.logEntry.WithError(err).Warn("Ignoring non-fatal ActionError")
+			return nil
+		}
+	default:
+		gl.logEntry.WithError(err).Debug("handle generic error")
+		return err
+	}
+}
+
 // Handles each event produced by delegating to the event handler.
 // If an event representing the game being over is encountered, an
 // ErrGameOver error is returned, after the event has been processed
@@ -179,6 +204,8 @@ func (gl *gameLoop) handleEvents(ctx context.Context, evts []events.Event) error
 	if gl.eventHandler != nil {
 		for _, evt := range evts {
 			gl.eventHandler.handleEvent(ctx, evt)
+			// If we sent a game over event, make sure we return
+			// an error here to stop the game loop.
 			if events.IsGameOverEvent(evt) {
 				return ErrGameOver
 			}

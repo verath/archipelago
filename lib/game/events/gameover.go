@@ -18,8 +18,15 @@ type (
 	}
 )
 
-func NewGameOverEvent(player *model.Player) Event {
-	return &gameOverEvent{player.ID()}
+// Creates a new game over event, with the provided player as winner.
+// If the winner is nil, then a game over event without a winner is
+// created.
+func NewGameOverEvent(winner *model.Player) Event {
+	var winnerID model.PlayerID
+	if winner != nil {
+		winnerID = winner.ID()
+	}
+	return &gameOverEvent{winnerID}
 }
 
 func (event *gameOverEvent) ToPlayerEvent(id model.PlayerID) PlayerEvent {

@@ -13,6 +13,11 @@ const (
 
 type (
 	Action interface {
+		// Apply applies an action to a game, returning a slice of events
+		// created. Additionally, the Apply method is responsible for validating
+		// the action before it is applied. Invalid or Illegal actions are returned
+		// as ActionErrors. Unless the error returned is explicitly non-fatal, any
+		// error should be regarded as fatal by default and must stop the game.
 		Apply(game *model.Game) ([]events.Event, error)
 	}
 

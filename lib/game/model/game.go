@@ -41,6 +41,19 @@ func (g *Game) Player(id PlayerID) *Player {
 	return nil
 }
 
+// Takes a player id and returns the opponent of that player. I.e.
+// given the id for player1, player2 is returned. Returns nil
+// if the id does not point to either player1 or player2
+func (g *Game) Opponent(id PlayerID) *Player {
+	if g.player1.id == id {
+		return g.player2
+	}
+	if g.player2.id == id {
+		return g.player1
+	}
+	return nil
+}
+
 // Returns an island by id, or nil if the island does not exist.
 func (g *Game) Island(id IslandID) *Island {
 	for _, island := range g.islands {
