@@ -5,8 +5,9 @@ import (
 )
 
 const (
-	EventTypeTick  = "evt_tick"
-	EventTypeStart = "evt_game_start"
+	EventTypeTick     = "evt_tick"
+	EventTypeStart    = "evt_game_start"
+	EventTypeGameOver = "evt_game_over"
 )
 
 type (
@@ -28,3 +29,9 @@ type (
 		Data() interface{}
 	}
 )
+
+// Tests if an event is a game over event.
+func IsGameOverEvent(evt Event) bool {
+	_, ok := evt.(*gameOverEvent)
+	return ok
+}

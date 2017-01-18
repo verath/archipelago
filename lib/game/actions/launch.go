@@ -11,13 +11,13 @@ type launchAction struct {
 	From model.IslandID `json:"from"`
 	To   model.IslandID `json:"to"`
 
-	playerID model.PlayerID
+	ownerID model.PlayerID
 }
 
-// We implement ToAction by setting the playerID property and returning
+// We implement ToAction by setting the ownerID property and returning
 // ourselves, as we already implement the Action interface.
 func (a *launchAction) ToAction(playerID model.PlayerID) Action {
-	a.playerID = playerID
+	a.ownerID = playerID
 	return a
 }
 
@@ -28,7 +28,7 @@ func (a *launchAction) Apply(g *model.Game) ([]events.Event, error) {
 
 	fromIsland := g.Island(a.From)
 	toIsland := g.Island(a.To)
-	owningPlayer := g.Player(a.playerID)
+	owningPlayer := g.Player(a.ownerID)
 
 	if fromIsland == nil {
 		return nil, errors.New("from island does not exist")

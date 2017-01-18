@@ -2,6 +2,7 @@ package game
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"github.com/Sirupsen/logrus"
 	"github.com/verath/archipelago/lib/common"
@@ -14,6 +15,10 @@ import (
 
 const defaultTickInterval time.Duration = (time.Second / 2)
 
+// A special error returned if the game loop finished because the
+// game has successfully come to an end.
+var ErrGameOver = errors.New("Game is over")
+
 // The gameLoop is what updates the game model instance that it is
 // associated with. The updates are performed in ticks. Each tick
 // applies all actions that has been added since the last tick
@@ -25,64 +30,68 @@ const defaultTickInterval time.Duration = (time.Second / 2)
 // once the gameLoop is started is not safe.
 type gameLoop struct {
 	logEntry *logrus.Entry
-
+	// Duration between each tick
 	tickInterval time.Duration
-	game         *model.Game
+	// The game instance on which actions are to be applied
+	game *model.Game
 
-	// A signaling channel that is sent a value each time
-	// the events *might* have been updated.
-	eventsSCh chan bool
-	eventsMu  sync.Mutex
-	events    []events.Event
+	eventHandlerMu sync.Mutex
+	// A handler to handle events produced when applying actions
+	// to the game instance.
+	eventHandler eventHandler
 
 	actionsMu sync.Mutex
-	actions   []actions.Action
+	// A slice of actions to be applied on the next tick
+	actions []actions.Action
 }
 
-// Perform a tick on the game; Applies all queued actions on the game
-// sequentially, making it safe for the applied actions to modify the
-// game state. An additional TickAction is always performed as the
-// last actions.
-func (gl *gameLoop) tick(delta time.Duration) error {
-	// We make a copy of the current gl.actions and replace gl.actions
-	// with a new array so that we can release the lock asap
+// A handler for game events produced from applying actions.
+type eventHandler interface {
+	// Handles an event produced. This method will be called from the
+	// "tick" goroutine. As such, the handleEvent call will block any
+	// further processing of the current tick. If the context expires,
+	// the handler must unblock.
+	handleEvent(ctx context.Context, event events.Event)
+}
+
+func newGameLoop(log *logrus.Logger, game *model.Game) (*gameLoop, error) {
+	logEntry := common.ModuleLogEntryWithID(log, "gameLoop")
+
+	return &gameLoop{
+		logEntry:     logEntry,
+		tickInterval: defaultTickInterval,
+		game:         game,
+		actions:      make([]actions.Action, 0),
+	}, nil
+}
+
+// Sets the handler for game events.
+func (gl *gameLoop) SetEventHandler(eventHandler eventHandler) {
+	gl.eventHandlerMu.Lock()
+	gl.eventHandler = eventHandler
+	gl.eventHandlerMu.Unlock()
+}
+
+// Adds an action to be processed in the next tick.
+func (gl *gameLoop) AddAction(action actions.Action) {
 	gl.actionsMu.Lock()
-	acts := gl.actions
-	gl.actions = make([]actions.Action, 0, len(acts))
+	gl.actions = append(gl.actions, action)
 	gl.actionsMu.Unlock()
-
-	// Add a tick actions as the last actions
-	tickAction, err := actions.NewTickAction(delta)
-	if err != nil {
-		return fmt.Errorf("Error creating tick action: %v", err)
-	}
-	acts = append(acts, tickAction)
-
-	// Process actions
-	evts := make([]events.Event, 0)
-	for _, act := range acts {
-		actionEvts, err := act.Apply(gl.game)
-		if err != nil {
-			return fmt.Errorf("Error applying actions: %v", err)
-		}
-		evts = append(evts, actionEvts...)
-	}
-
-	// Append the new events to the gl.events slice
-	gl.eventsMu.Lock()
-	gl.events = append(gl.events, evts...)
-	gl.eventsMu.Unlock()
-
-	// Signal that events (might have) been added
-	select {
-	case gl.eventsSCh <- true:
-	default:
-	}
-	return nil
 }
 
-// Performs a "tick" each tickInterval. The tick is what updates the game.
-// This method blocks, and always returns a non-nil error .
+// Runs the game loop. Run blocks until the context is cancelled, or an
+// error occurs. The special ErrGameOver is returned if the reason for
+// the game loop quitting is that the underlying game has finished.
+func (gl *gameLoop) Run(ctx context.Context) error {
+	gl.logEntry.Debug("Starting")
+	defer gl.logEntry.Debug("Stopped")
+	err := gl.tickLoop(ctx)
+	return fmt.Errorf("tickLoop quit: %v", err)
+}
+
+// Performs a "tick" each tickInterval. The tick is what updates the game, by applying
+// actions that has been added since the last tick.  This method blocks, and always
+// returns a non-nil error.
 func (gl *gameLoop) tickLoop(ctx context.Context) error {
 	tickInterval := gl.tickInterval
 	ticker := time.NewTicker(tickInterval)
@@ -93,64 +102,87 @@ func (gl *gameLoop) tickLoop(ctx context.Context) error {
 		case <-ctx.Done():
 			return ctx.Err()
 		case <-ticker.C:
-			if err := gl.tick(tickInterval); err != nil {
+			err := gl.tick(ctx, tickInterval)
+			if err != nil {
 				return err
 			}
 		}
 	}
 }
 
-// Adds an actions to the actions to be processed.
-func (gl *gameLoop) AddAction(action actions.Action) {
-	gl.actionsMu.Lock()
-	gl.actions = append(gl.actions, action)
-	gl.actionsMu.Unlock()
-}
+// Perform a tick on the game; Applies all queued actions on the game
+// sequentially, making it safe for the applied actions to modify the
+// game-state. An additional TickAction is always performed as the
+// last actions during a tick.
+func (gl *gameLoop) tick(ctx context.Context, delta time.Duration) error {
+	// Obtain a slice of the actions added since the last tick.
+	acts := gl.getActions()
 
-// Returns the next event from the list of events. Blocks until an event
-// can be returned or the context is cancelled.
-func (gl *gameLoop) NextEvent(ctx context.Context) (events.Event, error) {
-	var evt events.Event
-	for {
-		// Try get the first event
-		gl.eventsMu.Lock()
-		if len(gl.events) > 0 {
-			evt, gl.events = gl.events[0], gl.events[1:]
-		}
-		gl.eventsMu.Unlock()
+	// Add a tick actions as the last action to our local actions slice.
+	tickAction, err := actions.NewTickAction(delta)
+	if err != nil {
+		return fmt.Errorf("Error creating tick action: %v", err)
+	}
+	acts = append(acts, tickAction)
 
-		if evt != nil {
-			return evt, nil
-		}
-
-		// If we did not find an event, wait for the gl.eventsSCh
-		// and try again.
-		select {
-		case <-ctx.Done():
-			return nil, ctx.Err()
-		case <-gl.eventsSCh:
+	for _, act := range acts {
+		if err := gl.applyAction(ctx, act); err != nil {
+			return err
 		}
 	}
+	return nil
 }
 
-// Runs the game loop. Run blocks until the context is cancelled and
-// always returns a non-nil error.
-func (gl *gameLoop) Run(ctx context.Context) error {
-	gl.logEntry.Debug("Starting")
-	defer gl.logEntry.Debug("Stopped")
-	err := gl.tickLoop(ctx)
-	return fmt.Errorf("tickLoop quit: %v", err)
+// Swaps the current slice of actions with a new empty slice, returning
+// the previous actions.
+func (gl *gameLoop) getActions() []actions.Action {
+	gl.actionsMu.Lock()
+	defer gl.actionsMu.Unlock()
+	acts := gl.actions
+
+	// We slowly shrink the initial capacity of the actions here, so
+	// that one tick with an abnormal number of actions doesn't result
+	// in every new actions slice being allocated that same large size.
+	newLen := len(acts) / 2
+	gl.actions = make([]actions.Action, 0, newLen)
+	return acts
 }
 
-func newGameLoop(log *logrus.Logger, game *model.Game) (*gameLoop, error) {
-	logEntry := common.ModuleLogEntryWithID(log, "gameLoop")
+// Applies a single event to the game, and handles each event this action
+// produced sequentially. Returns an ErrGameOver if a game over event
+// was encountered.
+func (gl *gameLoop) applyAction(ctx context.Context, act actions.Action) error {
+	evts, err := act.Apply(gl.game)
+	if err != nil {
+		return fmt.Errorf("Error applying actions: %v", err)
+	}
+	if err := gl.handleEvents(ctx, evts); err != nil {
+		if err == ErrGameOver {
+			// We don't want to add context to the game over event, as
+			// that would prevent the caller from identifying it.
+			return err
+		} else {
+			return fmt.Errorf("Error handling events: %v", err)
+		}
+	}
+	return nil
+}
 
-	return &gameLoop{
-		logEntry:     logEntry,
-		tickInterval: defaultTickInterval,
-		game:         game,
-		eventsSCh:    make(chan bool, 0),
-		events:       make([]events.Event, 0),
-		actions:      make([]actions.Action, 0),
-	}, nil
+// Handles each event produced by delegating to the event handler.
+// If an event representing the game being over is encountered, an
+// ErrGameOver error is returned, after the event has been processed
+// by the event handler.
+func (gl *gameLoop) handleEvents(ctx context.Context, evts []events.Event) error {
+	gl.eventHandlerMu.Lock()
+	defer gl.eventHandlerMu.Unlock()
+
+	if gl.eventHandler != nil {
+		for _, evt := range evts {
+			gl.eventHandler.handleEvent(ctx, evt)
+			if events.IsGameOverEvent(evt) {
+				return ErrGameOver
+			}
+		}
+	}
+	return nil
 }

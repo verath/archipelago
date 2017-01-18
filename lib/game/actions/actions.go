@@ -8,6 +8,7 @@ import (
 
 const (
 	ActionTypeLaunch = "act_launch"
+	ActionTypeLeave  = "act_leave"
 )
 
 type (
@@ -52,4 +53,5 @@ func PlayerActionByType(actType string) (PlayerAction, error) {
 
 func init() {
 	playerActions[ActionTypeLaunch] = creatorFunc(func() PlayerAction { return &launchAction{} })
+	playerActions[ActionTypeLeave] = creatorFunc(func() PlayerAction { return &leaveAction{} })
 }

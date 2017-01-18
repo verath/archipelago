@@ -10,7 +10,7 @@ func newLaunchAction(from, to model.IslandID, ownerID model.PlayerID) *launchAct
 	return &launchAction{
 		From:     from,
 		To:       to,
-		playerID: ownerID,
+		ownerID: ownerID,
 	}
 }
 

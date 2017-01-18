@@ -37,6 +37,7 @@ func TestGameLoop_Start_Stop(t *stdtesting.T) {
 
 func TestGameLoop_AddAction(t *stdtesting.T) {
 	game := testing.CreateEmptyGame()
+	ctx := context.Background()
 	gl, _ := newGameLoop(log, game)
 
 	t.Log("Adding actions to game loop...")
@@ -48,14 +49,14 @@ func TestGameLoop_AddAction(t *stdtesting.T) {
 
 	t.Log("Tick 1: actions added")
 	gl.AddAction(a1)
-	gl.tick(1 * time.Millisecond)
+	gl.tick(ctx, 1 * time.Millisecond)
 	if !a1Applied {
 		t.Error("Action was not applied")
 	}
 
 	t.Log("Tick 2: without actions")
 	a1Applied = false
-	gl.tick(1 * time.Millisecond)
+	gl.tick(ctx, 1 * time.Millisecond)
 	if a1Applied {
 		t.Error("Action was applied twice")
 	}
@@ -63,7 +64,7 @@ func TestGameLoop_AddAction(t *stdtesting.T) {
 	t.Log("Tick 3: actions added")
 	a1Applied = false
 	gl.AddAction(a1)
-	gl.tick(1 * time.Millisecond)
+	gl.tick(ctx, 1 * time.Millisecond)
 	if !a1Applied {
 		t.Error("Action was not applied")
 	}
