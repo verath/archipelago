@@ -129,6 +129,8 @@ func (c *clientImpl) WriteEnvelope(ctx context.Context, envelope *envelope) erro
 		// TODO(2017-01-08): select on ctx.Done() here too? If we do,
 		// make resultCh buffered.
 		return <-resultCh
+	case <-c.disconnectCh:
+		return ErrClientDisconnected
 	case <-ctx.Done():
 		return ctx.Err()
 	}
