@@ -51,6 +51,9 @@ func newController(log *logrus.Logger, game *model.Game, p1Client, p2Client netw
 // Run starts the game controller, in turn starting the gameLoop and makes
 // the game controller start listening for player actions. Blocks until an
 // error occurs or the context is canceled. Always returns a non-nil error.
+// The special ErrGameOver is returned if the reason for the coordinator
+// quitting is that the underlying game has finished, and can be regarded
+// as a non-failure state.
 func (ctrl *controller) Run(ctx context.Context) error {
 	ctrl.logEntry.Debug("Starting")
 	defer ctrl.logEntry.Debug("Stopped")

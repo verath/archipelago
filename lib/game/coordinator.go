@@ -121,7 +121,7 @@ func (c *Coordinator) startGame(ctx context.Context, p1Client, p2Client network.
 	go func() {
 		defer c.gamesWG.Done()
 		err := ctrl.Run(gameCtx)
-		if err != nil && err != context.Canceled {
+		if err != nil && err != ErrGameOver && err != context.Canceled {
 			c.logEntry.WithError(err).Error("Game stopped with an error")
 		}
 		cancel()
