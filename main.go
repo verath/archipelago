@@ -30,7 +30,7 @@ func main() {
 
 	archipelagoGame, err := archipelago.New(log, http.Dir("static"), ":8080")
 	if err != nil {
-		log.WithError(err).Error("Error creating game")
+		log.WithError(err).Fatal("Error creating game")
 	}
 
 	log.Fatal(archipelagoGame.Run(ctx))
