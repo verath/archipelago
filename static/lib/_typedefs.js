@@ -17,6 +17,12 @@
  */
 
 /**
+ * @typedef {object} GameOverEventData
+ * @property {string} winner_id
+ * @property {bool} is_winner
+ */
+
+/**
  * @typedef {object} CoordinateData
  * @property {number} x
  * @property {number} y

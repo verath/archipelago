@@ -69,6 +69,10 @@ export default class Connection {
         this._eventEmitter.on(EVENT_DISCONNECT, listener, context);
     }
 
+    removeDisconnectListener(listener, context=null) {
+        this._eventEmitter.off(EVENT_DISCONNECT, listener, context);
+    }
+
     connect() {
         if (this._conn != null) {
             console.warn("connect called when Connection already connected");
@@ -78,6 +82,17 @@ export default class Connection {
         this._conn.onmessage = this._onWSMessage.bind(this);
         this._conn.onclose = this._onWSClose.bind(this);
         this._conn.onerror = this._onWSError.bind(this);
+    }
 
+    disconnect() {
+        if(this._conn == null) {
+            console.warn("disconnect called when Connection was not connected");
+            return;
+        }
+        this._conn.close();
+        this._conn.onmessage = null;
+        this._conn.onclose = null;
+        this._conn.onerror = null;
+        this._conn = null;
     }
 }

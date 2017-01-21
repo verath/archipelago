@@ -56,6 +56,11 @@ export default class GameController {
             return;
         }
 
+        if(originIsland.strength < 2) {
+            // Cannot send from island with less than 2 strength
+            return;
+        }
+
         // Launch a local dummy airplane, which will be replaced
         // once we hear back from the server.
         this._gameModel.launchAirplane(originIsland, targetIsland);
@@ -93,6 +98,20 @@ export default class GameController {
     }
 
     /**
+     * @param {GameOverEventData} data
+     * @private
+     */
+    _onGameOverEvent(data) {
+        if(data.is_winner) {
+            alert("Game Over\nYou Won!");
+        } else {
+            alert("Game Over\nYou Lost!");
+        }
+        this._connection.removeDisconnectListener(this._onDisconnect, this);
+        this._connection.disconnect();
+    }
+
+    /**
      * @param {ServerPayload} payload
      * @private
      */
@@ -103,6 +122,9 @@ export default class GameController {
                 break;
             case "evt_tick":
                 this._onTickEvent(payload.data);
+                break;
+            case "evt_game_over":
+                this._onGameOverEvent(payload.data);
                 break;
             default:
                 console.log("Unknown event:", payload.type, payload);
