@@ -1,7 +1,7 @@
 import * as PIXI from "pixijs";
-import GameController from "./controller/GameController";
-import GameModel from "./model/GameModel";
-import GameView from "./view/GameView";
+import GameController from "./game/controller/GameController";
+import GameModel from "./game/model/GameModel";
+import GameView from "./game/view/GameView";
 import Connection from "./network/Connection";
 import ResourceLoader from "./resource/ResourceLoader";
 
