@@ -1,4 +1,4 @@
-# Archipelago [WIP]
+# Archipelago
 
 A 2-player web-based clone of the [android game](https://play.google.com/store/apps/details?id=com.sgg.archipelago_kr) with the same name.
 
@@ -24,7 +24,7 @@ The frontend project is found in the `static` directory and is hosted by the ser
 
 ### Backend
 
-The backend (aka the server), is written in go, using [Godep](https://github.com/tools/godep) for managing vendor dependencies. The server is written primarily with the standard library, but uses [Gorilla WebSocket](https://github.com/gorilla/websocket) for WebSocket handling and [Logrus](https://github.com/Sirupsen/logrus) for logging. It also generates ids via [nu7hatch/gouuid](https://github.com/nu7hatch/gouuid). The backend code is found in the `lib` directory.
+The backend (aka the server), is written in go, using [Godep](https://github.com/tools/godep) for managing vendor dependencies. The server is written primarily with the standard library, but uses [Gorilla WebSocket](https://github.com/gorilla/websocket) for WebSocket handling and [Logrus](https://github.com/Sirupsen/logrus) for logging. The backend code is found in the `lib` directory.
 
 ## Running the Project
 
