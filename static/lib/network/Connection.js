@@ -53,16 +53,12 @@ export default class Connection {
         this._eventEmitter.emit(EVENT_DISCONNECT);
     }
 
-    /**
-     * @param {ServerPayload} payloadObj
-     */
-    sendAction(payloadObj) {
-        let message = JSON.stringify(payloadObj);
-        this._conn.send(message);
-    }
-
     addServerEventListener(listener, context = null) {
         this._eventEmitter.on(EVENT_SERVER_EVENT, listener, context);
+    }
+
+    removeServerEventListener(listener, context=null) {
+        this._eventEmitter.off(EVENT_SERVER_EVENT, listener, context);
     }
 
     addDisconnectListener(listener, context = null) {
@@ -94,5 +90,17 @@ export default class Connection {
         this._conn.onclose = null;
         this._conn.onerror = null;
         this._conn = null;
+    }
+
+    /**
+     * @param {ServerPayload} payloadObj
+     */
+    sendAction(payloadObj) {
+        if(this._conn == null) {
+            console.warn("sendAction called when Connection was not connected");
+            return;
+        }
+        let message = JSON.stringify(payloadObj);
+        this._conn.send(message);
     }
 }

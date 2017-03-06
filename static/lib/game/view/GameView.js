@@ -161,6 +161,10 @@ export default class GameView {
         this._eventEmitter.on(EVENT_ISLAND_CLICKED, listener, context);
     }
 
+    removeIslandClickListener(listener, context = null) {
+        this._eventEmitter.off(EVENT_ISLAND_CLICKED, listener, context);
+    }
+
     resize() {
         let pixelRatio = (window.devicePixelRatio || 1);
         let canvas = this._renderer.view;

@@ -102,13 +102,7 @@ export default class GameController {
      * @private
      */
     _onGameOverEvent(data) {
-        if(data.is_winner) {
-            alert("Game Over\nYou Won!");
-        } else {
-            alert("Game Over\nYou Lost!");
-        }
-        this._connection.removeDisconnectListener(this._onDisconnect, this);
-        this._connection.disconnect();
+        this._onGameOver(data.is_winner);
     }
 
     /**
@@ -132,8 +126,26 @@ export default class GameController {
     }
 
     _onDisconnect() {
+        this._onGameOver(false);
+    }
+
+    /**
+     * @param {bool} isWinner
+     * @private
+     */
+    _onGameOver(isWinner) {
+        if(isWinner) {
+            alert("Game Over\nYou Won!");
+        } else {
+            alert("Game Over\nYou Lost!");
+        }
+        // Remove listeners
+        this._connection.removeServerEventListener(this._onServerEvent, this);
+        this._connection.removeDisconnectListener(this._onDisconnect, this);
+        this._gameView.removeIslandClickListener(this._onIslandClicked, this);
+        // Close the connection, and stop view animation
+        this._connection.disconnect();
         this._ticker.stop();
-        alert("Disconnected! :(");
     }
 
     /**
