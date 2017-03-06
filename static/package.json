@@ -14,6 +14,7 @@
     "jspm": "^0.16.48"
   },
   "scripts": {
-    "postinstall": "./node_modules/.bin/jspm install"
+    "postinstall": "./node_modules/.bin/jspm install",
+    "bundle": "./node_modules/.bin/jspm bundle-sfx lib/main.js app.bundle.js --minify"
   }
 }

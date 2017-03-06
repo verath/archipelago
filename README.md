@@ -37,14 +37,15 @@ Then download the project to your `GOPATH`:
 $ go get github.com/verath/archipelago
 ```
 
-This will include all dependencies required for the server code. However, the client side dependencies are not included in the repo and have to be fetched via npm:
+This will include all dependencies required for the server code. However, the client side dependencies are not included in the repo and have to be fetched via npm and bundled to an `app.bundle.js` file:
 
 ```
 $ cd $GOPATH/src/github.com/verath/archipelago/static
 $ npm install
+$ npm run bundle
 ```
 
- Now run the project as a go project, e.g. using `go run` from the root directory:
+Now run the project as a go project, e.g. using `go run` from the root directory:
 
 ```
 $ cd $GOPATH/src/github.com/verath/archipelago
