@@ -17,7 +17,8 @@ function runGame(resourceHolder) {
     let renderer = PIXI.autoDetectRenderer(1, 1, {transparent: true});
     document.body.appendChild(renderer.view);
 
-    let connection = new Connection("ws://" + location.host + "/ws");
+    let protocol = (location.protocol === 'https:') ? 'wss://' : 'ws://';
+    let connection = new Connection(protocol + location.host + "/ws");
     let gameModel = new GameModel();
     let gameView = new GameView(resourceHolder, renderer, gameModel);
     let gameController = new GameController(connection, gameModel, gameView);
