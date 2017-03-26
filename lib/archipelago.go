@@ -28,7 +28,7 @@ type archipelago struct {
 
 	clientQueue     *network.ClientQueue
 	gameCoordinator *game.Coordinator
-	httpServer      *network.ClosableHTTPServer
+	httpServer      *http.Server
 }
 
 func New(log *logrus.Logger, staticRoot http.FileSystem, httpServerAddr string) (*archipelago, error) {
@@ -56,16 +56,11 @@ func New(log *logrus.Logger, staticRoot http.FileSystem, httpServerAddr string) 
 		WriteTimeout: httpWriteTimeout,
 	}
 
-	httpServer, err := network.NewClosableHTTPServer(server)
-	if err != nil {
-		return nil, fmt.Errorf("Error creating http server: %v", err)
-	}
-
 	return &archipelago{
 		logEntry:        logEntry,
 		clientQueue:     clientQueue,
 		gameCoordinator: gameCoordinator,
-		httpServer:      httpServer,
+		httpServer:      server,
 	}, nil
 }
 
@@ -74,8 +69,11 @@ func (a *archipelago) Run(ctx context.Context) error {
 	go func() { httpErrCh <- a.httpServer.ListenAndServe() }()
 	err := a.gameCoordinator.Run(ctx)
 	// Once the game coordinator stops, also close the http server
-	// connection and wait for the server to stop
-	a.httpServer.Close()
-	a.logEntry.WithError(<-httpErrCh).Error("httpServer stopped")
+	// connection and wait it to stop
+	if err := a.httpServer.Close(); err != nil {
+		a.logEntry.WithError(err).Debug("Error closing httpServer")
+	}
+	httpErr := <-httpErrCh
+	a.logEntry.WithError(httpErr).Error("httpServer stopped")
 	return fmt.Errorf("gameCoorddinator stopped: %v", err)
 }
