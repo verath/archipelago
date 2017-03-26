@@ -11,7 +11,7 @@
     }
   },
   "devDependencies": {
-    "jspm": "^0.16.48"
+    "jspm": "^0.16.53"
   },
   "scripts": {
     "postinstall": "./node_modules/.bin/jspm install",
