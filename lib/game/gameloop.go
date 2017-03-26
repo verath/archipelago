@@ -160,9 +160,8 @@ func (gl *gameLoop) applyAction(ctx context.Context, act actions.Action) error {
 			// We don't want to add context to the game over event, as
 			// that would prevent the caller from identifying it.
 			return err
-		} else {
-			return fmt.Errorf("Error handling events: %v", err)
 		}
+		return fmt.Errorf("Error handling events: %v", err)
 	}
 	return nil
 }
@@ -174,19 +173,19 @@ func (gl *gameLoop) applyAction(ctx context.Context, act actions.Action) error {
 func (gl *gameLoop) handleActionError(ctx context.Context, err error) error {
 	switch err := err.(type) {
 	case actions.ActionError:
-		if err.IsFatal() {
-			gl.logEntry.WithError(err).Debug("handle fatal ActionError")
-			var winner *model.Player
-			if err.Player() != nil {
-				winner = gl.game.Opponent(err.Player().ID())
-			}
-			gameOverEvent := events.NewGameOverEvent(winner)
-			gl.eventHandler.handleEvent(ctx, gameOverEvent)
-			return fmt.Errorf("Encountered a fatal ActionError: %v", err)
-		} else {
+		if !err.IsFatal() {
 			gl.logEntry.WithError(err).Warn("Ignoring non-fatal ActionError")
 			return nil
 		}
+
+		gl.logEntry.WithError(err).Debug("handle fatal ActionError")
+		var winner *model.Player
+		if err.Player() != nil {
+			winner = gl.game.Opponent(err.Player().ID())
+		}
+		gameOverEvent := events.NewGameOverEvent(winner)
+		gl.eventHandler.handleEvent(ctx, gameOverEvent)
+		return fmt.Errorf("Encountered a fatal ActionError: %v", err)
 	default:
 		gl.logEntry.WithError(err).Debug("handle generic error")
 		return err

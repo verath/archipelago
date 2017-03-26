@@ -52,7 +52,7 @@ func createIslands(p1, p2, pn *Player, size Coordinate, gameRand *rand.Rand) ([]
 	islandMap[Coordinate{size.X - 1, size.Y - 1}] = islandData{IslandSizeLarge, 20, p2}
 
 	// Transform the map to a slice of islands
-	islands := make([]*Island, 0)
+	var islands []*Island
 	for pos, data := range islandMap {
 		island, err := NewIsland(pos, data.Size, data.Strength, data.Player)
 		if err != nil {

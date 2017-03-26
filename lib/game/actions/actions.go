@@ -51,9 +51,8 @@ func (f creatorFunc) New() PlayerAction {
 func PlayerActionByType(actType string) (PlayerAction, error) {
 	if creator, ok := playerActions[actType]; ok {
 		return creator.New(), nil
-	} else {
-		return nil, fmt.Errorf("No creator for actType: %s", actType)
 	}
+	return nil, fmt.Errorf("No creator for actType: %s", actType)
 }
 
 func init() {

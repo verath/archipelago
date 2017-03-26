@@ -33,17 +33,18 @@ func (ta *tickAction) Apply(game *model.Game) ([]events.Event, error) {
 	if isGameOver, winner := ta.isGameOver(game); isGameOver {
 		gameOverEvent := events.NewGameOverEvent(winner)
 		return []events.Event{gameOverEvent}, nil
-	} else {
-		tickEvt, err := events.NewTickEvent(game)
-		if err != nil {
-			return nil, err
-		}
-		return []events.Event{tickEvt}, nil
 	}
+
+	tickEvt, err := events.NewTickEvent(game)
+	if err != nil {
+		return nil, err
+	}
+	return []events.Event{tickEvt}, nil
+
 }
 
 func (ta *tickAction) updateAirplanes(g *model.Game, delta time.Duration) error {
-	arrivals := make([]*model.Airplane, 0)
+	var arrivals []*model.Airplane
 
 	for _, airplane := range g.Airplanes() {
 		speed := airplane.Speed()
