@@ -5,8 +5,8 @@
 	"Deps": [
 		{
 			"ImportPath": "github.com/Sirupsen/logrus",
-			"Comment": "v0.11.0-10-ga437dfd",
-			"Rev": "a437dfd2463eaedbec3dfe443e477d3b0a810b3f"
+			"Comment": "v0.11.5-12-g10f801e",
+			"Rev": "10f801ebc38b33738c9d17d50860f484a0988ff5"
 		},
 		{
 			"ImportPath": "github.com/gorilla/websocket",
