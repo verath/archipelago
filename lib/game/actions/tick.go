@@ -51,20 +51,18 @@ func (ta *tickAction) updateAirplanes(g *model.Game, delta time.Duration) error 
 		dir := airplane.Direction()
 		// Our target is an island, look up its position
 		target := g.Island(airplane.Destination()).Position().ToFloatCoordinate()
-
-		newPos := pos
-		newPos.X = pos.X + float64(delta)*speed*math.Cos(dir)
-		newPos.Y = pos.Y + float64(delta)*speed*math.Sin(dir)
-
-		// If the distance to the target increased, we have already reached it,
-		// add us to arrivals.
-		// TODO: This is not great hit-detection
 		dist := math.Hypot(pos.X-target.X, pos.Y-target.Y)
-		newDist := math.Hypot(newPos.X-target.X, newPos.Y-target.Y)
-		if newDist > dist {
+		movement := speed * float64(delta)
+
+		// Check if we reached the destination. We add a small fraction to the
+		// distance travelled this tick to account for rounding errors
+		// TODO(2017-03-26): Is increasing this for rounding errors necessary?
+		if dist <= movement*1.001 {
 			arrivals = append(arrivals, airplane)
 		} else {
-			airplane.SetPosition(newPos)
+			pos.X += movement * math.Cos(dir)
+			pos.Y += movement * math.Sin(dir)
+			airplane.SetPosition(pos)
 		}
 	}
 
