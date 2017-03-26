@@ -10,8 +10,8 @@
 		},
 		{
 			"ImportPath": "github.com/gorilla/websocket",
-			"Comment": "v1.0.0-15-g54f9dec",
-			"Rev": "54f9decdbfb3fe254c5df3d5aa234480989f4af0"
+			"Comment": "v1.1.0-29-ga91eba7",
+			"Rev": "a91eba7f97777409bc2c443f5534d41dd20c5720"
 		},
 		{
 			"ImportPath": "golang.org/x/sys/unix",
