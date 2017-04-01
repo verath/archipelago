@@ -1,4 +1,4 @@
-import EventEmitter from 'eventemitter3';
+import EventEmitter from "eventemitter3";
 
 const EVENT_SERVER_EVENT = Symbol("EVENT_SERVER_EVENT");
 const EVENT_DISCONNECT = Symbol("EVENT_DISCONNECT");
@@ -57,7 +57,7 @@ export default class Connection {
         this._eventEmitter.on(EVENT_SERVER_EVENT, listener, context);
     }
 
-    removeServerEventListener(listener, context=null) {
+    removeServerEventListener(listener, context = null) {
         this._eventEmitter.off(EVENT_SERVER_EVENT, listener, context);
     }
 
@@ -65,12 +65,12 @@ export default class Connection {
         this._eventEmitter.on(EVENT_DISCONNECT, listener, context);
     }
 
-    removeDisconnectListener(listener, context=null) {
+    removeDisconnectListener(listener, context = null) {
         this._eventEmitter.off(EVENT_DISCONNECT, listener, context);
     }
 
     connect() {
-        if (this._conn != null) {
+        if (this._conn !== null) {
             console.warn("connect called when Connection already connected");
             return;
         }
@@ -81,7 +81,7 @@ export default class Connection {
     }
 
     disconnect() {
-        if(this._conn == null) {
+        if (this._conn === null) {
             console.warn("disconnect called when Connection was not connected");
             return;
         }
@@ -96,7 +96,7 @@ export default class Connection {
      * @param {ServerPayload} payloadObj
      */
     sendAction(payloadObj) {
-        if(this._conn == null) {
+        if (this._conn === null) {
             console.warn("sendAction called when Connection was not connected");
             return;
         }
