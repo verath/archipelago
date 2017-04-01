@@ -2,6 +2,8 @@
 
 A 2-player web-based clone of the [android game](https://play.google.com/store/apps/details?id=com.sgg.archipelago_kr) with the same name.
 
+![Screenshot Archipelago](.github/screenshot1.png)
+
 ## The Archipelago game
 
 The game is about controlling islands by sending airplanes. Each players starts controlling a single island. In addition, there are multiple islands, controlled by neither of the two players. Each island has an army, that for player-controlled islands increases over time. A player may at anytime choose to send an airplane from an island that the player controls to any other island. The airplane is created with half the army strength of the island, subtracted from the island.
