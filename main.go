@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"github.com/Sirupsen/logrus"
+	"github.com/pkg/errors"
 	"github.com/verath/archipelago/lib"
 	"net/http"
 	"os"
@@ -33,5 +34,7 @@ func main() {
 		log.WithError(err).Fatal("Error creating game")
 	}
 
-	log.Fatalf("Error during game: %+v", archipelagoGame.Run(ctx))
+	if err := archipelagoGame.Run(ctx); errors.Cause(err) != context.Canceled {
+		log.Fatalf("Error during game: %+v", err)
+	}
 }
