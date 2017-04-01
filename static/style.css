@@ -1,0 +1,47 @@
+* {
+    padding: 0;
+    margin: 0
+}
+
+body {
+    background-color: aqua;
+}
+
+canvas {
+    display: block;
+    margin: 0 auto;
+}
+
+.center-text-wrap {
+    display: block;
+    margin-top: 10vmin;
+    line-height: 20vmin;
+    text-align: center;
+    font-family: 'Droid Sans Mono', 'Courier New', monospace;
+    font-size: 10vmin;
+}
+
+.progress-text-dot {
+    opacity: 0;
+}
+
+.progress-text-dot.progress-text-dot1 {
+    animation: blink 3s infinite 0s;
+}
+
+.progress-text-dot.progress-text-dot2 {
+    animation: blink 3s infinite 0.5s;
+}
+
+.progress-text-dot.progress-text-dot3 {
+    animation: blink 3s infinite 1s;
+}
+
+@keyframes blink {
+    1%, 54% {
+        opacity: 1;
+    }
+    55% {
+        opacity: 0;
+    }
+}

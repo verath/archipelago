@@ -3,69 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <title>Archipelago</title>
-    <style>
-        * {
-            padding: 0;
-            margin: 0
-        }
-
-        body {
-            background-color: aqua;
-        }
-
-        body.no-js .js-show {
-            display: none;
-        }
-
-        canvas {
-            display: block;
-            margin: 0 auto;
-        }
-
-        #loading {
-            display: block;
-            margin-top: 10vmin;
-            line-height: 20vmin;
-            text-align: center;
-            font-family: 'Droid Sans Mono', 'Courier New', monospace;
-            font-size: 10vmin;
-        }
-
-        #loading .loading-text {
-            opacity: 0;
-        }
-
-        #loading .loading-text1 {
-            animation: blink 3s infinite 0s;
-        }
-
-        #loading .loading-text2 {
-            animation: blink 3s infinite 0.5s;
-        }
-
-        #loading .loading-text3 {
-            animation: blink 3s infinite 1s;
-        }
-
-        @keyframes blink {
-            1%, 54% {
-                opacity: 1;
-            }
-            55% {
-                opacity: 0;
-            }
-        }
-
-    </style>
+    <link rel="stylesheet" href="style.css">
 </head>
-<body class="no-js">
+<body>
 
-<div id="loading" class="js-show">
-    Loading<span class="loading-text loading-text1">.</span><span class="loading-text loading-text2">.</span><span
-        class="loading-text loading-text3">.</span>
+<div class="center-text-wrap" id="progress-text-wrap">
+    <span class="progress-text">Loading</span><span
+        class="progress-text-dot progress-text-dot1">.</span><span
+        class="progress-text-dot progress-text-dot2">.</span><span
+        class="progress-text-dot progress-text-dot3">.</span>
 </div>
 
-<script>document.body.classList.remove("no-js");</script>
 <script src="app.bundle.js"></script>
 </body>
 </html>

@@ -1,4 +1,7 @@
+import EventEmitter from "eventemitter3";
 import * as PIXI from "pixijs";
+
+const EVENT_GAME_START = Symbol("EVENT_GAME_START");
 
 export default class GameController {
 
@@ -37,6 +40,12 @@ export default class GameController {
          */
         this._lastUpdateMS = 0;
 
+        /**
+         * @member EventEmitter
+         * @private
+         */
+        this._eventEmitter = new EventEmitter();
+
         // Setup event listeners
         this._connection.addServerEventListener(this._onServerEvent, this);
         this._connection.addDisconnectListener(this._onDisconnect, this);
@@ -56,7 +65,7 @@ export default class GameController {
             return;
         }
 
-        if(originIsland.strength < 2) {
+        if (originIsland.strength < 2) {
             // Cannot send from island with less than 2 strength
             return;
         }
@@ -86,6 +95,9 @@ export default class GameController {
         this._gameModel.playerId = data.player_id;
         // Starts the ticker, calling this._onTick
         this._ticker.start();
+
+        // Notify our listeners that the game is now actually started
+        this._eventEmitter.emit(EVENT_GAME_START);
     }
 
     /**
@@ -134,7 +146,7 @@ export default class GameController {
      * @private
      */
     _onGameOver(isWinner) {
-        if(isWinner) {
+        if (isWinner) {
             alert("Game Over\nYou Won!");
         } else {
             alert("Game Over\nYou Lost!");
@@ -183,5 +195,34 @@ export default class GameController {
 
     run() {
         this._connection.connect();
+    }
+
+    /**
+     * @returns {Connection}
+     */
+    get connection() {
+        return this._connection;
+    }
+
+    /**
+     * @returns {GameModel}
+     */
+    get gameModel() {
+        return this._gameModel;
+    }
+
+    /**
+     * @returns {GameView}
+     */
+    get gameView() {
+        return this._gameView;
+    }
+
+    addGameStartListener(listener, context = null) {
+        this._eventEmitter.on(EVENT_GAME_START, listener, context);
+    }
+
+    removeGameStartListener(listener, context = null) {
+        this._eventEmitter.off(EVENT_GAME_START, listener, context);
     }
 }
