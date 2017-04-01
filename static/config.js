@@ -17,8 +17,8 @@ System.config({
     "babel": "npm:babel-core@5.8.38",
     "babel-runtime": "npm:babel-runtime@5.8.38",
     "core-js": "npm:core-js@1.2.7",
-    "eventemitter3": "npm:eventemitter3@2.0.2",
-    "pixijs": "npm:pixi.js@4.4.3",
+    "eventemitter3": "npm:eventemitter3@2.0.3",
+    "pixijs": "npm:pixi.js@4.4.4",
     "github:jspm/nodelibs-assert@0.1.0": {
       "assert": "npm:assert@1.4.1"
     },
@@ -81,11 +81,11 @@ System.config({
     "npm:pixi-gl-core@1.1.0": {
       "buffer": "github:jspm/nodelibs-buffer@0.1.0"
     },
-    "npm:pixi.js@4.4.3": {
+    "npm:pixi.js@4.4.4": {
       "bit-twiddle": "npm:bit-twiddle@1.0.2",
       "buffer": "github:jspm/nodelibs-buffer@0.1.0",
       "earcut": "npm:earcut@2.1.1",
-      "eventemitter3": "npm:eventemitter3@2.0.2",
+      "eventemitter3": "npm:eventemitter3@2.0.3",
       "ismobilejs": "npm:ismobilejs@0.4.1",
       "object-assign": "npm:object-assign@4.1.1",
       "path": "github:jspm/nodelibs-path@0.1.0",
