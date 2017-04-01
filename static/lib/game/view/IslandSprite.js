@@ -1,7 +1,10 @@
+/**
+ * @extends BaseSprite
+ */
 import * as PIXI from "pixijs";
 import BaseSprite from "./BaseSprite";
-import {COLOR_SELF, COLOR_NEUTRAL, COLOR_ENEMY} from "./colors";
-import {TILE_WIDTH, TILE_HEIGHT} from "./GameView";
+import {COLOR_FILL_ENEMY, COLOR_FILL_NEUTRAL, COLOR_FILL_SELF} from "./colors";
+import {TILE_HEIGHT, TILE_WIDTH} from "./GameView";
 
 const EVENT_CLICK = Symbol("EVENT_CLICK");
 
@@ -13,9 +16,6 @@ const ISLAND_TEXTURE_IDS = [
 ];
 const SELECTED_TEXTURE_ID = 'assets/selected.png';
 
-/**
- * @extends BaseSprite
- */
 export default class IslandSprite extends BaseSprite {
 
     /**
@@ -93,11 +93,11 @@ export default class IslandSprite extends BaseSprite {
         // on who owns the island
         this._strengthText.text = "" + island.strength;
         if (island.owner.isSelf()) {
-            this._strengthText.style.fill = COLOR_SELF;
+            this._strengthText.style.fill = COLOR_FILL_SELF;
         } else if (island.owner.isNeutral()) {
-            this._strengthText.style.fill = COLOR_NEUTRAL;
+            this._strengthText.style.fill = COLOR_FILL_NEUTRAL;
         } else {
-            this._strengthText.style.fill = COLOR_ENEMY;
+            this._strengthText.style.fill = COLOR_FILL_ENEMY;
         }
 
         // Show island selected indicator
