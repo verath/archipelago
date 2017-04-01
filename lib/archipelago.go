@@ -71,9 +71,9 @@ func (a *archipelago) Run(ctx context.Context) error {
 	// Once the game coordinator stops, also close the http server
 	// connection and wait it to stop
 	if err := a.httpServer.Close(); err != nil {
-		a.logEntry.WithError(err).Debug("Error closing httpServer")
+		a.logEntry.Debugf("Error closing httpServer: %+v", err)
 	}
 	httpErr := <-httpErrCh
-	a.logEntry.WithError(httpErr).Error("httpServer stopped")
+	a.logEntry.Errorf("httpServer stopped: %+v", httpErr)
 	return errors.Wrap(err, "gameCoordinator stopped")
 }

@@ -33,5 +33,5 @@ func main() {
 		log.WithError(err).Fatal("Error creating game")
 	}
 
-	log.Fatal(archipelagoGame.Run(ctx))
+	log.Fatalf("Error during game: %+v", archipelagoGame.Run(ctx))
 }

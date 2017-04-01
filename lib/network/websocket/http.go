@@ -38,12 +38,12 @@ func NewUpgradeHandler(log *logrus.Logger, connListener network.ConnectionHandle
 func (h *upgradeHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	wsConn, err := wsUpgrader.Upgrade(w, r, nil)
 	if err != nil {
-		h.logEntry.WithError(err).Warn("Failed upgrading to websocket")
+		h.logEntry.Warnf("Failed upgrading to websocket: %+v", err)
 		return
 	}
 	go func() {
 		if err := h.handleWSConn(wsConn); err != nil {
-			h.logEntry.WithError(err).Error("Error handling ws connection")
+			h.logEntry.Errorf("Error handling ws connection: %+v", err)
 		}
 	}()
 }
