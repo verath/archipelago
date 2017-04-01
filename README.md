@@ -26,7 +26,9 @@ The frontend project is found in the `static` directory and is hosted by the ser
 
 ### Backend
 
-The backend (aka the server), is written in go, using [Godep](https://github.com/tools/godep) for managing vendor dependencies. The server is written primarily with the standard library, but uses [Gorilla WebSocket](https://github.com/gorilla/websocket) for WebSocket handling and [Logrus](https://github.com/Sirupsen/logrus) for logging. The backend code is found in the `lib` directory.
+The backend is written in go and uses [Godep](https://github.com/tools/godep) for managing vendor dependencies. The backend relies primarily on the go standard library, but uses [Gorilla/WebSocket](https://github.com/gorilla/websocket) for WebSocket handling, [Logrus](https://github.com/Sirupsen/logrus) for logging, and [pkg/errors](https://github.com/pkg/errors) for better error handling. 
+
+The backend code is found in the `lib` directory.
 
 ## Running the Project
 
@@ -39,7 +41,7 @@ Then download the project to your `GOPATH`:
 $ go get github.com/verath/archipelago
 ```
 
-This will include all dependencies required for the server code. However, the client side dependencies are not included in the repo and have to be fetched via npm and bundled to an `app.bundle.js` file:
+This will include all dependencies required for the backend code. However, the client side dependencies are not included in the repo and have to be fetched via npm and bundled to an `app.bundle.js` file:
 
 ```
 $ cd $GOPATH/src/github.com/verath/archipelago/static
