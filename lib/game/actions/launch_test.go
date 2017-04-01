@@ -8,8 +8,8 @@ import (
 
 func newLaunchAction(from, to model.IslandID, ownerID model.PlayerID) *launchAction {
 	return &launchAction{
-		From:     from,
-		To:       to,
+		From:    from,
+		To:      to,
 		ownerID: ownerID,
 	}
 }
