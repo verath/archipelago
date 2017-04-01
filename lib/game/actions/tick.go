@@ -1,7 +1,7 @@
 package actions
 
 import (
-	"errors"
+	"github.com/pkg/errors"
 	"github.com/verath/archipelago/lib/game/events"
 	"github.com/verath/archipelago/lib/game/model"
 	"math"
@@ -21,13 +21,13 @@ func NewTickAction(delta time.Duration) (*tickAction, error) {
 
 func (ta *tickAction) Apply(game *model.Game) ([]events.Event, error) {
 	if ta.delta < 0 {
-		return nil, errors.New("delta must be positive")
+		return nil, errors.New("Delta must be positive")
 	}
 	if err := ta.updateAirplanes(game, ta.delta); err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "Could not update airplanes")
 	}
 	if err := ta.updateIslands(game, ta.delta); err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "Could not update islands")
 	}
 
 	if isGameOver, winner := ta.isGameOver(game); isGameOver {
@@ -37,7 +37,7 @@ func (ta *tickAction) Apply(game *model.Game) ([]events.Event, error) {
 
 	tickEvt, err := events.NewTickEvent(game)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "Could not create tick event")
 	}
 	return []events.Event{tickEvt}, nil
 

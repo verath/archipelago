@@ -1,7 +1,7 @@
 package model
 
 import (
-	"fmt"
+	"github.com/pkg/errors"
 	"math/rand"
 	"time"
 )
@@ -9,17 +9,17 @@ import (
 func createPlayers() (p1, p2, pn *Player, err error) {
 	p1, err = NewPlayer()
 	if err != nil {
-		err = fmt.Errorf("Error creating p1: %v", err)
+		err = errors.Wrap(err, "Error creating p1")
 		return
 	}
 	p2, err = NewPlayer()
 	if err != nil {
-		err = fmt.Errorf("Error creating p2: %v", err)
+		err = errors.Wrap(err, "Error creating p2")
 		return
 	}
 	pn, err = NewPlayer()
 	if err != nil {
-		err = fmt.Errorf("Error creating pn: %v", err)
+		err = errors.Wrap(err, "Error creating pn")
 		return
 	}
 	return
@@ -56,7 +56,7 @@ func createIslands(p1, p2, pn *Player, size Coordinate, gameRand *rand.Rand) ([]
 	for pos, data := range islandMap {
 		island, err := NewIsland(pos, data.Size, data.Strength, data.Player)
 		if err != nil {
-			return nil, fmt.Errorf("Error creating island (data: %v): %v", data, err)
+			return nil, errors.Wrapf(err, "Error creating island (data: %v)", data)
 		}
 		islands = append(islands, island)
 	}
@@ -71,12 +71,12 @@ func CreateBasicGame() (*Game, error) {
 
 	p1, p2, pn, err := createPlayers()
 	if err != nil {
-		return nil, fmt.Errorf("Error creating players: %v", err)
+		return nil, errors.Wrap(err, "Error creating players")
 	}
 
 	islands, err := createIslands(p1, p2, pn, size, gameRand)
 	if err != nil {
-		return nil, fmt.Errorf("Error creating islands: %v", err)
+		return nil, errors.Wrap(err, "Error creating islands")
 	}
 
 	gameBuilder := NewGameBuilder(size, p1, p2, pn)

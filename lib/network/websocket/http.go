@@ -1,9 +1,9 @@
 package websocket
 
 import (
-	"fmt"
 	"github.com/Sirupsen/logrus"
 	"github.com/gorilla/websocket"
+	"github.com/pkg/errors"
 	"github.com/verath/archipelago/lib/common"
 	"github.com/verath/archipelago/lib/network"
 	"net/http"
@@ -42,8 +42,7 @@ func (h *upgradeHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	go func() {
-		err := h.handleWSConn(wsConn)
-		if err != nil {
+		if err := h.handleWSConn(wsConn); err != nil {
 			h.logEntry.WithError(err).Error("Error handling ws connection")
 		}
 	}()
@@ -54,10 +53,10 @@ func (h *upgradeHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 func (h *upgradeHandler) handleWSConn(wsConn *websocket.Conn) error {
 	conn, err := newWSConnection(wsConn)
 	if err != nil {
-		return fmt.Errorf("Failed creating connection: %v", err)
+		return errors.Wrap(err, "Failed creating WSConnection")
 	}
 	if err := h.connHandler.HandleConnection(conn); err != nil {
-		return err
+		return errors.Wrap(err, "Connection handler did not handle connection")
 	}
 	return nil
 }

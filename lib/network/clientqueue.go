@@ -2,12 +2,9 @@ package network
 
 import (
 	"context"
-	"errors"
-	"fmt"
 	"github.com/Sirupsen/logrus"
+	"github.com/pkg/errors"
 )
-
-var ErrQueueFull = errors.New("Queue is full")
 
 // The ClientQueue is a simple implementation of the ConnectionHandler interface
 // that creates a client from the connection and puts the client in a queue.
@@ -42,12 +39,12 @@ func (cq *ClientQueue) NextClient(ctx context.Context) (Client, error) {
 func (cq *ClientQueue) HandleConnection(conn connection) error {
 	client, err := NewClient(cq.log, conn)
 	if err != nil {
-		return fmt.Errorf("Failed creating client: %v", err)
+		return errors.Wrap(err, "Failed creating client for connection")
 	}
 	select {
 	case cq.queue <- client:
 		return nil
 	default:
-		return ErrQueueFull
+		return errors.New("Queue is full")
 	}
 }

@@ -2,8 +2,8 @@ package game
 
 import (
 	"context"
-	"fmt"
 	"github.com/Sirupsen/logrus"
+	"github.com/pkg/errors"
 	"github.com/verath/archipelago/lib/common"
 	"github.com/verath/archipelago/lib/game/actions"
 	"github.com/verath/archipelago/lib/game/events"
@@ -29,15 +29,15 @@ func newController(log *logrus.Logger, game *model.Game, p1Client, p2Client netw
 
 	gameLoop, err := newGameLoop(log, game)
 	if err != nil {
-		return nil, fmt.Errorf("Error creating gameLoop: %v", err)
+		return nil, errors.Wrap(err, "Error creating gameLoop")
 	}
 	p1Proxy, err := newPlayerProxy(game.Player1(), p1Client)
 	if err != nil {
-		return nil, fmt.Errorf("Error creating player1 proxy: %v", err)
+		return nil, errors.Wrap(err, "Error creating player1 proxy")
 	}
 	p2Proxy, err := newPlayerProxy(game.Player2(), p2Client)
 	if err != nil {
-		return nil, fmt.Errorf("Error creating player2 proxy: %v", err)
+		return nil, errors.Wrap(err, "Error creating player2 proxy")
 	}
 
 	return &controller{
@@ -50,10 +50,7 @@ func newController(log *logrus.Logger, game *model.Game, p1Client, p2Client netw
 
 // Run starts the game controller, in turn starting the gameLoop and makes
 // the game controller start listening for player actions. Blocks until an
-// error occurs or the context is canceled. Always returns a non-nil error.
-// The special ErrGameOver is returned if the reason for the coordinator
-// quitting is that the underlying game has finished, and can be regarded
-// as a non-failure state.
+// error occurs, the context is canceled, or the game is successfully finished.
 func (ctrl *controller) Run(ctx context.Context) error {
 	ctrl.logEntry.Debug("Starting")
 	defer ctrl.logEntry.Debug("Stopped")
@@ -72,7 +69,7 @@ func (ctrl *controller) Run(ctx context.Context) error {
 	// Notify the players that the game is starting
 	startEvt := events.NewGameStartEvent()
 	if err := ctrl.broadcastEvent(ctx, startEvt); err != nil {
-		return err
+		return errors.Wrap(err, "Could not broadcast game starting event")
 	}
 
 	// Start the action forwarding loop
@@ -102,25 +99,25 @@ func (ctrl *controller) broadcastEvent(ctx context.Context, evt events.Event) er
 	errCh := make(chan error)
 	go func() { errCh <- ctrl.p1Proxy.SendEvent(ctx, evt) }()
 	go func() { errCh <- ctrl.p2Proxy.SendEvent(ctx, evt) }()
+	// TODO(2017-04-01): Might want to log something if we get 2 errors here
 	err, err2 := <-errCh, <-errCh
-	if err != nil {
-		return fmt.Errorf("Error broadcasting event: %v", err)
-	} else if err2 != nil {
-		return fmt.Errorf("Error broadcasting event: %v", err2)
+	if err == nil {
+		err = err2
 	}
-	return nil
+	return errors.Wrapf(err, "Failed broadcasting event: %v", evt)
 }
 
 // Forwards the event to both players, and blocks until the event has been
 // successfully sent. Called by the gameloop for each event produced.
-func (ctrl *controller) handleEvent(ctx context.Context, evt events.Event) {
+func (ctrl *controller) handleEvent(ctx context.Context, evt events.Event) error {
+	// We don't handle errors here, as it wouldn't let us identify
+	// which player is the problem. Instead we rely on that players
+	// that cannot be written to will also post errors when reading,
+	// which will be handled in the action loop.
 	if err := ctrl.broadcastEvent(ctx, evt); err != nil {
-		// We don't handle errors here, as it wouldn't let us identify
-		// which player is the problem. Instead we rely on that players
-		// that cannot be written to will also post errors when reading,
-		// which will be handled in the action loop.
 		ctrl.logEntry.WithError(err).Debug("Error in handleEvent")
 	}
+	return nil
 }
 
 // playerActionLoop is a helper method for reading actions from one player
@@ -130,7 +127,7 @@ func (ctrl *controller) playerActionLoop(ctx context.Context, proxy *playerProxy
 	for {
 		act, err := proxy.NextAction(ctx)
 		if err != nil {
-			return err
+			return errors.Wrap(err, "Could not get action from proxy")
 		}
 		select {
 		case actionCh <- act:
@@ -174,8 +171,8 @@ func (ctrl *controller) actionLoop(ctx context.Context) {
 		case act := <-actionCh:
 			ctrl.gameLoop.AddAction(act)
 		case err := <-errCh:
-			act := actions.NewLeaveAction(err.proxy.playerID)
-			ctrl.gameLoop.AddAction(act)
+			leaveAct := actions.NewLeaveAction(err.proxy.playerID)
+			ctrl.gameLoop.AddAction(leaveAct)
 			cancel()
 			<-errCh
 			ctrl.logEntry.WithFields(logrus.Fields{

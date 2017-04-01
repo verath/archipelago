@@ -1,7 +1,7 @@
 package actions
 
 import (
-	"fmt"
+	"github.com/pkg/errors"
 	"github.com/verath/archipelago/lib/game/events"
 	"github.com/verath/archipelago/lib/game/model"
 )
@@ -55,7 +55,7 @@ func (a *launchAction) Apply(g *model.Game) ([]events.Event, error) {
 
 	airplane, err := model.NewAirplane(fromIsland, toIsland, owningPlayer, airplaneStr)
 	if err != nil {
-		return nil, fmt.Errorf("Error creating airplane: %v", err)
+		return nil, errors.Wrap(err, "Error creating airplane")
 	}
 	g.AddAirplane(airplane)
 	return nil, nil

@@ -2,9 +2,8 @@ package websocket
 
 import (
 	"context"
-	"errors"
-	"fmt"
 	"github.com/gorilla/websocket"
+	"github.com/pkg/errors"
 	"sync"
 	"time"
 )
@@ -58,10 +57,10 @@ func (c *wsConnection) ReadMessage() (msg []byte, err error) {
 
 	msgType, msg, err := c.readMessage()
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "Failed reading message")
 	}
 	if msgType != websocket.TextMessage {
-		return nil, fmt.Errorf("Unexpected message type '%d'", msgType)
+		return nil, errors.Errorf("Unexpected message type '%d'", msgType)
 	}
 	return msg, nil
 }
@@ -83,7 +82,7 @@ func (c *wsConnection) Shutdown(ctx context.Context) error {
 	go func() { errCh <- c.shutdown() }()
 	select {
 	case err := <-errCh:
-		return err
+		return errors.Wrap(err, "Unable to cleanly shutdown")
 	case <-ctx.Done():
 		return ctx.Err()
 	}
@@ -105,7 +104,7 @@ func (c *wsConnection) pingLoop(stop <-chan struct{}) error {
 		select {
 		case <-ticker.C:
 			if err := c.writePing(); err != nil {
-				return err
+				return errors.Wrap(err, "Failed writing ping message")
 			}
 		case <-stop:
 			return nil
@@ -159,7 +158,7 @@ func (c *wsConnection) shutdown() error {
 	defer c.writeMu.Unlock()
 	err := c.writeMessage(websocket.CloseMessage, []byte{})
 	if err != nil {
-		return err
+		return errors.Wrap(err, "Failed writing websocket CloseMessage")
 	}
 	return c.wsConn.Close()
 }

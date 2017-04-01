@@ -2,8 +2,7 @@ package model
 
 import (
 	"encoding/json"
-	"errors"
-	"fmt"
+	"github.com/pkg/errors"
 )
 
 type Game struct {
@@ -189,12 +188,14 @@ func (gb *GameBuilder) Build() (*Game, error) {
 	// no islands has the same location
 	for i, island := range gb.islands {
 		if !island.position.IsWithin(gb.size) {
-			return nil, fmt.Errorf("Island out of bounds (coord: %v; size: %v)", island.position, gb.size)
+			return nil, errors.Errorf("Island out of bounds (coord: %v; size: %v)",
+				island.position, gb.size)
 		}
 
 		for j, other := range gb.islands {
 			if i != j && island.position == other.position {
-				return nil, fmt.Errorf("Islands has same position (coord: %v)", island.position)
+				return nil, errors.Errorf("Islands has same position (coord: %v)",
+					island.position)
 			}
 		}
 	}

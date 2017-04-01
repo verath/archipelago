@@ -2,8 +2,7 @@ package game
 
 import (
 	"context"
-	"errors"
-	"fmt"
+	"github.com/pkg/errors"
 	"github.com/verath/archipelago/lib/game/actions"
 	"github.com/verath/archipelago/lib/game/events"
 	"github.com/verath/archipelago/lib/game/model"
@@ -36,15 +35,15 @@ func newPlayerProxy(player *model.Player, playerClient network.Client) (*playerP
 func (pp *playerProxy) NextAction(ctx context.Context) (actions.Action, error) {
 	env, err := pp.client.ReadEnvelope(ctx)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "Could not read envelope from client")
 	}
 	playerAction, err := actions.PlayerActionByType(env.Type())
 	if err != nil {
-		return nil, fmt.Errorf("Could not map envelope to actions: %v", err)
+		return nil, errors.Wrap(err, "Could not map envelope to action")
 	}
 
 	if err := env.UnmarshalData(playerAction); err != nil {
-		return nil, fmt.Errorf("Could not unmarshal envelope data: %v", err)
+		return nil, errors.Wrap(err, "Could not unmarshal envelope data")
 	}
 
 	return playerAction.ToAction(pp.playerID), nil
@@ -57,9 +56,13 @@ func (pp *playerProxy) SendEvent(ctx context.Context, evt events.Event) error {
 	playerEvent := evt.ToPlayerEvent(pp.playerID)
 	env, err := network.NewEnvelope(playerEvent.Type(), playerEvent.Data())
 	if err != nil {
-		return fmt.Errorf("Error creating envelope: %v", err)
+		return errors.Wrapf(err,
+			"Error creating envelope for playerEvent: %v", playerEvent)
 	}
-	return pp.client.WriteEnvelope(ctx, env)
+	if err := pp.client.WriteEnvelope(ctx, env); err != nil {
+		return errors.Wrap(err, "Error writing envelope to client")
+	}
+	return nil
 }
 
 // Disconnects the player proxy, disconnecting the proxied client.

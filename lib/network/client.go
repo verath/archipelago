@@ -3,17 +3,12 @@ package network
 import (
 	"context"
 	"encoding/json"
-	"errors"
-	"fmt"
 	"github.com/Sirupsen/logrus"
+	"github.com/pkg/errors"
 	"github.com/verath/archipelago/lib/common"
 	"sync"
 	"sync/atomic"
 	"time"
-)
-
-var (
-	ErrClientDisconnected = errors.New("Client has disconnected")
 )
 
 const (
@@ -51,9 +46,7 @@ type Client interface {
 	WriteEnvelope(ctx context.Context, envelope *envelope) error
 
 	// Reads data from the client, returned as an envelope. Read blocks until
-	// the read is successful, or the context is cancelled. If ReadEnvelope
-	// returns ErrClientDisconnected, then any future reads will also return
-	// the same error.
+	// the read is successful, or the context is cancelled.
 	ReadEnvelope(ctx context.Context) (ReceivedEnvelope, error)
 }
 
@@ -130,7 +123,7 @@ func (c *clientImpl) WriteEnvelope(ctx context.Context, envelope *envelope) erro
 		// make resultCh buffered.
 		return <-resultCh
 	case <-c.disconnectCh:
-		return ErrClientDisconnected
+		return errors.New("Client has disconnected")
 	case <-ctx.Done():
 		return ctx.Err()
 	}
@@ -140,7 +133,7 @@ func (c *clientImpl) ReadEnvelope(ctx context.Context) (ReceivedEnvelope, error)
 	select {
 	case env, ok := <-c.readQueue:
 		if !ok {
-			return nil, ErrClientDisconnected
+			return nil, errors.New("Client has disconnected")
 		}
 		return env, nil
 	case <-ctx.Done():
@@ -177,7 +170,7 @@ func (c *clientImpl) disconnect() {
 func (c *clientImpl) writeEnvelope(env *envelope) error {
 	msg, err := json.Marshal(env)
 	if err != nil {
-		return err
+		return errors.Wrap(err, "Failed encoding envelope")
 	}
 	return c.conn.WriteMessage(msg)
 }
@@ -208,10 +201,13 @@ func (c *clientImpl) writePump() {
 func (c *clientImpl) readEnvelope() (*receivedEnvelopeImpl, error) {
 	msg, err := c.conn.ReadMessage()
 	if err != nil {
-		return nil, fmt.Errorf("Error reading message from conn: %v", err)
+		return nil, errors.Wrap(err, "Error reading message from conn")
 	}
 	recvEnv := &receivedEnvelopeImpl{}
-	return recvEnv, json.Unmarshal(msg, recvEnv)
+	if err := json.Unmarshal(msg, recvEnv); err != nil {
+		return nil, errors.Wrap(err, "Failed umarshaling to envelope")
+	}
+	return recvEnv, nil
 }
 
 // The read pump reads messages from the connection and posts them on the

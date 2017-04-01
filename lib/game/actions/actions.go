@@ -1,7 +1,7 @@
 package actions
 
 import (
-	"fmt"
+	"github.com/pkg/errors"
 	"github.com/verath/archipelago/lib/game/events"
 	"github.com/verath/archipelago/lib/game/model"
 )
@@ -52,7 +52,7 @@ func PlayerActionByType(actType string) (PlayerAction, error) {
 	if creator, ok := playerActions[actType]; ok {
 		return creator.New(), nil
 	}
-	return nil, fmt.Errorf("No creator for actType: %s", actType)
+	return nil, errors.Errorf("No creator for actType: %s", actType)
 }
 
 func init() {

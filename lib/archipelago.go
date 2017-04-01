@@ -2,8 +2,8 @@ package archipelago
 
 import (
 	"context"
-	"fmt"
 	"github.com/Sirupsen/logrus"
+	"github.com/pkg/errors"
 	"github.com/verath/archipelago/lib/common"
 	"github.com/verath/archipelago/lib/game"
 	"github.com/verath/archipelago/lib/network"
@@ -36,12 +36,12 @@ func New(log *logrus.Logger, staticRoot http.FileSystem, httpServerAddr string) 
 
 	clientQueue, err := network.NewClientQueue(log, clientQueueSize)
 	if err != nil {
-		return nil, fmt.Errorf("Error creating client pool: %v", err)
+		return nil, errors.Wrap(err, "Error creating client pool")
 	}
 
 	gameCoordinator, err := game.NewCoordinator(log, clientQueue)
 	if err != nil {
-		return nil, fmt.Errorf("Error creating game coordinator: %v", err)
+		return nil, errors.Wrap(err, "Error creating game coordinator")
 	}
 
 	// Http server to server both the websocket upgrade route and the static
@@ -75,5 +75,5 @@ func (a *archipelago) Run(ctx context.Context) error {
 	}
 	httpErr := <-httpErrCh
 	a.logEntry.WithError(httpErr).Error("httpServer stopped")
-	return fmt.Errorf("gameCoorddinator stopped: %v", err)
+	return errors.Wrap(err, "gameCoordinator stopped")
 }

@@ -2,8 +2,8 @@ package game
 
 import (
 	"context"
-	"fmt"
 	"github.com/Sirupsen/logrus"
+	"github.com/pkg/errors"
 	"github.com/verath/archipelago/lib/common"
 	"github.com/verath/archipelago/lib/game/model"
 	"github.com/verath/archipelago/lib/network"
@@ -13,7 +13,7 @@ import (
 
 const (
 	// A timeout for the maximum length of a game before it is force-closed.
-	// Used so that a client leaving a game open will not keep it resources
+	// Used so that a client leaving a game open will not keep its resources
 	// allocated forever.
 	GameMaxDuration time.Duration = 45 * time.Minute
 )
@@ -40,6 +40,8 @@ func NewCoordinator(log *logrus.Logger, clientProvider ClientProvider) (*Coordin
 	}, nil
 }
 
+// Starts and runs the Coordinator. This method blocks until the context is cancelled or
+// an error occurs, and always returns a non-nil error.
 func (c *Coordinator) Run(ctx context.Context) error {
 	c.logEntry.Info("Starting")
 	err := c.run(ctx)
@@ -52,10 +54,10 @@ func (c *Coordinator) Run(ctx context.Context) error {
 // Waits for two player connections to be made. If successful, the methods
 // returns two started clients. These clients *must* be stopped. If the
 // method returns an error the clients can be assumed to be stopped.
-func (c *Coordinator) waitForClients(ctx context.Context) (network.Client, network.Client, error) {
+func (c *Coordinator) awaitClients(ctx context.Context) (network.Client, network.Client, error) {
 	p1Client, err := c.clientProvider.NextClient(ctx)
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, errors.Wrap(err, "Error when getting a Client")
 	}
 	p1Client.Start()
 
@@ -63,7 +65,7 @@ func (c *Coordinator) waitForClients(ctx context.Context) (network.Client, netwo
 		p2Client, err := c.clientProvider.NextClient(ctx)
 		if err != nil {
 			p1Client.Disconnect()
-			return nil, nil, err
+			return nil, nil, errors.Wrap(err, "Error when getting a Client")
 		}
 		p2Client.Start()
 
@@ -84,9 +86,9 @@ func (c *Coordinator) waitForClients(ctx context.Context) (network.Client, netwo
 // an error occurs. Always returns a non-nil error.
 func (c *Coordinator) run(ctx context.Context) error {
 	for {
-		p1Client, p2Client, err := c.waitForClients(ctx)
+		p1Client, p2Client, err := c.awaitClients(ctx)
 		if err != nil {
-			return fmt.Errorf("Error waiting for players: %v", err)
+			return errors.Wrap(err, "Error when awaiting clients")
 		}
 
 		c.logEntry.Debug("Starting a new game")
@@ -96,7 +98,7 @@ func (c *Coordinator) run(ctx context.Context) error {
 			// before quiting ourselves
 			p1Client.Disconnect()
 			p2Client.Disconnect()
-			return fmt.Errorf("Error starting game: %v", err)
+			return errors.Wrap(err, "Error starting game")
 		}
 	}
 }
@@ -107,11 +109,11 @@ func (c *Coordinator) run(ctx context.Context) error {
 func (c *Coordinator) startGame(ctx context.Context, p1Client, p2Client network.Client) error {
 	game, err := model.CreateBasicGame()
 	if err != nil {
-		return fmt.Errorf("Error creating game: %v", err)
+		return errors.Wrap(err, "Error creating game")
 	}
 	ctrl, err := newController(c.logEntry.Logger, game, p1Client, p2Client)
 	if err != nil {
-		return fmt.Errorf("Error creating game controller: %v", err)
+		return errors.Wrap(err, "Error creating game controller")
 	}
 
 	// We create a new context that has a limited lifetime, so a game
@@ -121,7 +123,7 @@ func (c *Coordinator) startGame(ctx context.Context, p1Client, p2Client network.
 	go func() {
 		defer c.gamesWG.Done()
 		err := ctrl.Run(gameCtx)
-		if err != nil && err != ErrGameOver && err != context.Canceled {
+		if err != nil && err != context.Canceled {
 			c.logEntry.WithError(err).Error("Game stopped with an error")
 		}
 		cancel()
