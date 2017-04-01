@@ -62,35 +62,31 @@ func (ctrl *controller) Run(ctx context.Context) error {
 		ctrl.p1Proxy.Disconnect()
 		ctrl.p2Proxy.Disconnect()
 	}()
-
 	ctx, cancel := context.WithCancel(ctx)
 	var shutdownWG sync.WaitGroup
-
+	defer func() {
+		// Stop, and wait for the action loop to shutdown, before returning control
+		ctrl.logEntry.Debug("Stopping the action loop")
+		cancel()
+		shutdownWG.Wait()
+	}()
 	// Notify the players that the game is starting
 	startEvt := events.NewGameStartEvent()
 	if err := ctrl.broadcastEvent(ctx, startEvt); err != nil {
 		return errors.Wrap(err, "Could not broadcast game starting event")
 	}
-
 	// Start the action forwarding loop
 	shutdownWG.Add(1)
 	go func() {
 		defer shutdownWG.Done()
 		ctrl.actionLoop(ctx)
 	}()
-
-	// Register ourselves as the eventHandler of the game loop, and
-	// run the game loop until it quits
+	// Register ourselves as the eventHandler of the game loop
 	ctrl.gameLoop.SetEventHandler(ctrl)
 	defer ctrl.gameLoop.SetEventHandler(nil)
+	// Run the game loop until it finishes
 	err := ctrl.gameLoop.Run(ctx)
-	ctrl.logEntry.WithError(err).Debug("The game loop quit")
-
-	// Wait for the action loop to shutdown
-	ctrl.logEntry.Debug("Stopping the action loop")
-	cancel()
-	shutdownWG.Wait()
-	return err
+	return errors.Wrap(err, "Error while running game loop")
 }
 
 // Broadcast an event to both the player proxies. Blocks until both events have been
