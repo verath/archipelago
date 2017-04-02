@@ -4,7 +4,7 @@
 import * as PIXI from "pixijs";
 import {TILE_HEIGHT, TILE_WIDTH} from "./GameView";
 import BaseSprite from "./BaseSprite";
-import {COLOR_FILL_NEUTRAL, COLOR_STROKE} from "./colors";
+import {COLOR_FILL_ENEMY, COLOR_FILL_NEUTRAL, COLOR_FILL_SELF, COLOR_STROKE} from "./colors";
 
 const AIRPLANE_WIDTH = 64;
 const AIRPLANE_HEIGHT = 64;
@@ -67,9 +67,9 @@ export default class AirplaneSprite extends BaseSprite {
         this.position.set(x, y);
 
         if (airplane.owner.isSelf()) {
-            this.tint = 0x1010FF;
+            this.tint = COLOR_FILL_SELF;
         } else {
-            this.tint = 0xFF1010;
+            this.tint = COLOR_FILL_ENEMY;
         }
     }
 }
