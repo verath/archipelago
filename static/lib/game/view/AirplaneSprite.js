@@ -59,6 +59,7 @@ export default class AirplaneSprite extends BaseSprite {
         this.scale.set(scale, scale);
 
         this.rotation = airplane.direction;
+        // Negate for the text so that it is displayed non-rotated
         this._strengthText.rotation = -airplane.direction;
 
         // Update our position, account for anchor being in the center
