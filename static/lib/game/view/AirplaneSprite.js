@@ -4,7 +4,13 @@
 import * as PIXI from "pixijs";
 import {TILE_HEIGHT, TILE_WIDTH} from "./GameView";
 import BaseSprite from "./BaseSprite";
-import {COLOR_FILL_ENEMY, COLOR_FILL_NEUTRAL, COLOR_FILL_SELF, COLOR_STROKE} from "./colors";
+import {
+    COLOR_FILL_ENEMY,
+    COLOR_FILL_NEUTRAL,
+    COLOR_FILL_SELF,
+    COLOR_STROKE,
+    FONT_FAMILY_DEFAULT
+} from "./constants";
 
 const AIRPLANE_WIDTH = 64;
 const AIRPLANE_HEIGHT = 64;
@@ -33,7 +39,7 @@ export default class AirplaneSprite extends BaseSprite {
      */
     static _createStrengthText() {
         let strengthText = new PIXI.Text("", {
-            fontFamily: 'Arial',
+            fontFamily: FONT_FAMILY_DEFAULT,
             fontSize: 50,
             align: 'center',
             fill: COLOR_FILL_NEUTRAL,
@@ -46,7 +52,8 @@ export default class AirplaneSprite extends BaseSprite {
         return strengthText;
     }
 
-    _onModelChanged() {
+    _onAdded() {
+        super._onAdded();
         let airplane = /** @type {AirplaneModel} */ (this._model);
 
         this._strengthText.text = "" + airplane.strength;
@@ -62,15 +69,19 @@ export default class AirplaneSprite extends BaseSprite {
         // Negate for the text so that it is displayed non-rotated
         this._strengthText.rotation = -airplane.direction;
 
-        // Update our position, account for anchor being in the center
-        let x = airplane.position.x * TILE_WIDTH + TILE_WIDTH / 2;
-        let y = airplane.position.y * TILE_HEIGHT + TILE_HEIGHT / 2;
-        this.position.set(x, y);
-
         if (airplane.owner.isSelf()) {
             this.tint = COLOR_FILL_SELF;
         } else {
             this.tint = COLOR_FILL_ENEMY;
         }
+    }
+
+    _onModelChanged() {
+        let airplane = /** @type {AirplaneModel} */ (this._model);
+
+        // Update our position, account for anchor being in the center
+        let x = airplane.position.x * TILE_WIDTH + TILE_WIDTH / 2;
+        let y = airplane.position.y * TILE_HEIGHT + TILE_HEIGHT / 2;
+        this.position.set(x, y);
     }
 }

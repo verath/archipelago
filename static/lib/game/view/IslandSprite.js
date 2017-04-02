@@ -3,7 +3,12 @@
  */
 import * as PIXI from "pixijs";
 import BaseSprite from "./BaseSprite";
-import {COLOR_FILL_ENEMY, COLOR_FILL_NEUTRAL, COLOR_FILL_SELF} from "./colors";
+import {
+    COLOR_FILL_ENEMY,
+    COLOR_FILL_NEUTRAL,
+    COLOR_FILL_SELF,
+    FONT_FAMILY_DEFAULT
+} from "./constants";
 import {TILE_HEIGHT, TILE_WIDTH} from "./GameView";
 
 const EVENT_CLICK = Symbol("EVENT_CLICK");
@@ -57,7 +62,7 @@ export default class IslandSprite extends BaseSprite {
      */
     static _createStrengthText() {
         let strengthText = new PIXI.Text("", {
-            fontFamily: 'Arial',
+            fontFamily: FONT_FAMILY_DEFAULT,
             fontSize: 50,
             align: 'center'
         });
@@ -76,7 +81,8 @@ export default class IslandSprite extends BaseSprite {
         return new PIXI.Sprite(resourceHolder.getTexture(SELECTED_TEXTURE_ID));
     }
 
-    _onModelChanged() {
+    _onAdded() {
+        super._onAdded();
         let island = /** @type {IslandModel} */ (this._model);
 
         // Set scale depending on the island size. Island size is 0-1,
@@ -89,8 +95,28 @@ export default class IslandSprite extends BaseSprite {
         let y = island.position.y * TILE_HEIGHT + TILE_HEIGHT / 2;
         this.position.set(x, y);
 
-        // Update the strength text number, and set its color depending
-        // on who owns the island
+        this._updateStrengthText(island);
+    }
+
+    _onModelChanged() {
+        let island = /** @type {IslandModel} */ (this._model);
+
+        this._updateStrengthText(island);
+        // Show island selected indicator
+        if (island.selected) {
+            this._selectedIndicator.alpha = 1;
+        } else {
+            this._selectedIndicator.alpha = 0;
+        }
+    }
+
+    /**
+     * Update the strength text number, and set its color depending
+     * on who owns the island
+     * @param {IslandModel} island
+     * @private
+     */
+    _updateStrengthText(island) {
         this._strengthText.text = "" + island.strength;
         if (island.owner.isSelf()) {
             this._strengthText.style.fill = COLOR_FILL_SELF;
@@ -98,13 +124,6 @@ export default class IslandSprite extends BaseSprite {
             this._strengthText.style.fill = COLOR_FILL_NEUTRAL;
         } else {
             this._strengthText.style.fill = COLOR_FILL_ENEMY;
-        }
-
-        // Show island selected indicator
-        if (island.selected) {
-            this._selectedIndicator.alpha = 1;
-        } else {
-            this._selectedIndicator.alpha = 0;
         }
     }
 

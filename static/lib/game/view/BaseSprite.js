@@ -22,7 +22,6 @@ export default class BaseSprite extends PIXI.Sprite {
      * @protected
      */
     _onAdded() {
-        this._onModelChanged();
         this._model.addChangeListener(this._onModelChanged, this);
         this.once('removed', this._onRemoved.bind(this));
     }
@@ -36,13 +35,15 @@ export default class BaseSprite extends PIXI.Sprite {
     }
 
     /**
-     * @param {BaseModel} model
+     * @param {?BaseModel} model
      */
     set model(model) {
         this._model = model;
     }
 
     /**
+     * Method called when the model that is attached to the view
+     * has its properties changed.
      * @protected
      */
     _onModelChanged() {
