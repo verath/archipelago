@@ -15,6 +15,6 @@
   },
   "scripts": {
     "postinstall": "./node_modules/.bin/jspm install",
-    "bundle": "./node_modules/.bin/jspm bundle-sfx lib/main.js app.bundle.js --minify"
+    "bundle": "./node_modules/.bin/jspm bundle-sfx lib/main.js build/app.bundle.js --minify"
   }
 }
