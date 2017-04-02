@@ -147,9 +147,9 @@ export default class GameView {
             idsToRemove.forEach(id => this._removeAirplane(id));
         }
 
-        // Check if the game has changed size, if so we resize ourselves
+        // Check if the game model has changed size, if so we resize ourselves
         let newStageWidth = this._gameModel.size.x * TILE_WIDTH;
-        let newStageHeight = this._gameModel.size.x * TILE_WIDTH;
+        let newStageHeight = this._gameModel.size.y * TILE_HEIGHT;
         if (newStageWidth !== this._stageWidth || newStageHeight !== this._stageHeight) {
             this._stageWidth = this._gameModel.size.x * TILE_WIDTH;
             this._stageHeight = this._gameModel.size.y * TILE_HEIGHT;
