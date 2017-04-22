@@ -30,7 +30,7 @@ server {
 	}
 
 	# All other requests are served from the static folder
-	root /home/deploy/go/src/github.com/verath/archipelago/static;
+	root /home/deploy/go/src/github.com/verath/archipelago/static/;
 	index index.html;
 	location / {
 		try_files $uri $uri/ index.html;
