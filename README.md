@@ -53,7 +53,7 @@ Now run the project as a go project, e.g. using `go run` from the root directory
 
 ```
 $ cd $GOPATH/src/github.com/verath/archipelago
-$ go run main.go
+$ go run main.go -debug -servestatic
 ```
 
 This should start the server, and make it available at [http://localhost:8080](http://localhost:8080) by default.
