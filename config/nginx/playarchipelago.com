@@ -4,17 +4,36 @@
 # the archipelago/static dir and forwards requests to /ws
 # to the archipelago server.
 # 
+
+# Redirect http:// -> https://
 server {
-	listen 80 default_server;
-	listen [::]:80 default_server;
+	server_name www.playarchipelago.com playarchipelago.com;
+	return 301 https://playarchipelago.com$request_uri;
+}
+
+# Redirect https://www.playarchipelago.com -> https://playarchipelago.com
+server {
+	listen 443 ssl;
+	ssl_certificate /etc/letsencrypt/live/playarchipelago.com/fullchain.pem;
+	ssl_certificate_key /etc/letsencrypt/live/playarchipelago.com/privkey.pem;
+	server_name www.playarchipelago.com;
+	return 301 https://playarchipelago.com$request_uri;
+}
+
+server {
+	listen 443 ssl;
+	ssl_certificate /etc/letsencrypt/live/playarchipelago.com/fullchain.pem;
+	ssl_certificate_key /etc/letsencrypt/live/playarchipelago.com/privkey.pem;
 	server_name playarchipelago.com;
 
 	access_log /var/log/playarchipelago.com/nginx.access.log;
 	error_log  /var/log/playarchipelago.com/nginx.error.log;
 
-	# Deny access to .-files
-	location ~ /\. {
-		return 403; 
+	# Serve "/.well-known/acme-challenge" from a separate directory
+	# this directory is used by let's encrypt to validate ownership
+	location ^~ /.well-known/acme-challenge/ {
+		root /var/www/letsencrypt/playarchipelago.com;
+		try_files $uri $uri/ =404;
 	}
 
 	# Proxy requests for /ws to the archipelago server on :8080
@@ -35,10 +54,9 @@ server {
 	location / {
 		try_files $uri $uri/ index.html;
 	}
-}
 
-# Redirect www.playarchipelago.com -> playarchipelago.com
-server {
-	server_name www.playarchipelago.com;
-	return 301 $scheme://playarchipelago.com$request_uri;
+	# Deny access to .-files
+	location ~ /\. {
+		return 403; 
+	}
 }
