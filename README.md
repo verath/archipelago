@@ -1,11 +1,11 @@
 # Archipelago
 
-https://playarchipelago.com
-
 A 2-player web-based clone of the [android game](https://play.google.com/store/apps/details?id=com.sgg.archipelago_kr) 
 with the same name.
 
 ![Screenshot Archipelago](.github/screenshot1.png)
+
+The game can be played at https://playarchipelago.com.
 
 ## The Archipelago game
 
