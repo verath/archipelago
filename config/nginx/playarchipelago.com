@@ -2,18 +2,8 @@
 # 
 # Listens for requests made to https://playarchipelago.com, serving
 # static files from  the archipelago/static dir and forwards requests
-# to /ws to the archipelago server. Includes http2, ssl and some basic
-# browser caching.
+# to /ws to the archipelago server.
 # 
-
-# Expires map
-map $sent_http_content_type $expires {
-    default                    off;
-    text/html                  epoch;
-    text/css                   max;
-    application/javascript     max;
-    ~image/                    max;
-}
 
 # Redirect http:// -> https://
 server {
