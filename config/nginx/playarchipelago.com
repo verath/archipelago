@@ -1,30 +1,45 @@
 # NGINX configuration for playarchipelago.com.
 # 
-# Listens for requests on :80, serving static files from 
-# the archipelago/static dir and forwards requests to /ws
-# to the archipelago server.
+# Listens for requests made to https://playarchipelago.com, serving
+# static files from  the archipelago/static dir and forwards requests
+# to /ws to the archipelago server. Includes http2, ssl and some basic
+# browser caching.
 # 
+
+# Expires map
+map $sent_http_content_type $expires {
+    default                    off;
+    text/html                  epoch;
+    text/css                   max;
+    application/javascript     max;
+    ~image/                    max;
+}
 
 # Redirect http:// -> https://
 server {
+	listen 80;
+	listen [::]:80;
 	server_name www.playarchipelago.com playarchipelago.com;
 	return 301 https://playarchipelago.com$request_uri;
 }
 
 # Redirect https://www.playarchipelago.com -> https://playarchipelago.com
 server {
-	listen 443 ssl;
+	listen 443 ssl http2;
+	listen [::]:443 ssl http2;
+	server_name www.playarchipelago.com;
 	ssl_certificate /etc/letsencrypt/live/playarchipelago.com/fullchain.pem;
 	ssl_certificate_key /etc/letsencrypt/live/playarchipelago.com/privkey.pem;
-	server_name www.playarchipelago.com;
 	return 301 https://playarchipelago.com$request_uri;
 }
 
+# Primary, https://playarchipelago.com
 server {
-	listen 443 ssl;
+	listen 443 ssl http2;
+	listen [::]:443 ssl http2;
+	server_name playarchipelago.com;
 	ssl_certificate /etc/letsencrypt/live/playarchipelago.com/fullchain.pem;
 	ssl_certificate_key /etc/letsencrypt/live/playarchipelago.com/privkey.pem;
-	server_name playarchipelago.com;
 
 	access_log /var/log/playarchipelago.com/nginx.access.log;
 	error_log  /var/log/playarchipelago.com/nginx.error.log;
