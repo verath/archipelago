@@ -47,6 +47,6 @@
   },
   "scripts": {
     "postinstall": "./node_modules/.bin/jspm install",
-    "bundle": "./node_modules/.bin/jspm bundle lib/main.js build/app.bundle.js --minify"
+    "build": "./node_modules/.bin/jspm build lib/main.js build/app.build.js --minify"
   }
 }

@@ -60,13 +60,13 @@ $ go get github.com/verath/archipelago
 ```
 
 This will include all dependencies required for the backend code. However, the client 
-side dependencies are not included in the repo and have to be fetched via npm and bundled 
-to an `app.bundle.js` file:
+side dependencies are not included in the repo and have to be fetched via npm and built
+to an `app.build.js` file:
 
 ```
 $ cd $GOPATH/src/github.com/verath/archipelago/static
 $ npm install
-$ npm run bundle
+$ npm run build
 ```
 
 Now run the project as a go project, e.g. using `go run` from the root directory:
