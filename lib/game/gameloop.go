@@ -38,6 +38,9 @@ type gameLoop struct {
 	// A handler to handle events produced when applying actions
 	// to the game instance.
 	eventHandler eventHandler
+	// A WaitGroup for events being handled by the registered event
+	// handler.
+	handleEventWG sync.WaitGroup
 
 	actionsMu sync.Mutex
 	// A slice of actions to be applied on the next tick
@@ -50,11 +53,10 @@ type stopError interface {
 
 // A handler for game events produced from applying actions.
 type eventHandler interface {
-	// Handles an event produced. This method will be called from the
-	// "tick" goroutine. As such, the handleEvent call will block any
-	// further processing of the current tick. If the context expires,
-	// the handler must unblock.
-	handleEvent(ctx context.Context, event events.Event) error
+	// handleEvent handles an event produced. This method will be called on a
+	// separate go routine and must block until the even has been handled, or
+	// the context is cancelled.
+	handleEvent(ctx context.Context, event events.Event)
 }
 
 func newGameLoop(log *logrus.Logger, game *model.Game) (*gameLoop, error) {
@@ -87,11 +89,10 @@ func (gl *gameLoop) AddAction(action actions.Action) {
 func (gl *gameLoop) Run(ctx context.Context) error {
 	gl.logEntry.Debug("Starting")
 	defer gl.logEntry.Debug("Stopped")
-
-	if err := gl.tickLoop(ctx); err != nil {
-		errors.Wrap(err, "error while running tickLoop")
-	}
-	return nil
+	err := gl.tickLoop(ctx)
+	// Before returning control, wait for calls to eventHandler to finish
+	gl.handleEventWG.Wait()
+	return errors.Wrap(err, "error while running tickLoop")
 }
 
 // Sets the game over flag, returning an error if it is already set
@@ -205,39 +206,42 @@ func (gl *gameLoop) handleActionError(ctx context.Context, err error) error {
 		}
 
 		gl.logEntry.WithError(err).Debug("handle fatal ActionError")
+		// Send a game over event with the opponent as winner
 		var winner *model.Player
 		if err.Player() != nil {
 			winner = gl.game.Opponent(err.Player().ID())
 		}
-		// Create and try sending a game over event
-		gameOverEvent := events.NewGameOverEvent(winner)
-		if err := gl.eventHandler.handleEvent(ctx, gameOverEvent); err != nil {
-			gl.logEntry.
-				WithError(errors.WithStack(err)).
-				Error("Error handling gameOverEvent")
-		}
+		gl.handleEvent(ctx, events.NewGameOverEvent(winner))
 	default:
 		gl.logEntry.WithError(err).Debug("handle generic error")
 	}
 	return err
 }
 
-// Handles each event produced by delegating to the event handler.
-// If an event representing the game being over is encountered, an
-// ErrGameOver error is returned, after the event has been processed
-// by the event handler.
-func (gl *gameLoop) handleEvents(ctx context.Context, evts []events.Event) error {
+// handleEvent handles a single event by forwarding it to the registered
+// eventHandler on a new go-routine.
+func (gl *gameLoop) handleEvent(ctx context.Context, evt events.Event) {
 	gl.eventHandlerMu.Lock()
-	defer gl.eventHandlerMu.Unlock()
-	if gl.eventHandler == nil {
-		return nil // Skip handling if we don't have an event handler
+	handler := gl.eventHandler
+	gl.eventHandlerMu.Unlock()
+	if handler == nil {
+		gl.logEntry.Warn("handleEvent called, but no eventHandler was registered")
+		return
 	}
+	gl.handleEventWG.Add(1)
+	go func() {
+		defer gl.handleEventWG.Done()
+		handler.handleEvent(ctx, evt)
+	}()
+}
+
+// handleEvents handles each event produced by delegating to the event handler.
+// If an event representing the game being over is encountered, then all further
+// events are discarded and the gameLoop is set to game over state.
+func (gl *gameLoop) handleEvents(ctx context.Context, evts []events.Event) error {
 	for _, evt := range evts {
-		if err := gl.eventHandler.handleEvent(ctx, evt); err != nil {
-			return errors.Wrap(err, "Error handling event")
-		}
-		// If we sent a game over event, the game is now over so
-		// stop processing further events
+		gl.handleEvent(ctx, evt)
+		// Stop processing events if we sent a game over event
 		if events.IsGameOverEvent(evt) {
 			return gl.setGameOver()
 		}

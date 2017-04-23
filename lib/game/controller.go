@@ -92,17 +92,12 @@ func (ctrl *controller) broadcastEvent(ctx context.Context, evt events.Event) er
 	return errors.Wrapf(err, "Failed broadcasting event: %v", evt)
 }
 
-// Forwards the event to both players, and blocks until the event has been
-// successfully sent. Called by the gameloop for each event produced.
-func (ctrl *controller) handleEvent(ctx context.Context, evt events.Event) error {
-	// We don't handle errors here, as it wouldn't let us identify
-	// which player is the problem. Instead we rely on that players
-	// that cannot be written to will also post errors when reading,
-	// which will be handled in the action loop.
+// handleEvent forwards the event to both players, and blocks until the event
+// has been successfully sent. Called by the gameLoop for each event produced.
+func (ctrl *controller) handleEvent(ctx context.Context, evt events.Event)  {
 	if err := ctrl.broadcastEvent(ctx, evt); err != nil {
-		ctrl.logEntry.Debugf("Error in handleEvent: %v+", err)
+		ctrl.logEntry.Debugf("Error in handleEvent: %+v", err)
 	}
-	return nil
 }
 
 // playerActionLoop is a helper method for reading actions from one player
