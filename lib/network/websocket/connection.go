@@ -13,13 +13,13 @@ const (
 	connWriteTimeout = 10 * time.Second
 
 	// Time allowed to read a message from the peer.
-	connReadTimeout = 30 * time.Second
+	connReadTimeout = 10 * time.Second
 
 	// Send pings to peer with this period. Must be less than connReadTimeout.
-	connPingPeriod = 20 * time.Second
+	connPingPeriod = 5 * time.Second
 
 	// Maximum message size allowed from peer.
-	connMaxMessageSize = 512
+	connMaxMessageSize = 2048
 )
 
 // wsConnection is an adapter for a websocket Conn implementing the
