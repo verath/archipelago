@@ -47,6 +47,6 @@
   },
   "scripts": {
     "postinstall": "./node_modules/.bin/jspm install",
-    "build": "./node_modules/.bin/jspm build lib/main.js build/app.build.js --minify"
+    "build": "./node_modules/.bin/jspm build lib/main.js build/app.build.js --minify --skip-source-maps"
   }
 }
