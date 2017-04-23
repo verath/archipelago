@@ -9,7 +9,6 @@ import (
 	"github.com/verath/archipelago/lib/game/events"
 	"github.com/verath/archipelago/lib/game/model"
 	"github.com/verath/archipelago/lib/network"
-	"sync"
 )
 
 // The game controller represents a single game. It starts and
@@ -55,47 +54,37 @@ func (ctrl *controller) Run(ctx context.Context) error {
 	ctrl.logEntry.Debug("Starting")
 	defer ctrl.logEntry.Debug("Stopped")
 
-	// Make sure we always disconnect the player proxies after
-	// Run is finished.
-	defer func() {
-		ctrl.logEntry.Debug("Stopping the player proxies")
-		ctrl.p1Proxy.Disconnect()
-		ctrl.p2Proxy.Disconnect()
-	}()
-	ctx, cancel := context.WithCancel(ctx)
-	var shutdownWG sync.WaitGroup
-	defer func() {
-		// Stop, and wait for the action loop to shutdown, before returning control
-		ctrl.logEntry.Debug("Stopping the action loop")
-		cancel()
-		shutdownWG.Wait()
-	}()
 	// Notify the players that the game is starting
 	startEvt := events.NewGameStartEvent()
 	if err := ctrl.broadcastEvent(ctx, startEvt); err != nil {
 		return errors.Wrap(err, "Could not broadcast game starting event")
 	}
-	// Start the action forwarding loop
-	shutdownWG.Add(1)
-	go func() {
-		defer shutdownWG.Done()
-		ctrl.actionLoop(ctx)
-	}()
 	// Register ourselves as the eventHandler of the game loop
 	ctrl.gameLoop.SetEventHandler(ctrl)
 	defer ctrl.gameLoop.SetEventHandler(nil)
+
+	// Start the action forwarding loop
+	ctx, cancel := context.WithCancel(ctx)
+	actionErrCh := make(chan error)
+	go func() { actionErrCh <- ctrl.actionLoop(ctx) }()
+	// Before returning control, make sure the action loop has finished
+	defer func() {
+		ctrl.logEntry.Debug("Stopping the action loop")
+		cancel()
+		<-actionErrCh
+	}()
+
 	// Run the game loop until it finishes
 	err := ctrl.gameLoop.Run(ctx)
 	return errors.Wrap(err, "Error while running game loop")
 }
 
-// Broadcast an event to both the player proxies. Blocks until both events have been
-// processed.
+// Broadcast an event to both the player proxies simultaneously. Blocks until both
+// events have been sent.
 func (ctrl *controller) broadcastEvent(ctx context.Context, evt events.Event) error {
 	errCh := make(chan error)
 	go func() { errCh <- ctrl.p1Proxy.SendEvent(ctx, evt) }()
 	go func() { errCh <- ctrl.p2Proxy.SendEvent(ctx, evt) }()
-	// TODO(2017-04-01): Might want to log something if we get 2 errors here
 	err, err2 := <-errCh, <-errCh
 	if err == nil {
 		err = err2
@@ -111,7 +100,7 @@ func (ctrl *controller) handleEvent(ctx context.Context, evt events.Event) error
 	// that cannot be written to will also post errors when reading,
 	// which will be handled in the action loop.
 	if err := ctrl.broadcastEvent(ctx, evt); err != nil {
-		ctrl.logEntry.WithError(err).Debug("Error in handleEvent")
+		ctrl.logEntry.Debugf("Error in handleEvent: %v+", err)
 	}
 	return nil
 }
@@ -136,7 +125,7 @@ func (ctrl *controller) playerActionLoop(ctx context.Context, proxy *playerProxy
 // The actionLoop takes actions from both players and forwards them
 // to the gameLoop. Blocks until an error occurs or the context
 // is canceled. Always returns a non-nil error.
-func (ctrl *controller) actionLoop(ctx context.Context) {
+func (ctrl *controller) actionLoop(ctx context.Context) error {
 	// A struct holding both an error and the proxy in which the error occurred,
 	// used so we can share the handling of the error
 	type actionLoopError struct {
@@ -175,7 +164,7 @@ func (ctrl *controller) actionLoop(ctx context.Context) {
 				logrus.ErrorKey: err.error,
 				"PlayerID":      err.proxy.playerID,
 			}).Debug("Error in action loop")
-			return
+			return err.error
 		}
 	}
 }

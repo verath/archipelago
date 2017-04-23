@@ -64,8 +64,3 @@ func (pp *playerProxy) SendEvent(ctx context.Context, evt events.Event) error {
 	}
 	return nil
 }
-
-// Disconnects the player proxy, disconnecting the proxied client.
-func (pp *playerProxy) Disconnect() {
-	pp.client.Disconnect()
-}

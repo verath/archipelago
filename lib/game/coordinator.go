@@ -127,6 +127,9 @@ func (c *Coordinator) startGame(ctx context.Context, p1Client, p2Client network.
 			c.logEntry.Errorf("Game stopped with an error: %+v", err)
 		}
 		cancel()
+		// Disconnect the clients after the game is over
+		p1Client.Disconnect()
+		p2Client.Disconnect()
 	}()
 	return nil
 }
