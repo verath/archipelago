@@ -1,4 +1,4 @@
-import AirplaneSprite from "./AirplaneSprite";
+import AirplaneSprite from "./AirplaneSprite.js";
 
 /**
  * @typedef {function} AirplaneCreatorFunc

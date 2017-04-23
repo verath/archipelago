@@ -1,10 +1,10 @@
 import * as PIXI from "pixijs";
-import GameController from "./game/controller/GameController";
-import GameModel from "./game/model/GameModel";
-import GameView from "./game/view/GameView";
-import Connection from "./network/Connection";
-import ResourceLoader from "./resource/ResourceLoader";
-import ProgressText from "./ProgressText";
+import GameController from "./game/controller/GameController.js";
+import GameModel from "./game/model/GameModel.js";
+import GameView from "./game/view/GameView.js";
+import Connection from "./network/Connection.js";
+import ResourceLoader from "./resource/ResourceLoader.js";
+import ProgressText from "./ProgressText.js";
 
 class Main {
 

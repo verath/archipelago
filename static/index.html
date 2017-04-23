@@ -4,6 +4,10 @@
     <meta charset="UTF-8">
     <title>Archipelago</title>
     <link rel="stylesheet" href="style.css">
+    <script src="jspm_packages/system.js"></script>
+    <script src="jspm.browser.js"></script>
+    <script src="jspm.config.js"></script>
+    <script src="build/app.bundle.js"></script>
 </head>
 <body>
 
@@ -14,6 +18,6 @@
         class="progress-text-dot progress-text-dot3">.</span>
 </div>
 
-<script src="build/app.bundle.js"></script>
+<script>System.import('archipelago-frontend');</script>
 </body>
 </html>

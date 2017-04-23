@@ -1,15 +1,7 @@
-/**
- * @extends BaseSprite
- */
 import * as PIXI from "pixijs";
-import BaseSprite from "./BaseSprite";
-import {
-    COLOR_FILL_ENEMY,
-    COLOR_FILL_NEUTRAL,
-    COLOR_FILL_SELF,
-    FONT_FAMILY_DEFAULT
-} from "./constants";
-import {TILE_HEIGHT, TILE_WIDTH} from "./GameView";
+import BaseSprite from "./BaseSprite.js";
+import {COLOR_FILL_ENEMY, COLOR_FILL_NEUTRAL, COLOR_FILL_SELF, FONT_FAMILY_DEFAULT} from "./constants.js";
+import {TILE_HEIGHT, TILE_WIDTH} from "./GameView.js";
 
 const EVENT_CLICK = Symbol("EVENT_CLICK");
 
@@ -21,6 +13,9 @@ const ISLAND_TEXTURE_IDS = [
 ];
 const SELECTED_TEXTURE_ID = 'assets/selected.png';
 
+/**
+ * @extends BaseSprite
+ */
 export default class IslandSprite extends BaseSprite {
 
     /**

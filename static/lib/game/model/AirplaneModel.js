@@ -1,5 +1,5 @@
-import Coordinate from "./Coordinate";
-import OwnableModel from "./OwnableModel";
+import Coordinate from "./Coordinate.js";
+import OwnableModel from "./OwnableModel.js";
 
 /**
  * @extends OwnableModel

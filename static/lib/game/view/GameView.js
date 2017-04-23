@@ -1,8 +1,8 @@
 import * as PIXI from "pixijs";
-import IslandSprite from "./IslandSprite";
-import AirplaneSprite from "./AirplaneSprite";
 import EventEmitter from "eventemitter3";
-import AirplanePool from "./AirplanePool";
+import IslandSprite from "./IslandSprite.js";
+import AirplaneSprite from "./AirplaneSprite.js";
+import AirplanePool from "./AirplanePool.js";
 
 /** @type {Symbol}*/
 const EVENT_ISLAND_CLICKED = Symbol("EVENT_ISLAND_CLICKED");

@@ -1,4 +1,4 @@
-import ResourceHolder from "./ResourceHolder";
+import ResourceHolder from "./ResourceHolder.js";
 
 const TEXTURES = [
     'assets/airplane.png',

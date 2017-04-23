@@ -1,4 +1,4 @@
-import AirplaneModel from "./AirplaneModel";
+import AirplaneModel from "./AirplaneModel.js";
 
 export const DEFAULT_AIRPLANE_SPEED = 0.0005;
 

@@ -1,9 +1,9 @@
-import BaseModel from "./BaseModel";
-import AirplaneModel from "./AirplaneModel";
-import Coordinate from "./Coordinate";
-import PlayerModel from "./PlayerModel";
-import IslandModel from "./IslandModel";
-import LocalAirplaneModel from "./LocalAirplaneModel";
+import BaseModel from "./BaseModel.js";
+import AirplaneModel from "./AirplaneModel.js";
+import Coordinate from "./Coordinate.js";
+import PlayerModel from "./PlayerModel.js";
+import IslandModel from "./IslandModel.js";
+import LocalAirplaneModel from "./LocalAirplaneModel.js";
 
 export default class GameModel extends BaseModel {
 

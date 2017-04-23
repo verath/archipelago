@@ -1,20 +1,14 @@
-/**
- * @extends BaseSprite
- */
 import * as PIXI from "pixijs";
-import {TILE_HEIGHT, TILE_WIDTH} from "./GameView";
-import BaseSprite from "./BaseSprite";
-import {
-    COLOR_FILL_ENEMY,
-    COLOR_FILL_NEUTRAL,
-    COLOR_FILL_SELF,
-    COLOR_STROKE,
-    FONT_FAMILY_DEFAULT
-} from "./constants";
+import {TILE_HEIGHT, TILE_WIDTH} from "./GameView.js";
+import BaseSprite from "./BaseSprite.js";
+import {COLOR_FILL_ENEMY, COLOR_FILL_NEUTRAL, COLOR_FILL_SELF, COLOR_STROKE, FONT_FAMILY_DEFAULT} from "./constants.js";
 
 const AIRPLANE_WIDTH = 64;
 const AIRPLANE_HEIGHT = 64;
 
+/**
+ * @extends BaseSprite
+ */
 export default class AirplaneSprite extends BaseSprite {
 
     /**
