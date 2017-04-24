@@ -17,8 +17,8 @@
     "webpack": "^2.4.1"
   },
   "scripts": {
-    "build:dev": "webpack",
-    "build:prod": "webpack -p"
+    "build:dev": "webpack --progress ",
+    "build:prod": "webpack -p --progress --devtool source-map"
   },
   "dependencies": {
     "eventemitter3": "^2.0.3",
