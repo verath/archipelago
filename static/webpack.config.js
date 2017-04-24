@@ -21,7 +21,11 @@ module.exports = {
                 use: ExtractTextPlugin.extract({
                     use: 'css-loader'
                 })
-            }
+            },
+            {
+                test: /\.(jpg|png|svg)$/,
+                loader: 'file-loader'
+            },
         ]
     },
     resolve: {

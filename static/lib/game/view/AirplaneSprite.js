@@ -3,8 +3,7 @@ import {TILE_HEIGHT, TILE_WIDTH} from "./GameView.js";
 import BaseSprite from "./BaseSprite.js";
 import {COLOR_FILL_ENEMY, COLOR_FILL_NEUTRAL, COLOR_FILL_SELF, COLOR_STROKE, FONT_FAMILY_DEFAULT} from "./constants.js";
 
-const AIRPLANE_WIDTH = 64;
-const AIRPLANE_HEIGHT = 64;
+import {TEXTURE_AIRPLANE} from "../../images";
 
 /**
  * @extends BaseSprite
@@ -15,7 +14,7 @@ export default class AirplaneSprite extends BaseSprite {
      * @param {ResourceHolder} resourceHolder
      */
     constructor(resourceHolder) {
-        super(resourceHolder, 'assets/airplane.png');
+        super(resourceHolder, TEXTURE_AIRPLANE);
         // Center our position anchor to the middle of the tile
         this.pivot.set(TILE_WIDTH / 2, TILE_HEIGHT / 2);
 
