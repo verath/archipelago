@@ -1,11 +1,15 @@
 const path = require('path');
+const webpack = require('webpack');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const ExtractTextPlugin = require('extract-text-webpack-plugin');
 
 module.exports = {
-    entry: './src/main.js',
+    entry: {
+        main: './src/main.js',
+        vendor: ['pixijs', 'eventemitter3']
+    },
     output: {
-        filename: 'app.bundle.js',
+        filename: '[name].[chunkhash].js',
         path: path.resolve(__dirname, 'dist')
     },
     module: {
@@ -24,7 +28,8 @@ module.exports = {
             },
             {
                 test: /\.(jpg|png|svg)$/,
-                loader: 'file-loader'
+                loader: 'file-loader',
+                options: {name: '[name].[hash].[ext]'},
             },
         ]
     },
@@ -34,7 +39,12 @@ module.exports = {
         }
     },
     plugins: [
-        new HtmlWebpackPlugin({template: 'src/index.html'}),
-        new ExtractTextPlugin('style.css')
+        new HtmlWebpackPlugin({
+            template: 'src/index.html'
+        }),
+        new ExtractTextPlugin('[name].[contenthash].css'),
+        new webpack.optimize.CommonsChunkPlugin({
+            names: ['vendor', 'manifest']
+        })
     ]
 };
