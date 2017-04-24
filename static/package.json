@@ -12,5 +12,9 @@
   "scripts": {
     "build:dev": "webpack",
     "build:prod": "webpack -p"
+  },
+  "dependencies": {
+    "eventemitter3": "^2.0.3",
+    "pixi.js": "^4.5.1"
   }
 }
