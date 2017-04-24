@@ -1,4 +1,5 @@
 const path = require('path');
+const HtmlWebpackPlugin = require('html-webpack-plugin');
 
 module.exports = {
     entry: './lib/main.js',
@@ -20,5 +21,8 @@ module.exports = {
         alias: {
             pixijs: path.resolve(__dirname, 'node_modules/pixi.js'),
         }
-    }
+    },
+    plugins: [
+        new HtmlWebpackPlugin({ template: 'lib/index.html' })
+    ]
 };
