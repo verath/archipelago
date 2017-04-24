@@ -8,5 +8,9 @@
   },
   "devDependencies": {
     "webpack": "^2.4.1"
+  },
+  "scripts": {
+    "build:dev": "webpack",
+    "build:prod": "webpack -p"
   }
 }
