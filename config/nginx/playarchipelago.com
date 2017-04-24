@@ -5,6 +5,16 @@
 # to /ws to the archipelago server.
 # 
 
+# Cache map for different file types, see:
+# https://www.digitalocean.com/community/tutorials/how-to-implement-browser-caching-with-nginx-s-header-module-on-centos-7
+map $sent_http_content_type $expires {
+	default                    off;
+	text/html                  epoch;
+	text/css                   max;
+	application/javascript     max;
+	~image/                    max;
+}
+
 # Redirect http:// -> https://
 server {
 	listen 80;
@@ -54,10 +64,11 @@ server {
 	}
 
 	# All other requests are served from the static folder
-	root /home/deploy/go/src/github.com/verath/archipelago/static/;
+	root /home/deploy/go/src/github.com/verath/archipelago/static/dist;
 	index index.html;
 	location / {
 		try_files $uri $uri/ index.html;
+		expires $expires;
 	}
 
 	# Deny access to .-files
