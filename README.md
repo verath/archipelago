@@ -66,7 +66,7 @@ to an `app.build.js` file:
 ```
 $ cd $GOPATH/src/github.com/verath/archipelago/static
 $ npm install
-$ npm run build
+$ npm run build:prod
 ```
 
 Now run the project as a go project, e.g. using `go run` from the root directory:
