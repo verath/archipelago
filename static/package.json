@@ -1,7 +1,7 @@
 {
   "name": "archipelago-frontend",
   "version": "1.0.0",
-  "main": "lib/main.js",
+  "main": "src/main.js",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/verath/archipelago.git"

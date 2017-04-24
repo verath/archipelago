@@ -3,7 +3,7 @@ const HtmlWebpackPlugin = require('html-webpack-plugin');
 const ExtractTextPlugin = require('extract-text-webpack-plugin');
 
 module.exports = {
-    entry: './lib/main.js',
+    entry: './src/main.js',
     output: {
         filename: 'app.bundle.js',
         path: path.resolve(__dirname, 'dist')
@@ -34,7 +34,7 @@ module.exports = {
         }
     },
     plugins: [
-        new HtmlWebpackPlugin({template: 'lib/index.html'}),
+        new HtmlWebpackPlugin({template: 'src/index.html'}),
         new ExtractTextPlugin('style.css')
     ]
 };
