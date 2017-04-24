@@ -1,14 +1,22 @@
 import ResourceHolder from "./ResourceHolder.js";
 
-const TEXTURES = [
-    'assets/airplane.png',
-    'assets/island1.png',
-    'assets/island2.png',
-    'assets/island3.png',
-    'assets/island4.png',
-    'assets/selected.png'
-];
+import {
+    TEXTURE_AIRPLANE,
+    TEXTURE_ISLAND1,
+    TEXTURE_ISLAND2,
+    TEXTURE_ISLAND3,
+    TEXTURE_ISLAND4,
+    TEXTURE_SELECTED
+} from "../images";
 
+const TEXTURES = [
+    TEXTURE_AIRPLANE,
+    TEXTURE_ISLAND1,
+    TEXTURE_ISLAND2,
+    TEXTURE_ISLAND3,
+    TEXTURE_ISLAND4,
+    TEXTURE_SELECTED
+];
 
 export default class ResourceLoader {
 

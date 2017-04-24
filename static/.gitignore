@@ -1,5 +1,4 @@
+# Folder holding the "built" frontend
+dist
 
 node_modules
-jspm_packages
-
-build

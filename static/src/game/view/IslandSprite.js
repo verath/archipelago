@@ -3,15 +3,12 @@ import BaseSprite from "./BaseSprite.js";
 import {COLOR_FILL_ENEMY, COLOR_FILL_NEUTRAL, COLOR_FILL_SELF, FONT_FAMILY_DEFAULT} from "./constants.js";
 import {TILE_HEIGHT, TILE_WIDTH} from "./GameView.js";
 
+import {TEXTURE_ISLAND1, TEXTURE_ISLAND2, TEXTURE_ISLAND3, TEXTURE_ISLAND4, TEXTURE_SELECTED} from "../../images";
+
 const EVENT_CLICK = Symbol("EVENT_CLICK");
 
-const ISLAND_TEXTURE_IDS = [
-    'assets/island1.png',
-    'assets/island2.png',
-    'assets/island3.png',
-    'assets/island4.png',
-];
-const SELECTED_TEXTURE_ID = 'assets/selected.png';
+const ISLAND_TEXTURES = [TEXTURE_ISLAND1, TEXTURE_ISLAND2, TEXTURE_ISLAND3, TEXTURE_ISLAND4];
+const SELECTED_TEXTURE = TEXTURE_SELECTED;
 
 /**
  * @extends BaseSprite
@@ -22,8 +19,8 @@ export default class IslandSprite extends BaseSprite {
      * @param {ResourceHolder} resourceHolder
      */
     constructor(resourceHolder) {
-        let textureIdx = Math.floor(Math.random() * ISLAND_TEXTURE_IDS.length);
-        let textureId = ISLAND_TEXTURE_IDS[textureIdx];
+        let textureIdx = Math.floor(Math.random() * ISLAND_TEXTURES.length);
+        let textureId = ISLAND_TEXTURES[textureIdx];
         super(resourceHolder, textureId);
 
         // Center our anchor to the middle of the tile
@@ -73,7 +70,7 @@ export default class IslandSprite extends BaseSprite {
      * @private
      */
     static _createSelectedIndicator(resourceHolder) {
-        return new PIXI.Sprite(resourceHolder.getTexture(SELECTED_TEXTURE_ID));
+        return new PIXI.Sprite(resourceHolder.getTexture(SELECTED_TEXTURE));
     }
 
     _onAdded() {

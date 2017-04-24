@@ -6,6 +6,8 @@ import Connection from "./network/Connection.js";
 import ResourceLoader from "./resource/ResourceLoader.js";
 import ProgressText from "./ProgressText.js";
 
+import "./main.css";
+
 class Main {
 
     /**
@@ -50,7 +52,7 @@ class Main {
     }
 
     _onWindowResize() {
-        if(this._gameController !== null) {
+        if (this._gameController !== null) {
             this._gameController.gameView.resize();
         }
     }
