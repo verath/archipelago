@@ -14,6 +14,10 @@ module.exports = {
                 exclude: /node_modules/,
                 loader: 'babel-loader',
                 options: {presets: ['es2015']}
+            },
+            {
+                test: /\.css$/,
+                use: ['style-loader', 'css-loader']
             }
         ]
     },
@@ -23,6 +27,6 @@ module.exports = {
         }
     },
     plugins: [
-        new HtmlWebpackPlugin({ template: 'lib/index.html' })
+        new HtmlWebpackPlugin({template: 'lib/index.html'})
     ]
 };
