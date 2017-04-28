@@ -9,6 +9,11 @@ import (
 	"net/http"
 )
 
+// wsVersion is the version of the websocket protocol that the server
+// is currently implementing. Used to make sure that the client "talks"
+// the same version as we do.
+const wsVersion = "1"
+
 // The websocket.Upgrader used for all upgrades from http -> ws.
 var wsUpgrader = websocket.Upgrader{}
 
@@ -31,8 +36,17 @@ func NewUpgradeHandler(log *logrus.Logger, connListener network.ConnectionHandle
 }
 
 // ServeHTTP is called on each http request that matches our handler.
-// We try to upgrade each such request to a websocket connection.
+// We try to upgrade each such request to a websocket connection. We also
+// check the version ("v") parameter, to make sure the client is talking
+// the same websocket version as we are.
 func (h *upgradeHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	clientWSVersion := r.URL.Query().Get("v")
+	if clientWSVersion != wsVersion {
+		h.logEntry.Warnf("Not upgrading to websocket, version " +
+			"missmatch (client: %v, server: %v)", clientWSVersion, wsVersion)
+		http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
+		return
+	}
 	wsConn, err := wsUpgrader.Upgrade(w, r, nil)
 	if err != nil {
 		h.logEntry.Warnf("Failed upgrading to websocket: %+v", err)

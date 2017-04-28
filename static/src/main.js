@@ -8,6 +8,12 @@ import ProgressText from "./ProgressText.js";
 
 import "./main.css";
 
+/**
+ * The version of the websocket protocol we expect.
+ * @type {string}
+ */
+const WS_VERSION = "1";
+
 class Main {
 
     /**
@@ -67,7 +73,7 @@ class Main {
         this._progressText.setText('Finding a game');
 
         let protocol = (location.protocol === 'https:') ? 'wss://' : 'ws://';
-        let connection = new Connection(protocol + location.host + "/ws");
+        let connection = new Connection(protocol + location.host + "/ws?v=" + WS_VERSION);
         let gameModel = new GameModel();
         let gameView = new GameView(this._resourceHolder, this._renderer, gameModel);
         this._gameController = new GameController(connection, gameModel, gameView);
