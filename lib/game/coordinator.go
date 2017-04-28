@@ -123,7 +123,7 @@ func (c *Coordinator) startGame(ctx context.Context, p1Client, p2Client network.
 	go func() {
 		defer c.gamesWG.Done()
 		err := ctrl.Run(gameCtx)
-		if err != nil && err != context.Canceled {
+		if err != nil && errors.Cause(err) != context.Canceled {
 			c.logEntry.Errorf("Game stopped with an error: %+v", err)
 		}
 		cancel()
