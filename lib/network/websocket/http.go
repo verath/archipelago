@@ -10,10 +10,7 @@ import (
 )
 
 // The websocket.Upgrader used for all upgrades from http -> ws.
-var wsUpgrader = websocket.Upgrader{
-	// TODO: should we allow all origins?
-	CheckOrigin: func(r *http.Request) bool { return true },
-}
+var wsUpgrader = websocket.Upgrader{}
 
 // The upgradeHandler is an http.Handler that attempts to upgrade
 // handled connections to websocket connections. Once upgraded,
