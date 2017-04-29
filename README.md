@@ -5,6 +5,10 @@ with the same name.
 
 ![Screenshot Archipelago](.github/screenshot1.png)
 
+[![Build Status](https://travis-ci.org/verath/archipelago.svg?branch=master)](https://travis-ci.org/verath/archipelago)
+[![Go Report Card](https://goreportcard.com/badge/github.com/verath/archipelago)](https://goreportcard.com/report/github.com/verath/archipelago)
+[![Code Climate](https://codeclimate.com/github/verath/archipelago/badges/gpa.svg)](https://codeclimate.com/github/verath/archipelago)
+
 The game can be played at https://playarchipelago.com.
 
 ## The Archipelago game

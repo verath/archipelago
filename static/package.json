@@ -20,6 +20,7 @@
     "webpack": "^2.4.1"
   },
   "scripts": {
+    "lint": "eslint \"src/**\"",
     "build:dev": "webpack --progress ",
     "build:prod": "webpack -p --progress --devtool source-map"
   },
