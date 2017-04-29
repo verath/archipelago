@@ -94,7 +94,7 @@ func (ctrl *controller) broadcastEvent(ctx context.Context, evt events.Event) er
 
 // handleEvent forwards the event to both players, and blocks until the event
 // has been successfully sent. Called by the gameLoop for each event produced.
-func (ctrl *controller) handleEvent(ctx context.Context, evt events.Event)  {
+func (ctrl *controller) handleEvent(ctx context.Context, evt events.Event) {
 	if err := ctrl.broadcastEvent(ctx, evt); err != nil {
 		ctrl.logEntry.Debugf("Error in handleEvent: %+v", err)
 	}
