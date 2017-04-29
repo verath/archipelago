@@ -11,6 +11,9 @@ engines:
     enabled: true
   duplication:
     enabled: true
+    config:
+      languages:
+      - javascript:
   eslint:
     enabled: true
   fixme:
