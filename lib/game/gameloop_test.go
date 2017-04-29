@@ -5,9 +5,9 @@ import (
 	"github.com/Sirupsen/logrus"
 	"github.com/verath/archipelago/lib/game/events"
 	"github.com/verath/archipelago/lib/game/model"
-	"github.com/verath/archipelago/lib/testing"
+	"github.com/verath/archipelago/lib/game/model/testutil"
 	"io/ioutil"
-	stdtesting "testing"
+	"testing"
 	"time"
 )
 
@@ -22,8 +22,8 @@ func (f actionFunc) Apply(g *model.Game) ([]events.Event, error) {
 	return f(g)
 }
 
-func TestGameLoop_Start_Stop(t *stdtesting.T) {
-	game := testing.CreateEmptyGame()
+func TestGameLoop_Start_Stop(t *testing.T) {
+	game := testutil.CreateEmptyGame()
 	gl, _ := newGameLoop(log, game)
 	ctx, cancel := context.WithCancel(context.Background())
 
@@ -35,8 +35,8 @@ func TestGameLoop_Start_Stop(t *stdtesting.T) {
 	// Note this test requires the timeout flag to be set
 }
 
-func TestGameLoop_AddAction(t *stdtesting.T) {
-	game := testing.CreateEmptyGame()
+func TestGameLoop_AddAction(t *testing.T) {
+	game := testutil.CreateEmptyGame()
 	ctx := context.Background()
 	gl, _ := newGameLoop(log, game)
 
@@ -70,12 +70,12 @@ func TestGameLoop_AddAction(t *stdtesting.T) {
 	}
 }
 
-func TestGameLoop_AddAction_RealTick(t *stdtesting.T) {
-	if stdtesting.Short() {
+func TestGameLoop_AddAction_RealTick(t *testing.T) {
+	if testing.Short() {
 		t.Skip()
 	}
 
-	game := testing.CreateEmptyGame()
+	game := testutil.CreateEmptyGame()
 
 	gl, _ := newGameLoop(log, game)
 	gl.tickInterval = time.Millisecond

@@ -1,4 +1,4 @@
-package testing
+package testutil
 
 import (
 	. "github.com/verath/archipelago/lib/game/model"

@@ -2,12 +2,12 @@ package events
 
 import (
 	"encoding/json"
-	"github.com/verath/archipelago/lib/testing"
-	stdtesting "testing"
+	"github.com/verath/archipelago/lib/game/model/testutil"
+	"testing"
 )
 
-func TestNewTickEvent(t *stdtesting.T) {
-	game := testing.CreateEmptyGame()
+func TestNewTickEvent(t *testing.T) {
+	game := testutil.CreateEmptyGame()
 	evt, err := NewTickEvent(game)
 	if err != nil {
 		t.Fatalf("Expected no error when creating tick event, got: %v", err)

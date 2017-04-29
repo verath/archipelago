@@ -3,12 +3,12 @@ package actions
 import (
 	"github.com/verath/archipelago/lib/game/events"
 	"github.com/verath/archipelago/lib/game/model"
-	"github.com/verath/archipelago/lib/testing"
-	stdtesting "testing"
+	"github.com/verath/archipelago/lib/game/model/testutil"
+	"testing"
 	"time"
 )
 
-func TestNewTickAction(t *stdtesting.T) {
+func TestNewTickAction(t *testing.T) {
 	ta, err := NewTickAction(1)
 	if err != nil {
 		t.Errorf("Expected no error, got: %v", err)
@@ -18,8 +18,8 @@ func TestNewTickAction(t *stdtesting.T) {
 	}
 }
 
-func TestTickAction_Apply_Islands(t *stdtesting.T) {
-	game := testing.CreateSimpleGame()
+func TestTickAction_Apply_Islands(t *testing.T) {
+	game := testutil.CreateSimpleGame()
 
 	i1 := game.Island("p1")
 	i2 := game.Island("p2")
@@ -46,8 +46,8 @@ func TestTickAction_Apply_Islands(t *stdtesting.T) {
 	}
 }
 
-func TestTickAction_Apply_Airplanes(t *stdtesting.T) {
-	game := testing.CreateSimpleGame()
+func TestTickAction_Apply_Airplanes(t *testing.T) {
+	game := testutil.CreateSimpleGame()
 	fromIsland := game.Island("p1")
 	toIsland := game.Island("bottom-left")
 
@@ -64,13 +64,13 @@ func TestTickAction_Apply_Airplanes(t *stdtesting.T) {
 
 	expectedPos := model.FloatCoordinate{X: 0, Y: 1}
 	actualPos := game.Airplanes()[0].Position()
-	if !testing.CoordsAlmostEqual(actualPos, expectedPos) {
+	if !testutil.CoordsAlmostEqual(actualPos, expectedPos) {
 		t.Errorf("Expected airplane pos to be %v was %v", expectedPos, actualPos)
 	}
 }
 
-func TestTickAction_Apply_Airplane_Arrival(t *stdtesting.T) {
-	game := testing.CreateSimpleGame()
+func TestTickAction_Apply_Airplane_Arrival(t *testing.T) {
+	game := testutil.CreateSimpleGame()
 	fromIsland := game.Island("p1")
 	toIsland := game.Island("bottom-left")
 
@@ -100,8 +100,8 @@ func TestTickAction_Apply_Airplane_Arrival(t *stdtesting.T) {
 	}
 }
 
-func TestTickAction_Apply_AddsTickEvent(t *stdtesting.T) {
-	game := testing.CreateSimpleGame()
+func TestTickAction_Apply_AddsTickEvent(t *testing.T) {
+	game := testutil.CreateSimpleGame()
 
 	ta, _ := NewTickAction(1 * time.Second)
 	evts, err := ta.Apply(game)
@@ -119,8 +119,8 @@ func TestTickAction_Apply_AddsTickEvent(t *stdtesting.T) {
 	}
 }
 
-func TestTickAction_Apply_EmptyGame(t *stdtesting.T) {
-	game := testing.CreateEmptyGame()
+func TestTickAction_Apply_EmptyGame(t *testing.T) {
+	game := testutil.CreateEmptyGame()
 
 	ta, _ := NewTickAction(1 * time.Second)
 	if _, err := ta.Apply(game); err != nil {
