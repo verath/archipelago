@@ -34,16 +34,13 @@ func (a *launchAction) Apply(g *model.Game) ([]events.Event, error) {
 	if toIsland == nil {
 		return nil, newIllegalActionError(owningPlayer, "to island does not exist")
 	}
-
 	if fromIsland.ID() == toIsland.ID() {
 		return nil, newIllegalActionError(owningPlayer, "fromIsland == toIsland")
 	}
 
 	if !fromIsland.IsOwnedBy(owningPlayer) {
-		return nil, newInvalidActionError(owningPlayer, "to island does not exist")
-
+		return nil, newInvalidActionError(owningPlayer, "fromIsland is not owned by sending player")
 	}
-
 	if fromIsland.Strength() < 2 {
 		return nil, newIllegalActionError(owningPlayer, "from island strength < 2")
 	}
