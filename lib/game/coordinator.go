@@ -18,6 +18,15 @@ const (
 	GameMaxDuration time.Duration = 45 * time.Minute
 )
 
+// A ClientProvider is an interface for something that can
+// provide clients to the caller.
+type ClientProvider interface {
+	// NextClient returns a client to the caller, if one can be
+	// provided before the context has expired. Otherwise, the
+	// context's error is returned.
+	NextClient(ctx context.Context) (network.Client, error)
+}
+
 // The game coordinator is responsible for connecting players to
 // a game. Once enough players has been found so that a game can
 // be created, the game coordinator creates and starts a new game
