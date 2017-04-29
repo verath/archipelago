@@ -72,7 +72,9 @@ export default class BaseModel {
 
     /**
      * Tells the model to interpolate movement over time delta
+     * @param delta
      */
+    // eslint-disable-next-line no-unused-vars
     interpolate(delta) {
     }
 }

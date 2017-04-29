@@ -1,5 +1,3 @@
-import AirplaneSprite from "./AirplaneSprite.js";
-
 /**
  * @typedef {function} AirplaneCreatorFunc
  * @returns {AirplaneSprite}

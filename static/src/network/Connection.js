@@ -45,11 +45,11 @@ export default class Connection {
         this._eventEmitter.emit(EVENT_SERVER_EVENT, serverEvent);
     }
 
-    _onWSError(errEvent) {
+    _onWSError() {
         this._eventEmitter.emit(EVENT_DISCONNECT);
     }
 
-    _onWSClose(closeEvent) {
+    _onWSClose() {
         this._eventEmitter.emit(EVENT_DISCONNECT);
     }
 

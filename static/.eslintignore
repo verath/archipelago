@@ -1,0 +1,8 @@
+# Ignore built files
+dist/*
+
+# Ignore non-js files (these are "imported" and handled by webpack, but
+# they are obviously not javascript files
+*.png
+*.css
+*.html
