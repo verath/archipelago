@@ -122,7 +122,7 @@ export default class GameView {
         island.model = islandModel;
         island.addClickListener(this._onIslandClicked, this);
         this._stage.addChild(island);
-        this._islands.set(islandModel.id, island)
+        this._islands.set(islandModel.id, island);
     }
 
     _onModelChange() {
@@ -183,8 +183,8 @@ export default class GameView {
 
         canvas.width = width * pixelRatio;
         canvas.height = height * pixelRatio;
-        canvas.style.width = width + 'px';
-        canvas.style.height = height + 'px';
+        canvas.style.width = width + "px";
+        canvas.style.height = height + "px";
 
         // Notify pixi that the canvas has been resized
         this._renderer.resize(canvas.width, canvas.height);

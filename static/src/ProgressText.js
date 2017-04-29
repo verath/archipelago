@@ -14,19 +14,19 @@ export default class ProgressText {
          * @type {HTMLSpanElement}
          * @private
          */
-        this._textElem = progressTextWrapElem.querySelector('.progress-text');
+        this._textElem = progressTextWrapElem.querySelector(".progress-text");
     }
 
     /**
      * @param {string} text
      */
     setText(text) {
-        this._wrapperElem.style.display = 'block';
+        this._wrapperElem.style.display = "block";
         this._textElem.innerText = text;
     }
 
     hide() {
-        this._wrapperElem.style.display = 'none';
-        this._textElem.innerText = '';
+        this._wrapperElem.style.display = "none";
+        this._textElem.innerText = "";
     }
 }

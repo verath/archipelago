@@ -49,12 +49,12 @@ class Main {
         // Add the renderer view to the document. Since we might want to show
         // text elements when the game is not running, the view is hidden, and
         // only shown while the game is running.
-        this._renderer.view.style.display = 'none';
+        this._renderer.view.style.display = "none";
         document.body.appendChild(this._renderer.view);
 
         // Listen for window size changes
-        window.addEventListener('resize', this._onWindowResize.bind(this));
-        window.addEventListener('deviceOrientation', this._onWindowResize.bind(this));
+        window.addEventListener("resize", this._onWindowResize.bind(this));
+        window.addEventListener("deviceOrientation", this._onWindowResize.bind(this));
     }
 
     _onWindowResize() {
@@ -65,14 +65,14 @@ class Main {
 
     _onGameStart() {
         this._progressText.hide();
-        this._renderer.view.style.display = 'block';
+        this._renderer.view.style.display = "block";
         this._gameController.removeGameStartListener(this._onGameStart, this);
     }
 
     run() {
-        this._progressText.setText('Finding a game');
+        this._progressText.setText("Finding a game");
 
-        let protocol = (location.protocol === 'https:') ? 'wss://' : 'ws://';
+        let protocol = (location.protocol === "https:") ? "wss://" : "ws://";
         let connection = new Connection(protocol + location.host + "/ws?v=" + WS_VERSION);
         let gameModel = new GameModel();
         let gameView = new GameView(this._resourceHolder, this._renderer, gameModel);
@@ -84,7 +84,7 @@ class Main {
 }
 
 (function main() {
-    let progressTextWrapElem = document.querySelector('#progress-text-wrap');
+    let progressTextWrapElem = document.querySelector("#progress-text-wrap");
     let progressText = new ProgressText(progressTextWrapElem);
 
     ResourceLoader.load()

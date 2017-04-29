@@ -123,17 +123,17 @@ export default class GameController {
      */
     _onServerEvent(payload) {
         switch (payload.type) {
-            case "evt_game_start":
-                this._onGameStartEvent(payload.data);
-                break;
-            case "evt_tick":
-                this._onTickEvent(payload.data);
-                break;
-            case "evt_game_over":
-                this._onGameOverEvent(payload.data);
-                break;
-            default:
-                console.log("Unknown event:", payload.type, payload);
+        case "evt_game_start":
+            this._onGameStartEvent(payload.data);
+            break;
+        case "evt_tick":
+            this._onTickEvent(payload.data);
+            break;
+        case "evt_game_over":
+            this._onGameOverEvent(payload.data);
+            break;
+        default:
+            console.log("Unknown event:", payload.type, payload);
         }
     }
 

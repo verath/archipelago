@@ -15,7 +15,7 @@ export default class BaseSprite extends PIXI.Sprite {
          */
         this._model = null;
 
-        this.once('added', this._onAdded.bind(this));
+        this.once("added", this._onAdded.bind(this));
     }
 
     /**
@@ -23,7 +23,7 @@ export default class BaseSprite extends PIXI.Sprite {
      */
     _onAdded() {
         this._model.addChangeListener(this._onModelChanged, this);
-        this.once('removed', this._onRemoved.bind(this));
+        this.once("removed", this._onRemoved.bind(this));
     }
 
     /**
@@ -31,7 +31,7 @@ export default class BaseSprite extends PIXI.Sprite {
      */
     _onRemoved() {
         this._model.removeChangeListener(this._onModelChanged, this);
-        this.once('added', this._onAdded.bind(this));
+        this.once("added", this._onAdded.bind(this));
     }
 
     /**

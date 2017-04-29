@@ -43,8 +43,8 @@ export default class IslandSprite extends BaseSprite {
 
         // Listen for clicks
         this.interactive = true;
-        this.on('mousedown', this._onClicked);
-        this.on('touchstart', this._onClicked);
+        this.on("mousedown", this._onClicked);
+        this.on("touchstart", this._onClicked);
     }
 
 
@@ -56,7 +56,7 @@ export default class IslandSprite extends BaseSprite {
         let strengthText = new PIXI.Text("", {
             fontFamily: FONT_FAMILY_DEFAULT,
             fontSize: 50,
-            align: 'center'
+            align: "center"
         });
         strengthText.anchor.set(0.5, 0.5);
         strengthText.x = (TILE_WIDTH / 2);

@@ -6,4 +6,4 @@ export const COLOR_FILL_NEUTRAL = 0xeeeeee;
 export const COLOR_STROKE = 0x111111;
 
 // The default font family used
-export const FONT_FAMILY_DEFAULT = ['Arial', 'Helvetica Neue', 'Helvetica', 'sans-serif'];
+export const FONT_FAMILY_DEFAULT = ["Arial", "Helvetica Neue", "Helvetica", "sans-serif"];

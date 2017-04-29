@@ -36,7 +36,7 @@ export default class PlayerModel extends BaseModel {
      * @returns {boolean}
      */
     isSelf() {
-        return (this.id === this._gameModel.playerId)
+        return (this.id === this._gameModel.playerId);
     }
 
     /**
@@ -44,7 +44,7 @@ export default class PlayerModel extends BaseModel {
      * @returns {boolean}
      */
     isNeutral() {
-        return (this.id === this._gameModel.playerNeutral.id)
+        return (this.id === this._gameModel.playerNeutral.id);
     }
 
     /**

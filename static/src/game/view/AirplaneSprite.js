@@ -34,7 +34,7 @@ export default class AirplaneSprite extends BaseSprite {
         let strengthText = new PIXI.Text("", {
             fontFamily: FONT_FAMILY_DEFAULT,
             fontSize: 50,
-            align: 'center',
+            align: "center",
             fill: COLOR_FILL_NEUTRAL,
             stroke: COLOR_STROKE,
             strokeThickness: 3

@@ -218,7 +218,7 @@ export default class GameModel extends BaseModel {
         if (this._player1.id === playerId) {
             return this._player1;
         } else if (this._player2.id === playerId) {
-            return this._player2
+            return this._player2;
         } else if (this._playerNeutral.id === playerId) {
             return this._playerNeutral;
         }

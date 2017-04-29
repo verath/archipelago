@@ -31,7 +31,7 @@ export default class BaseModel {
     }
 
     removeChangeListener(listener, context = null) {
-        this._eventEmitter.off(EVENT_CHANGE, listener, context)
+        this._eventEmitter.off(EVENT_CHANGE, listener, context);
     }
 
     /**
@@ -39,7 +39,7 @@ export default class BaseModel {
      * @protected
      */
     _emitChanged(...args) {
-        this._eventEmitter.emit(EVENT_CHANGE, args)
+        this._eventEmitter.emit(EVENT_CHANGE, args);
     }
 
 
