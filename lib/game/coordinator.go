@@ -68,16 +68,12 @@ func (c *Coordinator) awaitClients(ctx context.Context) (network.Client, network
 	if err != nil {
 		return nil, nil, errors.Wrap(err, "Error when getting a Client")
 	}
-	p1Client.Start()
-
 	for {
 		p2Client, err := c.clientProvider.NextClient(ctx)
 		if err != nil {
 			p1Client.Disconnect()
 			return nil, nil, errors.Wrap(err, "Error when getting a Client")
 		}
-		p2Client.Start()
-
 		select {
 		case <-p1Client.DisconnectCh():
 			// p1 disconnected while waiting for p2. Set p1=p2

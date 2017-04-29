@@ -7,7 +7,6 @@ import (
 	"github.com/pkg/errors"
 	"github.com/verath/archipelago/lib/common"
 	"sync"
-	"sync/atomic"
 	"time"
 )
 
@@ -26,9 +25,11 @@ const (
 // from/to envelopes, and makes sure only a single read and a single write
 // is simultaneously performed on the underlying connection.
 type Client interface {
-	// Starts the client. Start must be called before any other methods
-	// on the client. Blocks until the client is started.
-	Start()
+	// Run starts and runs the Client. Run blocks until the context is
+	// cancelled, the client is disconnected, or an error occurs. The
+	// Client is guaranteed to be in a disconnected state when Run
+	// returns.
+	Run(ctx context.Context) error
 
 	// Stops the client, disconnecting the underlying connection.
 	// Disconnect blocks until the client is fully stopped. Calling
@@ -54,17 +55,13 @@ type Client interface {
 type clientImpl struct {
 	logEntry *logrus.Entry
 	// The underlying connection used for the client.
-	conn connection
+	conn Connection
 	// Buffered queue of messages that has been read from the connection.
 	readQueue chan *receivedEnvelopeImpl
 	// Queue of writes to be made on the connection.
 	writeQueue chan *writeRequest
 	// Channel closed when the client should disconnect.
 	disconnectCh chan struct{}
-	// Flag for if the client has been started.
-	started int32
-	// Wait group used to wait for the read and write pump to start.
-	startWG sync.WaitGroup
 	// Wait group used to wait for the read and write pump to finish.
 	shutdownWG sync.WaitGroup
 	// Lock around the disconnectCh so that it is only closed once.
@@ -80,8 +77,8 @@ type writeRequest struct {
 	resultCh chan<- error
 }
 
-// Creates a new Client, communicating on the provided connection
-func NewClient(log *logrus.Logger, conn connection) (Client, error) {
+// NewClient creates a new Client, communicating on the provided connection.
+func NewClient(log *logrus.Logger, conn Connection) (Client, error) {
 	return &clientImpl{
 		logEntry:     common.ModuleLogEntryWithID(log, "network/client"),
 		conn:         conn,
@@ -91,17 +88,21 @@ func NewClient(log *logrus.Logger, conn connection) (Client, error) {
 	}, nil
 }
 
-func (c *clientImpl) Start() {
-	if !c.setStarted() {
-		c.logEntry.Warn("Start called when already started")
-		return
-	}
-	c.startWG.Add(2)
-	c.shutdownWG.Add(2)
-	go c.readPump()
+func (c *clientImpl) Run(ctx context.Context) error {
+	ctx, cancel := context.WithCancel(ctx)
+	defer func() {
+		cancel()
+		c.shutdownWG.Wait()
+	}()
+	go func() {
+		select {
+		case <-ctx.Done():
+			c.disconnect()
+		case <-c.disconnectCh:
+		}
+	}()
 	go c.writePump()
-	c.startWG.Wait()
-	c.logEntry.Debug("Started")
+	return c.readPump()
 }
 
 func (c *clientImpl) Disconnect() {
@@ -141,11 +142,6 @@ func (c *clientImpl) ReadEnvelope(ctx context.Context) (ReceivedEnvelope, error)
 	}
 }
 
-// Sets the started flag, returning true if it had not been set previously.
-func (c *clientImpl) setStarted() bool {
-	return atomic.CompareAndSwapInt32(&c.started, 0, 1)
-}
-
 // Disconnects the client by closing the disconnectCh, as well as the
 // underlying connection. Does not block until the read and write
 // pumps have finished.
@@ -178,7 +174,7 @@ func (c *clientImpl) writeEnvelope(env *envelope) error {
 // The write pump takes write requests from the write queue and
 // writes them to the connection.
 func (c *clientImpl) writePump() {
-	c.startWG.Done()
+	c.shutdownWG.Add(1)
 	defer c.shutdownWG.Done()
 	// If we ever get an error when writing, then all following
 	// writes will fail. Instead of attempting to write, we store
@@ -213,9 +209,10 @@ func (c *clientImpl) readEnvelope() (*receivedEnvelopeImpl, error) {
 // The read pump reads messages from the connection and posts them on the
 // read queue. If a read fails, the read pump will disconnect the client.
 // If the read queue is full, new messages will be dropped.
-func (c *clientImpl) readPump() {
-	c.startWG.Done()
+func (c *clientImpl) readPump() error {
+	c.shutdownWG.Add(1)
 	defer func() {
+		c.disconnect()
 		close(c.readQueue)
 		c.shutdownWG.Done()
 	}()
@@ -224,9 +221,7 @@ func (c *clientImpl) readPump() {
 		default:
 			env, err := c.readEnvelope()
 			if err != nil {
-				c.logEntry.WithError(err).Debug("Error reading from connection")
-				c.disconnect()
-				return
+				return errors.Wrap(err, "Error reading from connection")
 			}
 			// Try to add the envelope to the readQueue. If the queue is full we
 			// have to drop the message so we can continue reading, otherwise we
@@ -237,7 +232,7 @@ func (c *clientImpl) readPump() {
 				c.logEntry.Warn("readQueue full, dropping message")
 			}
 		case <-c.disconnectCh:
-			return
+			return nil
 		}
 	}
 }

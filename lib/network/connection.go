@@ -2,10 +2,10 @@ package network
 
 import "context"
 
-// A connection is an abstraction of a connection to a peer that
+// Connection is an abstraction of a connection to a peer that
 // supports sending and receiving text messages, represented as
 // byte slices.
-type connection interface {
+type Connection interface {
 	// Reads a message from the connection. This method must
 	// be continuously polled in order to detect connection
 	// state changes. If ReadMessage returns an error, it is

@@ -7,6 +7,7 @@ import (
 	"github.com/verath/archipelago/lib/common"
 	"github.com/verath/archipelago/lib/network"
 	"net/http"
+	"sync"
 )
 
 // wsVersion is the version of the websocket protocol that the server
@@ -17,32 +18,33 @@ const wsVersion = "1"
 // The websocket.Upgrader used for all upgrades from http -> ws.
 var wsUpgrader = websocket.Upgrader{}
 
-// The upgradeHandler is an http.Handler that attempts to upgrade
-// handled connections to websocket connections. Once upgraded,
-// the connection is wrapped in a client and posted to the
-// registered ClientConnectListener.
-type upgradeHandler struct {
-	logEntry    *logrus.Entry
-	connHandler network.ConnectionHandler
+// The UpgradeHandler is an http.Handler that attempts to upgrade requests
+// to websocket connections. Successful upgrades are forwarded to the registered
+// ConnectionHandler.
+type UpgradeHandler struct {
+	logEntry *logrus.Entry
+
+	connHandlerMu sync.RWMutex
+	connHandler   network.ConnectionHandler
 }
 
-// Creates a new UpgradeHandler, notifying the connectListener for clients
-// successfully created.
-func NewUpgradeHandler(log *logrus.Logger, connListener network.ConnectionHandler) *upgradeHandler {
-	return &upgradeHandler{
-		logEntry:    common.ModuleLogEntry(log, "websocket/wsConnHandler"),
-		connHandler: connListener,
-	}
+// NewUpgradeHandler creates a new UpgradeHandler.
+func NewUpgradeHandler(log *logrus.Logger) (*UpgradeHandler, error) {
+	return &UpgradeHandler{
+		logEntry: common.ModuleLogEntry(log, "websocket/UpgradeHandler"),
+	}, nil
 }
 
-// ServeHTTP is called on each http request that matches our handler.
-// We try to upgrade each such request to a websocket connection. We also
-// check the version ("v") parameter, to make sure the client is talking
-// the same websocket version as we are.
-func (h *upgradeHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+func (h *UpgradeHandler) SetConnectionHandler(connHandler network.ConnectionHandler) {
+	h.connHandlerMu.Lock()
+	defer h.connHandlerMu.Unlock()
+	h.connHandler = connHandler
+}
+
+func (h *UpgradeHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	clientWSVersion := r.URL.Query().Get("v")
 	if clientWSVersion != wsVersion {
-		h.logEntry.Warnf("Not upgrading to websocket, version " +
+		h.logEntry.Warnf("Not upgrading to websocket, version "+
 			"missmatch (client: %v, server: %v)", clientWSVersion, wsVersion)
 		http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
 		return
@@ -52,22 +54,23 @@ func (h *upgradeHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		h.logEntry.Warnf("Failed upgrading to websocket: %+v", err)
 		return
 	}
-	go func() {
-		if err := h.handleWSConn(wsConn); err != nil {
-			h.logEntry.Errorf("Error handling ws connection: %+v", err)
-		}
-	}()
+	if err := h.handleWSConn(wsConn); err != nil {
+		h.logEntry.Errorf("Error handling ws connection: %+v", err)
+	}
 }
 
 // handleWSConn wraps the gorilla websocket in our own wsConnection
-// and forwards the connection to the connection handler.
-func (h *upgradeHandler) handleWSConn(wsConn *websocket.Conn) error {
+// and forwards the connection to the connection handler (if set).
+func (h *UpgradeHandler) handleWSConn(wsConn *websocket.Conn) error {
+	h.connHandlerMu.RLock()
+	defer h.connHandlerMu.RUnlock()
+	if h.connHandler == nil {
+		return errors.New("connHandler was nil")
+	}
 	conn, err := newWSConnection(wsConn)
 	if err != nil {
 		return errors.Wrap(err, "Failed creating WSConnection")
 	}
-	if err := h.connHandler.HandleConnection(conn); err != nil {
-		return errors.Wrap(err, "Connection handler did not handle connection")
-	}
+	go h.connHandler.HandleConnection(conn)
 	return nil
 }

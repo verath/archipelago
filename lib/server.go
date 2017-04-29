@@ -4,10 +4,10 @@ import (
 	"context"
 	"github.com/Sirupsen/logrus"
 	"github.com/pkg/errors"
+	"github.com/verath/archipelago/lib/common"
 	"github.com/verath/archipelago/lib/game"
 	"github.com/verath/archipelago/lib/network"
 	"github.com/verath/archipelago/lib/network/websocket"
-	"net/http"
 )
 
 const (
@@ -16,38 +16,63 @@ const (
 	clientQueueSize = 2
 )
 
-// Server is the main entry point to the game server. It is responsible for
-// starting the gameCoordinator, and also forwarding http connections to the
-// websocket upgrade handler.
+// Server is the main entry point to the game server. It connects the different
+// parts of the server and runs them.
 type Server struct {
+	logEntry        *logrus.Entry
+	wsHandler       *websocket.UpgradeHandler
+	clientManager   *network.ClientManager
 	gameCoordinator *game.Coordinator
-	wsHandler       http.Handler
 }
 
+// New returns a new Server using the provided logger.
 func New(log *logrus.Logger) (*Server, error) {
-	clientQueue, err := network.NewClientQueue(log, clientQueueSize)
+	logEntry := common.ModuleLogEntry(log, "server")
+	wsHandler, err := websocket.NewUpgradeHandler(log)
 	if err != nil {
-		return nil, errors.Wrap(err, "Error creating client pool")
+		return nil, errors.Wrap(err, "Error creating websocket upgrade handler")
+	}
+	clientQueue, err := network.NewClientQueue(clientQueueSize)
+	if err != nil {
+		return nil, errors.Wrap(err, "Error creating client queue")
+	}
+	clientManager, err := network.NewClientManager(log, clientQueue)
+	if err != nil {
+		return nil, errors.Wrap(err, "Error creating client manager")
 	}
 	gameCoordinator, err := game.NewCoordinator(log, clientQueue)
 	if err != nil {
 		return nil, errors.Wrap(err, "Error creating game coordinator")
 	}
-	wsHandler := websocket.NewUpgradeHandler(log, clientQueue)
 	return &Server{
-		gameCoordinator: gameCoordinator,
+		logEntry:        logEntry,
 		wsHandler:       wsHandler,
+		clientManager:   clientManager,
+		gameCoordinator: gameCoordinator,
 	}, nil
-}
-
-// WebsocketHandler returns an http.Handler that should be registered as handler
-// for a route that accepts websocket connections.
-func (a *Server) WebsocketHandler() http.Handler {
-	return a.wsHandler
 }
 
 // Run starts the game server and blocks until an error occurs, or
 // the context is canceled. Run always returns a non-nil error.
-func (a *Server) Run(ctx context.Context) error {
-	return a.gameCoordinator.Run(ctx)
+func (srv *Server) Run(ctx context.Context) error {
+	ctx, cancel := context.WithCancel(ctx)
+	errCh := make(chan error)
+	go func() {
+		err := srv.clientManager.Run(ctx, srv.wsHandler)
+		errCh <- errors.Wrap(err, "clientManager stopped with an error")
+	}()
+	go func() {
+		err := srv.gameCoordinator.Run(ctx)
+		errCh <- errors.Wrap(err, "gameCooridnator stopped with an error")
+	}()
+	err := <-errCh
+	cancel()
+	<-errCh
+	return err
+}
+
+// WebsocketHandler returns an http.Handler that should be registered as handler
+// for a route that accepts websocket connections.
+func (srv *Server) WebsocketHandler() *websocket.UpgradeHandler {
+	return srv.wsHandler
 }
