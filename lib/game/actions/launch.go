@@ -37,12 +37,13 @@ func (a *launchAction) Apply(g *model.Game) ([]events.Event, error) {
 	if fromIsland.ID() == toIsland.ID() {
 		return nil, newIllegalActionError(owningPlayer, "fromIsland == toIsland")
 	}
-
+	// The errors below might happen due to client being behind the server state,
+	// as such we treat them as invalid actions rather than illegal actions.
 	if !fromIsland.IsOwnedBy(owningPlayer) {
 		return nil, newInvalidActionError(owningPlayer, "fromIsland is not owned by sending player")
 	}
 	if fromIsland.Strength() < 2 {
-		return nil, newIllegalActionError(owningPlayer, "from island strength < 2")
+		return nil, newInvalidActionError(owningPlayer, "from island strength < 2")
 	}
 
 	// Launch an airplane with half the army of the island
