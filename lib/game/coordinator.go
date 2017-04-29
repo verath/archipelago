@@ -15,7 +15,7 @@ const (
 	// A timeout for the maximum length of a game before it is force-closed.
 	// Used so that a client leaving a game open will not keep its resources
 	// allocated forever.
-	GameMaxDuration time.Duration = 45 * time.Minute
+	maxGameDuration time.Duration = 45 * time.Minute
 )
 
 // A ClientProvider is an interface for something that can
@@ -49,7 +49,7 @@ func NewCoordinator(log *logrus.Logger, clientProvider ClientProvider) (*Coordin
 	}, nil
 }
 
-// Starts and runs the Coordinator. This method blocks until the context is cancelled or
+// Run starts and runs the Coordinator. This method blocks until the context is cancelled or
 // an error occurs, and always returns a non-nil error.
 func (c *Coordinator) Run(ctx context.Context) error {
 	c.logEntry.Info("Starting")
@@ -112,9 +112,9 @@ func (c *Coordinator) run(ctx context.Context) error {
 	}
 }
 
-// Starts a new game for the two clients. The game is run on a new goroutine.
-// This method blocks until the game has been created, but not until it has
-// finished running.
+// startGame starts a new game for the two clients. The game is run on a new goroutine.
+// This method blocks until the game has been created, but not until it has finished
+// running.
 func (c *Coordinator) startGame(ctx context.Context, p1Client, p2Client network.Client) error {
 	game, err := model.CreateBasicGame()
 	if err != nil {
@@ -125,17 +125,17 @@ func (c *Coordinator) startGame(ctx context.Context, p1Client, p2Client network.
 		return errors.Wrap(err, "Error creating game controller")
 	}
 
-	// We create a new context that has a limited lifetime, so a game
-	// cannot run forever.
-	gameCtx, cancel := context.WithTimeout(ctx, GameMaxDuration)
 	c.gamesWG.Add(1)
 	go func() {
 		defer c.gamesWG.Done()
+		// We create a new context that has a limited lifetime, so a game
+		// cannot run forever.
+		gameCtx, cancel := context.WithTimeout(ctx, maxGameDuration)
+		defer cancel()
 		err := ctrl.Run(gameCtx)
 		if err != nil && errors.Cause(err) != context.Canceled {
 			c.logEntry.Errorf("Game stopped with an error: %+v", err)
 		}
-		cancel()
 		// Disconnect the clients after the game is over
 		p1Client.Disconnect()
 		p2Client.Disconnect()
