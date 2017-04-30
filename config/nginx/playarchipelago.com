@@ -44,6 +44,9 @@ server {
 	access_log /var/log/playarchipelago.com/nginx.access.log;
 	error_log  /var/log/playarchipelago.com/nginx.error.log;
 
+	root /home/deploy/go/src/github.com/verath/archipelago/static/dist;
+	index index.html;
+
 	# Serve "/.well-known/acme-challenge" from a separate directory
 	# this directory is used by let's encrypt to validate ownership
 	location ^~ /.well-known/acme-challenge/ {
@@ -63,9 +66,12 @@ server {
 		proxy_set_header Connection "upgrade";
 	}
 
+	# Never cache the service worker file
+	location = /sw.js {
+		expires off;
+	}
+
 	# All other requests are served from the static folder
-	root /home/deploy/go/src/github.com/verath/archipelago/static/dist;
-	index index.html;
 	location / {
 		try_files $uri $uri/ index.html;
 		expires $expires;

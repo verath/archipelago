@@ -1,3 +1,6 @@
+import "./main.css";
+
+import * as OfflinePluginRuntime from "offline-plugin/runtime";
 import * as PIXI from "pixijs";
 import GameController from "./game/controller/GameController.js";
 import GameModel from "./game/model/GameModel.js";
@@ -6,7 +9,7 @@ import Connection from "./network/Connection.js";
 import ResourceLoader from "./resource/ResourceLoader.js";
 import ProgressText from "./ProgressText.js";
 
-import "./main.css";
+OfflinePluginRuntime.install();
 
 /**
  * The version of the websocket protocol we expect.

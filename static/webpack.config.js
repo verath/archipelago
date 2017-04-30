@@ -2,6 +2,7 @@ const path = require('path');
 const webpack = require('webpack');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const ExtractTextPlugin = require('extract-text-webpack-plugin');
+const OfflinePlugin = require('offline-plugin');
 
 module.exports = {
     entry: {
@@ -47,6 +48,10 @@ module.exports = {
         new ExtractTextPlugin('[name].[contenthash].css'),
         new webpack.optimize.CommonsChunkPlugin({
             names: ['vendor', 'manifest']
+        }),
+        new OfflinePlugin({
+            AppCache: false,
+            responseStrategy: 'network-first'
         })
     ]
 };
