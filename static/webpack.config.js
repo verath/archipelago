@@ -3,6 +3,8 @@ const webpack = require('webpack');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const ExtractTextPlugin = require('extract-text-webpack-plugin');
 const OfflinePlugin = require('offline-plugin');
+const CopyWebpackPlugin = require('copy-webpack-plugin');
+
 
 module.exports = {
     entry: {
@@ -49,6 +51,9 @@ module.exports = {
         new webpack.optimize.CommonsChunkPlugin({
             names: ['vendor', 'manifest']
         }),
+        CopyWebpackPlugin([
+            {from: 'src/static', to: 'static'}
+        ]),
         new OfflinePlugin({
             AppCache: false,
             responseStrategy: 'network-first'
