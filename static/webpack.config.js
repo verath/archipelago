@@ -42,7 +42,7 @@ module.exports = {
     },
     plugins: [
         new HtmlWebpackPlugin({
-            template: 'src/index.html'
+            template: 'src/index.html.ejs'
         }),
         new ExtractTextPlugin('[name].[contenthash].css'),
         new webpack.optimize.CommonsChunkPlugin({
