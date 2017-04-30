@@ -4,7 +4,9 @@
 }
 
 body {
-    background-color: aqua;
+    /** https://material.io/color/#!/?view.left=0&view.right=0&primary.color=18ffff **/
+    background-color: #18ffff;
+    color: #111;
 }
 
 canvas {
