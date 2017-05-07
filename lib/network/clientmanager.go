@@ -11,7 +11,7 @@ import (
 type ClientHandler interface {
 	// HandleClient handles the the provided Client. The method
 	// may block, but must unblock when the context is cancelled.
-	HandleClient(ctx context.Context, client Client) error
+	HandleClient(ctx context.Context, client *Client) error
 }
 
 // ConnectionProvider is an entity that allows registering ConnectionHandlers.
@@ -32,7 +32,7 @@ type ClientManager struct {
 // NewClientManager returns a new ClientManager.
 func NewClientManager(log *logrus.Logger, clientHandler ClientHandler) (*ClientManager, error) {
 	return &ClientManager{
-		logEntry:      common.ModuleLogEntryWithID(log, "network/clientmanager"),
+		logEntry:      common.ModuleLogEntry(log, "network/clientmanager"),
 		clientHandler: clientHandler,
 	}, nil
 }
@@ -74,15 +74,15 @@ func (cm *ClientManager) handleConnection(ctx context.Context, connection Connec
 // createClient returns a new Client from the provided logger and connection.
 // This method is primarily used so tests can override Client creation, it
 // if needed.
-func (cm *ClientManager) createClient(log *logrus.Logger, conn Connection) (Client, error) {
+func (cm *ClientManager) createClient(log *logrus.Logger, conn Connection) (*Client, error) {
 	return NewClient(log, conn)
 }
 
 // runClient starts and runs a client using the context provided.
-func (cm *ClientManager) runClient(ctx context.Context, client Client) {
+func (cm *ClientManager) runClient(ctx context.Context, client *Client) {
 	cm.clientsWG.Add(1)
 	defer cm.clientsWG.Done()
-	err := client.Run(ctx)
+	err := client.run(ctx)
 	if err != nil {
 		cm.logEntry.Debugf("Client stopped with an error: %v", err)
 	}

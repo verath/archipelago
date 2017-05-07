@@ -2,7 +2,6 @@ package network
 
 import (
 	"context"
-	"encoding/json"
 	"github.com/Sirupsen/logrus"
 	"github.com/pkg/errors"
 	"github.com/verath/archipelago/lib/common"
@@ -11,147 +10,143 @@ import (
 )
 
 const (
-	// Max number of messages buffered in the readQueue. If this
-	// number is exceeded, the readPump will start dropping messages.
+	// Max number of messages buffered in the readQueue.
 	clientReadBufferSize = 32
+
+	// Max number of messages buffered in the writeQueue.
+	clientWriteBufferSize = 32
 
 	// Max time the client will wait for the underlying connection
 	// to cleanly shutdown before force closing.
 	clientShutdownWait = 1 * time.Second
 )
 
-// A Client represents a network peer to which it is possible to send
-// and receive messages. The client handles encoding and decoding messages
-// from/to envelopes, and makes sure only a single read and a single write
-// is simultaneously performed on the underlying connection.
-type Client interface {
-	// Run starts and runs the Client. Run blocks until the context is
-	// cancelled, the client is disconnected, or an error occurs. The
-	// Client is guaranteed to be in a disconnected state when Run
-	// returns.
-	Run(ctx context.Context) error
-
-	// Stops the client, disconnecting the underlying connection.
-	// Disconnect blocks until the client is fully stopped. Calling
-	// Disconnect on an already disconnected Client is a no-op.
-	Disconnect()
-
-	// DisconnectCh is a channel closed when the client is disconnected.
-	// A disconnected client will not successfully perform any reads or
-	// writes.
-	DisconnectCh() <-chan struct{}
-
-	// Writes data to the client, provided as an envelope. Blocks until the
-	// message is successfully written to the client, or the context is
-	// cancelled.
-	WriteEnvelope(ctx context.Context, envelope *envelope) error
-
-	// Reads data from the client, returned as an envelope. Read blocks until
-	// the read is successful, or the context is cancelled.
-	ReadEnvelope(ctx context.Context) (ReceivedEnvelope, error)
-}
-
-// clientImpl is an implementation of the Client interface.
-type clientImpl struct {
-	logEntry *logrus.Entry
-	// The underlying connection used for the client.
-	conn Connection
-	// Buffered queue of messages that has been read from the connection.
-	readQueue chan *receivedEnvelopeImpl
-	// Queue of writes to be made on the connection.
-	writeQueue chan *writeRequest
-	// Channel closed when the client should disconnect.
-	disconnectCh chan struct{}
-	// Wait group used to wait for the read and write pump to finish.
-	shutdownWG sync.WaitGroup
-	// Lock around the disconnectCh so that it is only closed once.
-	disconnectOnce sync.Once
-}
+// ErrClientDisconnected is the error returned when trying to read or write
+// a message to a client that has disconnected.
+var ErrClientDisconnected = errors.New("Client has disconnected")
 
 // A struct encapsulating a message to be written and a channel
 // for returning the result of the write operation.
 type writeRequest struct {
-	envelope *envelope
+	// The message to send to the connection.
+	msg []byte
 	// A channel used to return the result of the write. Sending
 	// a message to this channel must not block.
 	resultCh chan<- error
 }
 
+// A Client represents a network peer to which it is possible to send
+// and receive messages, represented as byte arrays. Encoding and decoding
+// messages is left to the caller.
+type Client struct {
+	logEntry *logrus.Entry
+	// The underlying connection used for the client.
+	conn Connection
+	// Buffered queue of messages that has been read from the connection.
+	readQueue chan []byte
+	// Queue of writes to be made on the connection.
+	writeQueue chan *writeRequest
+	// Wait group used to wait for the read and write pump to finish.
+	shutdownWG sync.WaitGroup
+	// Lock around the disconnectCh so that it is only closed once.
+	disconnectOnce sync.Once
+	// Channel closed when the client is disconnected.
+	disconnectCh chan struct{}
+}
+
 // NewClient creates a new Client, communicating on the provided connection.
-func NewClient(log *logrus.Logger, conn Connection) (Client, error) {
-	return &clientImpl{
+func NewClient(log *logrus.Logger, conn Connection) (*Client, error) {
+	return &Client{
 		logEntry:     common.ModuleLogEntryWithID(log, "network/client"),
 		conn:         conn,
-		readQueue:    make(chan *receivedEnvelopeImpl, clientReadBufferSize),
-		writeQueue:   make(chan *writeRequest),
+		readQueue:    make(chan []byte, clientReadBufferSize),
+		writeQueue:   make(chan *writeRequest, clientWriteBufferSize),
 		disconnectCh: make(chan struct{}),
 	}, nil
 }
 
-func (c *clientImpl) Run(ctx context.Context) error {
-	ctx, cancel := context.WithCancel(ctx)
-	defer func() {
-		cancel()
-		c.shutdownWG.Wait()
-	}()
-	go func() {
-		select {
-		case <-ctx.Done():
-			c.disconnect()
-		case <-c.disconnectCh:
-		}
-	}()
-	go c.writePump()
-	return c.readPump()
-}
-
-func (c *clientImpl) Disconnect() {
+// Stops the client, disconnecting the underlying connection.
+// Disconnect blocks until the client is fully stopped. Calling
+// Disconnect on an already disconnected Client is a no-op.
+func (c *Client) Disconnect() {
 	c.disconnect()
-	c.shutdownWG.Wait()
-	c.logEntry.Debug("Stopped")
 }
 
-func (c *clientImpl) DisconnectCh() <-chan struct{} {
+// DisconnectCh is a channel closed when the client is disconnected.
+// A disconnected client will not successfully perform any reads or
+// writes.
+func (c *Client) DisconnectCh() <-chan struct{} {
 	return c.disconnectCh
 }
 
-func (c *clientImpl) WriteEnvelope(ctx context.Context, envelope *envelope) error {
-	resultCh := make(chan error)
-	req := &writeRequest{envelope, resultCh}
+// WriteMessage writes a message to the client. This method blocks until
+// the message has successfully been sent, an error occurs, or the context
+// is cancelled.
+func (c *Client) WriteMessage(ctx context.Context, msg []byte) error {
+	resultCh := make(chan error, 1)
+	// Enqueue write request
+	req := &writeRequest{msg: msg, resultCh: resultCh}
 	select {
 	case c.writeQueue <- req:
-		// TODO(2017-01-08): select on ctx.Done() here too? If we do,
-		// make resultCh buffered.
-		return <-resultCh
 	case <-c.disconnectCh:
-		return errors.New("Client has disconnected")
+		return ErrClientDisconnected
+	case <-ctx.Done():
+		return ctx.Err()
+	}
+	// Await result of write request
+	select {
+	case err := <-resultCh:
+		return err
+	case <-c.disconnectCh:
+		return ErrClientDisconnected
 	case <-ctx.Done():
 		return ctx.Err()
 	}
 }
 
-func (c *clientImpl) ReadEnvelope(ctx context.Context) (ReceivedEnvelope, error) {
+// ReadMessage reads a message from the client. This method blocks until
+// a message can be read, an error occurs, or the context is cancelled.
+func (c *Client) ReadMessage(ctx context.Context) ([]byte, error) {
 	select {
-	case env, ok := <-c.readQueue:
-		if !ok {
-			return nil, errors.New("Client has disconnected")
-		}
-		return env, nil
+	case msg := <-c.readQueue:
+		return msg, nil
+	case <-c.disconnectCh:
+		return nil, ErrClientDisconnected
 	case <-ctx.Done():
 		return nil, ctx.Err()
 	}
 }
 
+// run starts and runs the Client, in turn starting the read and write
+// pumps of the client. Run blocks until the context is cancelled, the
+// client is disconnected, or an error occurs. The Client is guaranteed
+// to be in a disconnected state when run returns.
+func (c *Client) run(ctx context.Context) error {
+	ctx, cancel := context.WithCancel(ctx)
+	errCh := make(chan error)
+	go func() {
+		err := c.writePump(ctx)
+		errCh <- errors.Wrap(err, "writePump quit with an error")
+	}()
+	go func() {
+		err := c.readPump(ctx)
+		errCh <- errors.Wrap(err, "readPump quit with an error")
+	}()
+	err := <-errCh
+	cancel()
+	c.disconnect()
+	<-errCh
+	return err
+}
+
 // Disconnects the client by closing the disconnectCh, as well as the
 // underlying connection. Does not block until the read and write
 // pumps have finished.
-func (c *clientImpl) disconnect() {
+func (c *Client) disconnect() {
 	c.disconnectOnce.Do(func() {
 		close(c.disconnectCh)
 		// By closing the underlying connection here, we force the
-		// read and write pumps to get unblocked. We first attempt a
-		// clean shutdown, if it doesn't succeed within the shutdown
-		// wait timeout, we force-close the connection instead.
+		// read and write pumps to get unblocked.
 		ctx, cancel := context.WithTimeout(context.Background(), clientShutdownWait)
 		defer cancel()
 		if err := c.conn.Shutdown(ctx); err != nil {
@@ -162,77 +157,35 @@ func (c *clientImpl) disconnect() {
 	})
 }
 
-// Encodes and writes an envelope to the connection
-func (c *clientImpl) writeEnvelope(env *envelope) error {
-	msg, err := json.Marshal(env)
-	if err != nil {
-		return errors.Wrap(err, "Failed encoding envelope")
-	}
-	return c.conn.WriteMessage(msg)
-}
-
-// The write pump takes write requests from the write queue and
-// writes them to the connection.
-func (c *clientImpl) writePump() {
-	c.shutdownWG.Add(1)
-	defer c.shutdownWG.Done()
-	// If we ever get an error when writing, then all following
-	// writes will fail. Instead of attempting to write, we store
-	// and return that same error to each write request.
-	var writeErr error
+// writePump continuously takes "write-requests" from the write queue and
+// writes them to the connection. writePump blocks until the context is
+// cancelled. It does not quit on write errors.
+func (c *Client) writePump(ctx context.Context) error {
 	for {
 		select {
 		case req := <-c.writeQueue:
-			if writeErr == nil {
-				writeErr = c.writeEnvelope(req.envelope)
-			}
-			req.resultCh <- writeErr
-		case <-c.disconnectCh:
-			return
+			req.resultCh <- c.conn.WriteMessage(req.msg)
+		case <-ctx.Done():
+			return ctx.Err()
 		}
 	}
 }
 
-// Reads a message from the connection and decodes it as an envelope.
-func (c *clientImpl) readEnvelope() (*receivedEnvelopeImpl, error) {
-	msg, err := c.conn.ReadMessage()
-	if err != nil {
-		return nil, errors.Wrap(err, "Error reading message from conn")
-	}
-	recvEnv := &receivedEnvelopeImpl{}
-	if err := json.Unmarshal(msg, recvEnv); err != nil {
-		return nil, errors.Wrap(err, "Failed umarshaling to envelope")
-	}
-	return recvEnv, nil
-}
-
-// The read pump reads messages from the connection and posts them on the
-// read queue. If a read fails, the read pump will disconnect the client.
-// If the read queue is full, new messages will be dropped.
-func (c *clientImpl) readPump() error {
-	c.shutdownWG.Add(1)
-	defer func() {
-		c.disconnect()
-		close(c.readQueue)
-		c.shutdownWG.Done()
-	}()
+// readPump continuously reads messages from the connection and posts them
+// on the readQueue. readPump blocks until a read fails, the readQueue is full
+// or the context is cancelled.
+func (c *Client) readPump(ctx context.Context) error {
 	for {
+		msg, err := c.conn.ReadMessage()
+		if err != nil {
+			return errors.Wrap(err, "Error reading from connection")
+		}
 		select {
+		case c.readQueue <- msg:
+		case <-ctx.Done():
+			return ctx.Err()
 		default:
-			env, err := c.readEnvelope()
-			if err != nil {
-				return errors.Wrap(err, "Error reading from connection")
-			}
-			// Try to add the envelope to the readQueue. If the queue is full we
-			// have to drop the message so we can continue reading, otherwise we
-			// cannot detect connection errors.
-			select {
-			case c.readQueue <- env:
-			default:
-				c.logEntry.Warn("readQueue full, dropping message")
-			}
-		case <-c.disconnectCh:
-			return nil
+			return errors.New("readQueue was full")
 		}
 	}
 }

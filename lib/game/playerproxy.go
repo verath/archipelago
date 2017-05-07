@@ -2,6 +2,7 @@ package game
 
 import (
 	"context"
+	"encoding/json"
 	"github.com/pkg/errors"
 	"github.com/verath/archipelago/lib/game/actions"
 	"github.com/verath/archipelago/lib/game/events"
@@ -15,10 +16,10 @@ import (
 // actions.
 type playerProxy struct {
 	playerID model.PlayerID
-	client   network.Client
+	client   *network.Client
 }
 
-func newPlayerProxy(player *model.Player, playerClient network.Client) (*playerProxy, error) {
+func newPlayerProxy(player *model.Player, playerClient *network.Client) (*playerProxy, error) {
 	if player == nil {
 		return nil, errors.New("player cannot be nil")
 	}
@@ -33,19 +34,21 @@ func newPlayerProxy(player *model.Player, playerClient network.Client) (*playerP
 // until the event has been sent. If  the context is expired, then the
 // context's error is returned.
 func (pp *playerProxy) NextAction(ctx context.Context) (actions.Action, error) {
-	env, err := pp.client.ReadEnvelope(ctx)
+	msg, err := pp.client.ReadMessage(ctx)
 	if err != nil {
-		return nil, errors.Wrap(err, "Could not read envelope from client")
+		return nil, errors.Wrap(err, "Could not read message from client")
+	}
+	env := &receivedEnvelopeImpl{}
+	if err := json.Unmarshal(msg, env); err != nil {
+		return nil, errors.Wrap(err, "Failed umarshaling to envelope")
 	}
 	playerAction, err := actions.PlayerActionByType(env.Type())
 	if err != nil {
 		return nil, errors.Wrap(err, "Could not map envelope to action")
 	}
-
 	if err := env.UnmarshalData(playerAction); err != nil {
 		return nil, errors.Wrap(err, "Could not unmarshal envelope data")
 	}
-
 	return playerAction.ToAction(pp.playerID), nil
 }
 
@@ -54,12 +57,16 @@ func (pp *playerProxy) NextAction(ctx context.Context) (actions.Action, error) {
 // the context is expired, then the context's error is returned.
 func (pp *playerProxy) SendEvent(ctx context.Context, evt events.Event) error {
 	playerEvent := evt.ToPlayerEvent(pp.playerID)
-	env, err := network.NewEnvelope(playerEvent.Type(), playerEvent.Data())
+	env, err := NewEnvelope(playerEvent.Type(), playerEvent.Data())
 	if err != nil {
 		return errors.Wrapf(err,
 			"Error creating envelope for playerEvent: %v", playerEvent)
 	}
-	if err := pp.client.WriteEnvelope(ctx, env); err != nil {
+	msg, err := json.Marshal(env)
+	if err != nil {
+		return errors.Wrap(err, "Failed encoding envelope")
+	}
+	if err := pp.client.WriteMessage(ctx, msg); err != nil {
 		return errors.Wrap(err, "Error writing envelope to client")
 	}
 	return nil

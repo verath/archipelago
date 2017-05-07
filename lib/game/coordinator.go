@@ -24,7 +24,7 @@ type ClientProvider interface {
 	// NextClient returns a client to the caller, if one can be
 	// provided before the context has expired. Otherwise, the
 	// context's error is returned.
-	NextClient(ctx context.Context) (network.Client, error)
+	NextClient(ctx context.Context) (*network.Client, error)
 }
 
 // The game coordinator is responsible for connecting players to
@@ -63,7 +63,7 @@ func (c *Coordinator) Run(ctx context.Context) error {
 // Waits for two player connections to be made. If successful, the methods
 // returns two started clients. These clients *must* be stopped. If the
 // method returns an error the clients can be assumed to be stopped.
-func (c *Coordinator) awaitClients(ctx context.Context) (network.Client, network.Client, error) {
+func (c *Coordinator) awaitClients(ctx context.Context) (*network.Client, *network.Client, error) {
 	p1Client, err := c.clientProvider.NextClient(ctx)
 	if err != nil {
 		return nil, nil, errors.Wrap(err, "Error when getting a Client")
@@ -111,7 +111,7 @@ func (c *Coordinator) run(ctx context.Context) error {
 // startGame starts a new game for the two clients. The game is run on a new goroutine.
 // This method blocks until the game has been created, but not until it has finished
 // running.
-func (c *Coordinator) startGame(ctx context.Context, p1Client, p2Client network.Client) error {
+func (c *Coordinator) startGame(ctx context.Context, p1Client, p2Client *network.Client) error {
 	game, err := model.CreateBasicGame()
 	if err != nil {
 		return errors.Wrap(err, "Error creating game")

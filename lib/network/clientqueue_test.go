@@ -9,7 +9,7 @@ import (
 func TestClientQueue_HandleClient(t *testing.T) {
 	cq, _ := NewClientQueue(1)
 	ctx := context.Background()
-	client := &MockClient{}
+	client := &Client{}
 	if err := cq.HandleClient(ctx, client); err != nil {
 		t.Errorf("Expected no error when adding client, got %+v", err)
 	}
@@ -23,7 +23,7 @@ func TestClientQueue_HandleClient(t *testing.T) {
 func TestClientQueue_NextClient(t *testing.T) {
 	cq, _ := NewClientQueue(1)
 	ctx := context.Background()
-	client := &MockClient{}
+	client := &Client{}
 	cq.HandleClient(ctx, client)
 
 	queueClient, err := cq.NextClient(ctx)

@@ -6,7 +6,7 @@ import (
 
 // ClientQueue is a simple wrapper around a channel of Clients.
 type ClientQueue struct {
-	queue chan Client
+	queue chan *Client
 }
 
 // Creates a new client queue. The queueSize is the maximum number of
@@ -15,13 +15,13 @@ type ClientQueue struct {
 // the queue.
 func NewClientQueue(queueSize int) (*ClientQueue, error) {
 	return &ClientQueue{
-		queue: make(chan Client, queueSize),
+		queue: make(chan *Client, queueSize),
 	}, nil
 }
 
 // NextClient returns the first client in the queue. Blocks until a client can
 // be provided, or the context is cancelled.
-func (cq *ClientQueue) NextClient(ctx context.Context) (Client, error) {
+func (cq *ClientQueue) NextClient(ctx context.Context) (*Client, error) {
 	select {
 	case client := <-cq.queue:
 		return client, nil
@@ -32,7 +32,7 @@ func (cq *ClientQueue) NextClient(ctx context.Context) (Client, error) {
 
 // HandleClient adds a client to the end of the queue. Blocks until the client
 // can be added, or the context is cancelled.
-func (cq *ClientQueue) HandleClient(ctx context.Context, client Client) error {
+func (cq *ClientQueue) HandleClient(ctx context.Context, client *Client) error {
 	select {
 	case cq.queue <- client:
 		return nil
