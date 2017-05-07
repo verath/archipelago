@@ -26,7 +26,7 @@ func main() {
 	)
 	flag.BoolVar(&debug, "debug", false, "Set to true to log debug messages.")
 	flag.BoolVar(&serveStatic, "servestatic", false, "Enable serving of static assets.")
-	flag.StringVar(&staticPath, "staticpath", "./static/dist", "Specifies the path to static assets "+
+	flag.StringVar(&staticPath, "staticpath", "./web/dist", "Specifies the path to static assets "+
 		"directory. Only applicable if servestatic is true.")
 	flag.StringVar(&serverAddr, "addr", ":8080", "TCP address for the http server to listen on.")
 	flag.Parse()

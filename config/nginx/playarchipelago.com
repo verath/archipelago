@@ -1,7 +1,7 @@
 # NGINX configuration for playarchipelago.com.
 # 
 # Listens for requests made to https://playarchipelago.com, serving
-# static files from  the archipelago/static dir and forwards requests
+# static files from  the archipelago/web dir and forwards requests
 # to /ws to the archipelago server.
 # 
 
@@ -44,7 +44,7 @@ server {
 	access_log /var/log/playarchipelago.com/nginx.access.log;
 	error_log  /var/log/playarchipelago.com/nginx.error.log;
 
-	root /home/deploy/go/src/github.com/verath/archipelago/static/dist;
+	root /home/deploy/go/src/github.com/verath/archipelago/web/dist;
 	index index.html;
 
 	# Serve "/.well-known/acme-challenge" from a separate directory
@@ -71,7 +71,7 @@ server {
 		expires off;
 	}
 
-	# All other requests are served from the static folder
+	# All other requests are served from the web folder
 	location / {
 		try_files $uri $uri/ index.html;
 		expires $expires;

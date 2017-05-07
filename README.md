@@ -38,7 +38,7 @@ Communication between the backend and frontend is done over JSON-encoded WebSock
 
 ### Frontend
 
-The frontend project is found in the [static](./static) directory. It is based on [Pixi.js](https://github.com/pixijs/pixi.js) 
+The frontend project is found in the [web](./web) directory. It is based on [Pixi.js](https://github.com/pixijs/pixi.js) 
 for WebGL/canvas rendering. The frontend is written in ES6, and is transpiled to ES5 via Babel. 
 NPM is used to manage dependencies, and [Webpack2](https://webpack.js.org/) 
 is used to bundle the frontend application (including js, css and images).
@@ -69,7 +69,7 @@ side dependencies are not included in the repo and have to be fetched via npm an
 to an `app.build.js` file:
 
 ```
-$ cd $GOPATH/src/github.com/verath/archipelago/static
+$ cd $GOPATH/src/github.com/verath/archipelago/web
 $ npm install
 $ npm run build:prod
 ```
