@@ -55,8 +55,7 @@ module.exports = {
             {from: 'src/static', to: 'static'}
         ]),
         new OfflinePlugin({
-            AppCache: false,
-            responseStrategy: 'network-first'
+            AppCache: false
         })
     ]
 };
