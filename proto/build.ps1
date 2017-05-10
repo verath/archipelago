@@ -57,12 +57,15 @@ Get-ChildItem -File -Recurse lib\*.pb.go | foreach {
 }
 Write-Host ""
 
-# HACK: Due to the import_prefix setting of the go_out every package is prefixed
-# with $go_import_prefix. We only want this for imports to our lib, as such we
-# strip this prefix from all other imports.
-# Fix when protobuf: https://github.com/golang/protobuf/pull/64#issuecomment-288121664
+# Fix import path and format the generated .go files.
 Get-ChildItem -File -Recurse lib\*.pb.go | foreach {
+    # HACK: Due to the import_prefix setting of the go_out every package is prefixed
+    # with $go_import_prefix. We only want this for imports to our lib, as such we
+    # strip this prefix from all other imports.
+    # Fix when protobuf: https://github.com/golang/protobuf/pull/64#issuecomment-288121664
     (Get-Content $_) -replace "$go_import_prefix(github\.com|golang\.org|google\.golang\.org)", '$1' | Set-Content $_
+
+    gofmt -s -w $_
 }
 
 Write-Host "Generating .js bundle"
