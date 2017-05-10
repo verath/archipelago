@@ -1,0 +1,23 @@
+syntax = "proto3";
+package archipelago.proto.wire;
+option go_package = "lib/wire";
+
+import "proto/wire/game/game.proto";
+
+message EventEnvelope {
+    oneof event {
+        EventGameStart eventGameStart = 1;
+        EventGameOver eventGameOver = 2;
+    }
+}
+
+message EventGameStart {
+    game.Player player = 1;
+}
+
+message EventGameOver {
+    game.Player winner = 1;
+}
+
+message EventGameTick {
+}
