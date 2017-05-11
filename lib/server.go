@@ -8,12 +8,7 @@ import (
 	"github.com/verath/archipelago/lib/game"
 	"github.com/verath/archipelago/lib/network"
 	"github.com/verath/archipelago/lib/network/websocket"
-)
-
-const (
-	// The max number of clients in the client queue
-	// TODO(2017-01-13): What is an appropriate number here?
-	clientQueueSize = 2
+	"sync"
 )
 
 // Server is the main entry point to the game server. It connects the different
@@ -21,8 +16,9 @@ const (
 type Server struct {
 	logEntry        *logrus.Entry
 	wsHandler       *websocket.UpgradeHandler
-	clientManager   *network.ClientManager
 	gameCoordinator *game.Coordinator
+	// A wait group for all clients started by the Server.
+	clientsWG sync.WaitGroup
 }
 
 // New returns a new Server using the provided logger.
@@ -32,22 +28,13 @@ func New(log *logrus.Logger) (*Server, error) {
 	if err != nil {
 		return nil, errors.Wrap(err, "Error creating websocket upgrade handler")
 	}
-	clientQueue, err := network.NewClientQueue(clientQueueSize)
-	if err != nil {
-		return nil, errors.Wrap(err, "Error creating client queue")
-	}
-	clientManager, err := network.NewClientManager(log, clientQueue)
-	if err != nil {
-		return nil, errors.Wrap(err, "Error creating client manager")
-	}
-	gameCoordinator, err := game.NewCoordinator(log, clientQueue)
+	gameCoordinator, err := game.NewCoordinator(log)
 	if err != nil {
 		return nil, errors.Wrap(err, "Error creating game coordinator")
 	}
 	return &Server{
 		logEntry:        logEntry,
 		wsHandler:       wsHandler,
-		clientManager:   clientManager,
 		gameCoordinator: gameCoordinator,
 	}, nil
 }
@@ -55,19 +42,15 @@ func New(log *logrus.Logger) (*Server, error) {
 // Run starts the game server and blocks until an error occurs, or
 // the context is canceled. Run always returns a non-nil error.
 func (srv *Server) Run(ctx context.Context) error {
+	srv.logEntry.Info("Starting")
+	defer srv.logEntry.Info("Stopped")
 	ctx, cancel := context.WithCancel(ctx)
-	errCh := make(chan error)
-	go func() {
-		err := srv.clientManager.Run(ctx, srv.wsHandler)
-		errCh <- errors.Wrap(err, "clientManager stopped with an error")
-	}()
-	go func() {
-		err := srv.gameCoordinator.Run(ctx)
-		errCh <- errors.Wrap(err, "gameCooridnator stopped with an error")
-	}()
-	err := <-errCh
+	srv.wsHandler.SetConnectionHandler(srv.wsConnectionHandler(ctx))
+	err := srv.gameCoordinator.Run(ctx)
+	srv.wsHandler.SetConnectionHandler(nil)
 	cancel()
-	<-errCh
+	srv.logEntry.Debug("Waiting for clients to stop...")
+	srv.clientsWG.Wait()
 	return err
 }
 
@@ -75,4 +58,34 @@ func (srv *Server) Run(ctx context.Context) error {
 // for a route that accepts websocket connections.
 func (srv *Server) WebsocketHandler() *websocket.UpgradeHandler {
 	return srv.wsHandler
+}
+
+// wsConnectionHandler creates a WSConnectionHandler that wraps the given context,
+// calling handleWSConnection for each new connection.
+func (srv *Server) wsConnectionHandler(ctx context.Context) websocket.WSConnectionHandler {
+	return websocket.WSConnectionHandlerFunc(func(conn *websocket.WSConnection) error {
+		return srv.handleWSConnection(ctx, conn)
+	})
+}
+
+// handleWSConnection handles new websocket connections. The connection is
+// wrapped in a Client, started, and added to the gameCoordinator.
+func (srv *Server) handleWSConnection(ctx context.Context, conn *websocket.WSConnection) error {
+	client, err := network.NewClient(srv.logEntry.Logger, conn)
+	if err != nil {
+		return errors.Wrap(err, "Error creating new Client from ws connection")
+	}
+	srv.clientsWG.Add(1)
+	go srv.runClient(ctx, client)
+	err = srv.gameCoordinator.AddClient(ctx, client)
+	return errors.Wrap(err, "Error in game coordinator when handling client")
+}
+
+// runClient runs a client within the given context.
+func (srv *Server) runClient(ctx context.Context, client *network.Client) {
+	defer srv.clientsWG.Done()
+	err := client.Run(ctx)
+	if err != nil && errors.Cause(err) != context.Canceled {
+		srv.logEntry.Debugf("Client stopped with an error: %+v", err)
+	}
 }

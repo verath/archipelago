@@ -117,11 +117,13 @@ func (c *Client) ReadMessage(ctx context.Context) ([]byte, error) {
 	}
 }
 
-// run starts and runs the Client, in turn starting the read and write
+// Run starts and runs the Client, in turn starting the read and write
 // pumps of the client. Run blocks until the context is cancelled, the
 // client is disconnected, or an error occurs. The Client is guaranteed
-// to be in a disconnected state when run returns.
-func (c *Client) run(ctx context.Context) error {
+// to be in a disconnected state when Run returns.
+func (c *Client) Run(ctx context.Context) error {
+	c.logEntry.Debug("Starting")
+	defer c.logEntry.Debug("Stopped")
 	ctx, cancel := context.WithCancel(ctx)
 	errCh := make(chan error)
 	go func() {

@@ -22,9 +22,9 @@ const (
 	connMaxMessageSize = 2048
 )
 
-// wsConnection is an adapter for a websocket Conn implementing the
+// WSConnection is an adapter for a websocket Conn implementing the
 // network.connection interface.
-type wsConnection struct {
+type WSConnection struct {
 	// The websocket connection used
 	wsConn *websocket.Conn
 	// A mutex that must be held to write to the wsConn. This mutex
@@ -35,12 +35,12 @@ type wsConnection struct {
 	readError error
 }
 
-// Creates a new wsConnection, wrapping the provided wsConn.
-func newWSConnection(wsConn *websocket.Conn) (*wsConnection, error) {
+// Creates a new WSConnection, wrapping the provided wsConn.
+func newWSConnection(wsConn *websocket.Conn) (*WSConnection, error) {
 	if wsConn == nil {
 		return nil, errors.New("wsConn cannot be nil")
 	}
-	return &wsConnection{
+	return &WSConnection{
 		wsConn: wsConn,
 	}, nil
 }
@@ -49,7 +49,7 @@ func newWSConnection(wsConn *websocket.Conn) (*wsConnection, error) {
 // a message has been read. Only a single goroutine may call
 // ReadMessage at a time. If ReadMessage ever returns an error, the
 // same error will be returned on each following call.
-func (c *wsConnection) ReadMessage() (msg []byte, err error) {
+func (c *WSConnection) ReadMessage() (msg []byte, err error) {
 	if c.readError != nil {
 		return nil, c.readError
 	}
@@ -68,7 +68,7 @@ func (c *wsConnection) ReadMessage() (msg []byte, err error) {
 // Writes a text message to the websocket connection. Blocks until the
 // message is sent. Only a single goroutine may call WriteMessage at
 // the same time.
-func (c *wsConnection) WriteMessage(message []byte) (err error) {
+func (c *WSConnection) WriteMessage(message []byte) (err error) {
 	c.writeMu.Lock()
 	defer c.writeMu.Unlock()
 	return c.writeMessage(websocket.TextMessage, message)
@@ -77,7 +77,7 @@ func (c *wsConnection) WriteMessage(message []byte) (err error) {
 // Attempts to cleanly shutdown the connection, sending a websocket
 // close frame to the client and then closing the connection. If the
 // provided context expires, then the context's error is returned.
-func (c *wsConnection) Shutdown(ctx context.Context) error {
+func (c *WSConnection) Shutdown(ctx context.Context) error {
 	errCh := make(chan error, 1)
 	go func() { errCh <- c.shutdown() }()
 	select {
@@ -90,14 +90,14 @@ func (c *wsConnection) Shutdown(ctx context.Context) error {
 
 // Closes the connection, without sending a close message. Closing the
 // connection will make all current and future readers and writers fail.
-func (c *wsConnection) Close() error {
+func (c *WSConnection) Close() error {
 	return c.wsConn.Close()
 }
 
 // pingLoop writes a ping message to the websocket connection
 // every connPingPeriod. The pingLoop is stopped if the stop
 // channel is closed, or if writing a ping message fails.
-func (c *wsConnection) pingLoop(stop <-chan struct{}) error {
+func (c *WSConnection) pingLoop(stop <-chan struct{}) error {
 	ticker := time.NewTicker(connPingPeriod)
 	defer ticker.Stop()
 	for {
@@ -115,7 +115,7 @@ func (c *wsConnection) pingLoop(stop <-chan struct{}) error {
 // readMessage reads a message from the underlying websocket connection.
 // If readMessage returns an error, it must not be called again. The
 // method blocks until a message is read.
-func (c *wsConnection) readMessage() (messageType int, msg []byte, err error) {
+func (c *WSConnection) readMessage() (messageType int, msg []byte, err error) {
 	// Start a separate goroutine for sending PINGs while we are
 	// waiting for a message to be read. pingLoop quitting will,
 	// due to the deadline, make the ReadMessage call fail.
@@ -138,14 +138,14 @@ func (c *wsConnection) readMessage() (messageType int, msg []byte, err error) {
 // writeMessage writes a message to the underlying websocket connection.
 // The method must be called holding writeMu. The method blocks until the
 // message is written, or for at most connWriteTimeout.
-func (c *wsConnection) writeMessage(messageType int, msg []byte) error {
+func (c *WSConnection) writeMessage(messageType int, msg []byte) error {
 	c.wsConn.SetWriteDeadline(time.Now().Add(connWriteTimeout))
 	return c.wsConn.WriteMessage(messageType, msg)
 }
 
 // writePing writes a websocket PING message to the peer, which the peer
 // should reply to with a PONG message.
-func (c *wsConnection) writePing() error {
+func (c *WSConnection) writePing() error {
 	c.writeMu.Lock()
 	defer c.writeMu.Unlock()
 	return c.writeMessage(websocket.PingMessage, []byte{})
@@ -153,7 +153,7 @@ func (c *wsConnection) writePing() error {
 
 // Writes a websocket close message to the client and, if successful,
 // closes the connection.
-func (c *wsConnection) shutdown() error {
+func (c *WSConnection) shutdown() error {
 	c.writeMu.Lock()
 	defer c.writeMu.Unlock()
 	err := c.writeMessage(websocket.CloseMessage, []byte{})

@@ -7,33 +7,33 @@ import (
 	"github.com/verath/archipelago/lib/game/actions"
 	"github.com/verath/archipelago/lib/game/events"
 	"github.com/verath/archipelago/lib/game/model"
-	"github.com/verath/archipelago/lib/network"
 )
 
-// The playerProxy represents a player connection as a single player part
+// A playerProxy represents a player connection as a single player part
 // of the game model. This is done by translating actions produced by the
 // player connection, adding the playerId this proxy represents to each
 // actions.
 type playerProxy struct {
 	playerID model.PlayerID
-	client   *network.Client
+	client   client
 }
 
-func newPlayerProxy(player *model.Player, playerClient *network.Client) (*playerProxy, error) {
+// newPlayerProxy creates a new player proxy representing the provided player
+// model, writing/reading on the provided client.
+func newPlayerProxy(player *model.Player, client client) (*playerProxy, error) {
 	if player == nil {
 		return nil, errors.New("player cannot be nil")
 	}
 	return &playerProxy{
 		playerID: player.ID(),
-		client:   playerClient,
+		client:   client,
 	}, nil
 }
 
-// Reads and decodes player actions from the network layer. Each player
+// ReadAction reads and decodes player actions from the network layer. Each player
 // action is then transformed to an action for the proxy's player id. Blocks
-// until the event has been sent. If  the context is expired, then the
-// context's error is returned.
-func (pp *playerProxy) NextAction(ctx context.Context) (actions.Action, error) {
+// until the event has been sent or the context is cancelled.
+func (pp *playerProxy) ReadAction(ctx context.Context) (actions.Action, error) {
 	msg, err := pp.client.ReadMessage(ctx)
 	if err != nil {
 		return nil, errors.Wrap(err, "Could not read message from client")
@@ -52,15 +52,14 @@ func (pp *playerProxy) NextAction(ctx context.Context) (actions.Action, error) {
 	return playerAction.ToAction(pp.playerID), nil
 }
 
-// Takes an event, transforms it into a player event for the proxy's player id, then
-// forwards the event to the network layer. Blocks until the event has been sent. If
-// the context is expired, then the context's error is returned.
-func (pp *playerProxy) SendEvent(ctx context.Context, evt events.Event) error {
+// WriteEvent takes an event, transforms it into a player event for the proxy's player
+// id, then forwards the event to the network layer. Blocks until the event has been
+// sent or the context is cancelled.
+func (pp *playerProxy) WriteEvent(ctx context.Context, evt events.Event) error {
 	playerEvent := evt.ToPlayerEvent(pp.playerID)
 	env, err := NewEnvelope(playerEvent.Type(), playerEvent.Data())
 	if err != nil {
-		return errors.Wrapf(err,
-			"Error creating envelope for playerEvent: %v", playerEvent)
+		return errors.Wrapf(err, "Error creating envelope for playerEvent: %v", playerEvent)
 	}
 	msg, err := json.Marshal(env)
 	if err != nil {
