@@ -140,10 +140,7 @@ func (gl *gameLoop) tick(ctx context.Context, delta time.Duration) error {
 	acts := gl.getActions()
 
 	// Add a tick actions as the last action to our local actions slice.
-	tickAction, err := model.NewTickAction(delta)
-	if err != nil {
-		return errors.Wrap(err, "Error creating tick action")
-	}
+	tickAction := &model.ActionTick{Delta: delta}
 	acts = append(acts, tickAction)
 
 	for _, act := range acts {

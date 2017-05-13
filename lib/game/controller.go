@@ -146,7 +146,8 @@ func (ctrl *controller) actionLoop(ctx context.Context) error {
 		case act := <-actionCh:
 			ctrl.gameLoop.AddAction(act)
 		case err := <-errCh:
-			leaveAct := model.NewLeaveAction(err.proxy.playerID)
+			leavePlayerAct := &model.PlayerActionLeave{}
+			leaveAct := leavePlayerAct.ToAction(err.proxy.playerID)
 			ctrl.gameLoop.AddAction(leaveAct)
 			cancel()
 			<-errCh
