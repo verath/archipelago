@@ -33,11 +33,9 @@ func TestGameLoop_Start_Stop(t *testing.T) {
 	// Note this test requires the timeout flag to be set
 }
 
-func TestGameLoop_ApplyAction(t *testing.T) {
+func TestGameLoop_AddAction(t *testing.T) {
 	game := &model.Game{}
 	ctx := context.Background()
-	cancelledCtx, cancel := context.WithCancel(ctx)
-	cancel()
 	gl, _ := newGameLoop(log, game)
 
 	t.Log("Adding actions to game loop...")
@@ -48,7 +46,7 @@ func TestGameLoop_ApplyAction(t *testing.T) {
 	})
 
 	t.Log("Tick 1: actions added")
-	gl.ApplyAction(cancelledCtx, a1)
+	gl.AddAction(a1)
 	gl.tick(ctx, 1*time.Millisecond)
 	if !a1Applied {
 		t.Error("Action was not applied")
@@ -63,7 +61,7 @@ func TestGameLoop_ApplyAction(t *testing.T) {
 
 	t.Log("Tick 3: actions added")
 	a1Applied = false
-	gl.ApplyAction(cancelledCtx, a1)
+	gl.AddAction(a1)
 	gl.tick(ctx, 1*time.Millisecond)
 	if !a1Applied {
 		t.Error("Action was not applied")
@@ -78,13 +76,11 @@ func TestGameLoop_AddAction_RealTick(t *testing.T) {
 	game := &model.Game{}
 	gl, _ := newGameLoop(log, game)
 	gl.tickInterval = time.Millisecond
-	cancelledCtx, cancel := context.WithCancel(context.Background())
-	cancel()
 	ctx, cancel := context.WithCancel(context.Background())
 	timesApplied := 0
 
-	gl.ApplyAction(cancelledCtx, actionFunc(func(_ *model.Game) ([]model.Event, error) {
-		timesApplied++
+	gl.AddAction(actionFunc(func(_ *model.Game) ([]model.Event, error) {
+		timesApplied += 1
 		return nil, nil
 	}))
 
