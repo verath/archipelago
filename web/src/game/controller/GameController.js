@@ -114,7 +114,7 @@ export default class GameController {
      * @private
      */
     _onGameOverEvent(data) {
-        this._onGameOver(data.is_winner);
+        this._onGameOver(data.winner_id === this._gameModel.playerId);
     }
 
     /**
@@ -142,7 +142,7 @@ export default class GameController {
     }
 
     /**
-     * @param {bool} isWinner
+     * @param {boolean} isWinner
      * @private
      */
     _onGameOver(isWinner) {
