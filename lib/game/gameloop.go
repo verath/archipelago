@@ -209,7 +209,7 @@ func (gl *gameLoop) handleActionError(ctx context.Context, err error) error {
 		if err.Player() != nil {
 			winner = gl.game.Opponent(err.Player().ID())
 		}
-		gl.handleEvent(ctx, model.NewGameOverEvent(winner))
+		gl.handleEvent(ctx, model.NewEventGameOver(winner))
 	default:
 		gl.logEntry.WithError(err).Debug("handle generic error")
 	}
