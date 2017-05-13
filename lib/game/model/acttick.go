@@ -6,39 +6,33 @@ import (
 	"time"
 )
 
-type tickAction struct {
-	delta time.Duration
+// ActionTick is an action that performs a tick (i.e. update)
+// on the game instance.
+type ActionTick struct {
+	// Delta is the size of the time step that should be applied
+	// to the game. Delta must be >= 0.
+	Delta time.Duration
 }
 
-func NewTickAction(delta time.Duration) (*tickAction, error) {
-	ta := &tickAction{
-		delta: delta,
-	}
-	return ta, nil
-}
-
-func (ta *tickAction) Apply(game *Game) ([]Event, error) {
-	if ta.delta < 0 {
+// Apply applies the ActionTick to the game instance.
+func (ta *ActionTick) Apply(game *Game) ([]Event, error) {
+	if ta.Delta < 0 {
 		return nil, errors.New("Delta must be positive")
 	}
-	if err := ta.updateAirplanes(game, ta.delta); err != nil {
+	if err := ta.updateAirplanes(game, ta.Delta); err != nil {
 		return nil, errors.Wrap(err, "Could not update airplanes")
 	}
-	if err := ta.updateIslands(game, ta.delta); err != nil {
+	if err := ta.updateIslands(game, ta.Delta); err != nil {
 		return nil, errors.Wrap(err, "Could not update islands")
 	}
-
-	if isGameOver, winner := ta.isGameOver(game); isGameOver {
-		gameOverEvent := NewEventGameOver(winner)
-		return []Event{gameOverEvent}, nil
+	if gameOver, winner := ta.isGameOver(game); gameOver {
+		return []Event{NewEventGameOver(winner)}, nil
 	}
 	return []Event{NewEventTick(game)}, nil
-
 }
 
-func (ta *tickAction) updateAirplanes(g *Game, delta time.Duration) error {
+func (ta *ActionTick) updateAirplanes(g *Game, delta time.Duration) error {
 	var arrivals []*Airplane
-
 	for _, airplane := range g.Airplanes() {
 		speed := airplane.Speed()
 		pos := airplane.Position()
@@ -59,7 +53,6 @@ func (ta *tickAction) updateAirplanes(g *Game, delta time.Duration) error {
 			airplane.SetPosition(pos)
 		}
 	}
-
 	// Handle arrivals
 	for _, airplane := range arrivals {
 		target := g.Island(airplane.Destination())
@@ -90,73 +83,61 @@ func (ta *tickAction) updateAirplanes(g *Game, delta time.Duration) error {
 	return nil
 }
 
-func (ta *tickAction) updateIslands(g *Game, delta time.Duration) error {
-	islandGrowthInterval := IslandGrowthInterval
-	islandGrowthCap := IslandGrowthCap
-
+func (ta *ActionTick) updateIslands(g *Game, delta time.Duration) error {
 	for _, island := range g.Islands() {
 		if island.Owner().Equals(g.PlayerNeutral()) {
 			// Neutral islands does not grow in strength
 			continue
 		}
-
 		size := island.Size()
-		if float64(island.Strength()) >= (islandGrowthCap * size) {
+		if float64(island.Strength()) >= (IslandGrowthCap * size) {
 			continue
 		}
-
 		// Account for the island size. We do this by scaling the
 		// time delta by the size factor of the island. I.e. a size
 		// factor of 0.5 means the "time will move" at half the pace
 		// for that island.
 		increment := time.Duration(size * float64(delta))
-
 		// Calculate the whole number of added strength, storing
 		// the remaining "fractions" as the growth remainder. Note
 		// that we are doing calculations on time.Duration(=int64)
 		// here, but the reasoning stays the same.
 		remainder := island.GrowthRemainder()
-		addedStrength := (remainder + increment) / islandGrowthInterval
-		remainder = (remainder + increment) % islandGrowthInterval
+		addedStrength := (remainder + increment) / IslandGrowthInterval
+		remainder = (remainder + increment) % IslandGrowthInterval
 		newStrength := island.Strength() + int64(addedStrength)
-
 		island.SetStrength(newStrength)
 		island.SetGrowthRemainder(remainder)
 	}
 	return nil
 }
 
-// Checks if the current game is over. A game is over when a player
-// no longer controls any islands or airplanes. If the game is over,
+// isGameOver checks if the current game is over. A game is over when a
+// player no longer controls any islands or airplanes. If the game is over,
 // the winner is also returned. For a tie, the returned player is nil.
-func (ta *tickAction) isGameOver(g *Game) (bool, *Player) {
+func (ta *ActionTick) isGameOver(g *Game) (gameOver bool, winner *Player) {
 	player1Alive := false
 	player2Alive := false
-
 	for _, airplane := range g.Airplanes() {
 		if airplane.Owner().Equals(g.Player1()) {
 			player1Alive = true
 		} else if airplane.Owner().Equals(g.Player2()) {
 			player2Alive = true
 		}
-
 		if player1Alive && player2Alive {
 			return false, nil
 		}
 	}
-
 	for _, island := range g.Islands() {
 		if island.Owner().Equals(g.Player1()) {
 			player1Alive = true
 		} else if island.Owner().Equals(g.Player2()) {
 			player2Alive = true
 		}
-
 		if player1Alive && player2Alive {
 			return false, nil
 		}
 	}
-
 	if player1Alive {
 		return true, g.Player1()
 	} else if player2Alive {

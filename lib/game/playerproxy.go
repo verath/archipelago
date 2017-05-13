@@ -40,12 +40,9 @@ func (pp *playerProxy) ReadAction(ctx context.Context) (model.Action, error) {
 	if err := json.Unmarshal(msg, env); err != nil {
 		return nil, errors.Wrap(err, "Failed umarshaling to envelope")
 	}
-	playerAction, err := model.PlayerActionByType(env.Type())
+	playerAction, err := pp.envelopeToPlayerAction(env)
 	if err != nil {
 		return nil, errors.Wrap(err, "Could not map envelope to action")
-	}
-	if err := env.UnmarshalData(playerAction); err != nil {
-		return nil, errors.Wrap(err, "Could not unmarshal envelope data")
 	}
 	return playerAction.ToAction(pp.playerID), nil
 }
@@ -71,6 +68,24 @@ func (pp *playerProxy) WriteEvent(ctx context.Context, evt model.Event) error {
 		return errors.Wrap(err, "Error writing envelope to client")
 	}
 	return nil
+}
+
+func (pp *playerProxy) envelopeToPlayerAction(envelope ReceivedEnvelope) (model.PlayerAction, error) {
+	switch envelope.Type() {
+	case "act_launch":
+		var data struct {
+			From model.IslandID `json:"from"`
+			To   model.IslandID `json:"to"`
+		}
+		if err := envelope.UnmarshalData(&data); err != nil {
+			return nil, errors.Wrap(err, "Failed unmarshaling data")
+		}
+		return &model.PlayerActionLaunch{From: data.From, To: data.To}, nil
+	case "act_leave":
+		return &model.PlayerActionLeave{}, nil
+	default:
+		return nil, errors.Errorf("Unknown envelope type: %v", envelope.Type())
+	}
 }
 
 func (pp *playerProxy) envelopeTypeByPlayerEvent(playerEvent model.PlayerEvent) (string, error) {

@@ -5,16 +5,6 @@ import (
 	"time"
 )
 
-func TestNewTickAction(t *testing.T) {
-	ta, err := NewTickAction(1)
-	if err != nil {
-		t.Errorf("Expected no error, got: %v", err)
-	}
-	if ta == nil {
-		t.Error("Expected a TickAction, got nil")
-	}
-}
-
 func TestTickAction_Apply_Islands(t *testing.T) {
 	game := CreateDummyGameSimple()
 
@@ -25,11 +15,10 @@ func TestTickAction_Apply_Islands(t *testing.T) {
 	i2.SetSize(2)
 
 	// Tick for IslandGrowthInterval seconds
-	ta, _ := NewTickAction(IslandGrowthInterval)
+	ta := ActionTick{IslandGrowthInterval}
 	if _, err := ta.Apply(game); err != nil {
 		t.Errorf("Expected no error, got: %v", err)
 	}
-
 	if i1.Strength() != 11 {
 		t.Errorf("Expected island strength of player island size 1.0 to be 11, was %d", i1.Strength())
 	}
@@ -49,12 +38,12 @@ func TestTickAction_Apply_Airplanes(t *testing.T) {
 	toIsland := game.Island("bottom-left")
 
 	// Add an airplane from 0,0 -> 0,8, moving at a speed of one coordinate/sec
-	airplane, _ := NewAirplane(fromIsland, toIsland, game.Player1(), 10)
+	airplane := NewAirplane(fromIsland, toIsland, game.Player1(), 10)
 	airplane.SetSpeed(1 / float64(time.Second))
 	game.AddAirplane(airplane)
 
 	// Tick for 1 second
-	ta, _ := NewTickAction(1 * time.Second)
+	ta := ActionTick{1 * time.Second}
 	if _, err := ta.Apply(game); err != nil {
 		t.Errorf("Expected no error, got: %v", err)
 	}
@@ -72,12 +61,12 @@ func TestTickAction_Apply_Airplane_Arrival(t *testing.T) {
 	toIsland := game.Island("bottom-left")
 
 	// Add an airplane from 0,0 -> 0,8, moving at a speed of one coordinate/sec
-	airplane, _ := NewAirplane(fromIsland, toIsland, game.Player1(), 10)
+	airplane := NewAirplane(fromIsland, toIsland, game.Player1(), 10)
 	airplane.SetSpeed(1 / float64(time.Second))
 	game.AddAirplane(airplane)
 
 	// Tick for 1 second
-	ta, _ := NewTickAction(1 * time.Second)
+	ta := ActionTick{1 * time.Second}
 	if _, err := ta.Apply(game); err != nil {
 		t.Errorf("Expected no error, got: %v", err)
 	}
@@ -87,7 +76,7 @@ func TestTickAction_Apply_Airplane_Arrival(t *testing.T) {
 	}
 
 	// Tick for another 7 second (8 sec total)
-	ta, _ = NewTickAction(7 * time.Second)
+	ta = ActionTick{7 * time.Second}
 	if _, err := ta.Apply(game); err != nil {
 		t.Errorf("Expected no error, got: %v", err)
 	}
@@ -99,7 +88,7 @@ func TestTickAction_Apply_Airplane_Arrival(t *testing.T) {
 
 func TestTickAction_Apply_AddsTickEvent(t *testing.T) {
 	game := CreateDummyGameSimple()
-	ta, _ := NewTickAction(1 * time.Second)
+	ta := ActionTick{1 * time.Second}
 	evts, err := ta.Apply(game)
 	if err != nil {
 		t.Errorf("Expected no error, got: %v", err)
@@ -116,7 +105,7 @@ func TestTickAction_Apply_AddsTickEvent(t *testing.T) {
 func TestTickAction_Apply_EmptyGame(t *testing.T) {
 	game := CreateDummyGameEmpty()
 
-	ta, _ := NewTickAction(1 * time.Second)
+	ta := ActionTick{1 * time.Second}
 	if _, err := ta.Apply(game); err != nil {
 		t.Errorf("Expected no error, got: %v", err)
 	}
