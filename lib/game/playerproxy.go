@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"github.com/pkg/errors"
-	"github.com/verath/archipelago/lib/game/actions"
 	"github.com/verath/archipelago/lib/game/model"
 )
 
@@ -32,7 +31,7 @@ func newPlayerProxy(player *model.Player, client client) (*playerProxy, error) {
 // ReadAction reads and decodes player actions from the network layer. Each player
 // action is then transformed to an action for the proxy's player id. Blocks
 // until the event has been sent or the context is cancelled.
-func (pp *playerProxy) ReadAction(ctx context.Context) (actions.Action, error) {
+func (pp *playerProxy) ReadAction(ctx context.Context) (model.Action, error) {
 	msg, err := pp.client.ReadMessage(ctx)
 	if err != nil {
 		return nil, errors.Wrap(err, "Could not read message from client")
@@ -41,7 +40,7 @@ func (pp *playerProxy) ReadAction(ctx context.Context) (actions.Action, error) {
 	if err := json.Unmarshal(msg, env); err != nil {
 		return nil, errors.Wrap(err, "Failed umarshaling to envelope")
 	}
-	playerAction, err := actions.PlayerActionByType(env.Type())
+	playerAction, err := model.PlayerActionByType(env.Type())
 	if err != nil {
 		return nil, errors.Wrap(err, "Could not map envelope to action")
 	}

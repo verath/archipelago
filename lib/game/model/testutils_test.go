@@ -1,12 +1,11 @@
-package testutil
+package model
 
 import (
-	. "github.com/verath/archipelago/lib/game/model"
 	"math"
 )
 
 // Creates an empty 9x9 board
-func CreateEmptyGame() *Game {
+func CreateDummyGameEmpty() *Game {
 	p1, _ := NewPlayer()
 	p2, _ := NewPlayer()
 	pn, _ := NewPlayer()
@@ -19,7 +18,7 @@ func CreateEmptyGame() *Game {
 //  * (4,4) - neutral island
 // All starting with a strength of 10 and a growth
 // interval of 1/second
-func CreateSimpleGame() *Game {
+func CreateDummyGameSimple() *Game {
 	p1, _ := NewPlayer()
 	p2, _ := NewPlayer()
 	pn, _ := NewPlayer()

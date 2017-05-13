@@ -5,7 +5,6 @@ import (
 	"github.com/Sirupsen/logrus"
 	"github.com/pkg/errors"
 	"github.com/verath/archipelago/lib/common"
-	"github.com/verath/archipelago/lib/game/actions"
 	"github.com/verath/archipelago/lib/game/model"
 )
 
@@ -99,7 +98,7 @@ func (ctrl *controller) handleEvent(ctx context.Context, evt model.Event) {
 // playerActionLoop is a helper method for reading actions from one player
 // and sending them to the actionCh. Blocks until an error occurs or the context
 // is canceled. Always returns a non-nil error.
-func (ctrl *controller) playerActionLoop(ctx context.Context, proxy *playerProxy, actionCh chan<- actions.Action) error {
+func (ctrl *controller) playerActionLoop(ctx context.Context, proxy *playerProxy, actionCh chan<- model.Action) error {
 	for {
 		act, err := proxy.ReadAction(ctx)
 		if err != nil {
@@ -124,7 +123,7 @@ func (ctrl *controller) actionLoop(ctx context.Context) error {
 		proxy *playerProxy
 	}
 	ctx, cancel := context.WithCancel(ctx)
-	actionCh := make(chan actions.Action)
+	actionCh := make(chan model.Action)
 	errCh := make(chan actionLoopError)
 
 	// Spawn a actions reading loop for each player, both broadcasting
@@ -147,7 +146,7 @@ func (ctrl *controller) actionLoop(ctx context.Context) error {
 		case act := <-actionCh:
 			ctrl.gameLoop.AddAction(act)
 		case err := <-errCh:
-			leaveAct := actions.NewLeaveAction(err.proxy.playerID)
+			leaveAct := model.NewLeaveAction(err.proxy.playerID)
 			ctrl.gameLoop.AddAction(leaveAct)
 			cancel()
 			<-errCh

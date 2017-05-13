@@ -1,12 +1,10 @@
-package actions
+package model
 
 import (
-	"github.com/verath/archipelago/lib/game/model"
-	"github.com/verath/archipelago/lib/game/model/testutil"
 	"testing"
 )
 
-func newLaunchAction(from, to model.IslandID, ownerID model.PlayerID) *launchAction {
+func newLaunchAction(from, to IslandID, ownerID PlayerID) *launchAction {
 	return &launchAction{
 		From:    from,
 		To:      to,
@@ -15,7 +13,7 @@ func newLaunchAction(from, to model.IslandID, ownerID model.PlayerID) *launchAct
 }
 
 func TestLaunchAction_Apply(t *testing.T) {
-	game := testutil.CreateSimpleGame()
+	game := CreateDummyGameSimple()
 	fromIsland := game.Island("p1")
 	toIsland := game.Island("p2")
 
@@ -43,7 +41,7 @@ func TestLaunchAction_Apply(t *testing.T) {
 }
 
 func TestLaunchAction_Apply_DifferentOwner(t *testing.T) {
-	game := testutil.CreateSimpleGame()
+	game := CreateDummyGameSimple()
 	fromIsland := game.Island("p1")
 	toIsland := game.Island("p2")
 
@@ -61,7 +59,7 @@ func TestLaunchAction_Apply_DifferentOwner(t *testing.T) {
 }
 
 func TestLaunchAction_Apply_NonExistingIslands(t *testing.T) {
-	game := testutil.CreateSimpleGame()
+	game := CreateDummyGameSimple()
 	fromIsland := game.Island("p1")
 	toIsland := game.Island("p2")
 
@@ -79,7 +77,7 @@ func TestLaunchAction_Apply_NonExistingIslands(t *testing.T) {
 }
 
 func TestLaunchAction_Apply_NoIslandArmy(t *testing.T) {
-	game := testutil.CreateSimpleGame()
+	game := CreateDummyGameSimple()
 	fromIsland := game.Island("p1")
 	toIsland := game.Island("p2")
 

@@ -5,7 +5,6 @@ import (
 	"github.com/Sirupsen/logrus"
 	"github.com/pkg/errors"
 	"github.com/verath/archipelago/lib/common"
-	"github.com/verath/archipelago/lib/game/actions"
 	"github.com/verath/archipelago/lib/game/model"
 	"sync"
 	"time"
@@ -43,7 +42,7 @@ type gameLoop struct {
 
 	actionsMu sync.Mutex
 	// A slice of actions to be applied on the next tick
-	actions []actions.Action
+	actions []model.Action
 }
 
 type stopError interface {
@@ -65,7 +64,7 @@ func newGameLoop(log *logrus.Logger, game *model.Game) (*gameLoop, error) {
 		logEntry:     logEntry,
 		tickInterval: defaultTickInterval,
 		game:         game,
-		actions:      make([]actions.Action, 0),
+		actions:      make([]model.Action, 0),
 	}, nil
 }
 
@@ -77,7 +76,7 @@ func (gl *gameLoop) SetEventHandler(eventHandler eventHandler) {
 }
 
 // Adds an action to be processed in the next tick.
-func (gl *gameLoop) AddAction(action actions.Action) {
+func (gl *gameLoop) AddAction(action model.Action) {
 	gl.actionsMu.Lock()
 	gl.actions = append(gl.actions, action)
 	gl.actionsMu.Unlock()
@@ -145,7 +144,7 @@ func (gl *gameLoop) tick(ctx context.Context, delta time.Duration) error {
 	acts := gl.getActions()
 
 	// Add a tick actions as the last action to our local actions slice.
-	tickAction, err := actions.NewTickAction(delta)
+	tickAction, err := model.NewTickAction(delta)
 	if err != nil {
 		return errors.Wrap(err, "Error creating tick action")
 	}
@@ -166,7 +165,7 @@ func (gl *gameLoop) tick(ctx context.Context, delta time.Duration) error {
 
 // Swaps the current slice of actions with a new empty slice, returning
 // the previous actions.
-func (gl *gameLoop) getActions() []actions.Action {
+func (gl *gameLoop) getActions() []model.Action {
 	gl.actionsMu.Lock()
 	defer gl.actionsMu.Unlock()
 	acts := gl.actions
@@ -175,13 +174,13 @@ func (gl *gameLoop) getActions() []actions.Action {
 	// that one tick with an abnormal number of actions doesn't result
 	// in every new actions slice being allocated that same large size.
 	newLen := len(acts) / 2
-	gl.actions = make([]actions.Action, 0, newLen)
+	gl.actions = make([]model.Action, 0, newLen)
 	return acts
 }
 
 // Applies a single action to the game, and handles each event this action
 // produced sequentially.
-func (gl *gameLoop) applyAction(ctx context.Context, act actions.Action) error {
+func (gl *gameLoop) applyAction(ctx context.Context, act model.Action) error {
 	evts, err := act.Apply(gl.game)
 	if err != nil {
 		err = gl.handleActionError(ctx, err)
@@ -198,7 +197,7 @@ func (gl *gameLoop) applyAction(ctx context.Context, act actions.Action) error {
 // being sent. All but non-fatal action errors are returned to the caller.
 func (gl *gameLoop) handleActionError(ctx context.Context, err error) error {
 	switch err := err.(type) {
-	case actions.ActionError:
+	case model.ActionError:
 		if !err.IsFatal() {
 			gl.logEntry.WithError(err).Warn("Ignoring non-fatal ActionError")
 			return nil

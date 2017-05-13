@@ -1,8 +1,7 @@
-package actions
+package model
 
 import (
 	"github.com/pkg/errors"
-	"github.com/verath/archipelago/lib/game/model"
 	"math"
 	"time"
 )
@@ -18,7 +17,7 @@ func NewTickAction(delta time.Duration) (*tickAction, error) {
 	return ta, nil
 }
 
-func (ta *tickAction) Apply(game *model.Game) ([]model.Event, error) {
+func (ta *tickAction) Apply(game *Game) ([]Event, error) {
 	if ta.delta < 0 {
 		return nil, errors.New("Delta must be positive")
 	}
@@ -30,20 +29,20 @@ func (ta *tickAction) Apply(game *model.Game) ([]model.Event, error) {
 	}
 
 	if isGameOver, winner := ta.isGameOver(game); isGameOver {
-		gameOverEvent := model.NewGameOverEvent(winner)
-		return []model.Event{gameOverEvent}, nil
+		gameOverEvent := NewGameOverEvent(winner)
+		return []Event{gameOverEvent}, nil
 	}
 
-	tickEvt, err := model.NewTickEvent(game)
+	tickEvt, err := NewTickEvent(game)
 	if err != nil {
 		return nil, errors.Wrap(err, "Could not create tick event")
 	}
-	return []model.Event{tickEvt}, nil
+	return []Event{tickEvt}, nil
 
 }
 
-func (ta *tickAction) updateAirplanes(g *model.Game, delta time.Duration) error {
-	var arrivals []*model.Airplane
+func (ta *tickAction) updateAirplanes(g *Game, delta time.Duration) error {
+	var arrivals []*Airplane
 
 	for _, airplane := range g.Airplanes() {
 		speed := airplane.Speed()
@@ -96,9 +95,9 @@ func (ta *tickAction) updateAirplanes(g *model.Game, delta time.Duration) error 
 	return nil
 }
 
-func (ta *tickAction) updateIslands(g *model.Game, delta time.Duration) error {
-	islandGrowthInterval := model.IslandGrowthInterval
-	islandGrowthCap := model.IslandGrowthCap
+func (ta *tickAction) updateIslands(g *Game, delta time.Duration) error {
+	islandGrowthInterval := IslandGrowthInterval
+	islandGrowthCap := IslandGrowthCap
 
 	for _, island := range g.Islands() {
 		if island.Owner().Equals(g.PlayerNeutral()) {
@@ -135,7 +134,7 @@ func (ta *tickAction) updateIslands(g *model.Game, delta time.Duration) error {
 // Checks if the current game is over. A game is over when a player
 // no longer controls any islands or airplanes. If the game is over,
 // the winner is also returned. For a tie, the returned player is nil.
-func (ta *tickAction) isGameOver(g *model.Game) (bool, *model.Player) {
+func (ta *tickAction) isGameOver(g *Game) (bool, *Player) {
 	player1Alive := false
 	player2Alive := false
 

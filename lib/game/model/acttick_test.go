@@ -1,8 +1,6 @@
-package actions
+package model
 
 import (
-	"github.com/verath/archipelago/lib/game/model"
-	"github.com/verath/archipelago/lib/game/model/testutil"
 	"testing"
 	"time"
 )
@@ -18,7 +16,7 @@ func TestNewTickAction(t *testing.T) {
 }
 
 func TestTickAction_Apply_Islands(t *testing.T) {
-	game := testutil.CreateSimpleGame()
+	game := CreateDummyGameSimple()
 
 	i1 := game.Island("p1")
 	i2 := game.Island("p2")
@@ -27,7 +25,7 @@ func TestTickAction_Apply_Islands(t *testing.T) {
 	i2.SetSize(2)
 
 	// Tick for IslandGrowthInterval seconds
-	ta, _ := NewTickAction(model.IslandGrowthInterval)
+	ta, _ := NewTickAction(IslandGrowthInterval)
 	if _, err := ta.Apply(game); err != nil {
 		t.Errorf("Expected no error, got: %v", err)
 	}
@@ -46,12 +44,12 @@ func TestTickAction_Apply_Islands(t *testing.T) {
 }
 
 func TestTickAction_Apply_Airplanes(t *testing.T) {
-	game := testutil.CreateSimpleGame()
+	game := CreateDummyGameSimple()
 	fromIsland := game.Island("p1")
 	toIsland := game.Island("bottom-left")
 
 	// Add an airplane from 0,0 -> 0,8, moving at a speed of one coordinate/sec
-	airplane, _ := model.NewAirplane(fromIsland, toIsland, game.Player1(), 10)
+	airplane, _ := NewAirplane(fromIsland, toIsland, game.Player1(), 10)
 	airplane.SetSpeed(1 / float64(time.Second))
 	game.AddAirplane(airplane)
 
@@ -61,20 +59,20 @@ func TestTickAction_Apply_Airplanes(t *testing.T) {
 		t.Errorf("Expected no error, got: %v", err)
 	}
 
-	expectedPos := model.FloatCoordinate{X: 0, Y: 1}
+	expectedPos := FloatCoordinate{X: 0, Y: 1}
 	actualPos := game.Airplanes()[0].Position()
-	if !testutil.CoordsAlmostEqual(actualPos, expectedPos) {
+	if !CoordsAlmostEqual(actualPos, expectedPos) {
 		t.Errorf("Expected airplane pos to be %v was %v", expectedPos, actualPos)
 	}
 }
 
 func TestTickAction_Apply_Airplane_Arrival(t *testing.T) {
-	game := testutil.CreateSimpleGame()
+	game := CreateDummyGameSimple()
 	fromIsland := game.Island("p1")
 	toIsland := game.Island("bottom-left")
 
 	// Add an airplane from 0,0 -> 0,8, moving at a speed of one coordinate/sec
-	airplane, _ := model.NewAirplane(fromIsland, toIsland, game.Player1(), 10)
+	airplane, _ := NewAirplane(fromIsland, toIsland, game.Player1(), 10)
 	airplane.SetSpeed(1 / float64(time.Second))
 	game.AddAirplane(airplane)
 
@@ -100,7 +98,7 @@ func TestTickAction_Apply_Airplane_Arrival(t *testing.T) {
 }
 
 func TestTickAction_Apply_AddsTickEvent(t *testing.T) {
-	game := testutil.CreateSimpleGame()
+	game := CreateDummyGameSimple()
 
 	ta, _ := NewTickAction(1 * time.Second)
 	evts, err := ta.Apply(game)
@@ -113,13 +111,13 @@ func TestTickAction_Apply_AddsTickEvent(t *testing.T) {
 	}
 
 	evt := evts[0]
-	if evt.ToPlayerEvent("").Type() != model.EventTypeTick {
+	if evt.ToPlayerEvent("").Type() != EventTypeTick {
 		t.Error("Expected a TickEvent to have been created")
 	}
 }
 
 func TestTickAction_Apply_EmptyGame(t *testing.T) {
-	game := testutil.CreateEmptyGame()
+	game := CreateDummyGameEmpty()
 
 	ta, _ := NewTickAction(1 * time.Second)
 	if _, err := ta.Apply(game); err != nil {

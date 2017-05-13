@@ -1,25 +1,24 @@
-package actions
+package model
 
 import (
 	"github.com/pkg/errors"
-	"github.com/verath/archipelago/lib/game/model"
 )
 
 type launchAction struct {
-	From model.IslandID `json:"from"`
-	To   model.IslandID `json:"to"`
+	From IslandID `json:"from"`
+	To   IslandID `json:"to"`
 
-	ownerID model.PlayerID
+	ownerID PlayerID
 }
 
 // We implement ToAction by setting the ownerID property and returning
 // ourselves, as we already implement the Action interface.
-func (a *launchAction) ToAction(playerID model.PlayerID) Action {
+func (a *launchAction) ToAction(playerID PlayerID) Action {
 	a.ownerID = playerID
 	return a
 }
 
-func (a *launchAction) Apply(g *model.Game) ([]model.Event, error) {
+func (a *launchAction) Apply(g *Game) ([]Event, error) {
 	fromIsland := g.Island(a.From)
 	toIsland := g.Island(a.To)
 	owningPlayer := g.Player(a.ownerID)
@@ -50,7 +49,7 @@ func (a *launchAction) Apply(g *model.Game) ([]model.Event, error) {
 	airplaneStr := islandStr / 2
 	fromIsland.SetStrength(islandStr - airplaneStr)
 
-	airplane, err := model.NewAirplane(fromIsland, toIsland, owningPlayer, airplaneStr)
+	airplane, err := NewAirplane(fromIsland, toIsland, owningPlayer, airplaneStr)
 	if err != nil {
 		return nil, errors.Wrap(err, "Error creating airplane")
 	}

@@ -4,7 +4,6 @@ import (
 	"context"
 	"github.com/Sirupsen/logrus"
 	"github.com/verath/archipelago/lib/game/model"
-	"github.com/verath/archipelago/lib/game/model/testutil"
 	"io/ioutil"
 	"testing"
 	"time"
@@ -22,7 +21,7 @@ func (f actionFunc) Apply(g *model.Game) ([]model.Event, error) {
 }
 
 func TestGameLoop_Start_Stop(t *testing.T) {
-	game := testutil.CreateEmptyGame()
+	game := &model.Game{}
 	gl, _ := newGameLoop(log, game)
 	ctx, cancel := context.WithCancel(context.Background())
 
@@ -35,13 +34,13 @@ func TestGameLoop_Start_Stop(t *testing.T) {
 }
 
 func TestGameLoop_AddAction(t *testing.T) {
-	game := testutil.CreateEmptyGame()
+	game := &model.Game{}
 	ctx := context.Background()
 	gl, _ := newGameLoop(log, game)
 
 	t.Log("Adding actions to game loop...")
 	a1Applied := false
-	a1 := actionFunc(func(g *model.Game) ([]model.Event, error) {
+	a1 := actionFunc(func(_ *model.Game) ([]model.Event, error) {
 		a1Applied = true
 		return nil, nil
 	})
@@ -74,14 +73,13 @@ func TestGameLoop_AddAction_RealTick(t *testing.T) {
 		t.Skip()
 	}
 
-	game := testutil.CreateEmptyGame()
-
+	game := &model.Game{}
 	gl, _ := newGameLoop(log, game)
 	gl.tickInterval = time.Millisecond
 	ctx, cancel := context.WithCancel(context.Background())
 	timesApplied := 0
 
-	gl.AddAction(actionFunc(func(g *model.Game) ([]model.Event, error) {
+	gl.AddAction(actionFunc(func(_ *model.Game) ([]model.Event, error) {
 		timesApplied += 1
 		return nil, nil
 	}))

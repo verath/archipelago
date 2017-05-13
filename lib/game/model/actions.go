@@ -1,8 +1,7 @@
-package actions
+package model
 
 import (
 	"github.com/pkg/errors"
-	"github.com/verath/archipelago/lib/game/model"
 )
 
 const (
@@ -17,11 +16,11 @@ type (
 		// the action before it is applied. Invalid or Illegal actions are returned
 		// as ActionErrors. Unless the error returned is explicitly non-fatal, any
 		// error should be regarded as fatal by default and must stop the game.
-		Apply(game *model.Game) ([]model.Event, error)
+		Apply(game *Game) ([]Event, error)
 	}
 
 	PlayerAction interface {
-		ToAction(playerID model.PlayerID) Action
+		ToAction(playerID PlayerID) Action
 	}
 )
 
