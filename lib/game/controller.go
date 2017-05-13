@@ -6,7 +6,6 @@ import (
 	"github.com/pkg/errors"
 	"github.com/verath/archipelago/lib/common"
 	"github.com/verath/archipelago/lib/game/actions"
-	"github.com/verath/archipelago/lib/game/events"
 	"github.com/verath/archipelago/lib/game/model"
 )
 
@@ -53,7 +52,7 @@ func (ctrl *controller) run(ctx context.Context) error {
 	defer ctrl.logEntry.Debug("Stopped")
 
 	// Notify the players that the game is starting
-	startEvt := events.NewGameStartEvent()
+	startEvt := model.NewGameStartEvent()
 	if err := ctrl.broadcastEvent(ctx, startEvt); err != nil {
 		return errors.Wrap(err, "Could not broadcast game starting event")
 	}
@@ -78,7 +77,7 @@ func (ctrl *controller) run(ctx context.Context) error {
 
 // Broadcast an event to both the player proxies simultaneously. Blocks until both
 // events have been sent.
-func (ctrl *controller) broadcastEvent(ctx context.Context, evt events.Event) error {
+func (ctrl *controller) broadcastEvent(ctx context.Context, evt model.Event) error {
 	errCh := make(chan error)
 	go func() { errCh <- ctrl.p1Proxy.WriteEvent(ctx, evt) }()
 	go func() { errCh <- ctrl.p2Proxy.WriteEvent(ctx, evt) }()
@@ -91,7 +90,7 @@ func (ctrl *controller) broadcastEvent(ctx context.Context, evt events.Event) er
 
 // handleEvent forwards the event to both players, and blocks until the event
 // has been successfully sent. Called by the gameLoop for each event produced.
-func (ctrl *controller) handleEvent(ctx context.Context, evt events.Event) {
+func (ctrl *controller) handleEvent(ctx context.Context, evt model.Event) {
 	if err := ctrl.broadcastEvent(ctx, evt); err != nil {
 		ctrl.logEntry.Debugf("Error in handleEvent: %+v", err)
 	}

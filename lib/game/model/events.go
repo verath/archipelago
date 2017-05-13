@@ -1,8 +1,4 @@
-package events
-
-import (
-	"github.com/verath/archipelago/lib/game/model"
-)
+package model
 
 const (
 	EventTypeTick     = "evt_tick"
@@ -18,7 +14,7 @@ type (
 	Event interface {
 		// Turns the event into a PlayerEvent for the specified
 		// player.
-		ToPlayerEvent(playerID model.PlayerID) PlayerEvent
+		ToPlayerEvent(playerID PlayerID) PlayerEvent
 	}
 
 	// A player event is an event to be sent to a specific player.

@@ -1,6 +1,4 @@
-package events
-
-import "github.com/verath/archipelago/lib/game/model"
+package model
 
 type (
 	gameStartEvent struct{}
@@ -10,7 +8,7 @@ type (
 	}
 
 	gameStartEventData struct {
-		PlayerID model.PlayerID `json:"player_id"`
+		PlayerID PlayerID `json:"player_id"`
 	}
 )
 
@@ -18,7 +16,7 @@ func NewGameStartEvent() Event {
 	return &gameStartEvent{}
 }
 
-func (event *gameStartEvent) ToPlayerEvent(playerID model.PlayerID) PlayerEvent {
+func (event *gameStartEvent) ToPlayerEvent(playerID PlayerID) PlayerEvent {
 	data := gameStartEventData{playerID}
 	return &gameStartPlayerEvent{data}
 }

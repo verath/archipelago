@@ -1,11 +1,9 @@
-package events
-
-import "github.com/verath/archipelago/lib/game/model"
+package model
 
 type (
 	// A game over event is an event created when the game is finished.
 	gameOverEvent struct {
-		winnerID model.PlayerID
+		winnerID PlayerID
 	}
 
 	gameOverPlayerEvent struct {
@@ -13,23 +11,23 @@ type (
 	}
 
 	gameOverEventData struct {
-		WinnerID model.PlayerID `json:"winner_id"`
-		IsWinner bool           `json:"is_winner"`
+		WinnerID PlayerID `json:"winner_id"`
+		IsWinner bool     `json:"is_winner"`
 	}
 )
 
 // Creates a new game over event, with the provided player as winner.
 // If the winner is nil, then a game over event without a winner is
 // created.
-func NewGameOverEvent(winner *model.Player) Event {
-	var winnerID model.PlayerID
+func NewGameOverEvent(winner *Player) Event {
+	var winnerID PlayerID
 	if winner != nil {
 		winnerID = winner.ID()
 	}
 	return &gameOverEvent{winnerID}
 }
 
-func (event *gameOverEvent) ToPlayerEvent(id model.PlayerID) PlayerEvent {
+func (event *gameOverEvent) ToPlayerEvent(id PlayerID) PlayerEvent {
 	data := gameOverEventData{
 		WinnerID: event.winnerID,
 		IsWinner: event.winnerID == id,

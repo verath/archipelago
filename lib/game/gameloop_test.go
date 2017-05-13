@@ -3,7 +3,6 @@ package game
 import (
 	"context"
 	"github.com/Sirupsen/logrus"
-	"github.com/verath/archipelago/lib/game/events"
 	"github.com/verath/archipelago/lib/game/model"
 	"github.com/verath/archipelago/lib/game/model/testutil"
 	"io/ioutil"
@@ -16,9 +15,9 @@ var log = &logrus.Logger{
 }
 
 // Type implementing the Action interface as a function
-type actionFunc func(game *model.Game) ([]events.Event, error)
+type actionFunc func(game *model.Game) ([]model.Event, error)
 
-func (f actionFunc) Apply(g *model.Game) ([]events.Event, error) {
+func (f actionFunc) Apply(g *model.Game) ([]model.Event, error) {
 	return f(g)
 }
 
@@ -42,7 +41,7 @@ func TestGameLoop_AddAction(t *testing.T) {
 
 	t.Log("Adding actions to game loop...")
 	a1Applied := false
-	a1 := actionFunc(func(g *model.Game) ([]events.Event, error) {
+	a1 := actionFunc(func(g *model.Game) ([]model.Event, error) {
 		a1Applied = true
 		return nil, nil
 	})
@@ -82,7 +81,7 @@ func TestGameLoop_AddAction_RealTick(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	timesApplied := 0
 
-	gl.AddAction(actionFunc(func(g *model.Game) ([]events.Event, error) {
+	gl.AddAction(actionFunc(func(g *model.Game) ([]model.Event, error) {
 		timesApplied += 1
 		return nil, nil
 	}))

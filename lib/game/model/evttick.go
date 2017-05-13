@@ -1,9 +1,8 @@
-package events
+package model
 
 import (
 	"encoding/json"
 	"github.com/pkg/errors"
-	"github.com/verath/archipelago/lib/game/model"
 )
 
 type tickEvent struct {
@@ -12,7 +11,7 @@ type tickEvent struct {
 	data *json.RawMessage
 }
 
-func NewTickEvent(game *model.Game) (Event, error) {
+func NewTickEvent(game *Game) (Event, error) {
 	data, err := json.Marshal(game)
 	if err != nil {
 		return nil, errors.Wrap(err, "Failed marshaling game to JSON")
@@ -29,6 +28,6 @@ func (event *tickEvent) Data() interface{} {
 	return event.data
 }
 
-func (event *tickEvent) ToPlayerEvent(playerID model.PlayerID) PlayerEvent {
+func (event *tickEvent) ToPlayerEvent(playerID PlayerID) PlayerEvent {
 	return event
 }

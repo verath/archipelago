@@ -1,7 +1,6 @@
 package actions
 
 import (
-	"github.com/verath/archipelago/lib/game/events"
 	"github.com/verath/archipelago/lib/game/model"
 	"github.com/verath/archipelago/lib/game/model/testutil"
 	"testing"
@@ -114,7 +113,7 @@ func TestTickAction_Apply_AddsTickEvent(t *testing.T) {
 	}
 
 	evt := evts[0]
-	if evt.ToPlayerEvent("").Type() != events.EventTypeTick {
+	if evt.ToPlayerEvent("").Type() != model.EventTypeTick {
 		t.Error("Expected a TickEvent to have been created")
 	}
 }

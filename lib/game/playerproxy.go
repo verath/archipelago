@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"github.com/pkg/errors"
 	"github.com/verath/archipelago/lib/game/actions"
-	"github.com/verath/archipelago/lib/game/events"
 	"github.com/verath/archipelago/lib/game/model"
 )
 
@@ -55,7 +54,7 @@ func (pp *playerProxy) ReadAction(ctx context.Context) (actions.Action, error) {
 // WriteEvent takes an event, transforms it into a player event for the proxy's player
 // id, then forwards the event to the network layer. Blocks until the event has been
 // sent or the context is cancelled.
-func (pp *playerProxy) WriteEvent(ctx context.Context, evt events.Event) error {
+func (pp *playerProxy) WriteEvent(ctx context.Context, evt model.Event) error {
 	playerEvent := evt.ToPlayerEvent(pp.playerID)
 	env, err := NewEnvelope(playerEvent.Type(), playerEvent.Data())
 	if err != nil {

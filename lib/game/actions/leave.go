@@ -1,7 +1,6 @@
 package actions
 
 import (
-	"github.com/verath/archipelago/lib/game/events"
 	"github.com/verath/archipelago/lib/game/model"
 )
 
@@ -29,12 +28,12 @@ func (a *leaveAction) ToAction(playerID model.PlayerID) Action {
 
 // Applies the leave action, producing a GameOver event with the
 // remaining player as the winner.
-func (a *leaveAction) Apply(game *model.Game) ([]events.Event, error) {
+func (a *leaveAction) Apply(game *model.Game) ([]model.Event, error) {
 	winner := game.Opponent(a.leaverID)
 	if winner == nil {
 		return nil, newIllegalActionError(nil, "Could not determine winenr")
 	}
 
-	gameOverEvent := events.NewGameOverEvent(winner)
-	return []events.Event{gameOverEvent}, nil
+	gameOverEvent := model.NewGameOverEvent(winner)
+	return []model.Event{gameOverEvent}, nil
 }

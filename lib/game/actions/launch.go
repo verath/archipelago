@@ -2,7 +2,6 @@ package actions
 
 import (
 	"github.com/pkg/errors"
-	"github.com/verath/archipelago/lib/game/events"
 	"github.com/verath/archipelago/lib/game/model"
 )
 
@@ -20,7 +19,7 @@ func (a *launchAction) ToAction(playerID model.PlayerID) Action {
 	return a
 }
 
-func (a *launchAction) Apply(g *model.Game) ([]events.Event, error) {
+func (a *launchAction) Apply(g *model.Game) ([]model.Event, error) {
 	fromIsland := g.Island(a.From)
 	toIsland := g.Island(a.To)
 	owningPlayer := g.Player(a.ownerID)

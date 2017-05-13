@@ -6,7 +6,6 @@ import (
 	"github.com/pkg/errors"
 	"github.com/verath/archipelago/lib/common"
 	"github.com/verath/archipelago/lib/game/actions"
-	"github.com/verath/archipelago/lib/game/events"
 	"github.com/verath/archipelago/lib/game/model"
 	"sync"
 	"time"
@@ -56,7 +55,7 @@ type eventHandler interface {
 	// handleEvent handles an event produced. This method will be called on a
 	// separate go routine and must block until the even has been handled, or
 	// the context is cancelled.
-	handleEvent(ctx context.Context, event events.Event)
+	handleEvent(ctx context.Context, event model.Event)
 }
 
 func newGameLoop(log *logrus.Logger, game *model.Game) (*gameLoop, error) {
@@ -211,7 +210,7 @@ func (gl *gameLoop) handleActionError(ctx context.Context, err error) error {
 		if err.Player() != nil {
 			winner = gl.game.Opponent(err.Player().ID())
 		}
-		gl.handleEvent(ctx, events.NewGameOverEvent(winner))
+		gl.handleEvent(ctx, model.NewGameOverEvent(winner))
 	default:
 		gl.logEntry.WithError(err).Debug("handle generic error")
 	}
@@ -220,7 +219,7 @@ func (gl *gameLoop) handleActionError(ctx context.Context, err error) error {
 
 // handleEvent handles a single event by forwarding it to the registered
 // eventHandler on a new go-routine.
-func (gl *gameLoop) handleEvent(ctx context.Context, evt events.Event) {
+func (gl *gameLoop) handleEvent(ctx context.Context, evt model.Event) {
 	gl.eventHandlerMu.Lock()
 	handler := gl.eventHandler
 	gl.eventHandlerMu.Unlock()
@@ -238,11 +237,11 @@ func (gl *gameLoop) handleEvent(ctx context.Context, evt events.Event) {
 // handleEvents handles each event produced by delegating to the event handler.
 // If an event representing the game being over is encountered, then all further
 // events are discarded and the gameLoop is set to game over state.
-func (gl *gameLoop) handleEvents(ctx context.Context, evts []events.Event) error {
+func (gl *gameLoop) handleEvents(ctx context.Context, evts []model.Event) error {
 	for _, evt := range evts {
 		gl.handleEvent(ctx, evt)
 		// Stop processing events if we sent a game over event
-		if events.IsGameOverEvent(evt) {
+		if model.IsGameOverEvent(evt) {
 			return gl.setGameOver()
 		}
 	}
