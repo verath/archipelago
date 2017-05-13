@@ -45,10 +45,6 @@ type gameLoop struct {
 	actions []model.Action
 }
 
-type stopError interface {
-	Successful() bool
-}
-
 // A handler for game events produced from applying actions.
 type eventHandler interface {
 	// handleEvent handles an event produced. This method will be called on a
