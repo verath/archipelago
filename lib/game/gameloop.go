@@ -99,12 +99,12 @@ func (gl *gameLoop) Run(ctx context.Context) error {
 	gl.logEntry.Debug("Starting")
 	defer gl.logEntry.Debug("Stopped")
 	err := gl.tickLoop(ctx)
+	// Wait for calls to eventHandler to finish
+	gl.handleEventWG.Wait()
 	// Close the actionsAppliedCh, as no more actions will be applied
 	gl.actionsMu.Lock()
 	close(gl.actionsAppliedCh)
 	gl.actionsMu.Unlock()
-	// Wait for calls to eventHandler to finish
-	gl.handleEventWG.Wait()
 	return errors.Wrap(err, "error while running tickLoop")
 }
 
