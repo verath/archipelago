@@ -5,7 +5,6 @@ import (
 	"github.com/Sirupsen/logrus"
 	"github.com/pkg/errors"
 	"github.com/verath/archipelago/lib/common"
-	"github.com/verath/archipelago/lib/game/model"
 	"sync"
 	"time"
 )
@@ -130,7 +129,7 @@ func (c *Coordinator) run(ctx context.Context) error {
 // This method blocks until the game has been created, but not until it has finished
 // running.
 func (c *Coordinator) startGame(ctx context.Context, p1Client client, p2Client client) error {
-	game, err := model.CreateBasicGame()
+	game, err := CreateBasicGame()
 	if err != nil {
 		return errors.Wrap(err, "Error creating game")
 	}

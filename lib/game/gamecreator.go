@@ -1,23 +1,24 @@
-package model
+package game
 
 import (
 	"github.com/pkg/errors"
+	"github.com/verath/archipelago/lib/game/model"
 	"math/rand"
 	"time"
 )
 
-func createPlayers() (p1, p2, pn *Player, err error) {
-	p1, err = NewPlayer()
+func createPlayers() (p1, p2, pn *model.Player, err error) {
+	p1, err = model.NewPlayer()
 	if err != nil {
 		err = errors.Wrap(err, "Error creating p1")
 		return
 	}
-	p2, err = NewPlayer()
+	p2, err = model.NewPlayer()
 	if err != nil {
 		err = errors.Wrap(err, "Error creating p2")
 		return
 	}
-	pn, err = NewPlayer()
+	pn, err = model.NewPlayer()
 	if err != nil {
 		err = errors.Wrap(err, "Error creating pn")
 		return
@@ -25,22 +26,22 @@ func createPlayers() (p1, p2, pn *Player, err error) {
 	return
 }
 
-func createIslands(p1, p2, pn *Player, size Coordinate, gameRand *rand.Rand) ([]*Island, error) {
+func createIslands(p1, p2, pn *model.Player, size model.Coordinate, gameRand *rand.Rand) ([]*model.Island, error) {
 	type islandData struct {
-		Size     IslandSize
+		Size     model.IslandSize
 		Strength int64
-		Player   *Player
+		Player   *model.Player
 	}
-	islandMap := make(map[Coordinate]islandData)
+	islandMap := make(map[model.Coordinate]islandData)
 
 	// Randomize the neutral islands
-	neutralSizes := []IslandSize{IslandSizeTiny, IslandSizeSmall, IslandSizeMedium}
+	neutralSizes := []model.IslandSize{model.IslandSizeTiny, model.IslandSizeSmall, model.IslandSizeMedium}
 	for x := 0; x < size.X; x++ {
 		for y := 0; y < size.Y; y++ {
 			if gameRand.Intn(100) >= 20 {
 				continue
 			}
-			pos := Coordinate{x, y}
+			pos := model.Coordinate{x, y}
 			size := neutralSizes[gameRand.Intn(len(neutralSizes))]
 			strength := gameRand.Int63n(22) + 4 // 4-25
 			islandMap[pos] = islandData{size, strength, pn}
@@ -48,13 +49,13 @@ func createIslands(p1, p2, pn *Player, size Coordinate, gameRand *rand.Rand) ([]
 	}
 
 	// Set top left to player 1 island, bottom right to player 2 island
-	islandMap[Coordinate{0, 0}] = islandData{IslandSizeLarge, 20, p1}
-	islandMap[Coordinate{size.X - 1, size.Y - 1}] = islandData{IslandSizeLarge, 20, p2}
+	islandMap[model.Coordinate{0, 0}] = islandData{model.IslandSizeLarge, 20, p1}
+	islandMap[model.Coordinate{size.X - 1, size.Y - 1}] = islandData{model.IslandSizeLarge, 20, p2}
 
 	// Transform the map to a slice of islands
-	var islands []*Island
+	var islands []*model.Island
 	for pos, data := range islandMap {
-		island, err := NewIsland(pos, data.Size, data.Strength, data.Player)
+		island, err := model.NewIsland(pos, data.Size, data.Strength, data.Player)
 		if err != nil {
 			return nil, errors.Wrapf(err, "Error creating island (data: %v)", data)
 		}
@@ -63,11 +64,11 @@ func createIslands(p1, p2, pn *Player, size Coordinate, gameRand *rand.Rand) ([]
 	return islands, nil
 }
 
-func CreateBasicGame() (*Game, error) {
+func CreateBasicGame() (*model.Game, error) {
 	seed := time.Now().UnixNano()
 	gameRand := rand.New(rand.NewSource(seed))
 
-	size := Coordinate{7, 7}
+	size := model.Coordinate{7, 7}
 
 	p1, p2, pn, err := createPlayers()
 	if err != nil {
@@ -79,7 +80,7 @@ func CreateBasicGame() (*Game, error) {
 		return nil, errors.Wrap(err, "Error creating islands")
 	}
 
-	gameBuilder := NewGameBuilder(size, p1, p2, pn)
+	gameBuilder := model.NewGameBuilder(size, p1, p2, pn)
 	for _, island := range islands {
 		gameBuilder.AddIsland(island)
 	}
