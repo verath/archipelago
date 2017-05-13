@@ -29,15 +29,10 @@ func (ta *tickAction) Apply(game *Game) ([]Event, error) {
 	}
 
 	if isGameOver, winner := ta.isGameOver(game); isGameOver {
-		gameOverEvent := NewGameOverEvent(winner)
+		gameOverEvent := NewEventGameOver(winner)
 		return []Event{gameOverEvent}, nil
 	}
-
-	tickEvt, err := NewTickEvent(game)
-	if err != nil {
-		return nil, errors.Wrap(err, "Could not create tick event")
-	}
-	return []Event{tickEvt}, nil
+	return []Event{NewEventTick(game)}, nil
 
 }
 

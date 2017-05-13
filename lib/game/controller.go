@@ -51,7 +51,7 @@ func (ctrl *controller) run(ctx context.Context) error {
 	defer ctrl.logEntry.Debug("Stopped")
 
 	// Notify the players that the game is starting
-	startEvt := model.NewGameStartEvent()
+	startEvt := model.NewEventGameStart()
 	if err := ctrl.broadcastEvent(ctx, startEvt); err != nil {
 		return errors.Wrap(err, "Could not broadcast game starting event")
 	}

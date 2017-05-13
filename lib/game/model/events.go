@@ -1,11 +1,5 @@
 package model
 
-const (
-	EventTypeTick     = "evt_tick"
-	EventTypeStart    = "evt_game_start"
-	EventTypeGameOver = "evt_game_over"
-)
-
 type (
 	// An event is a (partially) created event that is to be sent
 	// to a player. As an event might depend on the player it is
@@ -17,17 +11,20 @@ type (
 		ToPlayerEvent(playerID PlayerID) PlayerEvent
 	}
 
-	// A player event is an event to be sent to a specific player.
+	// PlayerEvent is an event that is meant for a specific player. The
+	// PlayerEvent is a marker interface used instead of an empty interface
+	// to better convey the intention, and allow IDEs to find implementations.
+	// It is still necessary for the PlayerEvent to be type switched before
+	// it can be used.
 	PlayerEvent interface {
-		// Returns a string uniquely identifying the type of event.
-		Type() string
-		// Returns the data contained in the event.
-		Data() interface{}
+		// playerEventMarker is a dummy method used as marker for
+		// things that implement the PlayerEvent interface.
+		playerEventMarker()
 	}
 )
 
 // Tests if an event is a game over event.
 func IsGameOverEvent(evt Event) bool {
-	_, ok := evt.(*gameOverEvent)
+	_, ok := evt.(*eventGameOver)
 	return ok
 }

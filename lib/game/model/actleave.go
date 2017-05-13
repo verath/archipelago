@@ -1,6 +1,5 @@
 package model
 
-
 // A leave action is an action posted when a player is leaving the game.
 // The action results in a game over, with the other player as the winning
 // player.
@@ -31,6 +30,6 @@ func (a *leaveAction) Apply(game *Game) ([]Event, error) {
 		return nil, newIllegalActionError(nil, "Could not determine winenr")
 	}
 
-	gameOverEvent := NewGameOverEvent(winner)
+	gameOverEvent := NewEventGameOver(winner)
 	return []Event{gameOverEvent}, nil
 }

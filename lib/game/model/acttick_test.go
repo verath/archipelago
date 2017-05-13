@@ -99,20 +99,17 @@ func TestTickAction_Apply_Airplane_Arrival(t *testing.T) {
 
 func TestTickAction_Apply_AddsTickEvent(t *testing.T) {
 	game := CreateDummyGameSimple()
-
 	ta, _ := NewTickAction(1 * time.Second)
 	evts, err := ta.Apply(game)
 	if err != nil {
 		t.Errorf("Expected no error, got: %v", err)
 	}
-
 	if len(evts) != 1 {
 		t.Error("Expected exactly one event to have been created")
 	}
-
 	evt := evts[0]
-	if evt.ToPlayerEvent("").Type() != EventTypeTick {
-		t.Error("Expected a TickEvent to have been created")
+	if _, ok := evt.(*eventTick); !ok {
+		t.Errorf("Expected a eventTick to have been created, got: %T", evt)
 	}
 }
 
