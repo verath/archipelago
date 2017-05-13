@@ -1,28 +1,34 @@
 package model
 
-import (
-	"github.com/pkg/errors"
-)
-
-type launchAction struct {
-	From IslandID `json:"from"`
-	To   IslandID `json:"to"`
-
-	ownerID PlayerID
+// actionLaunch wraps a PlayerActionLaunch, also providing
+// the PlayerID of the player that created the action.
+type actionLaunch struct {
+	PlayerActionLaunch
+	playerID PlayerID
 }
 
-// We implement ToAction by setting the ownerID property and returning
-// ourselves, as we already implement the Action interface.
-func (a *launchAction) ToAction(playerID PlayerID) Action {
-	a.ownerID = playerID
-	return a
+// PlayerActionLaunch is a player action for launching an
+// airplane from an island to another island.
+type PlayerActionLaunch struct {
+	From IslandID
+	To   IslandID
 }
 
-func (a *launchAction) Apply(g *Game) ([]Event, error) {
-	fromIsland := g.Island(a.From)
-	toIsland := g.Island(a.To)
-	owningPlayer := g.Player(a.ownerID)
+// ToAction transforms the PlayerActionLaunch, and a PlayerID, to
+// a new Action. The returned action copies the PlayerActionLaunch
+// struct values.
+func (act PlayerActionLaunch) ToAction(playerID PlayerID) Action {
+	return &actionLaunch{
+		PlayerActionLaunch: act,
+		playerID:           playerID,
+	}
+}
 
+// Apply applies the launch action to a game instance.
+func (act *actionLaunch) Apply(g *Game) ([]Event, error) {
+	fromIsland := g.Island(act.From)
+	toIsland := g.Island(act.To)
+	owningPlayer := g.Player(act.playerID)
 	if owningPlayer == nil {
 		return nil, newIllegalActionError(owningPlayer, "owning player does not exist")
 	}
@@ -43,16 +49,11 @@ func (a *launchAction) Apply(g *Game) ([]Event, error) {
 	if fromIsland.Strength() < 2 {
 		return nil, newInvalidActionError(owningPlayer, "from island strength < 2")
 	}
-
 	// Launch an airplane with half the army of the island
 	islandStr := fromIsland.Strength()
 	airplaneStr := islandStr / 2
 	fromIsland.SetStrength(islandStr - airplaneStr)
-
-	airplane, err := NewAirplane(fromIsland, toIsland, owningPlayer, airplaneStr)
-	if err != nil {
-		return nil, errors.Wrap(err, "Error creating airplane")
-	}
+	airplane := NewAirplane(fromIsland, toIsland, owningPlayer, airplaneStr)
 	g.AddAirplane(airplane)
 	return nil, nil
 }

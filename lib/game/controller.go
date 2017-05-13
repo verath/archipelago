@@ -58,20 +58,21 @@ func (ctrl *controller) run(ctx context.Context) error {
 	// Register ourselves as the eventHandler of the game loop
 	ctrl.gameLoop.SetEventHandler(ctrl)
 	defer ctrl.gameLoop.SetEventHandler(nil)
-
-	// Start the action forwarding loop
+	// Start the action forwarding loop and the game loop
 	ctx, cancel := context.WithCancel(ctx)
-	actionErrCh := make(chan error)
-	go func() { actionErrCh <- ctrl.actionLoop(ctx) }()
-	// Before returning control, make sure the action loop has finished
-	defer func() {
-		ctrl.logEntry.Debug("Stopping the action loop")
-		cancel()
-		<-actionErrCh
+	errCh := make(chan error)
+	go func() {
+		err := ctrl.actionLoop(ctx)
+		errCh <- errors.Wrap(err, "Error while running action loop")
 	}()
-	// Run the game loop until it finishes
-	err := ctrl.gameLoop.Run(ctx)
-	return errors.Wrap(err, "Error while running game loop")
+	go func() {
+		err := ctrl.gameLoop.Run(ctx)
+		errCh <- errors.Wrap(err, "Error while running game loop")
+	}()
+	err := <-errCh
+	cancel()
+	<-errCh
+	return err
 }
 
 // Broadcast an event to both the player proxies simultaneously. Blocks until both
@@ -119,42 +120,41 @@ func (ctrl *controller) actionLoop(ctx context.Context) error {
 	// A struct holding both an error and the proxy in which the error occurred,
 	// used so we can share the handling of the error
 	type actionLoopError struct {
-		error error
+		err   error
 		proxy *playerProxy
 	}
 	ctx, cancel := context.WithCancel(ctx)
 	actionCh := make(chan model.Action)
-	errCh := make(chan actionLoopError)
-
-	// Spawn a actions reading loop for each player, both broadcasting
+	actLoopErrCh := make(chan actionLoopError)
+	// Spawn an actions reading loop for each player, both broadcasting
 	// new actions to a shared actionCh channel.
 	go func() {
 		err := ctrl.playerActionLoop(ctx, ctrl.p1Proxy, actionCh)
-		errCh <- actionLoopError{err, ctrl.p1Proxy}
+		actLoopErrCh <- actionLoopError{err, ctrl.p1Proxy}
 	}()
 	go func() {
 		err := ctrl.playerActionLoop(ctx, ctrl.p2Proxy, actionCh)
-		errCh <- actionLoopError{err, ctrl.p2Proxy}
+		actLoopErrCh <- actionLoopError{err, ctrl.p2Proxy}
 	}()
-
 	// Read actions from the actionCh channel and forward them to the
 	// gameLoop, applying them to the game. If an error is posted on the
-	// errCh, then a player leave action is created for that player,
+	// actLoopErrCh, then a player leave action is created for that player,
 	// resulting in a game over with the remaining player as the winner.
 	for {
 		select {
 		case act := <-actionCh:
-			ctrl.gameLoop.AddAction(act)
-		case err := <-errCh:
-			leaveAct := model.NewLeaveAction(err.proxy.playerID)
-			ctrl.gameLoop.AddAction(leaveAct)
+			go ctrl.gameLoop.ApplyAction(ctx, act)
+		case actLoopErr := <-actLoopErrCh:
+			leavePlayerAct := &model.PlayerActionLeave{}
+			leaveAct := leavePlayerAct.ToAction(actLoopErr.proxy.playerID)
+			err := ctrl.gameLoop.ApplyAction(ctx, leaveAct)
+			// Wait for the other playerActionLoop to finish
 			cancel()
-			<-errCh
-			ctrl.logEntry.WithFields(logrus.Fields{
-				logrus.ErrorKey: err.error,
-				"PlayerID":      err.proxy.playerID,
-			}).Debug("Error in action loop")
-			return err.error
+			<-actLoopErrCh
+			// TODO(2017-05-13): Return actLoopErr.err instead? Should then need
+			// to filter "ok" errors, such as if the client disconnected
+			ctrl.logEntry.Debugf("Error in action loop: %+v", actLoopErr.err)
+			return err
 		}
 	}
 }

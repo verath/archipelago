@@ -4,12 +4,9 @@ import (
 	"testing"
 )
 
-func newLaunchAction(from, to IslandID, ownerID PlayerID) *launchAction {
-	return &launchAction{
-		From:    from,
-		To:      to,
-		ownerID: ownerID,
-	}
+func newLaunchAction(from, to IslandID, playerId PlayerID) *actionLaunch {
+	playerAction := PlayerActionLaunch{From: from, To: to}
+	return &actionLaunch{PlayerActionLaunch: playerAction, playerID: playerId}
 }
 
 func TestLaunchAction_Apply(t *testing.T) {
