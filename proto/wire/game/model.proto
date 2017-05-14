@@ -1,0 +1,49 @@
+syntax = "proto3";
+package archipelago.proto.wire.game;
+option go_package = "lib/wire/game";
+
+message Coordinate {
+    int32 x = 1;
+    int32 y = 2;
+}
+
+message FloatCoordinate {
+    float x = 1;
+    float y = 2;
+}
+
+message Player {
+    string id = 1;
+}
+
+message Army {
+    Player owner = 1;
+    int32 strength = 2;
+}
+
+message Airplane {
+    string id = 1;
+    Army army = 2;
+    FloatCoordinate position = 3;
+    float direction = 4;
+    float speed = 5;
+}
+
+message Island {
+    string id = 1;
+    Army army = 2;
+    Coordinate position = 3;
+    float size = 4;
+}
+
+message Game {
+    string id = 1;
+    Coordinate size = 2;
+    Player player1 = 3;
+    Player player2 = 4;
+    Player player_neutral = 5;
+    repeated Island islands = 6;
+    repeated Airplane airplanes = 7;
+}
+
+

@@ -11,6 +11,8 @@ It is generated from these files:
 
 It has these top-level messages:
 	ActionEnvelope
+	ActionGameLeave
+	ActionGameLaunch
 	EventEnvelope
 	EventGameStart
 	EventGameOver
@@ -34,6 +36,10 @@ var _ = math.Inf
 const _ = proto.ProtoPackageIsVersion2 // please upgrade the proto package
 
 type ActionEnvelope struct {
+	// Types that are valid to be assigned to Action:
+	//	*ActionEnvelope_ActionGameLeave
+	//	*ActionEnvelope_ActionGameLaunch
+	Action isActionEnvelope_Action `protobuf_oneof:"action"`
 }
 
 func (m *ActionEnvelope) Reset()                    { *m = ActionEnvelope{} }
@@ -41,18 +47,170 @@ func (m *ActionEnvelope) String() string            { return proto.CompactTextSt
 func (*ActionEnvelope) ProtoMessage()               {}
 func (*ActionEnvelope) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{0} }
 
+type isActionEnvelope_Action interface {
+	isActionEnvelope_Action()
+}
+
+type ActionEnvelope_ActionGameLeave struct {
+	ActionGameLeave *ActionGameLeave `protobuf:"bytes,1,opt,name=action_game_leave,json=actionGameLeave,oneof"`
+}
+type ActionEnvelope_ActionGameLaunch struct {
+	ActionGameLaunch *ActionGameLaunch `protobuf:"bytes,2,opt,name=action_game_launch,json=actionGameLaunch,oneof"`
+}
+
+func (*ActionEnvelope_ActionGameLeave) isActionEnvelope_Action()  {}
+func (*ActionEnvelope_ActionGameLaunch) isActionEnvelope_Action() {}
+
+func (m *ActionEnvelope) GetAction() isActionEnvelope_Action {
+	if m != nil {
+		return m.Action
+	}
+	return nil
+}
+
+func (m *ActionEnvelope) GetActionGameLeave() *ActionGameLeave {
+	if x, ok := m.GetAction().(*ActionEnvelope_ActionGameLeave); ok {
+		return x.ActionGameLeave
+	}
+	return nil
+}
+
+func (m *ActionEnvelope) GetActionGameLaunch() *ActionGameLaunch {
+	if x, ok := m.GetAction().(*ActionEnvelope_ActionGameLaunch); ok {
+		return x.ActionGameLaunch
+	}
+	return nil
+}
+
+// XXX_OneofFuncs is for the internal use of the proto package.
+func (*ActionEnvelope) XXX_OneofFuncs() (func(msg proto.Message, b *proto.Buffer) error, func(msg proto.Message, tag, wire int, b *proto.Buffer) (bool, error), func(msg proto.Message) (n int), []interface{}) {
+	return _ActionEnvelope_OneofMarshaler, _ActionEnvelope_OneofUnmarshaler, _ActionEnvelope_OneofSizer, []interface{}{
+		(*ActionEnvelope_ActionGameLeave)(nil),
+		(*ActionEnvelope_ActionGameLaunch)(nil),
+	}
+}
+
+func _ActionEnvelope_OneofMarshaler(msg proto.Message, b *proto.Buffer) error {
+	m := msg.(*ActionEnvelope)
+	// action
+	switch x := m.Action.(type) {
+	case *ActionEnvelope_ActionGameLeave:
+		b.EncodeVarint(1<<3 | proto.WireBytes)
+		if err := b.EncodeMessage(x.ActionGameLeave); err != nil {
+			return err
+		}
+	case *ActionEnvelope_ActionGameLaunch:
+		b.EncodeVarint(2<<3 | proto.WireBytes)
+		if err := b.EncodeMessage(x.ActionGameLaunch); err != nil {
+			return err
+		}
+	case nil:
+	default:
+		return fmt.Errorf("ActionEnvelope.Action has unexpected type %T", x)
+	}
+	return nil
+}
+
+func _ActionEnvelope_OneofUnmarshaler(msg proto.Message, tag, wire int, b *proto.Buffer) (bool, error) {
+	m := msg.(*ActionEnvelope)
+	switch tag {
+	case 1: // action.action_game_leave
+		if wire != proto.WireBytes {
+			return true, proto.ErrInternalBadWireType
+		}
+		msg := new(ActionGameLeave)
+		err := b.DecodeMessage(msg)
+		m.Action = &ActionEnvelope_ActionGameLeave{msg}
+		return true, err
+	case 2: // action.action_game_launch
+		if wire != proto.WireBytes {
+			return true, proto.ErrInternalBadWireType
+		}
+		msg := new(ActionGameLaunch)
+		err := b.DecodeMessage(msg)
+		m.Action = &ActionEnvelope_ActionGameLaunch{msg}
+		return true, err
+	default:
+		return false, nil
+	}
+}
+
+func _ActionEnvelope_OneofSizer(msg proto.Message) (n int) {
+	m := msg.(*ActionEnvelope)
+	// action
+	switch x := m.Action.(type) {
+	case *ActionEnvelope_ActionGameLeave:
+		s := proto.Size(x.ActionGameLeave)
+		n += proto.SizeVarint(1<<3 | proto.WireBytes)
+		n += proto.SizeVarint(uint64(s))
+		n += s
+	case *ActionEnvelope_ActionGameLaunch:
+		s := proto.Size(x.ActionGameLaunch)
+		n += proto.SizeVarint(2<<3 | proto.WireBytes)
+		n += proto.SizeVarint(uint64(s))
+		n += s
+	case nil:
+	default:
+		panic(fmt.Sprintf("proto: unexpected type %T in oneof", x))
+	}
+	return n
+}
+
+type ActionGameLeave struct {
+}
+
+func (m *ActionGameLeave) Reset()                    { *m = ActionGameLeave{} }
+func (m *ActionGameLeave) String() string            { return proto.CompactTextString(m) }
+func (*ActionGameLeave) ProtoMessage()               {}
+func (*ActionGameLeave) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{1} }
+
+type ActionGameLaunch struct {
+	IslandIdFrom string `protobuf:"bytes,1,opt,name=island_id_from,json=islandIdFrom" json:"island_id_from,omitempty"`
+	IslandIdTo   string `protobuf:"bytes,2,opt,name=island_id_to,json=islandIdTo" json:"island_id_to,omitempty"`
+}
+
+func (m *ActionGameLaunch) Reset()                    { *m = ActionGameLaunch{} }
+func (m *ActionGameLaunch) String() string            { return proto.CompactTextString(m) }
+func (*ActionGameLaunch) ProtoMessage()               {}
+func (*ActionGameLaunch) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{2} }
+
+func (m *ActionGameLaunch) GetIslandIdFrom() string {
+	if m != nil {
+		return m.IslandIdFrom
+	}
+	return ""
+}
+
+func (m *ActionGameLaunch) GetIslandIdTo() string {
+	if m != nil {
+		return m.IslandIdTo
+	}
+	return ""
+}
+
 func init() {
 	proto.RegisterType((*ActionEnvelope)(nil), "archipelago.proto.wire.ActionEnvelope")
+	proto.RegisterType((*ActionGameLeave)(nil), "archipelago.proto.wire.ActionGameLeave")
+	proto.RegisterType((*ActionGameLaunch)(nil), "archipelago.proto.wire.ActionGameLaunch")
 }
 
 func init() { proto.RegisterFile("proto/wire/action.proto", fileDescriptor0) }
 
 var fileDescriptor0 = []byte{
-	// 93 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xe2, 0x12, 0x2f, 0x28, 0xca, 0x2f,
-	0xc9, 0xd7, 0x2f, 0xcf, 0x2c, 0x4a, 0xd5, 0x4f, 0x4c, 0x2e, 0xc9, 0xcc, 0xcf, 0xd3, 0x03, 0x8b,
-	0x08, 0x89, 0x25, 0x16, 0x25, 0x67, 0x64, 0x16, 0xa4, 0xe6, 0x24, 0xa6, 0xe7, 0x43, 0x84, 0xf4,
-	0x40, 0x8a, 0x94, 0x04, 0xb8, 0xf8, 0x1c, 0xc1, 0xea, 0x5c, 0xf3, 0xca, 0x52, 0x73, 0xf2, 0x0b,
-	0x52, 0x9d, 0xb8, 0xa2, 0x38, 0x72, 0x32, 0x93, 0xc0, 0x46, 0x24, 0xb1, 0x81, 0x55, 0x1a, 0x03,
-	0x02, 0x00, 0x00, 0xff, 0xff, 0xd3, 0x53, 0x87, 0xea, 0x57, 0x00, 0x00, 0x00,
+	// 235 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x8c, 0x90, 0xcf, 0x4a, 0x03, 0x31,
+	0x10, 0x87, 0xbb, 0x1e, 0x4a, 0x3b, 0x96, 0xfe, 0xc9, 0x41, 0x7b, 0x2c, 0x8b, 0x60, 0x4f, 0x5b,
+	0xd0, 0x27, 0xb0, 0xa0, 0x56, 0xf0, 0x14, 0x14, 0xa4, 0x97, 0x30, 0xdd, 0x1d, 0xdb, 0x40, 0x92,
+	0x59, 0xe2, 0x5a, 0x1f, 0xd2, 0x97, 0x92, 0x4e, 0x10, 0xe9, 0xe2, 0xa1, 0xd7, 0x8f, 0x2f, 0x1f,
+	0xbf, 0x0c, 0x5c, 0xd6, 0x91, 0x1b, 0x5e, 0x7c, 0xd9, 0x48, 0x0b, 0x2c, 0x1b, 0xcb, 0xa1, 0x10,
+	0xa2, 0x2e, 0x30, 0x96, 0x3b, 0x5b, 0x93, 0xc3, 0x2d, 0x27, 0x54, 0x1c, 0xa4, 0xfc, 0x3b, 0x83,
+	0xe1, 0x9d, 0x88, 0xf7, 0x61, 0x4f, 0x8e, 0x6b, 0x52, 0xaf, 0x30, 0x49, 0x4f, 0xcd, 0x16, 0x3d,
+	0x19, 0x47, 0xb8, 0xa7, 0x69, 0x36, 0xcb, 0xe6, 0xe7, 0x37, 0xd7, 0xc5, 0xff, 0x99, 0x22, 0x25,
+	0x1e, 0xd1, 0xd3, 0xf3, 0x41, 0x5f, 0x75, 0xf4, 0x08, 0x8f, 0x91, 0x7a, 0x03, 0x75, 0x94, 0xc5,
+	0xcf, 0x50, 0xee, 0xa6, 0x67, 0xd2, 0x9d, 0x9f, 0xd0, 0x15, 0x7f, 0xd5, 0xd1, 0x63, 0x6c, 0xb1,
+	0x65, 0x0f, 0xba, 0x89, 0xe5, 0x13, 0x18, 0xb5, 0x96, 0xe4, 0x6b, 0x18, 0xb7, 0x23, 0xea, 0x0a,
+	0x86, 0xf6, 0xc3, 0x61, 0xa8, 0x8c, 0xad, 0xcc, 0x7b, 0x64, 0x2f, 0xdf, 0xeb, 0xeb, 0x41, 0xa2,
+	0x4f, 0xd5, 0x43, 0x64, 0xaf, 0x66, 0x30, 0xf8, 0xb3, 0x1a, 0x96, 0xa9, 0x7d, 0x0d, 0xbf, 0xce,
+	0x0b, 0x2f, 0x61, 0xdd, 0x73, 0x76, 0x23, 0xd7, 0xde, 0x74, 0x65, 0xf5, 0xed, 0x4f, 0x00, 0x00,
+	0x00, 0xff, 0xff, 0x91, 0x2a, 0x86, 0xaa, 0x82, 0x01, 0x00, 0x00,
 }
