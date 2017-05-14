@@ -88,11 +88,7 @@ func TestTickAction_Apply_Airplane_Arrival(t *testing.T) {
 
 func TestTickAction_Apply_AddsTickEvent(t *testing.T) {
 	game := CreateDummyGameSimple()
-<<<<<<< HEAD
-	ta, _ := NewTickAction(1 * time.Second)
-=======
 	ta := ActionTick{1 * time.Second}
->>>>>>> master
 	evts, err := ta.Apply(game)
 	if err != nil {
 		t.Errorf("Expected no error, got: %v", err)

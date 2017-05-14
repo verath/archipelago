@@ -52,22 +52,9 @@ func (pp *playerProxy) ReadAction(ctx context.Context) (model.Action, error) {
 // sent or the context is cancelled.
 func (pp *playerProxy) WriteEvent(ctx context.Context, evt model.Event) error {
 	playerEvent := evt.ToPlayerEvent(pp.playerID)
-<<<<<<< HEAD
-	var evtType string
-	switch playerEvent.(type) {
-	case *model.PlayerEventGameStart:
-		evtType = "evt_game_start"
-	case *model.PlayerEventTick:
-		evtType = "evt_tick"
-	case *model.PlayerEventGameOver:
-		evtType = "evt_game_over"
-	default:
-		return errors.Errorf("Unknown PlayerEvent type: %T", playerEvent)
-=======
 	evtType, err := pp.envelopeTypeByPlayerEvent(playerEvent)
 	if err != nil {
 		return errors.Wrapf(err, "Could not determine envelope type for: %T", playerEvent)
->>>>>>> master
 	}
 	env, err := NewEnvelope(evtType, playerEvent)
 	if err != nil {

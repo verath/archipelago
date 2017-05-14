@@ -25,20 +25,10 @@ func (ta *ActionTick) Apply(game *Game) ([]Event, error) {
 	if err := ta.updateIslands(game, ta.Delta); err != nil {
 		return nil, errors.Wrap(err, "Could not update islands")
 	}
-<<<<<<< HEAD
-
-	if isGameOver, winner := ta.isGameOver(game); isGameOver {
-		gameOverEvent := NewEventGameOver(winner)
-		return []Event{gameOverEvent}, nil
-	}
-	return []Event{NewEventTick(game)}, nil
-
-=======
 	if gameOver, winner := ta.isGameOver(game); gameOver {
 		return []Event{NewEventGameOver(winner)}, nil
 	}
 	return []Event{NewEventTick(game)}, nil
->>>>>>> master
 }
 
 func (ta *ActionTick) updateAirplanes(g *Game, delta time.Duration) error {
