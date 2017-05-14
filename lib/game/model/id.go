@@ -2,13 +2,24 @@ package model
 
 import "github.com/verath/archipelago/lib/common"
 
-type ModelID string
+// ID is the type used as ID for all models.
+type ID string
 
-type AirplaneID ModelID
-type GameID ModelID
-type IslandID ModelID
-type PlayerID ModelID
+// Distinct types for various entries in the game model. Each
+// entry is given a separate type of ID, to avoid issues with
+// trying to find an entity of one type with the id of another.
+type (
+	// GameID is the id type for games.
+	GameID ID
+	// PlayerID is the id type for players.
+	PlayerID ID
+	// IslandID is the id type for Islands.
+	IslandID ID
+	// AirplaneID is the id type for Airplanes.
+	AirplaneID ID
+)
 
-func NewModelID() ModelID {
-	return ModelID(common.NextGlobalID())
+// NextModelID returns a unique id.
+func NextModelID() ID {
+	return ID(common.NextGlobalID())
 }

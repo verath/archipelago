@@ -1,7 +1,7 @@
 package model
 
 type (
-	// An event is a (partially) created event that is to be sent
+	// Event is a (partially) created event that is to be sent
 	// to a player. As an event might depend on the player it is
 	// sent to, an Event is always transformed into a PlayerEvent
 	// for each player.
@@ -23,8 +23,8 @@ type (
 	}
 )
 
-// Tests if an event is a game over event.
+// IsGameOverEvent tests if an event is a game over event.
 func IsGameOverEvent(evt Event) bool {
-	_, ok := evt.(*eventGameOver)
+	_, ok := evt.(*EventGameOver)
 	return ok
 }

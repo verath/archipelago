@@ -7,11 +7,12 @@ type actionLeave struct {
 	playerID PlayerID
 }
 
-// PlayerActionLeave is a player action for leaving
-// the game. The action results in the leaving player
-// losing the game.
+// PlayerActionLeave is a player action for leaving the game. The
+// action results in the leaving player losing the game.
 type PlayerActionLeave struct{}
 
+// ToAction returns a new leave action associated with the provided
+// playerID
 func (act PlayerActionLeave) ToAction(playerID PlayerID) Action {
 	return &actionLeave{
 		PlayerActionLeave: act,

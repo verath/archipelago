@@ -5,6 +5,8 @@ import (
 	"github.com/pkg/errors"
 )
 
+// Game represents a game instance, and acts as a container
+// for other game models associated to the same game instance.
 type Game struct {
 	id            GameID
 	size          Coordinate
@@ -15,18 +17,24 @@ type Game struct {
 	airplanes     []*Airplane
 }
 
+// Player1 is a getter for the Player model representing player 1.
 func (g *Game) Player1() *Player {
 	return g.player1
 }
 
+// Player2 is a getter for the Player model representing player 2.
 func (g *Game) Player2() *Player {
 	return g.player2
 }
 
+// PlayerNeutral is a getter for the Player model representing the neutral
+// player.
 func (g *Game) PlayerNeutral() *Player {
 	return g.playerNeutral
 }
 
+// Player returns a player by PlayerID, or nil if a player with the given
+// id could not be found in the game instance.
 func (g *Game) Player(id PlayerID) *Player {
 	if g.player1.id == id {
 		return g.player1
@@ -40,9 +48,9 @@ func (g *Game) Player(id PlayerID) *Player {
 	return nil
 }
 
-// Takes a player id and returns the opponent of that player. I.e.
-// given the id for player1, player2 is returned. Returns nil
-// if the id does not point to either player1 or player2
+// Opponent takes a player id and returns the opponent of that player. I.e.
+// given the id for player1, player2 is returned. Returns nil if id is not
+// associated with either player1 or player2.
 func (g *Game) Opponent(id PlayerID) *Player {
 	if g.player1.id == id {
 		return g.player2
@@ -53,7 +61,8 @@ func (g *Game) Opponent(id PlayerID) *Player {
 	return nil
 }
 
-// Returns an island by id, or nil if the island does not exist.
+// Island returns an island by IslandID, or nil if an island with the given
+// id could not be found in the game instance.
 func (g *Game) Island(id IslandID) *Island {
 	for _, island := range g.islands {
 		if island.id == id {
@@ -63,14 +72,18 @@ func (g *Game) Island(id IslandID) *Island {
 	return nil
 }
 
+// Islands returns all the islands in the game instance.
 func (g *Game) Islands() []*Island {
 	return g.islands
 }
 
+// Airplanes returns all the airplanes in the game instance.
 func (g *Game) Airplanes() []*Airplane {
 	return g.airplanes
 }
 
+// AddAirplane adds an airplane to the game instance. The method
+// panics if the airplane being added is nil.
 func (g *Game) AddAirplane(airplane *Airplane) {
 	if airplane == nil {
 		panic("AddAirplane: airplane cannot be nil")
@@ -78,6 +91,9 @@ func (g *Game) AddAirplane(airplane *Airplane) {
 	g.airplanes = append(g.airplanes, airplane)
 }
 
+// RemoveAirplane removes an airplane from the game instance. The method
+// panics if the airplane being removed is nil. The method is a no-op
+// if the airplane is not found in the game instance.
 func (g *Game) RemoveAirplane(airplane *Airplane) {
 	if airplane == nil {
 		panic("RemoveAirplane: airplane cannot be nil")
@@ -93,6 +109,8 @@ func (g *Game) RemoveAirplane(airplane *Airplane) {
 	}
 }
 
+// MarshalJSON marshals the game instance as JSON by recursively
+// marshalling each sub-component of the game.
 func (g *Game) MarshalJSON() ([]byte, error) {
 	return json.Marshal(&struct {
 		ID            GameID      `json:"id"`
@@ -113,6 +131,7 @@ func (g *Game) MarshalJSON() ([]byte, error) {
 	})
 }
 
+// Copy performs a deep copy of the game, returning the copy.
 func (g *Game) Copy() *Game {
 	airplanesCopy := make([]*Airplane, len(g.airplanes))
 	for i, airplane := range g.airplanes {
@@ -133,8 +152,10 @@ func (g *Game) Copy() *Game {
 	}
 }
 
+// newGame constructs a new game from the given parameters. Use GameBuilder to
+// perform validation on the parameters before creation.
 func newGame(size Coordinate, player1, player2, playerNeutral *Player, islands []*Island, airplanes []*Airplane) (*Game, error) {
-	id := GameID(NewModelID())
+	id := GameID(NextModelID())
 	return &Game{
 		id:            id,
 		size:          size,
@@ -146,6 +167,7 @@ func newGame(size Coordinate, player1, player2, playerNeutral *Player, islands [
 	}, nil
 }
 
+// GameBuilder implements a builder patter for creating a new Game instance.
 type GameBuilder struct {
 	size          Coordinate
 	player1       *Player
@@ -155,6 +177,7 @@ type GameBuilder struct {
 	airplanes     []*Airplane
 }
 
+// NewGameBuilder creates a new GameBuilder with initial values.
 func NewGameBuilder(size Coordinate, player1, player2, playerNeutral *Player) *GameBuilder {
 	return &GameBuilder{
 		size:          size,
@@ -166,11 +189,14 @@ func NewGameBuilder(size Coordinate, player1, player2, playerNeutral *Player) *G
 	}
 }
 
+// AddIsland adds an island to GameBuilder, to be later included in the game.
 func (gb *GameBuilder) AddIsland(island *Island) *GameBuilder {
 	gb.islands = append(gb.islands, island)
 	return gb
 }
 
+// Build creates a game from the GameBuilder parameters, first validating
+// that the provided parameters are valid.
 func (gb *GameBuilder) Build() (*Game, error) {
 	if gb.size.X <= 0 || gb.size.Y <= 0 {
 		return nil, errors.New("Size must be >= (1,1)")
@@ -202,6 +228,7 @@ func (gb *GameBuilder) Build() (*Game, error) {
 	return newGame(gb.size, gb.player1, gb.player2, gb.playerNeutral, gb.islands, gb.airplanes)
 }
 
+// BuildOrPanic calls Build and panics if Build returns an error.
 func (gb *GameBuilder) BuildOrPanic() *Game {
 	board, err := gb.Build()
 	if err != nil {

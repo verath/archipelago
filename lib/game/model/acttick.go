@@ -28,7 +28,8 @@ func (ta *ActionTick) Apply(game *Game) ([]Event, error) {
 	if gameOver, winner := ta.isGameOver(game); gameOver {
 		return []Event{NewEventGameOver(winner)}, nil
 	}
-	return []Event{NewEventTick(game)}, nil
+	tickEvt := EventTick{Game: game.Copy()}
+	return []Event{tickEvt}, nil
 }
 
 func (ta *ActionTick) updateAirplanes(g *Game, delta time.Duration) error {
@@ -91,7 +92,7 @@ func (ta *ActionTick) updateIslands(g *Game, delta time.Duration) error {
 			// Neutral islands does not grow in strength
 			continue
 		}
-		size := island.Size()
+		size := float64(island.Size())
 		if float64(island.Strength()) >= (IslandGrowthCap * size) {
 			continue
 		}
