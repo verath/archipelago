@@ -20,13 +20,12 @@ const (
 	clientQueueSize = 2
 )
 
-// The game coordinator is responsible for connecting players to
-// a game. Once enough players has been found so that a game can
-// be created, the game coordinator creates and starts a new game
-// with the given players.
+// The Coordinator is responsible for connecting players to a game. Once enough
+// players has been found so that a game can be created, the game coordinator
+// creates and starts a new game with the given players.
 //
-// The lifetime of the game coordinator is not tied to a single
-// game but rather the entire lifetime of the game server.
+// The lifetime of the game coordinator is not tied to a single game but rather
+// the entire lifetime of the game server.
 type Coordinator struct {
 	logEntry *logrus.Entry
 	// A queue of clients that has connected and should be added to a game
@@ -129,7 +128,7 @@ func (c *Coordinator) run(ctx context.Context) error {
 // This method blocks until the game has been created, but not until it has finished
 // running.
 func (c *Coordinator) startGame(ctx context.Context, p1Client client, p2Client client) error {
-	game, err := CreateBasicGame()
+	game, err := createBasicGame()
 	if err != nil {
 		return errors.Wrap(err, "Error creating game")
 	}

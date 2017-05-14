@@ -64,7 +64,8 @@ func createIslands(p1, p2, pn *model.Player, size model.Coordinate, gameRand *ra
 	return islands, nil
 }
 
-func CreateBasicGame() (*model.Game, error) {
+// createBasicGame creates a new instance of a Game model.
+func createBasicGame() (*model.Game, error) {
 	seed := time.Now().UnixNano()
 	gameRand := rand.New(rand.NewSource(seed))
 

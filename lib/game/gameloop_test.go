@@ -80,7 +80,7 @@ func TestGameLoop_AddAction_RealTick(t *testing.T) {
 	timesApplied := 0
 
 	gl.AddAction(actionFunc(func(_ *model.Game) ([]model.Event, error) {
-		timesApplied += 1
+		timesApplied++
 		return nil, nil
 	}))
 
