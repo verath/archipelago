@@ -34,12 +34,3 @@ func CreateDummyGameSimple() *Game {
 		AddIsland(ne2Island).
 		BuildOrPanic()
 }
-
-func CoordsWithin(c1, c2 FloatCoordinate, epsilon float64) bool {
-	return math.Hypot(c1.X-c2.X, c1.Y-c2.Y) < epsilon
-}
-
-// Helper for testing if two float coordinates are almost the same
-func CoordsAlmostEqual(c1, c2 FloatCoordinate) bool {
-	return CoordsWithin(c1, c2, 0.001)
-}

@@ -48,9 +48,9 @@ func TestTickAction_Apply_Airplanes(t *testing.T) {
 		t.Errorf("Expected no error, got: %v", err)
 	}
 
-	expectedPos := FloatCoordinate{X: 0, Y: 1}
-	actualPos := game.Airplanes()[0].Position()
-	if !CoordsAlmostEqual(actualPos, expectedPos) {
+	expectedPos := Coordinate{X: 0, Y: 1}
+	actualPos := game.Airplanes()[0].Position().ToCoordinate()
+	if actualPos != expectedPos {
 		t.Errorf("Expected airplane pos to be %v was %v", expectedPos, actualPos)
 	}
 }
