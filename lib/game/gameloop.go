@@ -41,12 +41,8 @@ type gameLoop struct {
 	handleEventWG sync.WaitGroup
 
 	actionsMu sync.Mutex
-	// actions is slice of actions to be applied on the next tick
+	// A slice of actions to be applied on the next tick
 	actions []model.Action
-	// actionsAppliedCh is a channel that is closed once the actions
-	// have all been applied (i.e. after the next tick), or once the
-	// gameLoop is finished.
-	actionsAppliedCh chan struct{}
 }
 
 // A handler for game events produced from applying actions.
@@ -61,49 +57,34 @@ func newGameLoop(log *logrus.Logger, game *model.Game) (*gameLoop, error) {
 	logEntry := common.ModuleLogEntryWithID(log, "gameLoop")
 
 	return &gameLoop{
-		logEntry:         logEntry,
-		tickInterval:     defaultTickInterval,
-		game:             game,
-		actions:          make([]model.Action, 0),
-		actionsAppliedCh: make(chan struct{}),
+		logEntry:     logEntry,
+		tickInterval: defaultTickInterval,
+		game:         game,
+		actions:      make([]model.Action, 0),
 	}, nil
 }
 
-// SetEventHandler sets the handler for game events.
+// Sets the handler for game events.
 func (gl *gameLoop) SetEventHandler(eventHandler eventHandler) {
 	gl.eventHandlerMu.Lock()
 	gl.eventHandler = eventHandler
 	gl.eventHandlerMu.Unlock()
 }
 
-// ApplyAction adds an action to be processed in the next tick. The method
-// blocks until the action has been applied, until it is determined that
-// the action will never be applied (i.e. the game loop quit), or the
-// context is cancelled.
-func (gl *gameLoop) ApplyAction(ctx context.Context, action model.Action) error {
+// Adds an action to be processed in the next tick.
+func (gl *gameLoop) AddAction(action model.Action) {
 	gl.actionsMu.Lock()
 	gl.actions = append(gl.actions, action)
-	appliedCh := gl.actionsAppliedCh
 	gl.actionsMu.Unlock()
-	select {
-	case <-ctx.Done():
-		return ctx.Err()
-	case <-appliedCh:
-		return nil
-	}
 }
 
-// Run runs the game loop. Run blocks until the context is cancelled, an
+// Runs the game loop. Run blocks until the context is cancelled, an
 // error occurs, or the game is finished.
 func (gl *gameLoop) Run(ctx context.Context) error {
 	gl.logEntry.Debug("Starting")
 	defer gl.logEntry.Debug("Stopped")
 	err := gl.tickLoop(ctx)
-	// Close the actionsAppliedCh, as no more actions will be applied
-	gl.actionsMu.Lock()
-	close(gl.actionsAppliedCh)
-	gl.actionsMu.Unlock()
-	// Wait for calls to eventHandler to finish
+	// Before returning control, wait for calls to eventHandler to finish
 	gl.handleEventWG.Wait()
 	return errors.Wrap(err, "error while running tickLoop")
 }
@@ -126,13 +107,14 @@ func (gl *gameLoop) isGameOver() bool {
 	return gl.gameOver
 }
 
-// tickLoop performs a "tick" each tickInterval. The tick is what updates the game, by
-// applying actions that has been added since the last tick. This method blocks until
-// the game is over, or an error occurs.
+// Performs a "tick" each tickInterval. The tick is what updates the game, by applying
+// actions that has been added since the last tick. This method blocks until the game
+// is over, on an error occurs.
 func (gl *gameLoop) tickLoop(ctx context.Context) error {
 	tickInterval := gl.tickInterval
 	ticker := time.NewTicker(tickInterval)
 	defer ticker.Stop()
+
 	for {
 		select {
 		case <-ctx.Done():
@@ -155,10 +137,12 @@ func (gl *gameLoop) tickLoop(ctx context.Context) error {
 // last actions during a tick.
 func (gl *gameLoop) tick(ctx context.Context, delta time.Duration) error {
 	// Obtain a slice of the actions added since the last tick.
-	acts, actsAppliedCh := gl.swapActions()
-	defer close(actsAppliedCh)
+	acts := gl.getActions()
+
 	// Add a tick actions as the last action to our local actions slice.
-	acts = append(acts, &model.ActionTick{Delta: delta})
+	tickAction := &model.ActionTick{Delta: delta}
+	acts = append(acts, tickAction)
+
 	for _, act := range acts {
 		if err := gl.applyAction(ctx, act); err != nil {
 			return err
@@ -172,21 +156,19 @@ func (gl *gameLoop) tick(ctx context.Context, delta time.Duration) error {
 	return nil
 }
 
-// swapActions swaps the current slice of actions with a new empty slice,
-// and the current actionsAppliedCh with a new channel. It returns the
-// old actions slice and actionsAppliedCh.
-func (gl *gameLoop) swapActions() ([]model.Action, chan<- struct{}) {
+// Swaps the current slice of actions with a new empty slice, returning
+// the previous actions.
+func (gl *gameLoop) getActions() []model.Action {
 	gl.actionsMu.Lock()
 	defer gl.actionsMu.Unlock()
 	acts := gl.actions
-	actsAppliedCh := gl.actionsAppliedCh
+
 	// We slowly shrink the initial capacity of the actions here, so
 	// that one tick with an abnormal number of actions doesn't result
 	// in every new actions slice being allocated that same large size.
 	newLen := len(acts) / 2
 	gl.actions = make([]model.Action, 0, newLen)
-	gl.actionsAppliedCh = make(chan struct{})
-	return acts, actsAppliedCh
+	return acts
 }
 
 // Applies a single action to the game, and handles each event this action
@@ -213,6 +195,7 @@ func (gl *gameLoop) handleActionError(ctx context.Context, err error) error {
 			gl.logEntry.WithError(err).Warn("Ignoring non-fatal ActionError")
 			return nil
 		}
+
 		gl.logEntry.WithError(err).Debug("handle fatal ActionError")
 		// Send a game over event with the opponent as winner
 		var winner *model.Player
