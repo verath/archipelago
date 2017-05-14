@@ -28,7 +28,7 @@ func (ta *ActionTick) Apply(game *Game) ([]Event, error) {
 	if gameOver, winner := ta.isGameOver(game); gameOver {
 		return []Event{NewEventGameOver(winner)}, nil
 	}
-	tickEvt := EventTick{Game: game.Copy()}
+	tickEvt := &EventTick{Game: game.Copy()}
 	return []Event{tickEvt}, nil
 }
 
