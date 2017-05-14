@@ -11,7 +11,7 @@ func TestEnvelope_MarshalUnmarshalJSON(t *testing.T) {
 	// Create a new envelope and marshal it to json
 	data := envDataType{Foo: "bar"}
 	env := &envelope{"test", data}
-	envJson, err := json.Marshal(env)
+	envJSON, err := json.Marshal(env)
 	if err != nil {
 		t.Fatalf("Error when marshaling envelope: %v", err)
 	}
@@ -19,7 +19,7 @@ func TestEnvelope_MarshalUnmarshalJSON(t *testing.T) {
 	// Unmarshal the json into a receivedEnvelopeImpl, verify that
 	// the type and data stays the same
 	recvEnv := receivedEnvelopeImpl{}
-	if err := json.Unmarshal(envJson, &recvEnv); err != nil {
+	if err := json.Unmarshal(envJSON, &recvEnv); err != nil {
 		t.Fatalf("Error unmarshalling as receivedEnvelopeImpl: %v", err)
 	}
 	if recvEnv.Type() != env.Type() {

@@ -28,7 +28,8 @@ func (ta *ActionTick) Apply(game *Game) ([]Event, error) {
 	if gameOver, winner := ta.isGameOver(game); gameOver {
 		return []Event{NewEventGameOver(winner)}, nil
 	}
-	return []Event{NewEventTick(game)}, nil
+	tickEvt := &EventTick{Game: game.Copy()}
+	return []Event{tickEvt}, nil
 }
 
 func (ta *ActionTick) updateAirplanes(g *Game, delta time.Duration) error {
@@ -70,10 +71,12 @@ func (ta *ActionTick) updateAirplanes(g *Game, delta time.Duration) error {
 				// If the airplane str is greater, then the airplane
 				// owner takes control of the island
 				target.SetStrength(airplaneStr - targetStr)
+				target.SetGrowthRemainder(0)
 				target.SetOwner(airplane.Owner())
 			} else {
 				// If they are equal, the owner is set to the neutral player
 				target.SetStrength(0)
+				target.SetGrowthRemainder(0)
 				target.SetOwner(g.PlayerNeutral())
 			}
 		}
@@ -89,7 +92,7 @@ func (ta *ActionTick) updateIslands(g *Game, delta time.Duration) error {
 			// Neutral islands does not grow in strength
 			continue
 		}
-		size := island.Size()
+		size := float64(island.Size())
 		if float64(island.Strength()) >= (IslandGrowthCap * size) {
 			continue
 		}

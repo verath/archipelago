@@ -35,7 +35,7 @@ type WSConnection struct {
 	readError error
 }
 
-// Creates a new WSConnection, wrapping the provided wsConn.
+// newWSConnection creates a new WSConnection, wrapping the provided wsConn.
 func newWSConnection(wsConn *websocket.Conn) (*WSConnection, error) {
 	if wsConn == nil {
 		return nil, errors.New("wsConn cannot be nil")
@@ -45,10 +45,10 @@ func newWSConnection(wsConn *websocket.Conn) (*WSConnection, error) {
 	}, nil
 }
 
-// Reads a text message from the websocket connection. Blocks until
-// a message has been read. Only a single goroutine may call
-// ReadMessage at a time. If ReadMessage ever returns an error, the
-// same error will be returned on each following call.
+// ReadMessage reads a text message from the websocket connection. Blocks until
+// a message has been read. Only a single goroutine may call ReadMessage at a
+// time. If ReadMessage ever returns an error, the same error will be returned
+// on each following call.
 func (c *WSConnection) ReadMessage() (msg []byte, err error) {
 	if c.readError != nil {
 		return nil, c.readError
@@ -65,18 +65,18 @@ func (c *WSConnection) ReadMessage() (msg []byte, err error) {
 	return msg, nil
 }
 
-// Writes a text message to the websocket connection. Blocks until the
-// message is sent. Only a single goroutine may call WriteMessage at
-// the same time.
+// WriteMessage writes a text message to the websocket connection. Blocks
+// until the message is sent. Only a single goroutine may call WriteMessage
+// at the same time.
 func (c *WSConnection) WriteMessage(message []byte) (err error) {
 	c.writeMu.Lock()
 	defer c.writeMu.Unlock()
 	return c.writeMessage(websocket.TextMessage, message)
 }
 
-// Attempts to cleanly shutdown the connection, sending a websocket
-// close frame to the client and then closing the connection. If the
-// provided context expires, then the context's error is returned.
+// Shutdown attempts to cleanly shutdown the connection, sending a websocket
+// close frame to the client and then closing the connection. Blocks until
+// the shutdown is complete, or the context is cancelled.
 func (c *WSConnection) Shutdown(ctx context.Context) error {
 	errCh := make(chan error, 1)
 	go func() { errCh <- c.shutdown() }()
@@ -88,7 +88,7 @@ func (c *WSConnection) Shutdown(ctx context.Context) error {
 	}
 }
 
-// Closes the connection, without sending a close message. Closing the
+// Close closes the connection, without sending a close message. Closing the
 // connection will make all current and future readers and writers fail.
 func (c *WSConnection) Close() error {
 	return c.wsConn.Close()

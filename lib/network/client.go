@@ -65,9 +65,9 @@ func NewClient(log *logrus.Logger, conn Connection) (*Client, error) {
 	}, nil
 }
 
-// Stops the client, disconnecting the underlying connection.
-// Disconnect blocks until the client is fully stopped. Calling
-// Disconnect on an already disconnected Client is a no-op.
+// Disconnect stops the client, disconnecting the underlying connection.
+// Disconnect blocks until the client is fully stopped. Calling Disconnect
+// on an already disconnected Client is a no-op.
 func (c *Client) Disconnect() {
 	c.disconnect()
 }

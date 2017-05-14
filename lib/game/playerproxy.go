@@ -56,7 +56,7 @@ func (pp *playerProxy) WriteEvent(ctx context.Context, evt model.Event) error {
 	if err != nil {
 		return errors.Wrapf(err, "Could not determine envelope type for: %T", playerEvent)
 	}
-	env, err := NewEnvelope(evtType, playerEvent)
+	env, err := newEnvelope(evtType, playerEvent)
 	if err != nil {
 		return errors.Wrapf(err, "Error creating envelope for playerEvent: %v", playerEvent)
 	}
@@ -70,7 +70,7 @@ func (pp *playerProxy) WriteEvent(ctx context.Context, evt model.Event) error {
 	return nil
 }
 
-func (pp *playerProxy) envelopeToPlayerAction(envelope ReceivedEnvelope) (model.PlayerAction, error) {
+func (pp *playerProxy) envelopeToPlayerAction(envelope receivedEnvelope) (model.PlayerAction, error) {
 	switch envelope.Type() {
 	case "act_launch":
 		var data struct {

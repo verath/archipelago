@@ -11,8 +11,8 @@ func TestTickAction_Apply_Islands(t *testing.T) {
 	i1 := game.Island("p1")
 	i2 := game.Island("p2")
 	in := game.Island("pn")
-	i1.SetSize(1)
-	i2.SetSize(2)
+	i1.size = 1
+	i2.size = 2
 
 	// Tick for IslandGrowthInterval seconds
 	ta := ActionTick{IslandGrowthInterval}
@@ -48,9 +48,9 @@ func TestTickAction_Apply_Airplanes(t *testing.T) {
 		t.Errorf("Expected no error, got: %v", err)
 	}
 
-	expectedPos := FloatCoordinate{X: 0, Y: 1}
-	actualPos := game.Airplanes()[0].Position()
-	if !CoordsAlmostEqual(actualPos, expectedPos) {
+	expectedPos := Coordinate{X: 0, Y: 1}
+	actualPos := game.Airplanes()[0].Position().ToCoordinate()
+	if actualPos != expectedPos {
 		t.Errorf("Expected airplane pos to be %v was %v", expectedPos, actualPos)
 	}
 }
@@ -97,8 +97,8 @@ func TestTickAction_Apply_AddsTickEvent(t *testing.T) {
 		t.Error("Expected exactly one event to have been created")
 	}
 	evt := evts[0]
-	if _, ok := evt.(*eventTick); !ok {
-		t.Errorf("Expected a eventTick to have been created, got: %T", evt)
+	if _, ok := evt.(*EventTick); !ok {
+		t.Errorf("Expected a EventTick to have been created, got: %T", evt)
 	}
 }
 

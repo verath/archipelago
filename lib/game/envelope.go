@@ -11,7 +11,7 @@ type envelope struct {
 	EnvData interface{} `json:"data"`
 }
 
-func NewEnvelope(envType string, envData interface{}) (*envelope, error) {
+func newEnvelope(envType string, envData interface{}) (*envelope, error) {
 	return &envelope{EnvType: envType, EnvData: envData}, nil
 }
 
@@ -19,8 +19,8 @@ func (env *envelope) Type() string {
 	return env.EnvType
 }
 
-// ReceivedEnvelope is an interface for an envelope received from a peer.
-type ReceivedEnvelope interface {
+// receivedEnvelope is an interface for an envelope received from a peer.
+type receivedEnvelope interface {
 	// Getter for the type of the envelope. This is a user-defined string,
 	// used to identify the type of data contained in the envelope.
 	Type() string
@@ -30,7 +30,7 @@ type ReceivedEnvelope interface {
 	UnmarshalData(v interface{}) error
 }
 
-// A JSON-based implementation of the ReceivedEnvelope interface
+// A JSON-based implementation of the receivedEnvelope interface
 type receivedEnvelopeImpl struct {
 	envelope
 	// The data received, stored as a json.RawMessage so that
