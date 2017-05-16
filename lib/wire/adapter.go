@@ -11,26 +11,26 @@ import (
 // providing higher level abstractions that also handle message encoding and
 // decoding.
 type ClientAdapter struct {
-	client client
+	Client client
 }
 
 // NewClientAdapter creates a new ClientAdapter wrapping the provided
 // client.
 func NewClientAdapter(client client) (*ClientAdapter, error) {
 	return &ClientAdapter{
-		client: client,
+		Client: client,
 	}, nil
 }
 
 // Disconnect disconnects underlying client.
 func (ca *ClientAdapter) Disconnect() {
-	ca.client.Disconnect()
+	ca.Client.Disconnect()
 }
 
 // DisconnectCh returns a channel that is closed when the underlying
 // client is disconnected.
 func (ca *ClientAdapter) DisconnectCh() <-chan struct{} {
-	return ca.client.DisconnectCh()
+	return ca.Client.DisconnectCh()
 }
 
 // WritePlayerEvent encodes and writes a PlayerEvent to the underlying connection.
@@ -48,8 +48,8 @@ func (ca *ClientAdapter) WritePlayerEvent(ctx context.Context, evt model.PlayerE
 	if err != nil {
 		return errors.Wrap(err, "Failed encoding envelope")
 	}
-	if err := ca.client.WriteMessage(ctx, msg); err != nil {
-		return errors.Wrap(err, "Error writing envelope to client")
+	if err := ca.Client.WriteMessage(ctx, msg); err != nil {
+		return errors.Wrap(err, "Error writing envelope to Client")
 	}
 	return nil
 }
@@ -57,9 +57,9 @@ func (ca *ClientAdapter) WritePlayerEvent(ctx context.Context, evt model.PlayerE
 // ReadPlayerAction reads and decodes a PlayerAction from the underlying connection.
 // This method blocks until a PlayerAction is read, or the context is cancelled.
 func (ca *ClientAdapter) ReadPlayerAction(ctx context.Context) (model.PlayerAction, error) {
-	msg, err := ca.client.ReadMessage(ctx)
+	msg, err := ca.Client.ReadMessage(ctx)
 	if err != nil {
-		return nil, errors.Wrap(err, "Could not read message from client")
+		return nil, errors.Wrap(err, "Could not read message from Client")
 	}
 	env := &receivedEnvelopeImpl{}
 	if err := json.Unmarshal(msg, env); err != nil {
