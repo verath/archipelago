@@ -8,6 +8,7 @@ import (
 	"github.com/verath/archipelago/lib/game"
 	"github.com/verath/archipelago/lib/network"
 	"github.com/verath/archipelago/lib/network/websocket"
+	"github.com/verath/archipelago/lib/wire"
 	"sync"
 )
 
@@ -75,6 +76,10 @@ func (srv *Server) handleWSConnection(ctx context.Context, conn *websocket.WSCon
 	if err != nil {
 		return errors.Wrap(err, "Error creating new Client from ws connection")
 	}
+	clientAdapter, err := wire.NewClientAdapter(client)
+	if err != nil {
+		return errors.Wrap(err, "Error creating client wire adapter")
+	}
 	srv.clientsWG.Add(1)
 	go func() {
 		defer srv.clientsWG.Done()
@@ -83,7 +88,7 @@ func (srv *Server) handleWSConnection(ctx context.Context, conn *websocket.WSCon
 			srv.logEntry.Debugf("Client stopped with an error: %+v", err)
 		}
 	}()
-	if err := srv.gameCoordinator.AddClient(ctx, client); err != nil {
+	if err := srv.gameCoordinator.AddClient(ctx, clientAdapter); err != nil {
 		errors.Wrap(err, "Error in game coordinator when handling client")
 	}
 	return nil

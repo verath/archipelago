@@ -1,4 +1,4 @@
-package game
+package wire
 
 import (
 	"encoding/json"
