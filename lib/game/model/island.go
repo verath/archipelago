@@ -1,7 +1,6 @@
 package model
 
 import (
-	"encoding/json"
 	"time"
 )
 
@@ -85,22 +84,6 @@ func (i *Island) GrowthRemainder() time.Duration {
 // would have taken place.
 func (i *Island) SetGrowthRemainder(growthRemainder time.Duration) {
 	i.growthRemainder = growthRemainder
-}
-
-// MarshalJSON marshals the Island instance as JSON by recursively
-// marshalling each sub-component of the Island.
-func (i *Island) MarshalJSON() ([]byte, error) {
-	return json.Marshal(&struct {
-		Army     *army      `json:"army"`
-		ID       IslandID   `json:"id"`
-		Position Coordinate `json:"position"`
-		Size     float64    `json:"size"`
-	}{
-		Army:     i.army,
-		ID:       i.id,
-		Position: i.position,
-		Size:     float64(i.size),
-	})
 }
 
 // Copy performs a deep copy of the Island, returning the copy.

@@ -1,7 +1,5 @@
 package model
 
-import "encoding/json"
-
 // PlayerEventGameOver is the player-specific game over event.
 // PlayerEventGameOver is only a thin wrapper around EventGameOver,
 // as the game over event does not contain any player-specific
@@ -31,15 +29,6 @@ func NewEventGameOver(winner *Player) *EventGameOver {
 // the EventGameOver, representing the event for the specified.
 func (evt *EventGameOver) ToPlayerEvent(_ PlayerID) PlayerEvent {
 	return &PlayerEventGameOver{evt}
-}
-
-// MarshalJSON marshals the event as to a json byte array.
-func (evt *PlayerEventGameOver) MarshalJSON() ([]byte, error) {
-	return json.Marshal(struct {
-		WinnerID PlayerID `json:"winner_id"`
-	}{
-		WinnerID: evt.WinnerID,
-	})
 }
 
 // playerEventMarker is the marker implementation of PlayerEvent.

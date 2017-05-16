@@ -1,7 +1,6 @@
 package model
 
 import (
-	"encoding/json"
 	"math"
 	"time"
 )
@@ -78,28 +77,6 @@ func (a *Airplane) Speed() float64 {
 // SetSpeed is a setter for the speed of the airplane.
 func (a *Airplane) SetSpeed(speed float64) {
 	a.speed = speed
-}
-
-// MarshalJSON marshals the airplane as JSON.
-func (a *Airplane) MarshalJSON() ([]byte, error) {
-	// No reason to have nanosecond precision on client side
-	speedMillis := a.speed * float64(time.Millisecond)
-
-	return json.Marshal(&struct {
-		Army        *army           `json:"army"`
-		ID          AirplaneID      `json:"id"`
-		Destination IslandID        `json:"-"`
-		Position    FloatCoordinate `json:"position"`
-		Direction   float64         `json:"direction"`
-		Speed       float64         `json:"speed"`
-	}{
-		Army:        a.army,
-		ID:          a.id,
-		Destination: a.destination,
-		Position:    a.position,
-		Direction:   a.direction,
-		Speed:       speedMillis,
-	})
 }
 
 // Copy performs a deep copy of the airplane.

@@ -1,7 +1,5 @@
 package model
 
-import "encoding/json"
-
 // army is a representation of an army owned by a player.
 // The army struct is not used directly, but instead
 // embedded in Islands and Airplanes.
@@ -49,17 +47,6 @@ func (a *army) SetStrength(strength int64) {
 // IsOwnedBy tests if the owning Player equals the provided Player.
 func (a *army) IsOwnedBy(player *Player) bool {
 	return a.owner.Equals(player)
-}
-
-// MarshalJSON marshals the airplane as JSON.
-func (a *army) MarshalJSON() ([]byte, error) {
-	return json.Marshal(&struct {
-		OwnerID  PlayerID `json:"owner_id"`
-		Strength int64    `json:"strength"`
-	}{
-		OwnerID:  a.owner.id,
-		Strength: a.strength,
-	})
 }
 
 // Copy performs a deep copy of the army.

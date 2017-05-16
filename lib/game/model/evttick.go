@@ -1,7 +1,5 @@
 package model
 
-import "encoding/json"
-
 // PlayerEventTick is the player-specific game tick event.
 type PlayerEventTick struct {
 	*EventTick
@@ -18,11 +16,6 @@ type EventTick struct {
 // ToPlayerEvent turn the EventTick into a PlayerEventTick.
 func (evt *EventTick) ToPlayerEvent(playerID PlayerID) PlayerEvent {
 	return &PlayerEventTick{EventTick: evt}
-}
-
-// MarshalJSON marshals the event as to a json byte array.
-func (evt *PlayerEventTick) MarshalJSON() ([]byte, error) {
-	return json.Marshal(evt.Game)
 }
 
 // playerEventMarker is the marker implementation of PlayerEvent.

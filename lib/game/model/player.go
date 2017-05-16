@@ -1,9 +1,5 @@
 package model
 
-import (
-	"encoding/json"
-)
-
 // Player represents a player in the game model.
 type Player struct {
 	id PlayerID
@@ -26,16 +22,6 @@ func (p *Player) ID() PlayerID {
 // by the ID of each player. Always returns false if other is nil.
 func (p *Player) Equals(other *Player) bool {
 	return other != nil && p.id == other.id
-}
-
-// MarshalJSON marshals the Player instance as JSON by recursively
-// marshalling each sub-component of the Player.
-func (p *Player) MarshalJSON() ([]byte, error) {
-	return json.Marshal(&struct {
-		ID PlayerID `json:"id"`
-	}{
-		ID: p.id,
-	})
 }
 
 // Copy performs a deep copy of the Player, returning the copy.
