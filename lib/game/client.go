@@ -5,16 +5,16 @@ import (
 	"github.com/verath/archipelago/lib/game/model"
 )
 
-// A client represents a (remote) player connection that can be
+// A Client represents a (remote) player connection that can be
 // written to and read from.
-type client interface {
-	// Disconnect disconnects the client.
+type Client interface {
+	// Disconnect disconnects the Client.
 	Disconnect()
-	// DisconnectCh returns a channel that is closed when the client
+	// DisconnectCh returns a channel that is closed when the Client
 	// is disconnected.
 	DisconnectCh() <-chan struct{}
-	// WritePlayerEvent writes a PlayerEvent to the client.
+	// WritePlayerEvent writes a PlayerEvent to the Client.
 	WritePlayerEvent(ctx context.Context, evt model.PlayerEvent) error
-	// ReadPlayerAction reads a PlayerAction from the client.
+	// ReadPlayerAction reads a PlayerAction from the Client.
 	ReadPlayerAction(ctx context.Context) (model.PlayerAction, error)
 }

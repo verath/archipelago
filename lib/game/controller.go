@@ -19,7 +19,7 @@ type controller struct {
 }
 
 // newController creates a new game controller.
-func newController(log *logrus.Logger, game *model.Game, p1Client, p2Client client) (*controller, error) {
+func newController(log *logrus.Logger, game *model.Game, p1Client, p2Client Client) (*controller, error) {
 	logEntry := common.ModuleLogEntryWithID(log, "game/controller")
 
 	gameLoop, err := newGameLoop(log, game)
