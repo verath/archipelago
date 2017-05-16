@@ -76,7 +76,7 @@ func (srv *Server) handleWSConnection(ctx context.Context, conn *websocket.WSCon
 	if err != nil {
 		return errors.Wrap(err, "Error creating new Client from ws connection")
 	}
-	clientAdapter, err := wire.NewClientAdapter(client)
+	wireClient, err := wire.NewClientAdapter(client)
 	if err != nil {
 		return errors.Wrap(err, "Error creating client wire adapter")
 	}
@@ -88,7 +88,7 @@ func (srv *Server) handleWSConnection(ctx context.Context, conn *websocket.WSCon
 			srv.logEntry.Debugf("Client stopped with an error: %+v", err)
 		}
 	}()
-	if err := srv.gameCoordinator.AddClient(ctx, clientAdapter); err != nil {
+	if err := srv.gameCoordinator.AddClient(ctx, wireClient); err != nil {
 		errors.Wrap(err, "Error in game coordinator when handling client")
 	}
 	return nil
