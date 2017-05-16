@@ -76,16 +76,15 @@ func (srv *Server) handleWSConnection(ctx context.Context, conn *websocket.WSCon
 		return errors.Wrap(err, "Error creating new Client from ws connection")
 	}
 	srv.clientsWG.Add(1)
-	go srv.runClient(ctx, client)
-	err = srv.gameCoordinator.AddClient(ctx, client)
-	return errors.Wrap(err, "Error in game coordinator when handling client")
-}
-
-// runClient runs a client within the given context.
-func (srv *Server) runClient(ctx context.Context, client *network.Client) {
-	defer srv.clientsWG.Done()
-	err := client.Run(ctx)
-	if err != nil && errors.Cause(err) != context.Canceled {
-		srv.logEntry.Debugf("Client stopped with an error: %+v", err)
+	go func() {
+		defer srv.clientsWG.Done()
+		err := client.Run(ctx)
+		if err != nil && errors.Cause(err) != context.Canceled {
+			srv.logEntry.Debugf("Client stopped with an error: %+v", err)
+		}
+	}()
+	if err := srv.gameCoordinator.AddClient(ctx, client); err != nil {
+		errors.Wrap(err, "Error in game coordinator when handling client")
 	}
+	return nil
 }
