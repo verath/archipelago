@@ -59,7 +59,7 @@ func (c *WSConnection) ReadMessage() (msg []byte, err error) {
 	if err != nil {
 		return nil, errors.Wrap(err, "Failed reading message")
 	}
-	if msgType != websocket.TextMessage {
+	if msgType != websocket.BinaryMessage {
 		return nil, errors.Errorf("Unexpected message type '%d'", msgType)
 	}
 	return msg, nil
@@ -71,7 +71,7 @@ func (c *WSConnection) ReadMessage() (msg []byte, err error) {
 func (c *WSConnection) WriteMessage(message []byte) (err error) {
 	c.writeMu.Lock()
 	defer c.writeMu.Unlock()
-	return c.writeMessage(websocket.TextMessage, message)
+	return c.writeMessage(websocket.BinaryMessage, message)
 }
 
 // Shutdown attempts to cleanly shutdown the connection, sending a websocket
