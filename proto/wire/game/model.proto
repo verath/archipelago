@@ -8,8 +8,8 @@ message Coordinate {
 }
 
 message FloatCoordinate {
-    float x = 1;
-    float y = 2;
+    double x = 1;
+    double y = 2;
 }
 
 message Player {
@@ -25,15 +25,15 @@ message Airplane {
     string id = 1;
     Army army = 2;
     FloatCoordinate position = 3;
-    float direction = 4;
-    float speed = 5;
+    double direction = 4;
+    double speed = 5;
 }
 
 message Island {
     string id = 1;
     Army army = 2;
     Coordinate position = 3;
-    float size = 4;
+    double size = 4;
 }
 
 message Game {

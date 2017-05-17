@@ -1625,9 +1625,9 @@ export const wire = $root.wire = (() => {
                 if (!writer)
                     writer = $Writer.create();
                 if (message.x != null && message.hasOwnProperty("x"))
-                    writer.uint32(/* id 1, wireType 5 =*/13).float(message.x);
+                    writer.uint32(/* id 1, wireType 1 =*/9).double(message.x);
                 if (message.y != null && message.hasOwnProperty("y"))
-                    writer.uint32(/* id 2, wireType 5 =*/21).float(message.y);
+                    writer.uint32(/* id 2, wireType 1 =*/17).double(message.y);
                 return writer;
             };
 
@@ -1657,10 +1657,10 @@ export const wire = $root.wire = (() => {
                     let tag = reader.uint32();
                     switch (tag >>> 3) {
                     case 1:
-                        message.x = reader.float();
+                        message.x = reader.double();
                         break;
                     case 2:
-                        message.y = reader.float();
+                        message.y = reader.double();
                         break;
                     default:
                         reader.skipType(tag & 7);
@@ -2221,9 +2221,9 @@ export const wire = $root.wire = (() => {
                 if (message.position != null && message.hasOwnProperty("position"))
                     $root.wire.game.FloatCoordinate.encode(message.position, writer.uint32(/* id 3, wireType 2 =*/26).fork()).ldelim();
                 if (message.direction != null && message.hasOwnProperty("direction"))
-                    writer.uint32(/* id 4, wireType 5 =*/37).float(message.direction);
+                    writer.uint32(/* id 4, wireType 1 =*/33).double(message.direction);
                 if (message.speed != null && message.hasOwnProperty("speed"))
-                    writer.uint32(/* id 5, wireType 5 =*/45).float(message.speed);
+                    writer.uint32(/* id 5, wireType 1 =*/41).double(message.speed);
                 return writer;
             };
 
@@ -2262,10 +2262,10 @@ export const wire = $root.wire = (() => {
                         message.position = $root.wire.game.FloatCoordinate.decode(reader, reader.uint32());
                         break;
                     case 4:
-                        message.direction = reader.float();
+                        message.direction = reader.double();
                         break;
                     case 5:
-                        message.speed = reader.float();
+                        message.speed = reader.double();
                         break;
                     default:
                         reader.skipType(tag & 7);
@@ -2479,7 +2479,7 @@ export const wire = $root.wire = (() => {
                 if (message.position != null && message.hasOwnProperty("position"))
                     $root.wire.game.Coordinate.encode(message.position, writer.uint32(/* id 3, wireType 2 =*/26).fork()).ldelim();
                 if (message.size != null && message.hasOwnProperty("size"))
-                    writer.uint32(/* id 4, wireType 5 =*/37).float(message.size);
+                    writer.uint32(/* id 4, wireType 1 =*/33).double(message.size);
                 return writer;
             };
 
@@ -2518,7 +2518,7 @@ export const wire = $root.wire = (() => {
                         message.position = $root.wire.game.Coordinate.decode(reader, reader.uint32());
                         break;
                     case 4:
-                        message.size = reader.float();
+                        message.size = reader.double();
                         break;
                     default:
                         reader.skipType(tag & 7);
