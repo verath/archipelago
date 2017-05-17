@@ -840,8 +840,8 @@ export namespace wire {
     namespace game {
 
         type Coordinate$Properties = {
-            x?: number;
-            y?: number;
+            x?: (number|Long);
+            y?: (number|Long);
         };
 
         /**
@@ -862,15 +862,15 @@ export namespace wire {
 
             /**
              * Coordinate x.
-             * @type {number}
+             * @type {number|Long}
              */
-            public x: number;
+            public x: (number|Long);
 
             /**
              * Coordinate y.
-             * @type {number}
+             * @type {number|Long}
              */
-            public y: number;
+            public y: (number|Long);
 
             /**
              * Creates a new Coordinate instance using the specified properties.
@@ -1194,7 +1194,7 @@ export namespace wire {
 
         type Army$Properties = {
             owner?: wire.game.Player$Properties;
-            strength?: number;
+            strength?: (number|Long);
         };
 
         /**
@@ -1221,9 +1221,9 @@ export namespace wire {
 
             /**
              * Army strength.
-             * @type {number}
+             * @type {number|Long}
              */
-            public strength: number;
+            public strength: (number|Long);
 
             /**
              * Creates a new Army instance using the specified properties.

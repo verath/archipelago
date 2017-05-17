@@ -3,8 +3,8 @@ package wire.game;
 option go_package = "lib/wire/game";
 
 message Coordinate {
-    int32 x = 1;
-    int32 y = 2;
+    int64 x = 1;
+    int64 y = 2;
 }
 
 message FloatCoordinate {
@@ -18,7 +18,7 @@ message Player {
 
 message Army {
     Player owner = 1;
-    int32 strength = 2;
+    int64 strength = 2;
 }
 
 message Airplane {
