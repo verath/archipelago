@@ -44,6 +44,11 @@ func NewAirplane(origin *Island, destination *Island, owner *Player, strength in
 	}
 }
 
+// ID is a getter for the id of the airplane.
+func (a *Airplane) ID() AirplaneID {
+	return a.id
+}
+
 // Destination returns the IslandID of the airplane's target island.
 func (a *Airplane) Destination() IslandID {
 	return a.destination

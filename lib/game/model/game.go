@@ -16,6 +16,16 @@ type Game struct {
 	airplanes     []*Airplane
 }
 
+// ID is a getter for the id of the game.
+func (g *Game) ID() GameID {
+	return g.id
+}
+
+// Size is a getter for the size of the game.
+func (g *Game) Size() Coordinate {
+	return g.size
+}
+
 // Player1 is a getter for the Player model representing player 1.
 func (g *Game) Player1() *Player {
 	return g.player1
