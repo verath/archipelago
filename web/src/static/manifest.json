@@ -3,7 +3,7 @@
   "name": "Play Archipelago!",
   "icons": [
     {
-      "src": "static/icon192.png",
+      "src": "/static/icon192.png",
       "type": "image/png",
       "sizes": "192x192"
     }
