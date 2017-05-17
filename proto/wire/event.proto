@@ -1,5 +1,5 @@
 syntax = "proto3";
-package archipelago.proto.wire;
+package wire;
 option go_package = "lib/wire";
 
 import "proto/wire/game/model.proto";

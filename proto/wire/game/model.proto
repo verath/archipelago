@@ -1,5 +1,5 @@
 syntax = "proto3";
-package archipelago.proto.wire.game;
+package wire.game;
 option go_package = "lib/wire/game";
 
 message Coordinate {
