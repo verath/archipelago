@@ -47,6 +47,11 @@ server {
 	root /home/deploy/go/src/github.com/verath/archipelago/web/dist;
 	index index.html;
 
+	# Basic security headers
+	add_header X-Frame-Options SAMEORIGIN;
+	add_header X-Content-Type-Options nosniff;
+	add_header X-XSS-Protection "1; mode=block";
+
 	# Serve "/.well-known/acme-challenge" from a separate directory
 	# this directory is used by let's encrypt to validate ownership
 	location ^~ /.well-known/acme-challenge/ {
@@ -68,12 +73,12 @@ server {
 
 	# Never cache the service worker file
 	location = /sw.js {
-		expires off;
+		expires 0;
 	}
 
 	# All other requests are served from the web folder
 	location / {
-		try_files $uri $uri/ index.html;
+		try_files $uri $uri/ =404;
 		expires $expires;
 	}
 
