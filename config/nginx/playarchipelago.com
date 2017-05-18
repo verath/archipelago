@@ -73,7 +73,7 @@ server {
 
 	# Never cache the service worker file
 	location = /sw.js {
-		expires off;
+		expires 0;
 	}
 
 	# All other requests are served from the web folder
