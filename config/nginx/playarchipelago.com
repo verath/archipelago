@@ -47,6 +47,11 @@ server {
 	root /home/deploy/go/src/github.com/verath/archipelago/web/dist;
 	index index.html;
 
+	# Basic security headers
+	add_header X-Frame-Options SAMEORIGIN;
+	add_header X-Content-Type-Options nosniff;
+	add_header X-XSS-Protection "1; mode=block";
+
 	# Serve "/.well-known/acme-challenge" from a separate directory
 	# this directory is used by let's encrypt to validate ownership
 	location ^~ /.well-known/acme-challenge/ {
