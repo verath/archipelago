@@ -2,7 +2,7 @@ package wire
 
 import (
 	"context"
-	"encoding/json"
+	"github.com/golang/protobuf/proto"
 	"github.com/pkg/errors"
 	"github.com/verath/archipelago/lib/game/model"
 )
@@ -11,94 +11,73 @@ import (
 // providing higher level abstractions that also handle message encoding and
 // decoding.
 type ClientAdapter struct {
-	Client client
+	client Client
 }
 
 // NewClientAdapter creates a new ClientAdapter wrapping the provided
 // client.
-func NewClientAdapter(client client) (*ClientAdapter, error) {
+func NewClientAdapter(client Client) (*ClientAdapter, error) {
 	return &ClientAdapter{
-		Client: client,
+		client: client,
 	}, nil
 }
 
 // Disconnect disconnects underlying client.
 func (ca *ClientAdapter) Disconnect() {
-	ca.Client.Disconnect()
+	ca.client.Disconnect()
 }
 
 // DisconnectCh returns a channel that is closed when the underlying
 // client is disconnected.
 func (ca *ClientAdapter) DisconnectCh() <-chan struct{} {
-	return ca.Client.DisconnectCh()
+	return ca.client.DisconnectCh()
 }
 
-// WritePlayerEvent encodes and writes a PlayerEvent to the underlying connection.
-// This method blocks until the PlayerEvent has been written, or the context is cancelled.
-func (ca *ClientAdapter) WritePlayerEvent(ctx context.Context, evt model.PlayerEvent) error {
-	evtType, err := ca.envelopeTypeByPlayerEvent(evt)
-	if err != nil {
-		return errors.Wrapf(err, "Could not determine envelope type for: %T", evt)
+// WritePlayerEvent encodes and writes a PlayerEvent to the underlying client.
+// This method blocks until the PlayerEvent has been written, or the context
+// is cancelled.
+func (ca *ClientAdapter) WritePlayerEvent(ctx context.Context, playerEvent model.PlayerEvent) error {
+	pbMessage := &EventEnvelope{}
+	switch evt := playerEvent.(type) {
+	case *model.PlayerEventGameStart:
+		evtStart := NewEventGameStart(evt)
+		pbMessage.Event = &EventEnvelope_EventGameStart{evtStart}
+	case *model.PlayerEventTick:
+		evtTick := NewEventGameTick(evt)
+		pbMessage.Event = &EventEnvelope_EventGameTick{evtTick}
+	case *model.PlayerEventGameOver:
+		evtGameOver := NewEventGameOver(evt)
+		pbMessage.Event = &EventEnvelope_EventGameOver{evtGameOver}
+	default:
+		return errors.Errorf("Unknown PlayerEvent type: %T", playerEvent)
 	}
-	env, err := newEnvelope(evtType, evt)
-	if err != nil {
-		return errors.Wrapf(err, "Error creating envelope for playerEvent: %v", evt)
-	}
-	msg, err := json.Marshal(env)
-	if err != nil {
-		return errors.Wrap(err, "Failed encoding envelope")
-	}
-	if err := ca.Client.WriteMessage(ctx, msg); err != nil {
-		return errors.Wrap(err, "Error writing envelope to Client")
+	if err := ca.writeProtobufMessage(ctx, pbMessage); err != nil {
+		return errors.Wrap(err, "Error writing protobuf message to client")
 	}
 	return nil
 }
 
-// ReadPlayerAction reads and decodes a PlayerAction from the underlying connection.
+// ReadPlayerAction reads and decodes a PlayerAction from the underlying client.
 // This method blocks until a PlayerAction is read, or the context is cancelled.
 func (ca *ClientAdapter) ReadPlayerAction(ctx context.Context) (model.PlayerAction, error) {
-	msg, err := ca.Client.ReadMessage(ctx)
+	_, err := ca.client.ReadMessage(ctx)
 	if err != nil {
 		return nil, errors.Wrap(err, "Could not read message from Client")
 	}
-	env := &receivedEnvelopeImpl{}
-	if err := json.Unmarshal(msg, env); err != nil {
-		return nil, errors.Wrap(err, "Failed umarshaling to envelope")
-	}
-	playerAction, err := ca.envelopeToPlayerAction(env)
+	// TODO: NYI
+	return nil, errors.New("NYI")
+}
+
+// writeProtobufMessage encodes and writes the given protobuf message to the underlying
+// client. This method blocks until the message has been written or the context is
+// cancelled.
+func (ca *ClientAdapter) writeProtobufMessage(ctx context.Context, pbMsg proto.Message) error {
+	msg, err := proto.Marshal(pbMsg)
 	if err != nil {
-		return nil, errors.Wrap(err, "Could not map envelope to action")
+		return errors.Wrap(err, "Failed encoding protobuf message")
 	}
-	return playerAction, nil
-}
-
-func (ca *ClientAdapter) envelopeToPlayerAction(envelope receivedEnvelope) (model.PlayerAction, error) {
-	switch envelope.Type() {
-	case "act_launch":
-		var data struct {
-			From model.IslandID `json:"from"`
-			To   model.IslandID `json:"to"`
-		}
-		if err := envelope.UnmarshalData(&data); err != nil {
-			return nil, errors.Wrap(err, "Failed unmarshaling data")
-		}
-		return &model.PlayerActionLaunch{From: data.From, To: data.To}, nil
-	case "act_leave":
-		return &model.PlayerActionLeave{}, nil
-	default:
-		return nil, errors.Errorf("Unknown envelope type: %v", envelope.Type())
+	if err := ca.client.WriteMessage(ctx, msg); err != nil {
+		return errors.Wrap(err, "Error writing message to Client")
 	}
-}
-
-func (ca *ClientAdapter) envelopeTypeByPlayerEvent(playerEvent model.PlayerEvent) (string, error) {
-	switch playerEvent.(type) {
-	case *model.PlayerEventGameStart:
-		return "evt_game_start", nil
-	case *model.PlayerEventTick:
-		return "evt_tick", nil
-	case *model.PlayerEventGameOver:
-		return "evt_game_over", nil
-	default:
-		return "", errors.Errorf("Unknown PlayerEvent type: %T", playerEvent)
-	}
+	return nil
 }

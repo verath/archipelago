@@ -6,7 +6,7 @@ import (
 
 // A Client represents a (remote) player connection where bytes can
 // be read from and written to.
-type client interface {
+type Client interface {
 	// Disconnect disconnects the Client.
 	Disconnect()
 	// DisconnectCh returns a channel that is closed when the Client
