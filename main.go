@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"path"
 	"time"
 )
 
@@ -44,6 +45,11 @@ func main() {
 
 	http.Handle("/ws", archipelagoServer.WebsocketHandler())
 	if serveStatic {
+		// Explicitly set a max-age of 0 for service worker script.
+		http.HandleFunc("/sw.js", func(w http.ResponseWriter, r *http.Request) {
+			w.Header().Set("Cache-Control", "max-age=0")
+			http.ServeFile(w, r, path.Join(staticPath, "sw.js"))
+		})
 		http.Handle("/", http.FileServer(http.Dir(staticPath)))
 	}
 	httpServer := &http.Server{
