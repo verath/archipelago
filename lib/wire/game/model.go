@@ -2,6 +2,7 @@ package game
 
 import "github.com/verath/archipelago/lib/game/model"
 
+// NewGame transforms a game model Game to its wire representation
 func NewGame(game *model.Game) *Game {
 	airplanes := make([]*Airplane, 0)
 	for _, airplane := range game.Airplanes() {
@@ -22,20 +23,24 @@ func NewGame(game *model.Game) *Game {
 	}
 }
 
+// NewCoordinate transforms a game model Coordinate to its wire representation
 func NewCoordinate(coordinate model.Coordinate) *Coordinate {
 	return &Coordinate{X: int64(coordinate.X), Y: int64(coordinate.Y)}
 }
 
+// NewFloatCoordinate transforms a game model FloatCoordinate to its wire representation
 func NewFloatCoordinate(coordinate model.FloatCoordinate) *FloatCoordinate {
 	return &FloatCoordinate{X: coordinate.X, Y: coordinate.Y}
 }
 
+// NewPlayer transforms a game model Player to its wire representation
 func NewPlayer(player *model.Player) *Player {
 	return &Player{
 		Id: string(player.ID()),
 	}
 }
 
+// NewPlayer transforms a game model Army to its wire representation
 func NewArmy(army *model.Army) *Army {
 	return &Army{
 		Strength: army.Strength(),
@@ -43,6 +48,7 @@ func NewArmy(army *model.Army) *Army {
 	}
 }
 
+// NewAirplane transforms a game model Airplane to its wire representation
 func NewAirplane(airplane *model.Airplane) *Airplane {
 	return &Airplane{
 		Id:        string(airplane.ID()),
@@ -53,6 +59,7 @@ func NewAirplane(airplane *model.Airplane) *Airplane {
 	}
 }
 
+// NewIsland transforms a game model Island to its wire representation
 func NewIsland(island *model.Island) *Island {
 	return &Island{
 		Id:       string(island.ID()),
