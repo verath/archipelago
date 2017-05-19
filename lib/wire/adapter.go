@@ -60,12 +60,15 @@ func (ca *ClientAdapter) WritePlayerEvent(ctx context.Context, playerEvent model
 // ReadPlayerAction reads and decodes a PlayerAction from the underlying client.
 // This method blocks until a PlayerAction is read, or the context is cancelled.
 func (ca *ClientAdapter) ReadPlayerAction(ctx context.Context) (model.PlayerAction, error) {
-	_, err := ca.client.ReadMessage(ctx)
-	if err != nil {
-		return nil, errors.Wrap(err, "Could not read message from Client")
+	actEnv := &ActionEnvelope{}
+	if err := ca.readProtobufMessage(ctx, actEnv); err != nil {
+		return nil, errors.Wrap(err, "Error reading protobuf message from client")
 	}
-	// TODO: NYI
-	return nil, errors.New("NYI")
+	act, ok := actEnv.Action.(GameActionDecoder)
+	if !ok {
+		return nil, errors.Errorf("Action (%T) was not a GameActionDecoder", act)
+	}
+	return act.ToGameAction(), nil
 }
 
 // writeProtobufMessage encodes and writes the given protobuf message to the underlying
@@ -78,6 +81,20 @@ func (ca *ClientAdapter) writeProtobufMessage(ctx context.Context, pbMsg proto.M
 	}
 	if err := ca.client.WriteMessage(ctx, msg); err != nil {
 		return errors.Wrap(err, "Error writing message to Client")
+	}
+	return nil
+}
+
+// readProtobufMessage reads and decodes a message from the underlying client
+// to the provided proto.Message. Blocks until a message is read, or the context
+// is cancelled.
+func (ca *ClientAdapter) readProtobufMessage(ctx context.Context, pbMsg proto.Message) error {
+	msg, err := ca.client.ReadMessage(ctx)
+	if err != nil {
+		return errors.Wrap(err, "Could not read message from Client")
+	}
+	if err := proto.Unmarshal(msg, pbMsg); err != nil {
+		return errors.Wrap(err, "Error unmarshalling message as protobuf")
 	}
 	return nil
 }
