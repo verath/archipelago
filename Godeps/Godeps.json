@@ -2,6 +2,9 @@
 	"ImportPath": "github.com/verath/archipelago",
 	"GoVersion": "go1.8",
 	"GodepVersion": "v79",
+	"Packages": [
+		"./..."
+	],
 	"Deps": [
 		{
 			"ImportPath": "github.com/Sirupsen/logrus",
@@ -17,6 +20,11 @@
 			"ImportPath": "github.com/pkg/errors",
 			"Comment": "v0.8.0-4-gff09b13",
 			"Rev": "ff09b135c25aae272398c51a07235b90a75aa4f0"
+		},
+		{
+			"ImportPath": "github.com/pkg/profile",
+			"Comment": "v1.2.1",
+			"Rev": "5b67d428864e92711fcbd2f8629456121a56d91f"
 		},
 		{
 			"ImportPath": "golang.org/x/sys/unix",
