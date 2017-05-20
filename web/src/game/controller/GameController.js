@@ -145,11 +145,6 @@ export default class GameController {
      * @private
      */
     _onGameOver(isWinner) {
-        if (isWinner) {
-            alert("Game Over\nYou Won!");
-        } else {
-            alert("Game Over\nYou Lost!");
-        }
         // Remove listeners
         this._connection.removeServerEventListener(this._onServerEvent, this);
         this._connection.removeDisconnectListener(this._onDisconnect, this);
@@ -157,6 +152,12 @@ export default class GameController {
         // Close the connection, and stop view animation
         this._connection.disconnect();
         this._ticker.stop();
+        // TODO: show game over screen...
+        if (isWinner) {
+            alert("Game Over\nYou Won!");
+        } else {
+            alert("Game Over\nYou Lost!");
+        }
     }
 
     /**
