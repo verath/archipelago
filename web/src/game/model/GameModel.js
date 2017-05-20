@@ -55,16 +55,16 @@ export default class GameModel extends BaseModel {
     }
 
     /**
-     * @param {[AirplaneData]} data
+     * @param {[wire.game.Airplane]} airplanes
      * @returns {Boolean}
      * @private
      */
-    _updateAirplanes(data) {
+    _updateAirplanes(airplanes) {
         let changed = false;
         let numAirplanes = this._airplanes.length;
 
         // Update each airplane, and create new ones if necessary
-        this._airplanes = data.map(airplaneData => {
+        this._airplanes = airplanes.map(airplaneData => {
             let airplane = this.airplaneById(airplaneData.id);
             if (!airplane) {
                 airplane = new AirplaneModel(this);
@@ -82,16 +82,16 @@ export default class GameModel extends BaseModel {
     }
 
     /**
-     * @param {[IslandData]} data
+     * @param {[wire.game.Island]} islands
      * @returns {Boolean}
      * @private
      */
-    _updateIslands(data) {
+    _updateIslands(islands) {
         let changed = false;
         let numIslands = this._islands.length;
 
         // Update each island, and create new ones if necessary
-        this._islands = data.map(islandData => {
+        this._islands = islands.map(islandData => {
             let island = this.islandById(islandData.id);
             if (!island) {
                 island = new IslandModel(this);
@@ -109,29 +109,25 @@ export default class GameModel extends BaseModel {
     }
 
     /**
-     * @param gameData {GameData}
+     * @param gameData {wire.game.Game}
      * @override
      * @inheritDoc
      */
     _update(gameData) {
         let changed = super._update(gameData);
-
         if (!this._size.equals(gameData.size)) {
             this._size.set(gameData.size);
             changed = true;
         }
-
         if (this._updateAirplanes(gameData.airplanes)) {
             changed = true;
         }
         if (this._updateIslands(gameData.islands)) {
             changed = true;
         }
-
         this._player1.update(gameData.player1);
         this._player2.update(gameData.player2);
-        this._playerNeutral.update(gameData.player_neutral);
-
+        this._playerNeutral.update(gameData.playerNeutral);
         return changed;
     }
 

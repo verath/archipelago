@@ -68,7 +68,7 @@ export default class Coordinate {
      */
     equals(other) {
         return (
-            other != null &&
+            other !== null &&
             this._x === other.x &&
             this._y === other.y
         );

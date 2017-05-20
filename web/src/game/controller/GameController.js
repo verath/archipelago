@@ -1,5 +1,6 @@
 import EventEmitter from "eventemitter3";
 import * as PIXI from "pixijs";
+import {wire} from "../../wire/proto_bundle.js";
 
 const EVENT_GAME_START = Symbol("EVENT_GAME_START");
 
@@ -64,35 +65,33 @@ export default class GameController {
             // Target cannot be the same as the origin
             return;
         }
-
         if (originIsland.strength < 2) {
             // Cannot send from island with less than 2 strength
             return;
         }
-
         // Launch a local dummy airplane, which will be replaced
         // once we hear back from the server.
         this._gameModel.launchAirplane(originIsland, targetIsland);
 
-        this._connection.sendAction({
-            "type": "act_launch",
-            "data": {
-                "from": originIsland.id,
-                "to": targetIsland.id
-            }
+        // Create and send the action as an ActionEnvelope
+        let actEnvelope = new wire.ActionEnvelope();
+        actEnvelope.actionGameLaunch = new wire.ActionGameLaunch({
+            fromId: originIsland.id,
+            toId: targetIsland.id
         });
+        this._connection.sendAction(actEnvelope);
     }
 
     /**
-     * @param {GameStartEventData} data
+     * @param {wire.EventGameStart} evtStart
      * @private
      */
-    _onGameStartEvent(data) {
+    _onGameStartEvent(evtStart) {
         if (this._started) {
             throw new Error("Start event when already started");
         }
         this._started = true;
-        this._gameModel.playerId = data.player_id;
+        this._gameModel.playerId = evtStart.playerId;
         // Starts the ticker, calling this._onTick
         this._ticker.start();
 
@@ -101,39 +100,39 @@ export default class GameController {
     }
 
     /**
-     * @param {TickEventData} data
+     * @param {wire.EventGameTick} evtTick
      * @private
      */
-    _onTickEvent(data) {
+    _onTickEvent(evtTick) {
         this._lastUpdateMS = performance.now();
-        this._gameModel.update(data);
+        this._gameModel.update(evtTick.game);
     }
 
     /**
-     * @param {GameOverEventData} data
+     * @param {wire.EventGameOver} evtGameOver
      * @private
      */
-    _onGameOverEvent(data) {
-        this._onGameOver(data.winner_id === this._gameModel.playerId);
+    _onGameOverEvent(evtGameOver) {
+        this._onGameOver(evtGameOver.winnerId === this._gameModel.playerId);
     }
 
     /**
-     * @param {ServerPayload} payload
+     * @param {wire.EventEnvelope} envelope
      * @private
      */
-    _onServerEvent(payload) {
-        switch (payload.type) {
-        case "evt_game_start":
-            this._onGameStartEvent(payload.data);
-            break;
-        case "evt_tick":
-            this._onTickEvent(payload.data);
-            break;
-        case "evt_game_over":
-            this._onGameOverEvent(payload.data);
-            break;
-        default:
-            console.log("Unknown event:", payload.type, payload);
+    _onServerEvent(envelope) {
+        switch (envelope.event) {
+            case "eventGameStart":
+                this._onGameStartEvent(envelope.eventGameStart);
+                break;
+            case "eventGameTick":
+                this._onTickEvent(envelope.eventGameTick);
+                break;
+            case "eventGameOver":
+                this._onGameOverEvent(envelope.eventGameOver);
+                break;
+            default:
+                console.log("Unknown event type:", envelope.event, envelope);
         }
     }
 

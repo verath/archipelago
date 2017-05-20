@@ -16,19 +16,6 @@ export default class PlayerModel extends BaseModel {
          * @private
          */
         this._gameModel = gameModel;
-
-        /**
-         * @member {?string}
-         * @private
-         */
-        this._name = null;
-    }
-
-    /**
-     * @returns {?string}
-     */
-    get name() {
-        return this._name;
     }
 
     /**
@@ -56,15 +43,10 @@ export default class PlayerModel extends BaseModel {
     }
 
     /**
-     * @param {PlayerData} playerData
+     * @param {wire.game.Player} playerData
      * @override
      */
     _update(playerData) {
-        let changed = super._update(playerData);
-        if (this._name !== playerData.name) {
-            this._name = playerData.name;
-            changed = true;
-        }
-        return changed;
+        return super._update(playerData);
     }
 }
