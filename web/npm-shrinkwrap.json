@@ -2,6 +2,66 @@
   "name": "archipelago-frontend",
   "version": "1.0.0",
   "dependencies": {
+    "@protobufjs/aspromise": {
+      "version": "1.1.2",
+      "from": "@protobufjs/aspromise@>=1.1.1 <2.0.0",
+      "resolved": "https://registry.npmjs.org/@protobufjs/aspromise/-/aspromise-1.1.2.tgz"
+    },
+    "@protobufjs/base64": {
+      "version": "1.1.1",
+      "from": "@protobufjs/base64@>=1.1.1 <2.0.0",
+      "resolved": "https://registry.npmjs.org/@protobufjs/base64/-/base64-1.1.1.tgz"
+    },
+    "@protobufjs/codegen": {
+      "version": "1.0.8",
+      "from": "@protobufjs/codegen@>=1.0.8 <2.0.0",
+      "resolved": "https://registry.npmjs.org/@protobufjs/codegen/-/codegen-1.0.8.tgz"
+    },
+    "@protobufjs/eventemitter": {
+      "version": "1.1.0",
+      "from": "@protobufjs/eventemitter@>=1.1.0 <2.0.0",
+      "resolved": "https://registry.npmjs.org/@protobufjs/eventemitter/-/eventemitter-1.1.0.tgz"
+    },
+    "@protobufjs/fetch": {
+      "version": "1.1.0",
+      "from": "@protobufjs/fetch@>=1.1.0 <2.0.0",
+      "resolved": "https://registry.npmjs.org/@protobufjs/fetch/-/fetch-1.1.0.tgz"
+    },
+    "@protobufjs/float": {
+      "version": "1.0.2",
+      "from": "@protobufjs/float@>=1.0.2 <2.0.0",
+      "resolved": "https://registry.npmjs.org/@protobufjs/float/-/float-1.0.2.tgz"
+    },
+    "@protobufjs/inquire": {
+      "version": "1.1.0",
+      "from": "@protobufjs/inquire@>=1.1.0 <2.0.0",
+      "resolved": "https://registry.npmjs.org/@protobufjs/inquire/-/inquire-1.1.0.tgz"
+    },
+    "@protobufjs/path": {
+      "version": "1.1.2",
+      "from": "@protobufjs/path@>=1.1.2 <2.0.0",
+      "resolved": "https://registry.npmjs.org/@protobufjs/path/-/path-1.1.2.tgz"
+    },
+    "@protobufjs/pool": {
+      "version": "1.1.0",
+      "from": "@protobufjs/pool@>=1.1.0 <2.0.0",
+      "resolved": "https://registry.npmjs.org/@protobufjs/pool/-/pool-1.1.0.tgz"
+    },
+    "@protobufjs/utf8": {
+      "version": "1.1.0",
+      "from": "@protobufjs/utf8@>=1.1.0 <2.0.0",
+      "resolved": "https://registry.npmjs.org/@protobufjs/utf8/-/utf8-1.1.0.tgz"
+    },
+    "@types/long": {
+      "version": "3.0.31",
+      "from": "@types/long@>=3.0.31 <4.0.0",
+      "resolved": "https://registry.npmjs.org/@types/long/-/long-3.0.31.tgz"
+    },
+    "@types/node": {
+      "version": "7.0.12",
+      "from": "@types/node@7.0.12",
+      "resolved": "https://registry.npmjs.org/@types/node/-/node-7.0.12.tgz"
+    },
     "acorn": {
       "version": "5.0.3",
       "from": "acorn@>=5.0.0 <6.0.0",
@@ -1938,6 +1998,11 @@
       "resolved": "https://registry.npmjs.org/lodash.uniq/-/lodash.uniq-4.5.0.tgz",
       "dev": true
     },
+    "long": {
+      "version": "3.2.0",
+      "from": "long@>=3.2.0 <4.0.0",
+      "resolved": "https://registry.npmjs.org/long/-/long-3.2.0.tgz"
+    },
     "longest": {
       "version": "1.0.1",
       "from": "longest@>=1.0.1 <2.0.0",
@@ -2648,6 +2713,11 @@
       "from": "progress@>=1.1.8 <2.0.0",
       "resolved": "https://registry.npmjs.org/progress/-/progress-1.1.8.tgz",
       "dev": true
+    },
+    "protobufjs": {
+      "version": "6.7.3",
+      "from": "protobufjs@latest",
+      "resolved": "https://registry.npmjs.org/protobufjs/-/protobufjs-6.7.3.tgz"
     },
     "prr": {
       "version": "0.0.0",

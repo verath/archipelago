@@ -1,4 +1,5 @@
 import EventEmitter from "eventemitter3";
+import {wire} from "../wire/proto_bundle.js";
 
 const EVENT_SERVER_EVENT = Symbol("EVENT_SERVER_EVENT");
 const EVENT_DISCONNECT = Symbol("EVENT_DISCONNECT");
@@ -33,16 +34,16 @@ export default class Connection {
      * @private
      */
     _onWSMessage(msgEvent) {
-        let message = /** @type {string} */ msgEvent.data;
-
-        let serverEvent;
+        let data = new Uint8Array(msgEvent.data);
+        /** @type wire.EventEnvelope */
+        let eventEnvelope;
         try {
-            serverEvent = JSON.parse(message);
+            eventEnvelope = wire.EventEnvelope.decode(data);
         } catch (err) {
-            console.warn("Failed decoding server message", err);
+            console.warn("Failed decoding server EventEnvelope:", err);
             return;
         }
-        this._eventEmitter.emit(EVENT_SERVER_EVENT, serverEvent);
+        this._eventEmitter.emit(EVENT_SERVER_EVENT, eventEnvelope);
     }
 
     _onWSError() {
@@ -75,6 +76,7 @@ export default class Connection {
             return;
         }
         this._conn = new WebSocket(this._url);
+        this._conn.binaryType = "arraybuffer";
         this._conn.onmessage = this._onWSMessage.bind(this);
         this._conn.onclose = this._onWSClose.bind(this);
         this._conn.onerror = this._onWSError.bind(this);
@@ -93,14 +95,14 @@ export default class Connection {
     }
 
     /**
-     * @param {ServerPayload} payloadObj
+     * @param {wire.ActionEnvelope} actionEnvelope
      */
-    sendAction(payloadObj) {
+    sendAction(actionEnvelope) {
         if (this._conn === null) {
             console.warn("sendAction called when Connection was not connected");
             return;
         }
-        let message = JSON.stringify(payloadObj);
-        this._conn.send(message);
+        let buffer = wire.ActionEnvelope.encode(actionEnvelope).finish();
+        this._conn.send(buffer);
     }
 }

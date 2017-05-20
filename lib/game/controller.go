@@ -19,7 +19,7 @@ type controller struct {
 }
 
 // newController creates a new game controller.
-func newController(log *logrus.Logger, game *model.Game, p1Client, p2Client client) (*controller, error) {
+func newController(log *logrus.Logger, game *model.Game, p1Client, p2Client Client) (*controller, error) {
 	logEntry := common.ModuleLogEntryWithID(log, "game/controller")
 
 	gameLoop, err := newGameLoop(log, game)
@@ -84,7 +84,7 @@ func (ctrl *controller) broadcastEvent(ctx context.Context, evt model.Event) err
 	if err == nil {
 		err = err2
 	}
-	return errors.Wrapf(err, "Failed broadcasting event: %v", evt)
+	return errors.Wrapf(err, "Failed broadcasting event of type: %T", evt)
 }
 
 // handleEvent forwards the event to both players, and blocks until the event

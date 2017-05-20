@@ -28,3 +28,4 @@ ratings:
 exclude_paths:
   - config/
   - vendor/
+  - "**pb.go"

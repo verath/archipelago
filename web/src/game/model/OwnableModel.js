@@ -66,15 +66,14 @@ export default class OwnableModel extends BaseModel {
     }
 
     /**
-     * @param {{army: ArmyData, id: string}} data
+     * @param {{army: wire.game.Army, id: string}} data
      * @override
      */
     _update(data) {
         let changed = super._update(data);
         let armyData = data.army;
-
-        if (this._ownerId !== armyData.owner_id) {
-            this._ownerId = armyData.owner_id;
+        if (this._ownerId !== armyData.ownerId) {
+            this._ownerId = armyData.ownerId;
             changed = true;
         }
         if (this._strength !== armyData.strength) {

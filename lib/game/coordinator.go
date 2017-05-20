@@ -29,7 +29,7 @@ const (
 type Coordinator struct {
 	logEntry *logrus.Entry
 	// A queue of clients that has connected and should be added to a game
-	clientsCh chan client
+	clientsCh chan Client
 	// WaitGroup for games created by the Coordinator
 	gamesWG sync.WaitGroup
 }
@@ -39,7 +39,7 @@ func NewCoordinator(log *logrus.Logger) (*Coordinator, error) {
 	logEntry := common.ModuleLogEntry(log, "game/coordinator")
 	return &Coordinator{
 		logEntry:  logEntry,
-		clientsCh: make(chan client, clientQueueSize),
+		clientsCh: make(chan Client, clientQueueSize),
 	}, nil
 }
 
@@ -54,9 +54,9 @@ func (c *Coordinator) Run(ctx context.Context) error {
 	return err
 }
 
-// AddClient takes a client and adds it to the coordinator. This method blocks
-// until the client can be added, or the context is cancelled.
-func (c *Coordinator) AddClient(ctx context.Context, client client) error {
+// AddClient takes a Client and adds it to the coordinator. This method blocks
+// until the Client can be added, or the context is cancelled.
+func (c *Coordinator) AddClient(ctx context.Context, client Client) error {
 	select {
 	case c.clientsCh <- client:
 		return nil
@@ -65,9 +65,9 @@ func (c *Coordinator) AddClient(ctx context.Context, client client) error {
 	}
 }
 
-// nextClient returns a client from the clientsCh. This method blocks
-// until a client can be retrieved or the context is cancelled.
-func (c *Coordinator) nextClient(ctx context.Context) (client, error) {
+// nextClient returns a Client from the clientsCh. This method blocks
+// until a Client can be retrieved or the context is cancelled.
+func (c *Coordinator) nextClient(ctx context.Context) (Client, error) {
 	select {
 	case client := <-c.clientsCh:
 		return client, nil
@@ -79,7 +79,7 @@ func (c *Coordinator) nextClient(ctx context.Context) (client, error) {
 // awaitClients waits for two player connections to be made. If successful, the
 // methods returns two started clients. These clients *must* be stopped. If the
 // method returns an error the clients can be assumed to be stopped.
-func (c *Coordinator) awaitClients(ctx context.Context) (client, client, error) {
+func (c *Coordinator) awaitClients(ctx context.Context) (Client, Client, error) {
 	p1Client, err := c.nextClient(ctx)
 	if err != nil {
 		return nil, nil, errors.Wrap(err, "Error when getting a Client")
@@ -127,7 +127,7 @@ func (c *Coordinator) run(ctx context.Context) error {
 // startGame starts a new game for the two clients. The game is run on a new goroutine.
 // This method blocks until the game has been created, but not until it has finished
 // running.
-func (c *Coordinator) startGame(ctx context.Context, p1Client client, p2Client client) error {
+func (c *Coordinator) startGame(ctx context.Context, p1Client Client, p2Client Client) error {
 	game, err := createBasicGame()
 	if err != nil {
 		return errors.Wrap(err, "Error creating game")

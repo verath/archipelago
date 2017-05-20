@@ -1,7 +1,6 @@
 package model
 
 import (
-	"encoding/json"
 	"time"
 )
 
@@ -28,7 +27,7 @@ const IslandGrowthCap = 100.0
 // Island represents an Island in the game. An Island has a fixed position
 // and an army controlled by some player.
 type Island struct {
-	*army
+	*Army
 
 	id       IslandID
 	position Coordinate
@@ -52,7 +51,7 @@ func NewIsland(position Coordinate, size IslandSize, strength int64, owner *Play
 // NewIslandWithID creats a new Island from the provided values.
 func NewIslandWithID(id IslandID, position Coordinate, size IslandSize, strength int64, owner *Player) (*Island, error) {
 	return &Island{
-		army:     newArmy(owner, strength),
+		Army:     NewArmy(owner, strength),
 		id:       id,
 		position: position,
 		size:     size,
@@ -87,26 +86,10 @@ func (i *Island) SetGrowthRemainder(growthRemainder time.Duration) {
 	i.growthRemainder = growthRemainder
 }
 
-// MarshalJSON marshals the Island instance as JSON by recursively
-// marshalling each sub-component of the Island.
-func (i *Island) MarshalJSON() ([]byte, error) {
-	return json.Marshal(&struct {
-		Army     *army      `json:"army"`
-		ID       IslandID   `json:"id"`
-		Position Coordinate `json:"position"`
-		Size     float64    `json:"size"`
-	}{
-		Army:     i.army,
-		ID:       i.id,
-		Position: i.position,
-		Size:     float64(i.size),
-	})
-}
-
 // Copy performs a deep copy of the Island, returning the copy.
 func (i *Island) Copy() *Island {
 	return &Island{
-		army:            i.army.Copy(),
+		Army:            i.Army.Copy(),
 		id:              i.id,
 		position:        i.position,
 		size:            i.size,

@@ -1,7 +1,6 @@
 package model
 
 import (
-	"encoding/json"
 	"math"
 	"time"
 )
@@ -12,7 +11,7 @@ const airplaneDefaultSpeed = 1 / float64(2*time.Second)
 // is sent from one island to another, transporting an army to
 // the destination.
 type Airplane struct {
-	*army
+	*Army
 
 	id AirplaneID
 	// destination is the target island of the airplane.
@@ -27,7 +26,7 @@ type Airplane struct {
 }
 
 // NewAirplane creates a new Airplane, starting at the origin Island, targeting
-// the destination Island. The army contained on the Airplane is set to the
+// the destination Island. The Army contained on the Airplane is set to the
 // provided strength, owned by the owner.
 func NewAirplane(origin *Island, destination *Island, owner *Player, strength int64) *Airplane {
 	id := AirplaneID(NextModelID())
@@ -36,13 +35,18 @@ func NewAirplane(origin *Island, destination *Island, owner *Player, strength in
 	destPos := destination.Position().ToFloatCoordinate()
 	direction := math.Atan2(destPos.Y-originPos.Y, destPos.X-originPos.X)
 	return &Airplane{
-		army:        newArmy(owner, strength),
+		Army:        NewArmy(owner, strength),
 		id:          id,
 		destination: destination.id,
 		position:    originPos,
 		direction:   direction,
 		speed:       airplaneDefaultSpeed,
 	}
+}
+
+// ID is a getter for the id of the airplane.
+func (a *Airplane) ID() AirplaneID {
+	return a.id
 }
 
 // Destination returns the IslandID of the airplane's target island.
@@ -80,32 +84,10 @@ func (a *Airplane) SetSpeed(speed float64) {
 	a.speed = speed
 }
 
-// MarshalJSON marshals the airplane as JSON.
-func (a *Airplane) MarshalJSON() ([]byte, error) {
-	// No reason to have nanosecond precision on client side
-	speedMillis := a.speed * float64(time.Millisecond)
-
-	return json.Marshal(&struct {
-		Army        *army           `json:"army"`
-		ID          AirplaneID      `json:"id"`
-		Destination IslandID        `json:"-"`
-		Position    FloatCoordinate `json:"position"`
-		Direction   float64         `json:"direction"`
-		Speed       float64         `json:"speed"`
-	}{
-		Army:        a.army,
-		ID:          a.id,
-		Destination: a.destination,
-		Position:    a.position,
-		Direction:   a.direction,
-		Speed:       speedMillis,
-	})
-}
-
 // Copy performs a deep copy of the airplane.
 func (a *Airplane) Copy() *Airplane {
 	return &Airplane{
-		army:        a.army.Copy(),
+		Army:        a.Army.Copy(),
 		id:          a.id,
 		destination: a.destination,
 		position:    a.position,

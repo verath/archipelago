@@ -60,22 +60,19 @@ export default class IslandModel extends OwnableModel {
     }
 
     /**
-     * @param {IslandData} islandData
+     * @param {wire.game.Island} islandData
      * @override
      */
     _update(islandData) {
         let changed = super._update(islandData);
-
         if (!this._position.equals(islandData.position)) {
             this._position.set(islandData.position);
             changed = true;
         }
-
         if (this._size !== islandData.size) {
             this._size = islandData.size;
             changed = true;
         }
-
         return changed;
     }
 }

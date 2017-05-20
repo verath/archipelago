@@ -42,7 +42,6 @@ export default class BaseModel {
         this._eventEmitter.emit(EVENT_CHANGE, args);
     }
 
-
     /**
      * Updates the model from the given data.
      * @param {{id: string}} data

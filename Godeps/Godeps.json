@@ -12,6 +12,10 @@
 			"Rev": "10f801ebc38b33738c9d17d50860f484a0988ff5"
 		},
 		{
+			"ImportPath": "github.com/golang/protobuf/proto",
+			"Rev": "b50ceb1fa9818fa4d78b016c2d4ae025593a7ce3"
+		},
+		{
 			"ImportPath": "github.com/gorilla/websocket",
 			"Comment": "v1.1.0-29-ga91eba7",
 			"Rev": "a91eba7f97777409bc2c443f5534d41dd20c5720"

@@ -15,7 +15,7 @@ OfflinePluginRuntime.install();
  * The version of the websocket protocol we expect.
  * @type {string}
  */
-const WS_VERSION = "1";
+const WS_VERSION = "2";
 
 class Main {
 

@@ -34,7 +34,8 @@ The game is over when a player no longer controls any islands or airplanes.
 ## Project Overview
 
 The project has two parts; A backend server written in go, and a frontend created in JavaScript. 
-Communication between the backend and frontend is done over JSON-encoded WebSockets messages.
+Communication between the backend and frontend is done over binary WebSockets messages, serialized
+using protocol buffers defined in the [proto](./proto) directory.
 
 ### Frontend
 
@@ -89,3 +90,14 @@ This should start the server, and make it available at
 There are obviously many ways to run a project in a production environment.
 An example configuration used for the host running the [playarchipelago.com](https://playarchipelago.com)
 domain is provided in the [config](./config) folder.
+
+## Developing
+
+### Protocol Buffers (protobuf)
+To regenerate the protobuf files it is necessary to install the protobuf compiler (`protoc`) and
+the go proto compiler plugin (`protoc-gen-go`), see the [protoc-gen-go](https://github.com/golang/protobuf)
+project for instructions. [dcodeIO/protobuf.js](https://github.com/dcodeIO/ProtoBuf.js/) is also
+required but should already be installed via npm.
+
+With these tools installed and available on the path, use the `proto/build.ps1` PowerShell script
+to build both the server (.pb.go) and the client (.js, .d.ts) files.

@@ -1,0 +1,18 @@
+syntax = "proto3";
+package wire;
+option go_package = "lib/wire";
+
+message ActionEnvelope {
+    oneof action {
+        ActionGameLeave action_game_leave = 1;
+        ActionGameLaunch action_game_launch = 2;
+    }
+}
+
+message ActionGameLeave {
+}
+
+message ActionGameLaunch {
+    string from_id = 1;
+    string to_id = 2;
+}

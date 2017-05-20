@@ -1,7 +1,6 @@
 package model
 
 import (
-	"encoding/json"
 	"github.com/pkg/errors"
 )
 
@@ -15,6 +14,16 @@ type Game struct {
 	playerNeutral *Player
 	islands       []*Island
 	airplanes     []*Airplane
+}
+
+// ID is a getter for the id of the game.
+func (g *Game) ID() GameID {
+	return g.id
+}
+
+// Size is a getter for the size of the game.
+func (g *Game) Size() Coordinate {
+	return g.size
 }
 
 // Player1 is a getter for the Player model representing player 1.
@@ -107,28 +116,6 @@ func (g *Game) RemoveAirplane(airplane *Airplane) {
 			break
 		}
 	}
-}
-
-// MarshalJSON marshals the game instance as JSON by recursively
-// marshalling each sub-component of the game.
-func (g *Game) MarshalJSON() ([]byte, error) {
-	return json.Marshal(&struct {
-		ID            GameID      `json:"id"`
-		Size          Coordinate  `json:"size"`
-		Player1       *Player     `json:"player1"`
-		Player2       *Player     `json:"player2"`
-		PlayerNeutral *Player     `json:"player_neutral"`
-		Islands       []*Island   `json:"islands"`
-		Airplanes     []*Airplane `json:"airplanes"`
-	}{
-		ID:            g.id,
-		Size:          g.size,
-		Player1:       g.player1,
-		Player2:       g.player2,
-		PlayerNeutral: g.playerNeutral,
-		Islands:       g.islands,
-		Airplanes:     g.airplanes,
-	})
 }
 
 // Copy performs a deep copy of the game, returning the copy.

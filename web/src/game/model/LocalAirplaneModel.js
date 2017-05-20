@@ -1,6 +1,7 @@
 import AirplaneModel from "./AirplaneModel.js";
 
-export const DEFAULT_AIRPLANE_SPEED = 0.0005;
+const NANOSECONDS_PER_SECOND = 1e9;
+export const DEFAULT_AIRPLANE_SPEED = 1 / (2 * NANOSECONDS_PER_SECOND);
 
 let airplane_id_count = 0;
 

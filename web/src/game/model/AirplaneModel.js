@@ -1,6 +1,8 @@
 import Coordinate from "./Coordinate.js";
 import OwnableModel from "./OwnableModel.js";
 
+const MILLISECONDS_PER_NANOSECOND = 1e6;
+
 /**
  * @extends OwnableModel
  */
@@ -53,33 +55,30 @@ export default class AirplaneModel extends OwnableModel {
     }
 
     /**
-     * @param {AirplaneData} airplaneData
+     * @param {wire.game.Airplane} airplaneData
      * @override
      */
     _update(airplaneData) {
         let changed = super._update(airplaneData);
-
         if (!this._position.equals(airplaneData.position)) {
             this._position.set(airplaneData.position);
             changed = true;
         }
-
         if (this._direction !== airplaneData.direction) {
             this._direction = airplaneData.direction;
             changed = true;
         }
-
         if (this._speed !== airplaneData.speed) {
             this._speed = airplaneData.speed;
             changed = true;
         }
-
         return changed;
     }
 
     interpolate(delta) {
-        this._position.x += delta * this._speed * Math.cos(this._direction);
-        this._position.y += delta * this._speed * Math.sin(this._direction);
+        let deltaNS = delta * MILLISECONDS_PER_NANOSECOND;
+        this._position.x += deltaNS * this._speed * Math.cos(this._direction);
+        this._position.y += deltaNS * this._speed * Math.sin(this._direction);
         this._emitChanged();
     }
 }

@@ -5,15 +5,15 @@ import "fmt"
 // Coordinate is an (x, y) coordinate, representing a position on
 // the game "board".
 type Coordinate struct {
-	X int `json:"x"`
-	Y int `json:"y"`
+	X int
+	Y int
 }
 
 // FloatCoordinate is an (x, y) coordinate, approximately representing
 // a position on the game "board".
 type FloatCoordinate struct {
-	X float64 `json:"x"`
-	Y float64 `json:"y"`
+	X float64
+	Y float64
 }
 
 // IsWithin determines if the coordinate is within a boundary, seen as a rectangle
