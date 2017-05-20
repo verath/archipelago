@@ -9,13 +9,10 @@ engines:
     enabled: true
   csslint:
     enabled: true
-  duplication:
-    enabled: true
-    config:
-      languages:
-      - javascript:
   eslint:
     enabled: true
+    config:
+      config: web/.eslintrc.json
   fixme:
     enabled: true
 
@@ -29,3 +26,5 @@ exclude_paths:
   - config/
   - vendor/
   - "**pb.go"
+  - "**proto_bundle.js"
+  - "**proto_bundle.d.ts"
