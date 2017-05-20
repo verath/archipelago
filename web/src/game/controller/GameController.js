@@ -122,17 +122,17 @@ export default class GameController {
      */
     _onServerEvent(envelope) {
         switch (envelope.event) {
-            case "eventGameStart":
-                this._onGameStartEvent(envelope.eventGameStart);
-                break;
-            case "eventGameTick":
-                this._onTickEvent(envelope.eventGameTick);
-                break;
-            case "eventGameOver":
-                this._onGameOverEvent(envelope.eventGameOver);
-                break;
-            default:
-                console.log("Unknown event type:", envelope.event, envelope);
+        case "eventGameStart":
+            this._onGameStartEvent(envelope.eventGameStart);
+            break;
+        case "eventGameTick":
+            this._onTickEvent(envelope.eventGameTick);
+            break;
+        case "eventGameOver":
+            this._onGameOverEvent(envelope.eventGameOver);
+            break;
+        default:
+            console.log("Unknown event type:", envelope.event, envelope);
         }
     }
 
