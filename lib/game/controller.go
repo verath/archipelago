@@ -84,7 +84,7 @@ func (ctrl *controller) broadcastEvent(ctx context.Context, evt model.Event) err
 	if err == nil {
 		err = err2
 	}
-	return errors.Wrapf(err, "Failed broadcasting event: %v", evt)
+	return errors.Wrapf(err, "Failed broadcasting event of type: %T", evt)
 }
 
 // handleEvent forwards the event to both players, and blocks until the event
