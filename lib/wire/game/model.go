@@ -44,7 +44,7 @@ func EncodePlayer(player *model.Player) *Player {
 func EncodeArmy(army *model.Army) *Army {
 	return &Army{
 		Strength: army.Strength(),
-		Owner:    EncodePlayer(army.Owner()),
+		OwnerId:  string(army.Owner().ID()),
 	}
 }
 

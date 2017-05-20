@@ -32,6 +32,6 @@ func EncodeEventGameOver(evt *model.PlayerEventGameOver) (*EventGameOver, error)
 		return nil, errors.New("evt cannot be nil")
 	}
 	return &EventGameOver{
-		PlayerIdWinner: string(evt.WinnerID),
+		WinnerId: string(evt.WinnerID),
 	}, nil
 }

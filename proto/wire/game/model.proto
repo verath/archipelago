@@ -17,7 +17,7 @@ message Player {
 }
 
 message Army {
-    Player owner = 1;
+    string owner_id = 1;
     int64 strength = 2;
 }
 

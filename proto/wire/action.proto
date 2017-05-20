@@ -13,6 +13,6 @@ message ActionGameLeave {
 }
 
 message ActionGameLaunch {
-    string island_id_from = 1;
-    string island_id_to = 2;
+    string from_id = 1;
+    string to_id = 2;
 }

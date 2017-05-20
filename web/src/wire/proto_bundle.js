@@ -396,8 +396,8 @@ export const wire = $root.wire = (() => {
          * Properties of an ActionGameLaunch.
          * @typedef wire.ActionGameLaunch$Properties
          * @type {Object}
-         * @property {string} [islandIdFrom] ActionGameLaunch islandIdFrom.
-         * @property {string} [islandIdTo] ActionGameLaunch islandIdTo.
+         * @property {string} [fromId] ActionGameLaunch fromId.
+         * @property {string} [toId] ActionGameLaunch toId.
          */
 
         /**
@@ -414,16 +414,16 @@ export const wire = $root.wire = (() => {
         }
 
         /**
-         * ActionGameLaunch islandIdFrom.
+         * ActionGameLaunch fromId.
          * @type {string}
          */
-        ActionGameLaunch.prototype.islandIdFrom = "";
+        ActionGameLaunch.prototype.fromId = "";
 
         /**
-         * ActionGameLaunch islandIdTo.
+         * ActionGameLaunch toId.
          * @type {string}
          */
-        ActionGameLaunch.prototype.islandIdTo = "";
+        ActionGameLaunch.prototype.toId = "";
 
         /**
          * Creates a new ActionGameLaunch instance using the specified properties.
@@ -443,10 +443,10 @@ export const wire = $root.wire = (() => {
         ActionGameLaunch.encode = function encode(message, writer) {
             if (!writer)
                 writer = $Writer.create();
-            if (message.islandIdFrom != null && message.hasOwnProperty("islandIdFrom"))
-                writer.uint32(/* id 1, wireType 2 =*/10).string(message.islandIdFrom);
-            if (message.islandIdTo != null && message.hasOwnProperty("islandIdTo"))
-                writer.uint32(/* id 2, wireType 2 =*/18).string(message.islandIdTo);
+            if (message.fromId != null && message.hasOwnProperty("fromId"))
+                writer.uint32(/* id 1, wireType 2 =*/10).string(message.fromId);
+            if (message.toId != null && message.hasOwnProperty("toId"))
+                writer.uint32(/* id 2, wireType 2 =*/18).string(message.toId);
             return writer;
         };
 
@@ -476,10 +476,10 @@ export const wire = $root.wire = (() => {
                 let tag = reader.uint32();
                 switch (tag >>> 3) {
                 case 1:
-                    message.islandIdFrom = reader.string();
+                    message.fromId = reader.string();
                     break;
                 case 2:
-                    message.islandIdTo = reader.string();
+                    message.toId = reader.string();
                     break;
                 default:
                     reader.skipType(tag & 7);
@@ -510,12 +510,12 @@ export const wire = $root.wire = (() => {
         ActionGameLaunch.verify = function verify(message) {
             if (typeof message !== "object" || message === null)
                 return "object expected";
-            if (message.islandIdFrom != null && message.hasOwnProperty("islandIdFrom"))
-                if (!$util.isString(message.islandIdFrom))
-                    return "islandIdFrom: string expected";
-            if (message.islandIdTo != null && message.hasOwnProperty("islandIdTo"))
-                if (!$util.isString(message.islandIdTo))
-                    return "islandIdTo: string expected";
+            if (message.fromId != null && message.hasOwnProperty("fromId"))
+                if (!$util.isString(message.fromId))
+                    return "fromId: string expected";
+            if (message.toId != null && message.hasOwnProperty("toId"))
+                if (!$util.isString(message.toId))
+                    return "toId: string expected";
             return null;
         };
 
@@ -528,10 +528,10 @@ export const wire = $root.wire = (() => {
             if (object instanceof $root.wire.ActionGameLaunch)
                 return object;
             let message = new $root.wire.ActionGameLaunch();
-            if (object.islandIdFrom != null)
-                message.islandIdFrom = String(object.islandIdFrom);
-            if (object.islandIdTo != null)
-                message.islandIdTo = String(object.islandIdTo);
+            if (object.fromId != null)
+                message.fromId = String(object.fromId);
+            if (object.toId != null)
+                message.toId = String(object.toId);
             return message;
         };
 
@@ -555,13 +555,13 @@ export const wire = $root.wire = (() => {
                 options = {};
             let object = {};
             if (options.defaults) {
-                object.islandIdFrom = "";
-                object.islandIdTo = "";
+                object.fromId = "";
+                object.toId = "";
             }
-            if (message.islandIdFrom != null && message.hasOwnProperty("islandIdFrom"))
-                object.islandIdFrom = message.islandIdFrom;
-            if (message.islandIdTo != null && message.hasOwnProperty("islandIdTo"))
-                object.islandIdTo = message.islandIdTo;
+            if (message.fromId != null && message.hasOwnProperty("fromId"))
+                object.fromId = message.fromId;
+            if (message.toId != null && message.hasOwnProperty("toId"))
+                object.toId = message.toId;
             return object;
         };
 
@@ -1020,7 +1020,7 @@ export const wire = $root.wire = (() => {
          * Properties of an EventGameOver.
          * @typedef wire.EventGameOver$Properties
          * @type {Object}
-         * @property {string} [playerIdWinner] EventGameOver playerIdWinner.
+         * @property {string} [winnerId] EventGameOver winnerId.
          */
 
         /**
@@ -1037,10 +1037,10 @@ export const wire = $root.wire = (() => {
         }
 
         /**
-         * EventGameOver playerIdWinner.
+         * EventGameOver winnerId.
          * @type {string}
          */
-        EventGameOver.prototype.playerIdWinner = "";
+        EventGameOver.prototype.winnerId = "";
 
         /**
          * Creates a new EventGameOver instance using the specified properties.
@@ -1060,8 +1060,8 @@ export const wire = $root.wire = (() => {
         EventGameOver.encode = function encode(message, writer) {
             if (!writer)
                 writer = $Writer.create();
-            if (message.playerIdWinner != null && message.hasOwnProperty("playerIdWinner"))
-                writer.uint32(/* id 1, wireType 2 =*/10).string(message.playerIdWinner);
+            if (message.winnerId != null && message.hasOwnProperty("winnerId"))
+                writer.uint32(/* id 1, wireType 2 =*/10).string(message.winnerId);
             return writer;
         };
 
@@ -1091,7 +1091,7 @@ export const wire = $root.wire = (() => {
                 let tag = reader.uint32();
                 switch (tag >>> 3) {
                 case 1:
-                    message.playerIdWinner = reader.string();
+                    message.winnerId = reader.string();
                     break;
                 default:
                     reader.skipType(tag & 7);
@@ -1122,9 +1122,9 @@ export const wire = $root.wire = (() => {
         EventGameOver.verify = function verify(message) {
             if (typeof message !== "object" || message === null)
                 return "object expected";
-            if (message.playerIdWinner != null && message.hasOwnProperty("playerIdWinner"))
-                if (!$util.isString(message.playerIdWinner))
-                    return "playerIdWinner: string expected";
+            if (message.winnerId != null && message.hasOwnProperty("winnerId"))
+                if (!$util.isString(message.winnerId))
+                    return "winnerId: string expected";
             return null;
         };
 
@@ -1137,8 +1137,8 @@ export const wire = $root.wire = (() => {
             if (object instanceof $root.wire.EventGameOver)
                 return object;
             let message = new $root.wire.EventGameOver();
-            if (object.playerIdWinner != null)
-                message.playerIdWinner = String(object.playerIdWinner);
+            if (object.winnerId != null)
+                message.winnerId = String(object.winnerId);
             return message;
         };
 
@@ -1162,9 +1162,9 @@ export const wire = $root.wire = (() => {
                 options = {};
             let object = {};
             if (options.defaults)
-                object.playerIdWinner = "";
-            if (message.playerIdWinner != null && message.hasOwnProperty("playerIdWinner"))
-                object.playerIdWinner = message.playerIdWinner;
+                object.winnerId = "";
+            if (message.winnerId != null && message.hasOwnProperty("winnerId"))
+                object.winnerId = message.winnerId;
             return object;
         };
 
@@ -1974,7 +1974,7 @@ export const wire = $root.wire = (() => {
              * Properties of an Army.
              * @typedef wire.game.Army$Properties
              * @type {Object}
-             * @property {wire.game.Player$Properties} [owner] Army owner.
+             * @property {string} [ownerId] Army ownerId.
              * @property {number|Long} [strength] Army strength.
              */
 
@@ -1992,10 +1992,10 @@ export const wire = $root.wire = (() => {
             }
 
             /**
-             * Army owner.
-             * @type {(wire.game.Player$Properties|null)}
+             * Army ownerId.
+             * @type {string}
              */
-            Army.prototype.owner = null;
+            Army.prototype.ownerId = "";
 
             /**
              * Army strength.
@@ -2021,8 +2021,8 @@ export const wire = $root.wire = (() => {
             Army.encode = function encode(message, writer) {
                 if (!writer)
                     writer = $Writer.create();
-                if (message.owner != null && message.hasOwnProperty("owner"))
-                    $root.wire.game.Player.encode(message.owner, writer.uint32(/* id 1, wireType 2 =*/10).fork()).ldelim();
+                if (message.ownerId != null && message.hasOwnProperty("ownerId"))
+                    writer.uint32(/* id 1, wireType 2 =*/10).string(message.ownerId);
                 if (message.strength != null && message.hasOwnProperty("strength"))
                     writer.uint32(/* id 2, wireType 0 =*/16).int64(message.strength);
                 return writer;
@@ -2054,7 +2054,7 @@ export const wire = $root.wire = (() => {
                     let tag = reader.uint32();
                     switch (tag >>> 3) {
                     case 1:
-                        message.owner = $root.wire.game.Player.decode(reader, reader.uint32());
+                        message.ownerId = reader.string();
                         break;
                     case 2:
                         message.strength = reader.int64();
@@ -2088,11 +2088,9 @@ export const wire = $root.wire = (() => {
             Army.verify = function verify(message) {
                 if (typeof message !== "object" || message === null)
                     return "object expected";
-                if (message.owner != null && message.hasOwnProperty("owner")) {
-                    let error = $root.wire.game.Player.verify(message.owner);
-                    if (error)
-                        return "owner." + error;
-                }
+                if (message.ownerId != null && message.hasOwnProperty("ownerId"))
+                    if (!$util.isString(message.ownerId))
+                        return "ownerId: string expected";
                 if (message.strength != null && message.hasOwnProperty("strength"))
                     if (!$util.isInteger(message.strength) && !(message.strength && $util.isInteger(message.strength.low) && $util.isInteger(message.strength.high)))
                         return "strength: integer|Long expected";
@@ -2108,11 +2106,8 @@ export const wire = $root.wire = (() => {
                 if (object instanceof $root.wire.game.Army)
                     return object;
                 let message = new $root.wire.game.Army();
-                if (object.owner != null) {
-                    if (typeof object.owner !== "object")
-                        throw TypeError(".wire.game.Army.owner: object expected");
-                    message.owner = $root.wire.game.Player.fromObject(object.owner);
-                }
+                if (object.ownerId != null)
+                    message.ownerId = String(object.ownerId);
                 if (object.strength != null)
                     if ($util.Long)
                         (message.strength = $util.Long.fromValue(object.strength)).unsigned = false;
@@ -2145,15 +2140,15 @@ export const wire = $root.wire = (() => {
                     options = {};
                 let object = {};
                 if (options.defaults) {
-                    object.owner = null;
+                    object.ownerId = "";
                     if ($util.Long) {
                         let long = new $util.Long(0, 0, false);
                         object.strength = options.longs === String ? long.toString() : options.longs === Number ? long.toNumber() : long;
                     } else
                         object.strength = options.longs === String ? "0" : 0;
                 }
-                if (message.owner != null && message.hasOwnProperty("owner"))
-                    object.owner = $root.wire.game.Player.toObject(message.owner, options);
+                if (message.ownerId != null && message.hasOwnProperty("ownerId"))
+                    object.ownerId = message.ownerId;
                 if (message.strength != null && message.hasOwnProperty("strength"))
                     if (typeof message.strength === "number")
                         object.strength = options.longs === String ? String(message.strength) : message.strength;

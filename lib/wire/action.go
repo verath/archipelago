@@ -19,7 +19,7 @@ func DecodeActionGameLaunch(act *ActionGameLaunch) (*model.PlayerActionLaunch, e
 		return nil, errors.New("act cannot be nil")
 	}
 	return &model.PlayerActionLaunch{
-		From: model.IslandID(act.IslandIdFrom),
-		To:   model.IslandID(act.IslandIdTo),
+		From: model.IslandID(act.FromId),
+		To:   model.IslandID(act.ToId),
 	}, nil
 }

@@ -240,8 +240,8 @@ export namespace wire {
     }
 
     type ActionGameLaunch$Properties = {
-        islandIdFrom?: string;
-        islandIdTo?: string;
+        fromId?: string;
+        toId?: string;
     };
 
     /**
@@ -261,16 +261,16 @@ export namespace wire {
         constructor(properties?: wire.ActionGameLaunch$Properties);
 
         /**
-         * ActionGameLaunch islandIdFrom.
+         * ActionGameLaunch fromId.
          * @type {string}
          */
-        public islandIdFrom: string;
+        public fromId: string;
 
         /**
-         * ActionGameLaunch islandIdTo.
+         * ActionGameLaunch toId.
          * @type {string}
          */
-        public islandIdTo: string;
+        public toId: string;
 
         /**
          * Creates a new ActionGameLaunch instance using the specified properties.
@@ -607,7 +607,7 @@ export namespace wire {
     }
 
     type EventGameOver$Properties = {
-        playerIdWinner?: string;
+        winnerId?: string;
     };
 
     /**
@@ -627,10 +627,10 @@ export namespace wire {
         constructor(properties?: wire.EventGameOver$Properties);
 
         /**
-         * EventGameOver playerIdWinner.
+         * EventGameOver winnerId.
          * @type {string}
          */
-        public playerIdWinner: string;
+        public winnerId: string;
 
         /**
          * Creates a new EventGameOver instance using the specified properties.
@@ -1193,7 +1193,7 @@ export namespace wire {
         }
 
         type Army$Properties = {
-            owner?: wire.game.Player$Properties;
+            ownerId?: string;
             strength?: (number|Long);
         };
 
@@ -1214,10 +1214,10 @@ export namespace wire {
             constructor(properties?: wire.game.Army$Properties);
 
             /**
-             * Army owner.
-             * @type {(wire.game.Player$Properties|null)}
+             * Army ownerId.
+             * @type {string}
              */
-            public owner: (wire.game.Player$Properties|null);
+            public ownerId: string;
 
             /**
              * Army strength.

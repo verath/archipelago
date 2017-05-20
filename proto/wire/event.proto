@@ -17,7 +17,7 @@ message EventGameStart {
 }
 
 message EventGameOver {
-    string player_id_winner = 1;
+    string winner_id = 1;
 }
 
 message EventGameTick {
