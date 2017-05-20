@@ -5,6 +5,7 @@ import (
 	"flag"
 	"github.com/Sirupsen/logrus"
 	"github.com/pkg/errors"
+	"github.com/pkg/profile"
 	"github.com/verath/archipelago/lib"
 	"net/http"
 	"os"
@@ -24,18 +25,32 @@ func main() {
 		serveStatic bool
 		staticPath  string
 		serverAddr  string
+		profileMode string
 	)
 	flag.BoolVar(&debug, "debug", false, "Set to true to log debug messages.")
 	flag.BoolVar(&serveStatic, "servestatic", false, "Enable serving of static assets.")
 	flag.StringVar(&staticPath, "staticpath", "./web/dist", "Specifies the path to static assets "+
 		"directory. Only applicable if servestatic is true.")
 	flag.StringVar(&serverAddr, "addr", ":8080", "TCP address for the http server to listen on.")
+	flag.StringVar(&profileMode, "profile", "", "Enable profiling mode, one of [cpu, mem, mutex, block]")
 	flag.Parse()
 
 	logger := logrus.New()
 	logger.Formatter = &logrus.TextFormatter{}
 	if debug {
 		logger.Level = logrus.DebugLevel
+	}
+	// Setup profiling, if profile flag was set
+	switch profileMode {
+	case "cpu":
+		defer profile.Start(profile.NoShutdownHook, profile.ProfilePath("."), profile.CPUProfile).Stop()
+	case "mem":
+		defer profile.Start(profile.NoShutdownHook, profile.ProfilePath("."), profile.MemProfile).Stop()
+	case "mutex":
+		defer profile.Start(profile.NoShutdownHook, profile.ProfilePath("."), profile.MutexProfile).Stop()
+	case "block":
+		defer profile.Start(profile.NoShutdownHook, profile.ProfilePath("."), profile.BlockProfile).Stop()
+	default:
 	}
 
 	archipelagoServer, err := archipelago.New(logger)
