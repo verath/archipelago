@@ -37,21 +37,30 @@ func (ca *ClientAdapter) DisconnectCh() <-chan struct{} {
 // This method blocks until the PlayerEvent has been written, or the context
 // is cancelled.
 func (ca *ClientAdapter) WritePlayerEvent(ctx context.Context, playerEvent model.PlayerEvent) error {
-	pbMessage := &EventEnvelope{}
+	pbMsg := &EventEnvelope{}
 	switch evt := playerEvent.(type) {
 	case *model.PlayerEventGameStart:
-		evtStart := NewEventGameStart(evt)
-		pbMessage.Event = &EventEnvelope_EventGameStart{evtStart}
+		evtStart, err := EncodeEventGameStart(evt)
+		if err != nil {
+			return err
+		}
+		pbMsg.Event = &EventEnvelope_EventGameStart{EventGameStart: evtStart}
 	case *model.PlayerEventTick:
-		evtTick := NewEventGameTick(evt)
-		pbMessage.Event = &EventEnvelope_EventGameTick{evtTick}
+		evtTick, err := EncodeEventGameTick(evt)
+		if err != nil {
+			return err
+		}
+		pbMsg.Event = &EventEnvelope_EventGameTick{EventGameTick: evtTick}
 	case *model.PlayerEventGameOver:
-		evtGameOver := NewEventGameOver(evt)
-		pbMessage.Event = &EventEnvelope_EventGameOver{evtGameOver}
+		evtOver, err := EncodeEventGameOver(evt)
+		if err != nil {
+			return err
+		}
+		pbMsg.Event = &EventEnvelope_EventGameOver{EventGameOver: evtOver}
 	default:
 		return errors.Errorf("Unknown PlayerEvent type: %T", playerEvent)
 	}
-	if err := ca.writeProtobufMessage(ctx, pbMessage); err != nil {
+	if err := ca.writeProtobufMessage(ctx, pbMsg); err != nil {
 		return errors.Wrap(err, "Error writing protobuf message to client")
 	}
 	return nil
@@ -64,11 +73,14 @@ func (ca *ClientAdapter) ReadPlayerAction(ctx context.Context) (model.PlayerActi
 	if err := ca.readProtobufMessage(ctx, actEnv); err != nil {
 		return nil, errors.Wrap(err, "Error reading protobuf message from client")
 	}
-	act, ok := actEnv.Action.(GameActionDecoder)
-	if !ok {
-		return nil, errors.Errorf("Action (%T) was not a GameActionDecoder", act)
+	switch act := actEnv.Action.(type) {
+	case *ActionEnvelope_ActionGameLeave:
+		return DecodeActionGameLeave(act.ActionGameLeave)
+	case *ActionEnvelope_ActionGameLaunch:
+		return DecodeActionGameLaunch(act.ActionGameLaunch)
+	default:
+		return nil, errors.Errorf("Unknown ActionEnvelope.Action type: %T", actEnv.Action)
 	}
-	return act.ToGameAction(), nil
 }
 
 // writeProtobufMessage encodes and writes the given protobuf message to the underlying

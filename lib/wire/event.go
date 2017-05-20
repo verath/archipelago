@@ -1,27 +1,37 @@
 package wire
 
 import (
+	"github.com/pkg/errors"
 	"github.com/verath/archipelago/lib/game/model"
 	"github.com/verath/archipelago/lib/wire/game"
 )
 
-// NewEventGameStart translates a model.PlayerEventGameStart to an EventGameStart message.
-func NewEventGameStart(evt *model.PlayerEventGameStart) *EventGameStart {
+// EncodeEventGameStart transforms a game model PlayerEventGameStart to its wire representation
+func EncodeEventGameStart(evt *model.PlayerEventGameStart) (*EventGameStart, error) {
+	if evt == nil {
+		return nil, errors.New("evt cannot be nil")
+	}
 	return &EventGameStart{
 		PlayerId: string(evt.PlayerID),
-	}
+	}, nil
 }
 
-// NewEventGameTick translates a model.PlayerEventTick to a EventGameTick message.
-func NewEventGameTick(evt *model.PlayerEventTick) *EventGameTick {
+// EncodeEventGameTick transforms a game model PlayerEventTick to its wire representation
+func EncodeEventGameTick(evt *model.PlayerEventTick) (*EventGameTick, error) {
+	if evt == nil {
+		return nil, errors.New("evt cannot be nil")
+	}
 	return &EventGameTick{
-		Game: game.NewGame(evt.Game),
-	}
+		Game: game.EncodeGame(evt.Game),
+	}, nil
 }
 
-// NewEventGameOver translates a model.PlayerEventGameOver to an EventGameOver message.
-func NewEventGameOver(evt *model.PlayerEventGameOver) *EventGameOver {
+// EncodeEventGameOver transforms a game model PlayerEventGameOver to its wire representation
+func EncodeEventGameOver(evt *model.PlayerEventGameOver) (*EventGameOver, error) {
+	if evt == nil {
+		return nil, errors.New("evt cannot be nil")
+	}
 	return &EventGameOver{
 		PlayerIdWinner: string(evt.WinnerID),
-	}
+	}, nil
 }
