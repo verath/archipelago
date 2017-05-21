@@ -76,7 +76,7 @@ func (srv *Server) handleWSConnection(ctx context.Context, conn *websocket.WSCon
 	if err != nil {
 		return errors.Wrap(err, "Error creating new Client from ws connection")
 	}
-	wireClient, err := wire.NewClientAdapter(client)
+	wireClient, err := wire.NewPBClientAdapter(client)
 	if err != nil {
 		return errors.Wrap(err, "Error creating client wire adapter")
 	}

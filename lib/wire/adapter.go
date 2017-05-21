@@ -7,36 +7,35 @@ import (
 	"github.com/verath/archipelago/lib/game/model"
 )
 
-// ClientAdapter is an adapter for a client that reads and writes byte slices,
-// providing higher level abstractions that also handle message encoding and
-// decoding.
-type ClientAdapter struct {
+// PBClientAdapter is an adapter for a client that reads and writes byte slices,
+// providing higher level abstractions. The encoding/decoding is based on protobuf.
+type PBClientAdapter struct {
 	client Client
 }
 
-// NewClientAdapter creates a new ClientAdapter wrapping the provided
+// NewPBClientAdapter creates a new PBClientAdapter wrapping the provided
 // client.
-func NewClientAdapter(client Client) (*ClientAdapter, error) {
-	return &ClientAdapter{
+func NewPBClientAdapter(client Client) (*PBClientAdapter, error) {
+	return &PBClientAdapter{
 		client: client,
 	}, nil
 }
 
 // Disconnect disconnects underlying client.
-func (ca *ClientAdapter) Disconnect() {
+func (ca *PBClientAdapter) Disconnect() {
 	ca.client.Disconnect()
 }
 
 // DisconnectCh returns a channel that is closed when the underlying
 // client is disconnected.
-func (ca *ClientAdapter) DisconnectCh() <-chan struct{} {
+func (ca *PBClientAdapter) DisconnectCh() <-chan struct{} {
 	return ca.client.DisconnectCh()
 }
 
 // WritePlayerEvent encodes and writes a PlayerEvent to the underlying client.
 // This method blocks until the PlayerEvent has been written, or the context
 // is cancelled.
-func (ca *ClientAdapter) WritePlayerEvent(ctx context.Context, playerEvent model.PlayerEvent) error {
+func (ca *PBClientAdapter) WritePlayerEvent(ctx context.Context, playerEvent model.PlayerEvent) error {
 	pbMsg := &EventEnvelope{}
 	switch evt := playerEvent.(type) {
 	case *model.PlayerEventGameStart:
@@ -68,7 +67,7 @@ func (ca *ClientAdapter) WritePlayerEvent(ctx context.Context, playerEvent model
 
 // ReadPlayerAction reads and decodes a PlayerAction from the underlying client.
 // This method blocks until a PlayerAction is read, or the context is cancelled.
-func (ca *ClientAdapter) ReadPlayerAction(ctx context.Context) (model.PlayerAction, error) {
+func (ca *PBClientAdapter) ReadPlayerAction(ctx context.Context) (model.PlayerAction, error) {
 	actEnv := &ActionEnvelope{}
 	if err := ca.readProtobufMessage(ctx, actEnv); err != nil {
 		return nil, errors.Wrap(err, "Error reading protobuf message from client")
@@ -86,7 +85,7 @@ func (ca *ClientAdapter) ReadPlayerAction(ctx context.Context) (model.PlayerActi
 // writeProtobufMessage encodes and writes the given protobuf message to the underlying
 // client. This method blocks until the message has been written or the context is
 // cancelled.
-func (ca *ClientAdapter) writeProtobufMessage(ctx context.Context, pbMsg proto.Message) error {
+func (ca *PBClientAdapter) writeProtobufMessage(ctx context.Context, pbMsg proto.Message) error {
 	msg, err := proto.Marshal(pbMsg)
 	if err != nil {
 		return errors.Wrap(err, "Failed encoding protobuf message")
@@ -100,7 +99,7 @@ func (ca *ClientAdapter) writeProtobufMessage(ctx context.Context, pbMsg proto.M
 // readProtobufMessage reads and decodes a message from the underlying client
 // to the provided proto.Message. Blocks until a message is read, or the context
 // is cancelled.
-func (ca *ClientAdapter) readProtobufMessage(ctx context.Context, pbMsg proto.Message) error {
+func (ca *PBClientAdapter) readProtobufMessage(ctx context.Context, pbMsg proto.Message) error {
 	msg, err := ca.client.ReadMessage(ctx)
 	if err != nil {
 		return errors.Wrap(err, "Could not read message from Client")
