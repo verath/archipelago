@@ -15,6 +15,12 @@ export default class AirplaneModel extends OwnableModel {
         super(gameModel);
 
         /**
+         * @member {GameModel}
+         * @private
+         */
+        this._gameModel = gameModel;
+
+        /**
          * @member {Coordinate}
          * @protected
          */
@@ -59,20 +65,31 @@ export default class AirplaneModel extends OwnableModel {
      * @override
      */
     _update(airplaneData) {
-        let changed = super._update(airplaneData);
-        if (!this._position.equals(airplaneData.position)) {
-            this._position.set(airplaneData.position);
-            changed = true;
+        super._update(airplaneData);
+        let newX = airplaneData.position.x;
+        let newY = airplaneData.position.y;
+        // Force set our position to the current server position if
+        // we are more than a tile away
+        if (Math.hypot(newY - this._position.y, newX - this._position.x) > 1) {
+            this._position.x = airplaneData.position.x;
+            this._position.y = airplaneData.position.y;
         }
-        if (this._direction !== airplaneData.direction) {
-            this._direction = airplaneData.direction;
-            changed = true;
-        }
-        if (this._speed !== airplaneData.speed) {
-            this._speed = airplaneData.speed;
-            changed = true;
-        }
-        return changed;
+        // Calculate the position we believe the airplane will be at next
+        // tick, and set our speed and direction to reach that point until
+        // then. By doing this instead of setting position directly, we can
+        // smooth out the change of position over the entire tickInterval,
+        // making for less janky movement.
+        let tickInterval = this._gameModel.serverTickInterval;
+        let speed = airplaneData.speed;
+        let direction = airplaneData.direction;
+        let nextX = newX + speed * Math.cos(direction) * tickInterval;
+        let nextY = newY + speed * Math.sin(direction) * tickInterval;
+        let diffX = nextX - this._position.x;
+        let diffY = nextY - this._position.y;
+        let distance = Math.hypot(diffY, diffX);
+        this._speed = distance / tickInterval;
+        this._direction = Math.atan2(diffY, diffX);
+        return true;
     }
 
     interpolate(delta) {

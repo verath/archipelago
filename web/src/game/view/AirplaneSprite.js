@@ -58,10 +58,6 @@ export default class AirplaneSprite extends BaseSprite {
         let scale = size * (0.8 - 0.25) + 0.25;
         this.scale.set(scale, scale);
 
-        this.rotation = airplane.direction;
-        // Negate for the text so that it is displayed non-rotated
-        this._strengthText.rotation = -airplane.direction;
-
         if (airplane.owner.isSelf()) {
             this.tint = COLOR_FILL_SELF;
         } else {
@@ -76,5 +72,9 @@ export default class AirplaneSprite extends BaseSprite {
         let x = airplane.position.x * TILE_WIDTH + TILE_WIDTH / 2;
         let y = airplane.position.y * TILE_HEIGHT + TILE_HEIGHT / 2;
         this.position.set(x, y);
+        // Update rotation to match the direction we are heading
+        this.rotation = airplane.direction;
+        // Negate for the text so that it is displayed non-rotated
+        this._strengthText.rotation = -airplane.direction;
     }
 }
