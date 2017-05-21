@@ -12,7 +12,8 @@ func EncodeEventGameStart(evt *model.PlayerEventGameStart) (*EventGameStart, err
 		return nil, errors.New("evt cannot be nil")
 	}
 	return &EventGameStart{
-		PlayerId: string(evt.PlayerID),
+		TickInterval: int64(evt.TickInterval),
+		PlayerId:     string(evt.PlayerID),
 	}, nil
 }
 

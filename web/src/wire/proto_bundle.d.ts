@@ -495,6 +495,7 @@ export namespace wire {
 
     type EventGameStart$Properties = {
         playerId?: string;
+        tickInterval?: (number|Long);
     };
 
     /**
@@ -518,6 +519,12 @@ export namespace wire {
          * @type {string}
          */
         public playerId: string;
+
+        /**
+         * EventGameStart tickInterval.
+         * @type {number|Long}
+         */
+        public tickInterval: (number|Long);
 
         /**
          * Creates a new EventGameStart instance using the specified properties.
