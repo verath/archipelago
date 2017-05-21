@@ -10,7 +10,7 @@ const CopyWebpackPlugin = require("copy-webpack-plugin");
 module.exports = {
     entry: {
         main: "./src/main.js",
-        vendor: ["pixijs", "eventemitter3"]
+        vendor: ["pixijs", "eventemitter3", "protobufjs"]
     },
     output: {
         filename: "[name].[chunkhash].js",
