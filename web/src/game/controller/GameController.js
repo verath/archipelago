@@ -92,6 +92,7 @@ export default class GameController {
         }
         this._started = true;
         this._gameModel.playerId = evtStart.playerId;
+        this._gameModel.serverTickInterval = evtStart.tickInterval;
         // Starts the ticker, calling this._onTick
         this._ticker.start();
 

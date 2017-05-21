@@ -52,6 +52,14 @@ export default class GameModel extends BaseModel {
          * @private
          */
         this._playerId = null;
+
+        /**
+         * The approximate tick interval (i.e. time between ticks)
+         * of the server, in nanoseconds.
+         * @type {number}
+         * @private
+         */
+        this._serverTickInterval = 1;
     }
 
     /**
@@ -67,7 +75,7 @@ export default class GameModel extends BaseModel {
         this._airplanes = airplanes.map(airplaneData => {
             let airplane = this.airplaneById(airplaneData.id);
             if (!airplane) {
-                airplane = new AirplaneModel(this);
+                airplane = new AirplaneModel(this, airplaneData);
                 // An airplane was added
                 changed = true;
             }
@@ -188,6 +196,23 @@ export default class GameModel extends BaseModel {
             this._playerId = playerId;
             this._emitChanged();
         }
+    }
+
+    /**
+     * @param {number} tickInterval
+     */
+    set serverTickInterval(tickInterval) {
+        if (this._serverTickInterval !== tickInterval) {
+            this._serverTickInterval = tickInterval;
+            this._emitChanged();
+        }
+    }
+
+    /**
+     * @returns {number}
+     */
+    get serverTickInterval() {
+        return this._serverTickInterval;
     }
 
     /**
