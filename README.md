@@ -41,7 +41,7 @@ using protocol buffers defined in the [proto](./proto) directory.
 
 The frontend project is found in the [web](./web) directory. It is based on [Pixi.js](https://github.com/pixijs/pixi.js) 
 for WebGL/canvas rendering. The frontend is written in ES6, and is transpiled to ES5 via Babel. 
-NPM is used to manage dependencies, and [Webpack2](https://webpack.js.org/) 
+[Yarn](https://yarnpkg.com/lang/en/) is used to manage dependencies, and [Webpack2](https://webpack.js.org/) 
 is used to bundle the frontend application (including js, css and images).
 
 ### Backend
@@ -59,6 +59,7 @@ The backend code is found in the [lib](./lib) directory.
 To run and build the project, make sure to have the following installed:
 * [Go](https://golang.org/dl/)
 * [Node.JS](https://nodejs.org/en/download/)
+* [Yarn](https://yarnpkg.com/en/docs/install)
 
 Then download the project to your `GOPATH`:
 ```
@@ -66,13 +67,12 @@ $ go get github.com/verath/archipelago
 ```
 
 This will include all dependencies required for the backend code. However, the client 
-side dependencies are not included in the repo and have to be fetched via npm and built
-to an `app.build.js` file:
+side dependencies are not included in the repo and have to be fetched via yarn, and then built/bundled:
 
 ```
 $ cd $GOPATH/src/github.com/verath/archipelago/web
-$ npm install
-$ npm run build:prod
+$ yarn install
+$ yarn run build:prod
 ```
 
 Now run the project as a go project, e.g. using `go run` from the root directory:
@@ -97,7 +97,7 @@ domain is provided in the [config](./config) folder.
 To regenerate the protobuf files it is necessary to install the protobuf compiler (`protoc`) and
 the go proto compiler plugin (`protoc-gen-go`), see the [protoc-gen-go](https://github.com/golang/protobuf)
 project for instructions. [dcodeIO/protobuf.js](https://github.com/dcodeIO/ProtoBuf.js/) is also
-required but should already be installed via npm.
+required but should already be installed via yarn.
 
 With these tools installed and available on the path, use the `proto/build.ps1` PowerShell script
 to build both the server (.pb.go) and the client (.js, .d.ts) files.
