@@ -51,6 +51,8 @@ server {
 	add_header X-Frame-Options SAMEORIGIN;
 	add_header X-Content-Type-Options nosniff;
 	add_header X-XSS-Protection "1; mode=block";
+	add_header Referrer-Policy no-referrer-when-downgrade;
+	add_header Content-Security-Policy "default-src 'none'; base-uri 'self'; block-all-mixed-content; child-src 'self'; connect-src 'self' wss://playarchipelago.com; img-src 'self' data:; script-src 'self' 'unsafe-eval'; style-src 'self'; worker-src 'self';";
 
 	# Serve "/.well-known/acme-challenge" from a separate directory
 	# this directory is used by let's encrypt to validate ownership
