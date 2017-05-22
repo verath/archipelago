@@ -39,22 +39,13 @@ func (ca *PBClientAdapter) WritePlayerEvent(ctx context.Context, playerEvent mod
 	pbMsg := &EventEnvelope{}
 	switch evt := playerEvent.(type) {
 	case *model.PlayerEventGameStart:
-		evtStart, err := EncodeEventGameStart(evt)
-		if err != nil {
-			return err
-		}
+		evtStart := EncodeEventGameStart(evt)
 		pbMsg.Event = &EventEnvelope_EventGameStart{EventGameStart: evtStart}
 	case *model.PlayerEventTick:
-		evtTick, err := EncodeEventGameTick(evt)
-		if err != nil {
-			return err
-		}
+		evtTick := EncodeEventGameTick(evt)
 		pbMsg.Event = &EventEnvelope_EventGameTick{EventGameTick: evtTick}
 	case *model.PlayerEventGameOver:
-		evtOver, err := EncodeEventGameOver(evt)
-		if err != nil {
-			return err
-		}
+		evtOver := EncodeEventGameOver(evt)
 		pbMsg.Event = &EventEnvelope_EventGameOver{EventGameOver: evtOver}
 	default:
 		return errors.Errorf("Unknown PlayerEvent type: %T", playerEvent)
@@ -74,9 +65,9 @@ func (ca *PBClientAdapter) ReadPlayerAction(ctx context.Context) (model.PlayerAc
 	}
 	switch act := actEnv.Action.(type) {
 	case *ActionEnvelope_ActionGameLeave:
-		return DecodeActionGameLeave(act.ActionGameLeave)
+		return DecodeActionGameLeave(act.ActionGameLeave), nil
 	case *ActionEnvelope_ActionGameLaunch:
-		return DecodeActionGameLaunch(act.ActionGameLaunch)
+		return DecodeActionGameLaunch(act.ActionGameLaunch), nil
 	default:
 		return nil, errors.Errorf("Unknown ActionEnvelope.Action type: %T", actEnv.Action)
 	}
