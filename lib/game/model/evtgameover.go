@@ -31,5 +31,5 @@ func (evt *EventGameOver) ToPlayerEvent(_ PlayerID) PlayerEvent {
 	return &PlayerEventGameOver{evt}
 }
 
-// playerEventMarker is the marker implementation of PlayerEvent.
-func (evt *PlayerEventGameOver) playerEventMarker() {}
+// PlayerEventMarker is the marker implementation of PlayerEvent.
+func (evt *PlayerEventGameOver) PlayerEventMarker() {}

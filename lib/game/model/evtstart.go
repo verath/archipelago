@@ -26,5 +26,5 @@ func (evt *EventGameStart) ToPlayerEvent(playerID PlayerID) PlayerEvent {
 	}
 }
 
-// playerEventMarker is the marker implementation of PlayerEvent.
-func (evt *PlayerEventGameStart) playerEventMarker() {}
+// PlayerEventMarker is the marker implementation of PlayerEvent.
+func (evt *PlayerEventGameStart) PlayerEventMarker() {}

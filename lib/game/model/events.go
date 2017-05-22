@@ -17,9 +17,9 @@ type (
 	// It is still necessary for the PlayerEvent to be type switched before
 	// it can be used.
 	PlayerEvent interface {
-		// playerEventMarker is a dummy method used as marker for
+		// PlayerEventMarker is a dummy method used as marker for
 		// things that implement the PlayerEvent interface.
-		playerEventMarker()
+		PlayerEventMarker()
 	}
 )
 

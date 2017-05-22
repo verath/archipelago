@@ -18,5 +18,5 @@ func (evt *EventTick) ToPlayerEvent(playerID PlayerID) PlayerEvent {
 	return &PlayerEventTick{EventTick: evt}
 }
 
-// playerEventMarker is the marker implementation of PlayerEvent.
-func (evt *PlayerEventTick) playerEventMarker() {}
+// PlayerEventMarker is the marker implementation of PlayerEvent.
+func (evt *PlayerEventTick) PlayerEventMarker() {}
