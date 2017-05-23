@@ -8,7 +8,7 @@ func CreateDummyGameEmpty() *Game {
 	return NewGameBuilder(Coordinate{9, 9}, p1, p2, pn).BuildOrPanic()
 }
 
-// CreateDummyGameSimple Creates a 9x9 board with 3 island:
+// CreateDummyGameSimple Creates a 9x9 board with 3 islands:
 //  * (0,0) - player 1 island
 //  * (8,8) - player 2 island
 //  * (4,4) - neutral island
