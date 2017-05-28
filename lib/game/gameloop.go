@@ -103,18 +103,19 @@ func (gl *gameLoop) isGameOver() bool {
 // actions that has been added since the last tick. This method blocks until the game
 // is over, on an error occurs.
 func (gl *gameLoop) tickLoop(ctx context.Context) error {
-	tickInterval := gl.tickInterval
-	ticker := time.NewTicker(tickInterval)
+	ticker := time.NewTicker(gl.tickInterval)
 	defer ticker.Stop()
-
+	lastTick := time.Now()
 	for {
 		select {
 		case <-ctx.Done():
 			return ctx.Err()
 		case <-ticker.C:
-			if err := gl.tick(ctx, tickInterval); err != nil {
+			elapsed := time.Since(lastTick)
+			if err := gl.tick(ctx, elapsed); err != nil {
 				return errors.Wrap(err, "Error when performing tick")
 			}
+			lastTick = time.Now()
 		}
 		// Check for game over after each tick, and stop the loop if game is over
 		if gl.isGameOver() {
