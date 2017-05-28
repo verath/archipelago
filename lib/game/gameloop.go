@@ -27,8 +27,6 @@ type gameLoop struct {
 	tickInterval time.Duration
 	// The game instance on which actions are to be applied
 	game *model.Game
-
-	gameOverMu sync.Mutex
 	// Flag for if the game has completed
 	gameOver bool
 
@@ -91,21 +89,13 @@ func (gl *gameLoop) Run(ctx context.Context) error {
 	return errors.Wrap(err, "error while running tickLoop")
 }
 
-// Sets the game over flag, returning an error if it is already set
-func (gl *gameLoop) setGameOver() error {
-	gl.gameOverMu.Lock()
-	defer gl.gameOverMu.Unlock()
-	if gl.gameOver {
-		return errors.New("Game is already over")
-	}
+// setGameOver sets the game over flag to true
+func (gl *gameLoop) setGameOver() {
 	gl.gameOver = true
-	return nil
 }
 
-// Checks if the game over flag has been set
+// isGameOver checks if the game over flag has been set
 func (gl *gameLoop) isGameOver() bool {
-	gl.gameOverMu.Lock()
-	defer gl.gameOverMu.Unlock()
 	return gl.gameOver
 }
 
