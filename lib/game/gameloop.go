@@ -16,8 +16,8 @@ const defaultTickInterval time.Duration = time.Second / 3
 // associated with. The updates are performed in ticks. Each tick
 // applies all actions that has been added since the last tick
 // sequentially on the model. For each such actions, zero or more
-// events are created. Those events are dispatched as the last stage
-// of the tick.
+// events are created. Those events are handled before the next action
+// is processed, by delegating to the registered eventHandler.
 //
 // Notice that any reads or writes (outside of actions) on the model
 // once the gameLoop is started is not safe.
@@ -79,7 +79,7 @@ func (gl *gameLoop) AddAction(action model.Action) {
 }
 
 // Runs the game loop. Run blocks until the context is cancelled, an
-// error occurs, or the game is finished.
+// error occurs, or the game is over.
 func (gl *gameLoop) Run(ctx context.Context) error {
 	gl.logEntry.Debug("Starting")
 	defer gl.logEntry.Debug("Stopped")
@@ -126,109 +126,84 @@ func (gl *gameLoop) tickLoop(ctx context.Context) error {
 
 // Perform a tick on the game; Applies all queued actions on the game
 // sequentially, making it safe for the applied actions to modify the
-// game-state. An additional TickAction is always performed as the
-// last actions during a tick.
+// game-state. A TickAction is always added as the last action during
+// a tick.
 func (gl *gameLoop) tick(ctx context.Context, delta time.Duration) error {
-	// Obtain a slice of the actions added since the last tick.
-	acts := gl.getActions()
-
+	actions := gl.getActions()
 	// Add a tick actions as the last action to our local actions slice.
-	tickAction := &model.ActionTick{Delta: delta}
-	acts = append(acts, tickAction)
-
-	for _, act := range acts {
-		if err := gl.applyAction(ctx, act); err != nil {
-			return err
+	actions = append(actions, &model.ActionTick{Delta: delta})
+	for _, action := range actions {
+		if err := gl.applyAction(ctx, action); err != nil {
+			return errors.Wrap(err, "Error applying action")
 		}
-		// Check for game over after each action applied, and
-		// stop processing actions if the game is over
 		if gl.isGameOver() {
-			return nil
+			break
 		}
 	}
 	return nil
 }
 
-// Swaps the current slice of actions with a new empty slice, returning
-// the previous actions.
+// getActions swaps the current slice of actions with a new empty slice,
+// returning the previous actions.
 func (gl *gameLoop) getActions() []model.Action {
 	gl.actionsMu.Lock()
 	defer gl.actionsMu.Unlock()
-	acts := gl.actions
-
 	// We slowly shrink the initial capacity of the actions here, so
 	// that one tick with an abnormal number of actions doesn't result
 	// in every new actions slice being allocated that same large size.
-	newLen := len(acts) / 2
+	newLen := len(gl.actions) / 2
+	actions := gl.actions
 	gl.actions = make([]model.Action, 0, newLen)
-	return acts
+	return actions
 }
 
-// Applies a single action to the game, and handles each event this action
-// produced sequentially.
-func (gl *gameLoop) applyAction(ctx context.Context, act model.Action) error {
-	evts, err := act.Apply(gl.game)
+// applyAction applies a single action to the game, and handles each
+// event this action produced sequentially.
+func (gl *gameLoop) applyAction(ctx context.Context, action model.Action) error {
+	events, err := action.Apply(gl.game)
 	if err != nil {
-		err = gl.handleActionError(ctx, err)
-		return errors.Wrap(err, "Unable to handle action error")
+		if _, ok := err.(*model.IllegalActionError); ok {
+			gl.logEntry.Warnf("Ignoring illegal action error: %v", err)
+			return nil
+		}
+		return errors.Wrapf(err, "Error applying action: %+v (%T)", action, action)
 	}
-	if err := gl.handleEvents(ctx, evts); err != nil {
+	if err := gl.handleEvents(ctx, events); err != nil {
 		return errors.Wrap(err, "Error handling events")
 	}
 	return nil
 }
 
-// Handles an error returned from applying an action. Non-fatal errors
-// are logged and ignored. Fatal action errors results in a game over event
-// being sent. All but non-fatal action errors are returned to the caller.
-func (gl *gameLoop) handleActionError(ctx context.Context, err error) error {
-	switch err := err.(type) {
-	case model.ActionError:
-		if !err.IsFatal() {
-			gl.logEntry.WithError(err).Warn("Ignoring non-fatal ActionError")
-			return nil
+// handleEvents handles each event by delegating to the event handler. If an
+// event representing the game being over is encountered, then all further
+// events are discarded and the gameLoop is set to game over state.
+func (gl *gameLoop) handleEvents(ctx context.Context, events []model.Event) error {
+	for _, event := range events {
+		if err := gl.handleEvent(ctx, event); err != nil {
+			return errors.Wrapf(err, "Error handling event: %+v (%T)", event, event)
 		}
-
-		gl.logEntry.WithError(err).Debug("handle fatal ActionError")
-		// Send a game over event with the opponent as winner
-		var winner *model.Player
-		if err.Player() != nil {
-			winner = gl.game.Opponent(err.Player().ID())
+		// Stop processing events if we just sent a game over event
+		if model.IsGameOverEvent(event) {
+			gl.setGameOver()
+			break
 		}
-		gl.handleEvent(ctx, model.NewEventGameOver(winner))
-	default:
-		gl.logEntry.WithError(err).Debug("handle generic error")
 	}
-	return err
+	return nil
 }
 
 // handleEvent handles a single event by forwarding it to the registered
 // eventHandler on a new go-routine.
-func (gl *gameLoop) handleEvent(ctx context.Context, evt model.Event) {
+func (gl *gameLoop) handleEvent(ctx context.Context, event model.Event) error {
 	gl.eventHandlerMu.Lock()
 	handler := gl.eventHandler
 	gl.eventHandlerMu.Unlock()
 	if handler == nil {
-		gl.logEntry.Warn("handleEvent called, but no eventHandler was registered")
-		return
+		return errors.New("Unable to handle event, no eventHandler was registered")
 	}
 	gl.handleEventWG.Add(1)
 	go func() {
 		defer gl.handleEventWG.Done()
-		handler.handleEvent(ctx, evt)
+		handler.handleEvent(ctx, event)
 	}()
-}
-
-// handleEvents handles each event produced by delegating to the event handler.
-// If an event representing the game being over is encountered, then all further
-// events are discarded and the gameLoop is set to game over state.
-func (gl *gameLoop) handleEvents(ctx context.Context, evts []model.Event) error {
-	for _, evt := range evts {
-		gl.handleEvent(ctx, evt)
-		// Stop processing events if we sent a game over event
-		if model.IsGameOverEvent(evt) {
-			return gl.setGameOver()
-		}
-	}
 	return nil
 }

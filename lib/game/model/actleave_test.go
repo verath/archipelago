@@ -45,11 +45,11 @@ func TestActionLeave_Apply_InvalidPlayerId(t *testing.T) {
 		playerID:          "INVALID",
 	}
 	_, err := leaveAct.Apply(game)
-	if actErr, ok := err.(ActionError); ok {
-		if !actErr.IsFatal() {
-			t.Errorf("Expected a fatal ActionError, got: %+v", actErr)
-		}
-	} else {
+	if err == nil {
 		t.Errorf("Expected an error")
+	} else {
+		if _, ok := err.(*IllegalActionError); ok {
+			t.Errorf("Did not expect an IllegalActionError")
+		}
 	}
 }

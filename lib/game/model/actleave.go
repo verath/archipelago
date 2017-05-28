@@ -1,5 +1,7 @@
 package model
 
+import "github.com/pkg/errors"
+
 // actionLeave wraps a PlayerActionLeave, also providing
 // the PlayerID of the player that created the action.
 type actionLeave struct {
@@ -27,7 +29,7 @@ func (a *actionLeave) Apply(game *Game) ([]Event, error) {
 	leavingPlayer := game.Player(a.playerID)
 	neutralPlayer := game.PlayerNeutral()
 	if leavingPlayer == nil {
-		return nil, newIllegalActionError(nil, "leavingPlayer was nil")
+		return nil, errors.New("leavingPlayer was nil")
 	}
 	// Set ownership of leaving player's islands to neutral player
 	for _, island := range game.Islands() {
