@@ -217,9 +217,9 @@ func (gb *GameBuilder) Build() (*Game, error) {
 
 // BuildOrPanic calls Build and panics if Build returns an error.
 func (gb *GameBuilder) BuildOrPanic() *Game {
-	board, err := gb.Build()
+	game, err := gb.Build()
 	if err != nil {
 		panic(err)
 	}
-	return board
+	return game
 }

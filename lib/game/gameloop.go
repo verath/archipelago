@@ -36,8 +36,10 @@ type gameLoop struct {
 	// A handler to handle events produced when applying actions
 	// to the game instance.
 	eventHandler eventHandler
+
 	// A WaitGroup for events being handled by the registered event
-	// handler.
+	// handler. We wait for this WaitGroup before returning from Run,
+	// to make sure that each event has finished being handled.
 	handleEventWG sync.WaitGroup
 
 	actionsMu sync.Mutex
@@ -45,7 +47,8 @@ type gameLoop struct {
 	actions []model.Action
 }
 
-// A handler for game events produced from applying actions.
+// eventHandler is a handler for game events produced when applying actions to
+// the game.
 type eventHandler interface {
 	// handleEvent handles an event produced. This method will be called on a
 	// separate go routine and must block until the even has been handled, or
@@ -55,7 +58,6 @@ type eventHandler interface {
 
 func newGameLoop(log *logrus.Logger, game *model.Game) (*gameLoop, error) {
 	logEntry := common.ModuleLogEntryWithID(log, "gameLoop")
-
 	return &gameLoop{
 		logEntry:     logEntry,
 		tickInterval: defaultTickInterval,
