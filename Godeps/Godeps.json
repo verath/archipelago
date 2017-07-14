@@ -13,7 +13,7 @@
 		},
 		{
 			"ImportPath": "github.com/golang/protobuf/proto",
-			"Rev": "b50ceb1fa9818fa4d78b016c2d4ae025593a7ce3"
+			"Rev": "0a4f71a498b7c4812f64969510bcb4eca251e33a"
 		},
 		{
 			"ImportPath": "github.com/gorilla/websocket",
