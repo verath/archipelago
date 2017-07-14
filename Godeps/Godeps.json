@@ -8,8 +8,8 @@
 	"Deps": [
 		{
 			"ImportPath": "github.com/Sirupsen/logrus",
-			"Comment": "v0.11.5-12-g10f801e",
-			"Rev": "10f801ebc38b33738c9d17d50860f484a0988ff5"
+			"Comment": "1.0.2-2-g51dc0fc",
+			"Rev": "51dc0fc64317a2861273909081f9c315786533eb"
 		},
 		{
 			"ImportPath": "github.com/golang/protobuf/proto",
@@ -17,13 +17,13 @@
 		},
 		{
 			"ImportPath": "github.com/gorilla/websocket",
-			"Comment": "v1.1.0-29-ga91eba7",
-			"Rev": "a91eba7f97777409bc2c443f5534d41dd20c5720"
+			"Comment": "v1.2.0-2-g462d5c5",
+			"Rev": "462d5c5828f6203e4047c47be2920315937be380"
 		},
 		{
 			"ImportPath": "github.com/pkg/errors",
-			"Comment": "v0.8.0-4-gff09b13",
-			"Rev": "ff09b135c25aae272398c51a07235b90a75aa4f0"
+			"Comment": "v0.8.0-5-gc605e28",
+			"Rev": "c605e284fe17294bda444b34710735b29d1a9d90"
 		},
 		{
 			"ImportPath": "github.com/pkg/profile",
@@ -32,7 +32,7 @@
 		},
 		{
 			"ImportPath": "golang.org/x/sys/unix",
-			"Rev": "62bee037599929a6e9146f29d10dd5208c43507d"
+			"Rev": "abf9c25f54453410d0c6668e519582a9e1115027"
 		}
 	]
 }
