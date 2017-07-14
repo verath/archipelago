@@ -1,5 +1,5 @@
 /*eslint-disable block-scoped-var, no-redeclare, no-control-regex, no-prototype-builtins*/
-import * as $protobuf from "protobufjs";
+import * as $protobuf from "protobufjs/minimal";
 
 // Common aliases
 const $Reader = $protobuf.Reader, $Writer = $protobuf.Writer, $util = $protobuf.util;
@@ -20,17 +20,18 @@ export const wire = $root.wire = (() => {
 
         /**
          * Properties of an ActionEnvelope.
-         * @typedef wire.ActionEnvelope$Properties
-         * @type {Object}
-         * @property {wire.ActionGameLeave$Properties} [actionGameLeave] ActionEnvelope actionGameLeave.
-         * @property {wire.ActionGameLaunch$Properties} [actionGameLaunch] ActionEnvelope actionGameLaunch.
+         * @memberof wire
+         * @interface IActionEnvelope
+         * @property {wire.IActionGameLeave} [actionGameLeave] ActionEnvelope actionGameLeave
+         * @property {wire.IActionGameLaunch} [actionGameLaunch] ActionEnvelope actionGameLaunch
          */
 
         /**
          * Constructs a new ActionEnvelope.
-         * @exports wire.ActionEnvelope
+         * @memberof wire
+         * @classdesc Represents an ActionEnvelope.
          * @constructor
-         * @param {wire.ActionEnvelope$Properties=} [properties] Properties to set
+         * @param {wire.IActionEnvelope=} [properties] Properties to set
          */
         function ActionEnvelope(properties) {
             if (properties)
@@ -41,13 +42,17 @@ export const wire = $root.wire = (() => {
 
         /**
          * ActionEnvelope actionGameLeave.
-         * @type {(wire.ActionGameLeave$Properties|null)}
+         * @member {(wire.IActionGameLeave|null|undefined)}actionGameLeave
+         * @memberof wire.ActionEnvelope
+         * @instance
          */
         ActionEnvelope.prototype.actionGameLeave = null;
 
         /**
          * ActionEnvelope actionGameLaunch.
-         * @type {(wire.ActionGameLaunch$Properties|null)}
+         * @member {(wire.IActionGameLaunch|null|undefined)}actionGameLaunch
+         * @memberof wire.ActionEnvelope
+         * @instance
          */
         ActionEnvelope.prototype.actionGameLaunch = null;
 
@@ -56,8 +61,9 @@ export const wire = $root.wire = (() => {
 
         /**
          * ActionEnvelope action.
-         * @name wire.ActionEnvelope#action
-         * @type {string|undefined}
+         * @member {string|undefined} action
+         * @memberof wire.ActionEnvelope
+         * @instance
          */
         Object.defineProperty(ActionEnvelope.prototype, "action", {
             get: $util.oneOfGetter($oneOfFields = ["actionGameLeave", "actionGameLaunch"]),
@@ -66,7 +72,10 @@ export const wire = $root.wire = (() => {
 
         /**
          * Creates a new ActionEnvelope instance using the specified properties.
-         * @param {wire.ActionEnvelope$Properties=} [properties] Properties to set
+         * @function create
+         * @memberof wire.ActionEnvelope
+         * @static
+         * @param {wire.IActionEnvelope=} [properties] Properties to set
          * @returns {wire.ActionEnvelope} ActionEnvelope instance
          */
         ActionEnvelope.create = function create(properties) {
@@ -75,7 +84,10 @@ export const wire = $root.wire = (() => {
 
         /**
          * Encodes the specified ActionEnvelope message. Does not implicitly {@link wire.ActionEnvelope.verify|verify} messages.
-         * @param {wire.ActionEnvelope$Properties} message ActionEnvelope message or plain object to encode
+         * @function encode
+         * @memberof wire.ActionEnvelope
+         * @static
+         * @param {wire.IActionEnvelope} message ActionEnvelope message or plain object to encode
          * @param {$protobuf.Writer} [writer] Writer to encode to
          * @returns {$protobuf.Writer} Writer
          */
@@ -91,7 +103,10 @@ export const wire = $root.wire = (() => {
 
         /**
          * Encodes the specified ActionEnvelope message, length delimited. Does not implicitly {@link wire.ActionEnvelope.verify|verify} messages.
-         * @param {wire.ActionEnvelope$Properties} message ActionEnvelope message or plain object to encode
+         * @function encodeDelimited
+         * @memberof wire.ActionEnvelope
+         * @static
+         * @param {wire.IActionEnvelope} message ActionEnvelope message or plain object to encode
          * @param {$protobuf.Writer} [writer] Writer to encode to
          * @returns {$protobuf.Writer} Writer
          */
@@ -101,6 +116,9 @@ export const wire = $root.wire = (() => {
 
         /**
          * Decodes an ActionEnvelope message from the specified reader or buffer.
+         * @function decode
+         * @memberof wire.ActionEnvelope
+         * @static
          * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
          * @param {number} [length] Message length if known beforehand
          * @returns {wire.ActionEnvelope} ActionEnvelope
@@ -130,6 +148,9 @@ export const wire = $root.wire = (() => {
 
         /**
          * Decodes an ActionEnvelope message from the specified reader or buffer, length delimited.
+         * @function decodeDelimited
+         * @memberof wire.ActionEnvelope
+         * @static
          * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
          * @returns {wire.ActionEnvelope} ActionEnvelope
          * @throws {Error} If the payload is not a reader or valid buffer
@@ -137,14 +158,17 @@ export const wire = $root.wire = (() => {
          */
         ActionEnvelope.decodeDelimited = function decodeDelimited(reader) {
             if (!(reader instanceof $Reader))
-                reader = $Reader(reader);
+                reader = new $Reader(reader);
             return this.decode(reader, reader.uint32());
         };
 
         /**
          * Verifies an ActionEnvelope message.
+         * @function verify
+         * @memberof wire.ActionEnvelope
+         * @static
          * @param {Object.<string,*>} message Plain object to verify
-         * @returns {?string} `null` if valid, otherwise the reason why it is not
+         * @returns {string|null} `null` if valid, otherwise the reason why it is not
          */
         ActionEnvelope.verify = function verify(message) {
             if (typeof message !== "object" || message === null)
@@ -160,7 +184,7 @@ export const wire = $root.wire = (() => {
                 if (properties.action === 1)
                     return "action: multiple values";
                 properties.action = 1;
-                let error = $root.wire.ActionGameLaunch.verify(message.actionGameLaunch);
+                error = $root.wire.ActionGameLaunch.verify(message.actionGameLaunch);
                 if (error)
                     return "actionGameLaunch." + error;
             }
@@ -169,6 +193,9 @@ export const wire = $root.wire = (() => {
 
         /**
          * Creates an ActionEnvelope message from a plain object. Also converts values to their respective internal types.
+         * @function fromObject
+         * @memberof wire.ActionEnvelope
+         * @static
          * @param {Object.<string,*>} object Plain object
          * @returns {wire.ActionEnvelope} ActionEnvelope
          */
@@ -190,18 +217,12 @@ export const wire = $root.wire = (() => {
         };
 
         /**
-         * Creates an ActionEnvelope message from a plain object. Also converts values to their respective internal types.
-         * This is an alias of {@link wire.ActionEnvelope.fromObject}.
-         * @function
-         * @param {Object.<string,*>} object Plain object
-         * @returns {wire.ActionEnvelope} ActionEnvelope
-         */
-        ActionEnvelope.from = ActionEnvelope.fromObject;
-
-        /**
          * Creates a plain object from an ActionEnvelope message. Also converts values to other types if specified.
+         * @function toObject
+         * @memberof wire.ActionEnvelope
+         * @static
          * @param {wire.ActionEnvelope} message ActionEnvelope
-         * @param {$protobuf.ConversionOptions} [options] Conversion options
+         * @param {$protobuf.IConversionOptions} [options] Conversion options
          * @returns {Object.<string,*>} Plain object
          */
         ActionEnvelope.toObject = function toObject(message, options) {
@@ -222,16 +243,10 @@ export const wire = $root.wire = (() => {
         };
 
         /**
-         * Creates a plain object from this ActionEnvelope message. Also converts values to other types if specified.
-         * @param {$protobuf.ConversionOptions} [options] Conversion options
-         * @returns {Object.<string,*>} Plain object
-         */
-        ActionEnvelope.prototype.toObject = function toObject(options) {
-            return this.constructor.toObject(this, options);
-        };
-
-        /**
          * Converts this ActionEnvelope to JSON.
+         * @function toJSON
+         * @memberof wire.ActionEnvelope
+         * @instance
          * @returns {Object.<string,*>} JSON object
          */
         ActionEnvelope.prototype.toJSON = function toJSON() {
@@ -245,15 +260,16 @@ export const wire = $root.wire = (() => {
 
         /**
          * Properties of an ActionGameLeave.
-         * @typedef wire.ActionGameLeave$Properties
-         * @type {Object}
+         * @memberof wire
+         * @interface IActionGameLeave
          */
 
         /**
          * Constructs a new ActionGameLeave.
-         * @exports wire.ActionGameLeave
+         * @memberof wire
+         * @classdesc Represents an ActionGameLeave.
          * @constructor
-         * @param {wire.ActionGameLeave$Properties=} [properties] Properties to set
+         * @param {wire.IActionGameLeave=} [properties] Properties to set
          */
         function ActionGameLeave(properties) {
             if (properties)
@@ -264,7 +280,10 @@ export const wire = $root.wire = (() => {
 
         /**
          * Creates a new ActionGameLeave instance using the specified properties.
-         * @param {wire.ActionGameLeave$Properties=} [properties] Properties to set
+         * @function create
+         * @memberof wire.ActionGameLeave
+         * @static
+         * @param {wire.IActionGameLeave=} [properties] Properties to set
          * @returns {wire.ActionGameLeave} ActionGameLeave instance
          */
         ActionGameLeave.create = function create(properties) {
@@ -273,7 +292,10 @@ export const wire = $root.wire = (() => {
 
         /**
          * Encodes the specified ActionGameLeave message. Does not implicitly {@link wire.ActionGameLeave.verify|verify} messages.
-         * @param {wire.ActionGameLeave$Properties} message ActionGameLeave message or plain object to encode
+         * @function encode
+         * @memberof wire.ActionGameLeave
+         * @static
+         * @param {wire.IActionGameLeave} message ActionGameLeave message or plain object to encode
          * @param {$protobuf.Writer} [writer] Writer to encode to
          * @returns {$protobuf.Writer} Writer
          */
@@ -285,7 +307,10 @@ export const wire = $root.wire = (() => {
 
         /**
          * Encodes the specified ActionGameLeave message, length delimited. Does not implicitly {@link wire.ActionGameLeave.verify|verify} messages.
-         * @param {wire.ActionGameLeave$Properties} message ActionGameLeave message or plain object to encode
+         * @function encodeDelimited
+         * @memberof wire.ActionGameLeave
+         * @static
+         * @param {wire.IActionGameLeave} message ActionGameLeave message or plain object to encode
          * @param {$protobuf.Writer} [writer] Writer to encode to
          * @returns {$protobuf.Writer} Writer
          */
@@ -295,6 +320,9 @@ export const wire = $root.wire = (() => {
 
         /**
          * Decodes an ActionGameLeave message from the specified reader or buffer.
+         * @function decode
+         * @memberof wire.ActionGameLeave
+         * @static
          * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
          * @param {number} [length] Message length if known beforehand
          * @returns {wire.ActionGameLeave} ActionGameLeave
@@ -318,6 +346,9 @@ export const wire = $root.wire = (() => {
 
         /**
          * Decodes an ActionGameLeave message from the specified reader or buffer, length delimited.
+         * @function decodeDelimited
+         * @memberof wire.ActionGameLeave
+         * @static
          * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
          * @returns {wire.ActionGameLeave} ActionGameLeave
          * @throws {Error} If the payload is not a reader or valid buffer
@@ -325,14 +356,17 @@ export const wire = $root.wire = (() => {
          */
         ActionGameLeave.decodeDelimited = function decodeDelimited(reader) {
             if (!(reader instanceof $Reader))
-                reader = $Reader(reader);
+                reader = new $Reader(reader);
             return this.decode(reader, reader.uint32());
         };
 
         /**
          * Verifies an ActionGameLeave message.
+         * @function verify
+         * @memberof wire.ActionGameLeave
+         * @static
          * @param {Object.<string,*>} message Plain object to verify
-         * @returns {?string} `null` if valid, otherwise the reason why it is not
+         * @returns {string|null} `null` if valid, otherwise the reason why it is not
          */
         ActionGameLeave.verify = function verify(message) {
             if (typeof message !== "object" || message === null)
@@ -342,6 +376,9 @@ export const wire = $root.wire = (() => {
 
         /**
          * Creates an ActionGameLeave message from a plain object. Also converts values to their respective internal types.
+         * @function fromObject
+         * @memberof wire.ActionGameLeave
+         * @static
          * @param {Object.<string,*>} object Plain object
          * @returns {wire.ActionGameLeave} ActionGameLeave
          */
@@ -352,18 +389,12 @@ export const wire = $root.wire = (() => {
         };
 
         /**
-         * Creates an ActionGameLeave message from a plain object. Also converts values to their respective internal types.
-         * This is an alias of {@link wire.ActionGameLeave.fromObject}.
-         * @function
-         * @param {Object.<string,*>} object Plain object
-         * @returns {wire.ActionGameLeave} ActionGameLeave
-         */
-        ActionGameLeave.from = ActionGameLeave.fromObject;
-
-        /**
          * Creates a plain object from an ActionGameLeave message. Also converts values to other types if specified.
+         * @function toObject
+         * @memberof wire.ActionGameLeave
+         * @static
          * @param {wire.ActionGameLeave} message ActionGameLeave
-         * @param {$protobuf.ConversionOptions} [options] Conversion options
+         * @param {$protobuf.IConversionOptions} [options] Conversion options
          * @returns {Object.<string,*>} Plain object
          */
         ActionGameLeave.toObject = function toObject() {
@@ -371,16 +402,10 @@ export const wire = $root.wire = (() => {
         };
 
         /**
-         * Creates a plain object from this ActionGameLeave message. Also converts values to other types if specified.
-         * @param {$protobuf.ConversionOptions} [options] Conversion options
-         * @returns {Object.<string,*>} Plain object
-         */
-        ActionGameLeave.prototype.toObject = function toObject(options) {
-            return this.constructor.toObject(this, options);
-        };
-
-        /**
          * Converts this ActionGameLeave to JSON.
+         * @function toJSON
+         * @memberof wire.ActionGameLeave
+         * @instance
          * @returns {Object.<string,*>} JSON object
          */
         ActionGameLeave.prototype.toJSON = function toJSON() {
@@ -394,17 +419,18 @@ export const wire = $root.wire = (() => {
 
         /**
          * Properties of an ActionGameLaunch.
-         * @typedef wire.ActionGameLaunch$Properties
-         * @type {Object}
-         * @property {string} [fromId] ActionGameLaunch fromId.
-         * @property {string} [toId] ActionGameLaunch toId.
+         * @memberof wire
+         * @interface IActionGameLaunch
+         * @property {string} [fromId] ActionGameLaunch fromId
+         * @property {string} [toId] ActionGameLaunch toId
          */
 
         /**
          * Constructs a new ActionGameLaunch.
-         * @exports wire.ActionGameLaunch
+         * @memberof wire
+         * @classdesc Represents an ActionGameLaunch.
          * @constructor
-         * @param {wire.ActionGameLaunch$Properties=} [properties] Properties to set
+         * @param {wire.IActionGameLaunch=} [properties] Properties to set
          */
         function ActionGameLaunch(properties) {
             if (properties)
@@ -415,19 +441,26 @@ export const wire = $root.wire = (() => {
 
         /**
          * ActionGameLaunch fromId.
-         * @type {string}
+         * @member {string}fromId
+         * @memberof wire.ActionGameLaunch
+         * @instance
          */
         ActionGameLaunch.prototype.fromId = "";
 
         /**
          * ActionGameLaunch toId.
-         * @type {string}
+         * @member {string}toId
+         * @memberof wire.ActionGameLaunch
+         * @instance
          */
         ActionGameLaunch.prototype.toId = "";
 
         /**
          * Creates a new ActionGameLaunch instance using the specified properties.
-         * @param {wire.ActionGameLaunch$Properties=} [properties] Properties to set
+         * @function create
+         * @memberof wire.ActionGameLaunch
+         * @static
+         * @param {wire.IActionGameLaunch=} [properties] Properties to set
          * @returns {wire.ActionGameLaunch} ActionGameLaunch instance
          */
         ActionGameLaunch.create = function create(properties) {
@@ -436,7 +469,10 @@ export const wire = $root.wire = (() => {
 
         /**
          * Encodes the specified ActionGameLaunch message. Does not implicitly {@link wire.ActionGameLaunch.verify|verify} messages.
-         * @param {wire.ActionGameLaunch$Properties} message ActionGameLaunch message or plain object to encode
+         * @function encode
+         * @memberof wire.ActionGameLaunch
+         * @static
+         * @param {wire.IActionGameLaunch} message ActionGameLaunch message or plain object to encode
          * @param {$protobuf.Writer} [writer] Writer to encode to
          * @returns {$protobuf.Writer} Writer
          */
@@ -452,7 +488,10 @@ export const wire = $root.wire = (() => {
 
         /**
          * Encodes the specified ActionGameLaunch message, length delimited. Does not implicitly {@link wire.ActionGameLaunch.verify|verify} messages.
-         * @param {wire.ActionGameLaunch$Properties} message ActionGameLaunch message or plain object to encode
+         * @function encodeDelimited
+         * @memberof wire.ActionGameLaunch
+         * @static
+         * @param {wire.IActionGameLaunch} message ActionGameLaunch message or plain object to encode
          * @param {$protobuf.Writer} [writer] Writer to encode to
          * @returns {$protobuf.Writer} Writer
          */
@@ -462,6 +501,9 @@ export const wire = $root.wire = (() => {
 
         /**
          * Decodes an ActionGameLaunch message from the specified reader or buffer.
+         * @function decode
+         * @memberof wire.ActionGameLaunch
+         * @static
          * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
          * @param {number} [length] Message length if known beforehand
          * @returns {wire.ActionGameLaunch} ActionGameLaunch
@@ -491,6 +533,9 @@ export const wire = $root.wire = (() => {
 
         /**
          * Decodes an ActionGameLaunch message from the specified reader or buffer, length delimited.
+         * @function decodeDelimited
+         * @memberof wire.ActionGameLaunch
+         * @static
          * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
          * @returns {wire.ActionGameLaunch} ActionGameLaunch
          * @throws {Error} If the payload is not a reader or valid buffer
@@ -498,14 +543,17 @@ export const wire = $root.wire = (() => {
          */
         ActionGameLaunch.decodeDelimited = function decodeDelimited(reader) {
             if (!(reader instanceof $Reader))
-                reader = $Reader(reader);
+                reader = new $Reader(reader);
             return this.decode(reader, reader.uint32());
         };
 
         /**
          * Verifies an ActionGameLaunch message.
+         * @function verify
+         * @memberof wire.ActionGameLaunch
+         * @static
          * @param {Object.<string,*>} message Plain object to verify
-         * @returns {?string} `null` if valid, otherwise the reason why it is not
+         * @returns {string|null} `null` if valid, otherwise the reason why it is not
          */
         ActionGameLaunch.verify = function verify(message) {
             if (typeof message !== "object" || message === null)
@@ -521,6 +569,9 @@ export const wire = $root.wire = (() => {
 
         /**
          * Creates an ActionGameLaunch message from a plain object. Also converts values to their respective internal types.
+         * @function fromObject
+         * @memberof wire.ActionGameLaunch
+         * @static
          * @param {Object.<string,*>} object Plain object
          * @returns {wire.ActionGameLaunch} ActionGameLaunch
          */
@@ -536,18 +587,12 @@ export const wire = $root.wire = (() => {
         };
 
         /**
-         * Creates an ActionGameLaunch message from a plain object. Also converts values to their respective internal types.
-         * This is an alias of {@link wire.ActionGameLaunch.fromObject}.
-         * @function
-         * @param {Object.<string,*>} object Plain object
-         * @returns {wire.ActionGameLaunch} ActionGameLaunch
-         */
-        ActionGameLaunch.from = ActionGameLaunch.fromObject;
-
-        /**
          * Creates a plain object from an ActionGameLaunch message. Also converts values to other types if specified.
+         * @function toObject
+         * @memberof wire.ActionGameLaunch
+         * @static
          * @param {wire.ActionGameLaunch} message ActionGameLaunch
-         * @param {$protobuf.ConversionOptions} [options] Conversion options
+         * @param {$protobuf.IConversionOptions} [options] Conversion options
          * @returns {Object.<string,*>} Plain object
          */
         ActionGameLaunch.toObject = function toObject(message, options) {
@@ -566,16 +611,10 @@ export const wire = $root.wire = (() => {
         };
 
         /**
-         * Creates a plain object from this ActionGameLaunch message. Also converts values to other types if specified.
-         * @param {$protobuf.ConversionOptions} [options] Conversion options
-         * @returns {Object.<string,*>} Plain object
-         */
-        ActionGameLaunch.prototype.toObject = function toObject(options) {
-            return this.constructor.toObject(this, options);
-        };
-
-        /**
          * Converts this ActionGameLaunch to JSON.
+         * @function toJSON
+         * @memberof wire.ActionGameLaunch
+         * @instance
          * @returns {Object.<string,*>} JSON object
          */
         ActionGameLaunch.prototype.toJSON = function toJSON() {
@@ -589,18 +628,19 @@ export const wire = $root.wire = (() => {
 
         /**
          * Properties of an EventEnvelope.
-         * @typedef wire.EventEnvelope$Properties
-         * @type {Object}
-         * @property {wire.EventGameStart$Properties} [eventGameStart] EventEnvelope eventGameStart.
-         * @property {wire.EventGameOver$Properties} [eventGameOver] EventEnvelope eventGameOver.
-         * @property {wire.EventGameTick$Properties} [eventGameTick] EventEnvelope eventGameTick.
+         * @memberof wire
+         * @interface IEventEnvelope
+         * @property {wire.IEventGameStart} [eventGameStart] EventEnvelope eventGameStart
+         * @property {wire.IEventGameOver} [eventGameOver] EventEnvelope eventGameOver
+         * @property {wire.IEventGameTick} [eventGameTick] EventEnvelope eventGameTick
          */
 
         /**
          * Constructs a new EventEnvelope.
-         * @exports wire.EventEnvelope
+         * @memberof wire
+         * @classdesc Represents an EventEnvelope.
          * @constructor
-         * @param {wire.EventEnvelope$Properties=} [properties] Properties to set
+         * @param {wire.IEventEnvelope=} [properties] Properties to set
          */
         function EventEnvelope(properties) {
             if (properties)
@@ -611,19 +651,25 @@ export const wire = $root.wire = (() => {
 
         /**
          * EventEnvelope eventGameStart.
-         * @type {(wire.EventGameStart$Properties|null)}
+         * @member {(wire.IEventGameStart|null|undefined)}eventGameStart
+         * @memberof wire.EventEnvelope
+         * @instance
          */
         EventEnvelope.prototype.eventGameStart = null;
 
         /**
          * EventEnvelope eventGameOver.
-         * @type {(wire.EventGameOver$Properties|null)}
+         * @member {(wire.IEventGameOver|null|undefined)}eventGameOver
+         * @memberof wire.EventEnvelope
+         * @instance
          */
         EventEnvelope.prototype.eventGameOver = null;
 
         /**
          * EventEnvelope eventGameTick.
-         * @type {(wire.EventGameTick$Properties|null)}
+         * @member {(wire.IEventGameTick|null|undefined)}eventGameTick
+         * @memberof wire.EventEnvelope
+         * @instance
          */
         EventEnvelope.prototype.eventGameTick = null;
 
@@ -632,8 +678,9 @@ export const wire = $root.wire = (() => {
 
         /**
          * EventEnvelope event.
-         * @name wire.EventEnvelope#event
-         * @type {string|undefined}
+         * @member {string|undefined} event
+         * @memberof wire.EventEnvelope
+         * @instance
          */
         Object.defineProperty(EventEnvelope.prototype, "event", {
             get: $util.oneOfGetter($oneOfFields = ["eventGameStart", "eventGameOver", "eventGameTick"]),
@@ -642,7 +689,10 @@ export const wire = $root.wire = (() => {
 
         /**
          * Creates a new EventEnvelope instance using the specified properties.
-         * @param {wire.EventEnvelope$Properties=} [properties] Properties to set
+         * @function create
+         * @memberof wire.EventEnvelope
+         * @static
+         * @param {wire.IEventEnvelope=} [properties] Properties to set
          * @returns {wire.EventEnvelope} EventEnvelope instance
          */
         EventEnvelope.create = function create(properties) {
@@ -651,7 +701,10 @@ export const wire = $root.wire = (() => {
 
         /**
          * Encodes the specified EventEnvelope message. Does not implicitly {@link wire.EventEnvelope.verify|verify} messages.
-         * @param {wire.EventEnvelope$Properties} message EventEnvelope message or plain object to encode
+         * @function encode
+         * @memberof wire.EventEnvelope
+         * @static
+         * @param {wire.IEventEnvelope} message EventEnvelope message or plain object to encode
          * @param {$protobuf.Writer} [writer] Writer to encode to
          * @returns {$protobuf.Writer} Writer
          */
@@ -669,7 +722,10 @@ export const wire = $root.wire = (() => {
 
         /**
          * Encodes the specified EventEnvelope message, length delimited. Does not implicitly {@link wire.EventEnvelope.verify|verify} messages.
-         * @param {wire.EventEnvelope$Properties} message EventEnvelope message or plain object to encode
+         * @function encodeDelimited
+         * @memberof wire.EventEnvelope
+         * @static
+         * @param {wire.IEventEnvelope} message EventEnvelope message or plain object to encode
          * @param {$protobuf.Writer} [writer] Writer to encode to
          * @returns {$protobuf.Writer} Writer
          */
@@ -679,6 +735,9 @@ export const wire = $root.wire = (() => {
 
         /**
          * Decodes an EventEnvelope message from the specified reader or buffer.
+         * @function decode
+         * @memberof wire.EventEnvelope
+         * @static
          * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
          * @param {number} [length] Message length if known beforehand
          * @returns {wire.EventEnvelope} EventEnvelope
@@ -711,6 +770,9 @@ export const wire = $root.wire = (() => {
 
         /**
          * Decodes an EventEnvelope message from the specified reader or buffer, length delimited.
+         * @function decodeDelimited
+         * @memberof wire.EventEnvelope
+         * @static
          * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
          * @returns {wire.EventEnvelope} EventEnvelope
          * @throws {Error} If the payload is not a reader or valid buffer
@@ -718,14 +780,17 @@ export const wire = $root.wire = (() => {
          */
         EventEnvelope.decodeDelimited = function decodeDelimited(reader) {
             if (!(reader instanceof $Reader))
-                reader = $Reader(reader);
+                reader = new $Reader(reader);
             return this.decode(reader, reader.uint32());
         };
 
         /**
          * Verifies an EventEnvelope message.
+         * @function verify
+         * @memberof wire.EventEnvelope
+         * @static
          * @param {Object.<string,*>} message Plain object to verify
-         * @returns {?string} `null` if valid, otherwise the reason why it is not
+         * @returns {string|null} `null` if valid, otherwise the reason why it is not
          */
         EventEnvelope.verify = function verify(message) {
             if (typeof message !== "object" || message === null)
@@ -741,7 +806,7 @@ export const wire = $root.wire = (() => {
                 if (properties.event === 1)
                     return "event: multiple values";
                 properties.event = 1;
-                let error = $root.wire.EventGameOver.verify(message.eventGameOver);
+                error = $root.wire.EventGameOver.verify(message.eventGameOver);
                 if (error)
                     return "eventGameOver." + error;
             }
@@ -749,7 +814,7 @@ export const wire = $root.wire = (() => {
                 if (properties.event === 1)
                     return "event: multiple values";
                 properties.event = 1;
-                let error = $root.wire.EventGameTick.verify(message.eventGameTick);
+                error = $root.wire.EventGameTick.verify(message.eventGameTick);
                 if (error)
                     return "eventGameTick." + error;
             }
@@ -758,6 +823,9 @@ export const wire = $root.wire = (() => {
 
         /**
          * Creates an EventEnvelope message from a plain object. Also converts values to their respective internal types.
+         * @function fromObject
+         * @memberof wire.EventEnvelope
+         * @static
          * @param {Object.<string,*>} object Plain object
          * @returns {wire.EventEnvelope} EventEnvelope
          */
@@ -784,18 +852,12 @@ export const wire = $root.wire = (() => {
         };
 
         /**
-         * Creates an EventEnvelope message from a plain object. Also converts values to their respective internal types.
-         * This is an alias of {@link wire.EventEnvelope.fromObject}.
-         * @function
-         * @param {Object.<string,*>} object Plain object
-         * @returns {wire.EventEnvelope} EventEnvelope
-         */
-        EventEnvelope.from = EventEnvelope.fromObject;
-
-        /**
          * Creates a plain object from an EventEnvelope message. Also converts values to other types if specified.
+         * @function toObject
+         * @memberof wire.EventEnvelope
+         * @static
          * @param {wire.EventEnvelope} message EventEnvelope
-         * @param {$protobuf.ConversionOptions} [options] Conversion options
+         * @param {$protobuf.IConversionOptions} [options] Conversion options
          * @returns {Object.<string,*>} Plain object
          */
         EventEnvelope.toObject = function toObject(message, options) {
@@ -821,16 +883,10 @@ export const wire = $root.wire = (() => {
         };
 
         /**
-         * Creates a plain object from this EventEnvelope message. Also converts values to other types if specified.
-         * @param {$protobuf.ConversionOptions} [options] Conversion options
-         * @returns {Object.<string,*>} Plain object
-         */
-        EventEnvelope.prototype.toObject = function toObject(options) {
-            return this.constructor.toObject(this, options);
-        };
-
-        /**
          * Converts this EventEnvelope to JSON.
+         * @function toJSON
+         * @memberof wire.EventEnvelope
+         * @instance
          * @returns {Object.<string,*>} JSON object
          */
         EventEnvelope.prototype.toJSON = function toJSON() {
@@ -844,17 +900,18 @@ export const wire = $root.wire = (() => {
 
         /**
          * Properties of an EventGameStart.
-         * @typedef wire.EventGameStart$Properties
-         * @type {Object}
-         * @property {string} [playerId] EventGameStart playerId.
-         * @property {number|Long} [tickInterval] EventGameStart tickInterval.
+         * @memberof wire
+         * @interface IEventGameStart
+         * @property {string} [playerId] EventGameStart playerId
+         * @property {number|Long} [tickInterval] EventGameStart tickInterval
          */
 
         /**
          * Constructs a new EventGameStart.
-         * @exports wire.EventGameStart
+         * @memberof wire
+         * @classdesc Represents an EventGameStart.
          * @constructor
-         * @param {wire.EventGameStart$Properties=} [properties] Properties to set
+         * @param {wire.IEventGameStart=} [properties] Properties to set
          */
         function EventGameStart(properties) {
             if (properties)
@@ -865,19 +922,26 @@ export const wire = $root.wire = (() => {
 
         /**
          * EventGameStart playerId.
-         * @type {string}
+         * @member {string}playerId
+         * @memberof wire.EventGameStart
+         * @instance
          */
         EventGameStart.prototype.playerId = "";
 
         /**
          * EventGameStart tickInterval.
-         * @type {number|Long}
+         * @member {number|Long}tickInterval
+         * @memberof wire.EventGameStart
+         * @instance
          */
         EventGameStart.prototype.tickInterval = $util.Long ? $util.Long.fromBits(0,0,false) : 0;
 
         /**
          * Creates a new EventGameStart instance using the specified properties.
-         * @param {wire.EventGameStart$Properties=} [properties] Properties to set
+         * @function create
+         * @memberof wire.EventGameStart
+         * @static
+         * @param {wire.IEventGameStart=} [properties] Properties to set
          * @returns {wire.EventGameStart} EventGameStart instance
          */
         EventGameStart.create = function create(properties) {
@@ -886,7 +950,10 @@ export const wire = $root.wire = (() => {
 
         /**
          * Encodes the specified EventGameStart message. Does not implicitly {@link wire.EventGameStart.verify|verify} messages.
-         * @param {wire.EventGameStart$Properties} message EventGameStart message or plain object to encode
+         * @function encode
+         * @memberof wire.EventGameStart
+         * @static
+         * @param {wire.IEventGameStart} message EventGameStart message or plain object to encode
          * @param {$protobuf.Writer} [writer] Writer to encode to
          * @returns {$protobuf.Writer} Writer
          */
@@ -902,7 +969,10 @@ export const wire = $root.wire = (() => {
 
         /**
          * Encodes the specified EventGameStart message, length delimited. Does not implicitly {@link wire.EventGameStart.verify|verify} messages.
-         * @param {wire.EventGameStart$Properties} message EventGameStart message or plain object to encode
+         * @function encodeDelimited
+         * @memberof wire.EventGameStart
+         * @static
+         * @param {wire.IEventGameStart} message EventGameStart message or plain object to encode
          * @param {$protobuf.Writer} [writer] Writer to encode to
          * @returns {$protobuf.Writer} Writer
          */
@@ -912,6 +982,9 @@ export const wire = $root.wire = (() => {
 
         /**
          * Decodes an EventGameStart message from the specified reader or buffer.
+         * @function decode
+         * @memberof wire.EventGameStart
+         * @static
          * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
          * @param {number} [length] Message length if known beforehand
          * @returns {wire.EventGameStart} EventGameStart
@@ -941,6 +1014,9 @@ export const wire = $root.wire = (() => {
 
         /**
          * Decodes an EventGameStart message from the specified reader or buffer, length delimited.
+         * @function decodeDelimited
+         * @memberof wire.EventGameStart
+         * @static
          * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
          * @returns {wire.EventGameStart} EventGameStart
          * @throws {Error} If the payload is not a reader or valid buffer
@@ -948,14 +1024,17 @@ export const wire = $root.wire = (() => {
          */
         EventGameStart.decodeDelimited = function decodeDelimited(reader) {
             if (!(reader instanceof $Reader))
-                reader = $Reader(reader);
+                reader = new $Reader(reader);
             return this.decode(reader, reader.uint32());
         };
 
         /**
          * Verifies an EventGameStart message.
+         * @function verify
+         * @memberof wire.EventGameStart
+         * @static
          * @param {Object.<string,*>} message Plain object to verify
-         * @returns {?string} `null` if valid, otherwise the reason why it is not
+         * @returns {string|null} `null` if valid, otherwise the reason why it is not
          */
         EventGameStart.verify = function verify(message) {
             if (typeof message !== "object" || message === null)
@@ -971,6 +1050,9 @@ export const wire = $root.wire = (() => {
 
         /**
          * Creates an EventGameStart message from a plain object. Also converts values to their respective internal types.
+         * @function fromObject
+         * @memberof wire.EventGameStart
+         * @static
          * @param {Object.<string,*>} object Plain object
          * @returns {wire.EventGameStart} EventGameStart
          */
@@ -993,18 +1075,12 @@ export const wire = $root.wire = (() => {
         };
 
         /**
-         * Creates an EventGameStart message from a plain object. Also converts values to their respective internal types.
-         * This is an alias of {@link wire.EventGameStart.fromObject}.
-         * @function
-         * @param {Object.<string,*>} object Plain object
-         * @returns {wire.EventGameStart} EventGameStart
-         */
-        EventGameStart.from = EventGameStart.fromObject;
-
-        /**
          * Creates a plain object from an EventGameStart message. Also converts values to other types if specified.
+         * @function toObject
+         * @memberof wire.EventGameStart
+         * @static
          * @param {wire.EventGameStart} message EventGameStart
-         * @param {$protobuf.ConversionOptions} [options] Conversion options
+         * @param {$protobuf.IConversionOptions} [options] Conversion options
          * @returns {Object.<string,*>} Plain object
          */
         EventGameStart.toObject = function toObject(message, options) {
@@ -1030,16 +1106,10 @@ export const wire = $root.wire = (() => {
         };
 
         /**
-         * Creates a plain object from this EventGameStart message. Also converts values to other types if specified.
-         * @param {$protobuf.ConversionOptions} [options] Conversion options
-         * @returns {Object.<string,*>} Plain object
-         */
-        EventGameStart.prototype.toObject = function toObject(options) {
-            return this.constructor.toObject(this, options);
-        };
-
-        /**
          * Converts this EventGameStart to JSON.
+         * @function toJSON
+         * @memberof wire.EventGameStart
+         * @instance
          * @returns {Object.<string,*>} JSON object
          */
         EventGameStart.prototype.toJSON = function toJSON() {
@@ -1053,16 +1123,17 @@ export const wire = $root.wire = (() => {
 
         /**
          * Properties of an EventGameOver.
-         * @typedef wire.EventGameOver$Properties
-         * @type {Object}
-         * @property {string} [winnerId] EventGameOver winnerId.
+         * @memberof wire
+         * @interface IEventGameOver
+         * @property {string} [winnerId] EventGameOver winnerId
          */
 
         /**
          * Constructs a new EventGameOver.
-         * @exports wire.EventGameOver
+         * @memberof wire
+         * @classdesc Represents an EventGameOver.
          * @constructor
-         * @param {wire.EventGameOver$Properties=} [properties] Properties to set
+         * @param {wire.IEventGameOver=} [properties] Properties to set
          */
         function EventGameOver(properties) {
             if (properties)
@@ -1073,13 +1144,18 @@ export const wire = $root.wire = (() => {
 
         /**
          * EventGameOver winnerId.
-         * @type {string}
+         * @member {string}winnerId
+         * @memberof wire.EventGameOver
+         * @instance
          */
         EventGameOver.prototype.winnerId = "";
 
         /**
          * Creates a new EventGameOver instance using the specified properties.
-         * @param {wire.EventGameOver$Properties=} [properties] Properties to set
+         * @function create
+         * @memberof wire.EventGameOver
+         * @static
+         * @param {wire.IEventGameOver=} [properties] Properties to set
          * @returns {wire.EventGameOver} EventGameOver instance
          */
         EventGameOver.create = function create(properties) {
@@ -1088,7 +1164,10 @@ export const wire = $root.wire = (() => {
 
         /**
          * Encodes the specified EventGameOver message. Does not implicitly {@link wire.EventGameOver.verify|verify} messages.
-         * @param {wire.EventGameOver$Properties} message EventGameOver message or plain object to encode
+         * @function encode
+         * @memberof wire.EventGameOver
+         * @static
+         * @param {wire.IEventGameOver} message EventGameOver message or plain object to encode
          * @param {$protobuf.Writer} [writer] Writer to encode to
          * @returns {$protobuf.Writer} Writer
          */
@@ -1102,7 +1181,10 @@ export const wire = $root.wire = (() => {
 
         /**
          * Encodes the specified EventGameOver message, length delimited. Does not implicitly {@link wire.EventGameOver.verify|verify} messages.
-         * @param {wire.EventGameOver$Properties} message EventGameOver message or plain object to encode
+         * @function encodeDelimited
+         * @memberof wire.EventGameOver
+         * @static
+         * @param {wire.IEventGameOver} message EventGameOver message or plain object to encode
          * @param {$protobuf.Writer} [writer] Writer to encode to
          * @returns {$protobuf.Writer} Writer
          */
@@ -1112,6 +1194,9 @@ export const wire = $root.wire = (() => {
 
         /**
          * Decodes an EventGameOver message from the specified reader or buffer.
+         * @function decode
+         * @memberof wire.EventGameOver
+         * @static
          * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
          * @param {number} [length] Message length if known beforehand
          * @returns {wire.EventGameOver} EventGameOver
@@ -1138,6 +1223,9 @@ export const wire = $root.wire = (() => {
 
         /**
          * Decodes an EventGameOver message from the specified reader or buffer, length delimited.
+         * @function decodeDelimited
+         * @memberof wire.EventGameOver
+         * @static
          * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
          * @returns {wire.EventGameOver} EventGameOver
          * @throws {Error} If the payload is not a reader or valid buffer
@@ -1145,14 +1233,17 @@ export const wire = $root.wire = (() => {
          */
         EventGameOver.decodeDelimited = function decodeDelimited(reader) {
             if (!(reader instanceof $Reader))
-                reader = $Reader(reader);
+                reader = new $Reader(reader);
             return this.decode(reader, reader.uint32());
         };
 
         /**
          * Verifies an EventGameOver message.
+         * @function verify
+         * @memberof wire.EventGameOver
+         * @static
          * @param {Object.<string,*>} message Plain object to verify
-         * @returns {?string} `null` if valid, otherwise the reason why it is not
+         * @returns {string|null} `null` if valid, otherwise the reason why it is not
          */
         EventGameOver.verify = function verify(message) {
             if (typeof message !== "object" || message === null)
@@ -1165,6 +1256,9 @@ export const wire = $root.wire = (() => {
 
         /**
          * Creates an EventGameOver message from a plain object. Also converts values to their respective internal types.
+         * @function fromObject
+         * @memberof wire.EventGameOver
+         * @static
          * @param {Object.<string,*>} object Plain object
          * @returns {wire.EventGameOver} EventGameOver
          */
@@ -1178,18 +1272,12 @@ export const wire = $root.wire = (() => {
         };
 
         /**
-         * Creates an EventGameOver message from a plain object. Also converts values to their respective internal types.
-         * This is an alias of {@link wire.EventGameOver.fromObject}.
-         * @function
-         * @param {Object.<string,*>} object Plain object
-         * @returns {wire.EventGameOver} EventGameOver
-         */
-        EventGameOver.from = EventGameOver.fromObject;
-
-        /**
          * Creates a plain object from an EventGameOver message. Also converts values to other types if specified.
+         * @function toObject
+         * @memberof wire.EventGameOver
+         * @static
          * @param {wire.EventGameOver} message EventGameOver
-         * @param {$protobuf.ConversionOptions} [options] Conversion options
+         * @param {$protobuf.IConversionOptions} [options] Conversion options
          * @returns {Object.<string,*>} Plain object
          */
         EventGameOver.toObject = function toObject(message, options) {
@@ -1204,16 +1292,10 @@ export const wire = $root.wire = (() => {
         };
 
         /**
-         * Creates a plain object from this EventGameOver message. Also converts values to other types if specified.
-         * @param {$protobuf.ConversionOptions} [options] Conversion options
-         * @returns {Object.<string,*>} Plain object
-         */
-        EventGameOver.prototype.toObject = function toObject(options) {
-            return this.constructor.toObject(this, options);
-        };
-
-        /**
          * Converts this EventGameOver to JSON.
+         * @function toJSON
+         * @memberof wire.EventGameOver
+         * @instance
          * @returns {Object.<string,*>} JSON object
          */
         EventGameOver.prototype.toJSON = function toJSON() {
@@ -1227,16 +1309,17 @@ export const wire = $root.wire = (() => {
 
         /**
          * Properties of an EventGameTick.
-         * @typedef wire.EventGameTick$Properties
-         * @type {Object}
-         * @property {wire.game.Game$Properties} [game] EventGameTick game.
+         * @memberof wire
+         * @interface IEventGameTick
+         * @property {wire.game.IGame} [game] EventGameTick game
          */
 
         /**
          * Constructs a new EventGameTick.
-         * @exports wire.EventGameTick
+         * @memberof wire
+         * @classdesc Represents an EventGameTick.
          * @constructor
-         * @param {wire.EventGameTick$Properties=} [properties] Properties to set
+         * @param {wire.IEventGameTick=} [properties] Properties to set
          */
         function EventGameTick(properties) {
             if (properties)
@@ -1247,13 +1330,18 @@ export const wire = $root.wire = (() => {
 
         /**
          * EventGameTick game.
-         * @type {(wire.game.Game$Properties|null)}
+         * @member {(wire.game.IGame|null|undefined)}game
+         * @memberof wire.EventGameTick
+         * @instance
          */
         EventGameTick.prototype.game = null;
 
         /**
          * Creates a new EventGameTick instance using the specified properties.
-         * @param {wire.EventGameTick$Properties=} [properties] Properties to set
+         * @function create
+         * @memberof wire.EventGameTick
+         * @static
+         * @param {wire.IEventGameTick=} [properties] Properties to set
          * @returns {wire.EventGameTick} EventGameTick instance
          */
         EventGameTick.create = function create(properties) {
@@ -1262,7 +1350,10 @@ export const wire = $root.wire = (() => {
 
         /**
          * Encodes the specified EventGameTick message. Does not implicitly {@link wire.EventGameTick.verify|verify} messages.
-         * @param {wire.EventGameTick$Properties} message EventGameTick message or plain object to encode
+         * @function encode
+         * @memberof wire.EventGameTick
+         * @static
+         * @param {wire.IEventGameTick} message EventGameTick message or plain object to encode
          * @param {$protobuf.Writer} [writer] Writer to encode to
          * @returns {$protobuf.Writer} Writer
          */
@@ -1276,7 +1367,10 @@ export const wire = $root.wire = (() => {
 
         /**
          * Encodes the specified EventGameTick message, length delimited. Does not implicitly {@link wire.EventGameTick.verify|verify} messages.
-         * @param {wire.EventGameTick$Properties} message EventGameTick message or plain object to encode
+         * @function encodeDelimited
+         * @memberof wire.EventGameTick
+         * @static
+         * @param {wire.IEventGameTick} message EventGameTick message or plain object to encode
          * @param {$protobuf.Writer} [writer] Writer to encode to
          * @returns {$protobuf.Writer} Writer
          */
@@ -1286,6 +1380,9 @@ export const wire = $root.wire = (() => {
 
         /**
          * Decodes an EventGameTick message from the specified reader or buffer.
+         * @function decode
+         * @memberof wire.EventGameTick
+         * @static
          * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
          * @param {number} [length] Message length if known beforehand
          * @returns {wire.EventGameTick} EventGameTick
@@ -1312,6 +1409,9 @@ export const wire = $root.wire = (() => {
 
         /**
          * Decodes an EventGameTick message from the specified reader or buffer, length delimited.
+         * @function decodeDelimited
+         * @memberof wire.EventGameTick
+         * @static
          * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
          * @returns {wire.EventGameTick} EventGameTick
          * @throws {Error} If the payload is not a reader or valid buffer
@@ -1319,14 +1419,17 @@ export const wire = $root.wire = (() => {
          */
         EventGameTick.decodeDelimited = function decodeDelimited(reader) {
             if (!(reader instanceof $Reader))
-                reader = $Reader(reader);
+                reader = new $Reader(reader);
             return this.decode(reader, reader.uint32());
         };
 
         /**
          * Verifies an EventGameTick message.
+         * @function verify
+         * @memberof wire.EventGameTick
+         * @static
          * @param {Object.<string,*>} message Plain object to verify
-         * @returns {?string} `null` if valid, otherwise the reason why it is not
+         * @returns {string|null} `null` if valid, otherwise the reason why it is not
          */
         EventGameTick.verify = function verify(message) {
             if (typeof message !== "object" || message === null)
@@ -1341,6 +1444,9 @@ export const wire = $root.wire = (() => {
 
         /**
          * Creates an EventGameTick message from a plain object. Also converts values to their respective internal types.
+         * @function fromObject
+         * @memberof wire.EventGameTick
+         * @static
          * @param {Object.<string,*>} object Plain object
          * @returns {wire.EventGameTick} EventGameTick
          */
@@ -1357,18 +1463,12 @@ export const wire = $root.wire = (() => {
         };
 
         /**
-         * Creates an EventGameTick message from a plain object. Also converts values to their respective internal types.
-         * This is an alias of {@link wire.EventGameTick.fromObject}.
-         * @function
-         * @param {Object.<string,*>} object Plain object
-         * @returns {wire.EventGameTick} EventGameTick
-         */
-        EventGameTick.from = EventGameTick.fromObject;
-
-        /**
          * Creates a plain object from an EventGameTick message. Also converts values to other types if specified.
+         * @function toObject
+         * @memberof wire.EventGameTick
+         * @static
          * @param {wire.EventGameTick} message EventGameTick
-         * @param {$protobuf.ConversionOptions} [options] Conversion options
+         * @param {$protobuf.IConversionOptions} [options] Conversion options
          * @returns {Object.<string,*>} Plain object
          */
         EventGameTick.toObject = function toObject(message, options) {
@@ -1383,16 +1483,10 @@ export const wire = $root.wire = (() => {
         };
 
         /**
-         * Creates a plain object from this EventGameTick message. Also converts values to other types if specified.
-         * @param {$protobuf.ConversionOptions} [options] Conversion options
-         * @returns {Object.<string,*>} Plain object
-         */
-        EventGameTick.prototype.toObject = function toObject(options) {
-            return this.constructor.toObject(this, options);
-        };
-
-        /**
          * Converts this EventGameTick to JSON.
+         * @function toJSON
+         * @memberof wire.EventGameTick
+         * @instance
          * @returns {Object.<string,*>} JSON object
          */
         EventGameTick.prototype.toJSON = function toJSON() {
@@ -1406,7 +1500,7 @@ export const wire = $root.wire = (() => {
 
         /**
          * Namespace game.
-         * @exports wire.game
+         * @memberof wire
          * @namespace
          */
         const game = {};
@@ -1415,17 +1509,18 @@ export const wire = $root.wire = (() => {
 
             /**
              * Properties of a Coordinate.
-             * @typedef wire.game.Coordinate$Properties
-             * @type {Object}
-             * @property {number|Long} [x] Coordinate x.
-             * @property {number|Long} [y] Coordinate y.
+             * @memberof wire.game
+             * @interface ICoordinate
+             * @property {number|Long} [x] Coordinate x
+             * @property {number|Long} [y] Coordinate y
              */
 
             /**
              * Constructs a new Coordinate.
-             * @exports wire.game.Coordinate
+             * @memberof wire.game
+             * @classdesc Represents a Coordinate.
              * @constructor
-             * @param {wire.game.Coordinate$Properties=} [properties] Properties to set
+             * @param {wire.game.ICoordinate=} [properties] Properties to set
              */
             function Coordinate(properties) {
                 if (properties)
@@ -1436,19 +1531,26 @@ export const wire = $root.wire = (() => {
 
             /**
              * Coordinate x.
-             * @type {number|Long}
+             * @member {number|Long}x
+             * @memberof wire.game.Coordinate
+             * @instance
              */
             Coordinate.prototype.x = $util.Long ? $util.Long.fromBits(0,0,false) : 0;
 
             /**
              * Coordinate y.
-             * @type {number|Long}
+             * @member {number|Long}y
+             * @memberof wire.game.Coordinate
+             * @instance
              */
             Coordinate.prototype.y = $util.Long ? $util.Long.fromBits(0,0,false) : 0;
 
             /**
              * Creates a new Coordinate instance using the specified properties.
-             * @param {wire.game.Coordinate$Properties=} [properties] Properties to set
+             * @function create
+             * @memberof wire.game.Coordinate
+             * @static
+             * @param {wire.game.ICoordinate=} [properties] Properties to set
              * @returns {wire.game.Coordinate} Coordinate instance
              */
             Coordinate.create = function create(properties) {
@@ -1457,7 +1559,10 @@ export const wire = $root.wire = (() => {
 
             /**
              * Encodes the specified Coordinate message. Does not implicitly {@link wire.game.Coordinate.verify|verify} messages.
-             * @param {wire.game.Coordinate$Properties} message Coordinate message or plain object to encode
+             * @function encode
+             * @memberof wire.game.Coordinate
+             * @static
+             * @param {wire.game.ICoordinate} message Coordinate message or plain object to encode
              * @param {$protobuf.Writer} [writer] Writer to encode to
              * @returns {$protobuf.Writer} Writer
              */
@@ -1473,7 +1578,10 @@ export const wire = $root.wire = (() => {
 
             /**
              * Encodes the specified Coordinate message, length delimited. Does not implicitly {@link wire.game.Coordinate.verify|verify} messages.
-             * @param {wire.game.Coordinate$Properties} message Coordinate message or plain object to encode
+             * @function encodeDelimited
+             * @memberof wire.game.Coordinate
+             * @static
+             * @param {wire.game.ICoordinate} message Coordinate message or plain object to encode
              * @param {$protobuf.Writer} [writer] Writer to encode to
              * @returns {$protobuf.Writer} Writer
              */
@@ -1483,6 +1591,9 @@ export const wire = $root.wire = (() => {
 
             /**
              * Decodes a Coordinate message from the specified reader or buffer.
+             * @function decode
+             * @memberof wire.game.Coordinate
+             * @static
              * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
              * @param {number} [length] Message length if known beforehand
              * @returns {wire.game.Coordinate} Coordinate
@@ -1512,6 +1623,9 @@ export const wire = $root.wire = (() => {
 
             /**
              * Decodes a Coordinate message from the specified reader or buffer, length delimited.
+             * @function decodeDelimited
+             * @memberof wire.game.Coordinate
+             * @static
              * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
              * @returns {wire.game.Coordinate} Coordinate
              * @throws {Error} If the payload is not a reader or valid buffer
@@ -1519,14 +1633,17 @@ export const wire = $root.wire = (() => {
              */
             Coordinate.decodeDelimited = function decodeDelimited(reader) {
                 if (!(reader instanceof $Reader))
-                    reader = $Reader(reader);
+                    reader = new $Reader(reader);
                 return this.decode(reader, reader.uint32());
             };
 
             /**
              * Verifies a Coordinate message.
+             * @function verify
+             * @memberof wire.game.Coordinate
+             * @static
              * @param {Object.<string,*>} message Plain object to verify
-             * @returns {?string} `null` if valid, otherwise the reason why it is not
+             * @returns {string|null} `null` if valid, otherwise the reason why it is not
              */
             Coordinate.verify = function verify(message) {
                 if (typeof message !== "object" || message === null)
@@ -1542,6 +1659,9 @@ export const wire = $root.wire = (() => {
 
             /**
              * Creates a Coordinate message from a plain object. Also converts values to their respective internal types.
+             * @function fromObject
+             * @memberof wire.game.Coordinate
+             * @static
              * @param {Object.<string,*>} object Plain object
              * @returns {wire.game.Coordinate} Coordinate
              */
@@ -1571,18 +1691,12 @@ export const wire = $root.wire = (() => {
             };
 
             /**
-             * Creates a Coordinate message from a plain object. Also converts values to their respective internal types.
-             * This is an alias of {@link wire.game.Coordinate.fromObject}.
-             * @function
-             * @param {Object.<string,*>} object Plain object
-             * @returns {wire.game.Coordinate} Coordinate
-             */
-            Coordinate.from = Coordinate.fromObject;
-
-            /**
              * Creates a plain object from a Coordinate message. Also converts values to other types if specified.
+             * @function toObject
+             * @memberof wire.game.Coordinate
+             * @static
              * @param {wire.game.Coordinate} message Coordinate
-             * @param {$protobuf.ConversionOptions} [options] Conversion options
+             * @param {$protobuf.IConversionOptions} [options] Conversion options
              * @returns {Object.<string,*>} Plain object
              */
             Coordinate.toObject = function toObject(message, options) {
@@ -1615,16 +1729,10 @@ export const wire = $root.wire = (() => {
             };
 
             /**
-             * Creates a plain object from this Coordinate message. Also converts values to other types if specified.
-             * @param {$protobuf.ConversionOptions} [options] Conversion options
-             * @returns {Object.<string,*>} Plain object
-             */
-            Coordinate.prototype.toObject = function toObject(options) {
-                return this.constructor.toObject(this, options);
-            };
-
-            /**
              * Converts this Coordinate to JSON.
+             * @function toJSON
+             * @memberof wire.game.Coordinate
+             * @instance
              * @returns {Object.<string,*>} JSON object
              */
             Coordinate.prototype.toJSON = function toJSON() {
@@ -1638,17 +1746,18 @@ export const wire = $root.wire = (() => {
 
             /**
              * Properties of a FloatCoordinate.
-             * @typedef wire.game.FloatCoordinate$Properties
-             * @type {Object}
-             * @property {number} [x] FloatCoordinate x.
-             * @property {number} [y] FloatCoordinate y.
+             * @memberof wire.game
+             * @interface IFloatCoordinate
+             * @property {number} [x] FloatCoordinate x
+             * @property {number} [y] FloatCoordinate y
              */
 
             /**
              * Constructs a new FloatCoordinate.
-             * @exports wire.game.FloatCoordinate
+             * @memberof wire.game
+             * @classdesc Represents a FloatCoordinate.
              * @constructor
-             * @param {wire.game.FloatCoordinate$Properties=} [properties] Properties to set
+             * @param {wire.game.IFloatCoordinate=} [properties] Properties to set
              */
             function FloatCoordinate(properties) {
                 if (properties)
@@ -1659,19 +1768,26 @@ export const wire = $root.wire = (() => {
 
             /**
              * FloatCoordinate x.
-             * @type {number}
+             * @member {number}x
+             * @memberof wire.game.FloatCoordinate
+             * @instance
              */
             FloatCoordinate.prototype.x = 0;
 
             /**
              * FloatCoordinate y.
-             * @type {number}
+             * @member {number}y
+             * @memberof wire.game.FloatCoordinate
+             * @instance
              */
             FloatCoordinate.prototype.y = 0;
 
             /**
              * Creates a new FloatCoordinate instance using the specified properties.
-             * @param {wire.game.FloatCoordinate$Properties=} [properties] Properties to set
+             * @function create
+             * @memberof wire.game.FloatCoordinate
+             * @static
+             * @param {wire.game.IFloatCoordinate=} [properties] Properties to set
              * @returns {wire.game.FloatCoordinate} FloatCoordinate instance
              */
             FloatCoordinate.create = function create(properties) {
@@ -1680,7 +1796,10 @@ export const wire = $root.wire = (() => {
 
             /**
              * Encodes the specified FloatCoordinate message. Does not implicitly {@link wire.game.FloatCoordinate.verify|verify} messages.
-             * @param {wire.game.FloatCoordinate$Properties} message FloatCoordinate message or plain object to encode
+             * @function encode
+             * @memberof wire.game.FloatCoordinate
+             * @static
+             * @param {wire.game.IFloatCoordinate} message FloatCoordinate message or plain object to encode
              * @param {$protobuf.Writer} [writer] Writer to encode to
              * @returns {$protobuf.Writer} Writer
              */
@@ -1696,7 +1815,10 @@ export const wire = $root.wire = (() => {
 
             /**
              * Encodes the specified FloatCoordinate message, length delimited. Does not implicitly {@link wire.game.FloatCoordinate.verify|verify} messages.
-             * @param {wire.game.FloatCoordinate$Properties} message FloatCoordinate message or plain object to encode
+             * @function encodeDelimited
+             * @memberof wire.game.FloatCoordinate
+             * @static
+             * @param {wire.game.IFloatCoordinate} message FloatCoordinate message or plain object to encode
              * @param {$protobuf.Writer} [writer] Writer to encode to
              * @returns {$protobuf.Writer} Writer
              */
@@ -1706,6 +1828,9 @@ export const wire = $root.wire = (() => {
 
             /**
              * Decodes a FloatCoordinate message from the specified reader or buffer.
+             * @function decode
+             * @memberof wire.game.FloatCoordinate
+             * @static
              * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
              * @param {number} [length] Message length if known beforehand
              * @returns {wire.game.FloatCoordinate} FloatCoordinate
@@ -1735,6 +1860,9 @@ export const wire = $root.wire = (() => {
 
             /**
              * Decodes a FloatCoordinate message from the specified reader or buffer, length delimited.
+             * @function decodeDelimited
+             * @memberof wire.game.FloatCoordinate
+             * @static
              * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
              * @returns {wire.game.FloatCoordinate} FloatCoordinate
              * @throws {Error} If the payload is not a reader or valid buffer
@@ -1742,14 +1870,17 @@ export const wire = $root.wire = (() => {
              */
             FloatCoordinate.decodeDelimited = function decodeDelimited(reader) {
                 if (!(reader instanceof $Reader))
-                    reader = $Reader(reader);
+                    reader = new $Reader(reader);
                 return this.decode(reader, reader.uint32());
             };
 
             /**
              * Verifies a FloatCoordinate message.
+             * @function verify
+             * @memberof wire.game.FloatCoordinate
+             * @static
              * @param {Object.<string,*>} message Plain object to verify
-             * @returns {?string} `null` if valid, otherwise the reason why it is not
+             * @returns {string|null} `null` if valid, otherwise the reason why it is not
              */
             FloatCoordinate.verify = function verify(message) {
                 if (typeof message !== "object" || message === null)
@@ -1765,6 +1896,9 @@ export const wire = $root.wire = (() => {
 
             /**
              * Creates a FloatCoordinate message from a plain object. Also converts values to their respective internal types.
+             * @function fromObject
+             * @memberof wire.game.FloatCoordinate
+             * @static
              * @param {Object.<string,*>} object Plain object
              * @returns {wire.game.FloatCoordinate} FloatCoordinate
              */
@@ -1780,18 +1914,12 @@ export const wire = $root.wire = (() => {
             };
 
             /**
-             * Creates a FloatCoordinate message from a plain object. Also converts values to their respective internal types.
-             * This is an alias of {@link wire.game.FloatCoordinate.fromObject}.
-             * @function
-             * @param {Object.<string,*>} object Plain object
-             * @returns {wire.game.FloatCoordinate} FloatCoordinate
-             */
-            FloatCoordinate.from = FloatCoordinate.fromObject;
-
-            /**
              * Creates a plain object from a FloatCoordinate message. Also converts values to other types if specified.
+             * @function toObject
+             * @memberof wire.game.FloatCoordinate
+             * @static
              * @param {wire.game.FloatCoordinate} message FloatCoordinate
-             * @param {$protobuf.ConversionOptions} [options] Conversion options
+             * @param {$protobuf.IConversionOptions} [options] Conversion options
              * @returns {Object.<string,*>} Plain object
              */
             FloatCoordinate.toObject = function toObject(message, options) {
@@ -1803,23 +1931,17 @@ export const wire = $root.wire = (() => {
                     object.y = 0;
                 }
                 if (message.x != null && message.hasOwnProperty("x"))
-                    object.x = message.x;
+                    object.x = options.json && !isFinite(message.x) ? String(message.x) : message.x;
                 if (message.y != null && message.hasOwnProperty("y"))
-                    object.y = message.y;
+                    object.y = options.json && !isFinite(message.y) ? String(message.y) : message.y;
                 return object;
             };
 
             /**
-             * Creates a plain object from this FloatCoordinate message. Also converts values to other types if specified.
-             * @param {$protobuf.ConversionOptions} [options] Conversion options
-             * @returns {Object.<string,*>} Plain object
-             */
-            FloatCoordinate.prototype.toObject = function toObject(options) {
-                return this.constructor.toObject(this, options);
-            };
-
-            /**
              * Converts this FloatCoordinate to JSON.
+             * @function toJSON
+             * @memberof wire.game.FloatCoordinate
+             * @instance
              * @returns {Object.<string,*>} JSON object
              */
             FloatCoordinate.prototype.toJSON = function toJSON() {
@@ -1833,16 +1955,17 @@ export const wire = $root.wire = (() => {
 
             /**
              * Properties of a Player.
-             * @typedef wire.game.Player$Properties
-             * @type {Object}
-             * @property {string} [id] Player id.
+             * @memberof wire.game
+             * @interface IPlayer
+             * @property {string} [id] Player id
              */
 
             /**
              * Constructs a new Player.
-             * @exports wire.game.Player
+             * @memberof wire.game
+             * @classdesc Represents a Player.
              * @constructor
-             * @param {wire.game.Player$Properties=} [properties] Properties to set
+             * @param {wire.game.IPlayer=} [properties] Properties to set
              */
             function Player(properties) {
                 if (properties)
@@ -1853,13 +1976,18 @@ export const wire = $root.wire = (() => {
 
             /**
              * Player id.
-             * @type {string}
+             * @member {string}id
+             * @memberof wire.game.Player
+             * @instance
              */
             Player.prototype.id = "";
 
             /**
              * Creates a new Player instance using the specified properties.
-             * @param {wire.game.Player$Properties=} [properties] Properties to set
+             * @function create
+             * @memberof wire.game.Player
+             * @static
+             * @param {wire.game.IPlayer=} [properties] Properties to set
              * @returns {wire.game.Player} Player instance
              */
             Player.create = function create(properties) {
@@ -1868,7 +1996,10 @@ export const wire = $root.wire = (() => {
 
             /**
              * Encodes the specified Player message. Does not implicitly {@link wire.game.Player.verify|verify} messages.
-             * @param {wire.game.Player$Properties} message Player message or plain object to encode
+             * @function encode
+             * @memberof wire.game.Player
+             * @static
+             * @param {wire.game.IPlayer} message Player message or plain object to encode
              * @param {$protobuf.Writer} [writer] Writer to encode to
              * @returns {$protobuf.Writer} Writer
              */
@@ -1882,7 +2013,10 @@ export const wire = $root.wire = (() => {
 
             /**
              * Encodes the specified Player message, length delimited. Does not implicitly {@link wire.game.Player.verify|verify} messages.
-             * @param {wire.game.Player$Properties} message Player message or plain object to encode
+             * @function encodeDelimited
+             * @memberof wire.game.Player
+             * @static
+             * @param {wire.game.IPlayer} message Player message or plain object to encode
              * @param {$protobuf.Writer} [writer] Writer to encode to
              * @returns {$protobuf.Writer} Writer
              */
@@ -1892,6 +2026,9 @@ export const wire = $root.wire = (() => {
 
             /**
              * Decodes a Player message from the specified reader or buffer.
+             * @function decode
+             * @memberof wire.game.Player
+             * @static
              * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
              * @param {number} [length] Message length if known beforehand
              * @returns {wire.game.Player} Player
@@ -1918,6 +2055,9 @@ export const wire = $root.wire = (() => {
 
             /**
              * Decodes a Player message from the specified reader or buffer, length delimited.
+             * @function decodeDelimited
+             * @memberof wire.game.Player
+             * @static
              * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
              * @returns {wire.game.Player} Player
              * @throws {Error} If the payload is not a reader or valid buffer
@@ -1925,14 +2065,17 @@ export const wire = $root.wire = (() => {
              */
             Player.decodeDelimited = function decodeDelimited(reader) {
                 if (!(reader instanceof $Reader))
-                    reader = $Reader(reader);
+                    reader = new $Reader(reader);
                 return this.decode(reader, reader.uint32());
             };
 
             /**
              * Verifies a Player message.
+             * @function verify
+             * @memberof wire.game.Player
+             * @static
              * @param {Object.<string,*>} message Plain object to verify
-             * @returns {?string} `null` if valid, otherwise the reason why it is not
+             * @returns {string|null} `null` if valid, otherwise the reason why it is not
              */
             Player.verify = function verify(message) {
                 if (typeof message !== "object" || message === null)
@@ -1945,6 +2088,9 @@ export const wire = $root.wire = (() => {
 
             /**
              * Creates a Player message from a plain object. Also converts values to their respective internal types.
+             * @function fromObject
+             * @memberof wire.game.Player
+             * @static
              * @param {Object.<string,*>} object Plain object
              * @returns {wire.game.Player} Player
              */
@@ -1958,18 +2104,12 @@ export const wire = $root.wire = (() => {
             };
 
             /**
-             * Creates a Player message from a plain object. Also converts values to their respective internal types.
-             * This is an alias of {@link wire.game.Player.fromObject}.
-             * @function
-             * @param {Object.<string,*>} object Plain object
-             * @returns {wire.game.Player} Player
-             */
-            Player.from = Player.fromObject;
-
-            /**
              * Creates a plain object from a Player message. Also converts values to other types if specified.
+             * @function toObject
+             * @memberof wire.game.Player
+             * @static
              * @param {wire.game.Player} message Player
-             * @param {$protobuf.ConversionOptions} [options] Conversion options
+             * @param {$protobuf.IConversionOptions} [options] Conversion options
              * @returns {Object.<string,*>} Plain object
              */
             Player.toObject = function toObject(message, options) {
@@ -1984,16 +2124,10 @@ export const wire = $root.wire = (() => {
             };
 
             /**
-             * Creates a plain object from this Player message. Also converts values to other types if specified.
-             * @param {$protobuf.ConversionOptions} [options] Conversion options
-             * @returns {Object.<string,*>} Plain object
-             */
-            Player.prototype.toObject = function toObject(options) {
-                return this.constructor.toObject(this, options);
-            };
-
-            /**
              * Converts this Player to JSON.
+             * @function toJSON
+             * @memberof wire.game.Player
+             * @instance
              * @returns {Object.<string,*>} JSON object
              */
             Player.prototype.toJSON = function toJSON() {
@@ -2007,17 +2141,18 @@ export const wire = $root.wire = (() => {
 
             /**
              * Properties of an Army.
-             * @typedef wire.game.Army$Properties
-             * @type {Object}
-             * @property {string} [ownerId] Army ownerId.
-             * @property {number|Long} [strength] Army strength.
+             * @memberof wire.game
+             * @interface IArmy
+             * @property {string} [ownerId] Army ownerId
+             * @property {number|Long} [strength] Army strength
              */
 
             /**
              * Constructs a new Army.
-             * @exports wire.game.Army
+             * @memberof wire.game
+             * @classdesc Represents an Army.
              * @constructor
-             * @param {wire.game.Army$Properties=} [properties] Properties to set
+             * @param {wire.game.IArmy=} [properties] Properties to set
              */
             function Army(properties) {
                 if (properties)
@@ -2028,19 +2163,26 @@ export const wire = $root.wire = (() => {
 
             /**
              * Army ownerId.
-             * @type {string}
+             * @member {string}ownerId
+             * @memberof wire.game.Army
+             * @instance
              */
             Army.prototype.ownerId = "";
 
             /**
              * Army strength.
-             * @type {number|Long}
+             * @member {number|Long}strength
+             * @memberof wire.game.Army
+             * @instance
              */
             Army.prototype.strength = $util.Long ? $util.Long.fromBits(0,0,false) : 0;
 
             /**
              * Creates a new Army instance using the specified properties.
-             * @param {wire.game.Army$Properties=} [properties] Properties to set
+             * @function create
+             * @memberof wire.game.Army
+             * @static
+             * @param {wire.game.IArmy=} [properties] Properties to set
              * @returns {wire.game.Army} Army instance
              */
             Army.create = function create(properties) {
@@ -2049,7 +2191,10 @@ export const wire = $root.wire = (() => {
 
             /**
              * Encodes the specified Army message. Does not implicitly {@link wire.game.Army.verify|verify} messages.
-             * @param {wire.game.Army$Properties} message Army message or plain object to encode
+             * @function encode
+             * @memberof wire.game.Army
+             * @static
+             * @param {wire.game.IArmy} message Army message or plain object to encode
              * @param {$protobuf.Writer} [writer] Writer to encode to
              * @returns {$protobuf.Writer} Writer
              */
@@ -2065,7 +2210,10 @@ export const wire = $root.wire = (() => {
 
             /**
              * Encodes the specified Army message, length delimited. Does not implicitly {@link wire.game.Army.verify|verify} messages.
-             * @param {wire.game.Army$Properties} message Army message or plain object to encode
+             * @function encodeDelimited
+             * @memberof wire.game.Army
+             * @static
+             * @param {wire.game.IArmy} message Army message or plain object to encode
              * @param {$protobuf.Writer} [writer] Writer to encode to
              * @returns {$protobuf.Writer} Writer
              */
@@ -2075,6 +2223,9 @@ export const wire = $root.wire = (() => {
 
             /**
              * Decodes an Army message from the specified reader or buffer.
+             * @function decode
+             * @memberof wire.game.Army
+             * @static
              * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
              * @param {number} [length] Message length if known beforehand
              * @returns {wire.game.Army} Army
@@ -2104,6 +2255,9 @@ export const wire = $root.wire = (() => {
 
             /**
              * Decodes an Army message from the specified reader or buffer, length delimited.
+             * @function decodeDelimited
+             * @memberof wire.game.Army
+             * @static
              * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
              * @returns {wire.game.Army} Army
              * @throws {Error} If the payload is not a reader or valid buffer
@@ -2111,14 +2265,17 @@ export const wire = $root.wire = (() => {
              */
             Army.decodeDelimited = function decodeDelimited(reader) {
                 if (!(reader instanceof $Reader))
-                    reader = $Reader(reader);
+                    reader = new $Reader(reader);
                 return this.decode(reader, reader.uint32());
             };
 
             /**
              * Verifies an Army message.
+             * @function verify
+             * @memberof wire.game.Army
+             * @static
              * @param {Object.<string,*>} message Plain object to verify
-             * @returns {?string} `null` if valid, otherwise the reason why it is not
+             * @returns {string|null} `null` if valid, otherwise the reason why it is not
              */
             Army.verify = function verify(message) {
                 if (typeof message !== "object" || message === null)
@@ -2134,6 +2291,9 @@ export const wire = $root.wire = (() => {
 
             /**
              * Creates an Army message from a plain object. Also converts values to their respective internal types.
+             * @function fromObject
+             * @memberof wire.game.Army
+             * @static
              * @param {Object.<string,*>} object Plain object
              * @returns {wire.game.Army} Army
              */
@@ -2156,18 +2316,12 @@ export const wire = $root.wire = (() => {
             };
 
             /**
-             * Creates an Army message from a plain object. Also converts values to their respective internal types.
-             * This is an alias of {@link wire.game.Army.fromObject}.
-             * @function
-             * @param {Object.<string,*>} object Plain object
-             * @returns {wire.game.Army} Army
-             */
-            Army.from = Army.fromObject;
-
-            /**
              * Creates a plain object from an Army message. Also converts values to other types if specified.
+             * @function toObject
+             * @memberof wire.game.Army
+             * @static
              * @param {wire.game.Army} message Army
-             * @param {$protobuf.ConversionOptions} [options] Conversion options
+             * @param {$protobuf.IConversionOptions} [options] Conversion options
              * @returns {Object.<string,*>} Plain object
              */
             Army.toObject = function toObject(message, options) {
@@ -2193,16 +2347,10 @@ export const wire = $root.wire = (() => {
             };
 
             /**
-             * Creates a plain object from this Army message. Also converts values to other types if specified.
-             * @param {$protobuf.ConversionOptions} [options] Conversion options
-             * @returns {Object.<string,*>} Plain object
-             */
-            Army.prototype.toObject = function toObject(options) {
-                return this.constructor.toObject(this, options);
-            };
-
-            /**
              * Converts this Army to JSON.
+             * @function toJSON
+             * @memberof wire.game.Army
+             * @instance
              * @returns {Object.<string,*>} JSON object
              */
             Army.prototype.toJSON = function toJSON() {
@@ -2216,20 +2364,21 @@ export const wire = $root.wire = (() => {
 
             /**
              * Properties of an Airplane.
-             * @typedef wire.game.Airplane$Properties
-             * @type {Object}
-             * @property {string} [id] Airplane id.
-             * @property {wire.game.Army$Properties} [army] Airplane army.
-             * @property {wire.game.FloatCoordinate$Properties} [position] Airplane position.
-             * @property {number} [direction] Airplane direction.
-             * @property {number} [speed] Airplane speed.
+             * @memberof wire.game
+             * @interface IAirplane
+             * @property {string} [id] Airplane id
+             * @property {wire.game.IArmy} [army] Airplane army
+             * @property {wire.game.IFloatCoordinate} [position] Airplane position
+             * @property {number} [direction] Airplane direction
+             * @property {number} [speed] Airplane speed
              */
 
             /**
              * Constructs a new Airplane.
-             * @exports wire.game.Airplane
+             * @memberof wire.game
+             * @classdesc Represents an Airplane.
              * @constructor
-             * @param {wire.game.Airplane$Properties=} [properties] Properties to set
+             * @param {wire.game.IAirplane=} [properties] Properties to set
              */
             function Airplane(properties) {
                 if (properties)
@@ -2240,37 +2389,50 @@ export const wire = $root.wire = (() => {
 
             /**
              * Airplane id.
-             * @type {string}
+             * @member {string}id
+             * @memberof wire.game.Airplane
+             * @instance
              */
             Airplane.prototype.id = "";
 
             /**
              * Airplane army.
-             * @type {(wire.game.Army$Properties|null)}
+             * @member {(wire.game.IArmy|null|undefined)}army
+             * @memberof wire.game.Airplane
+             * @instance
              */
             Airplane.prototype.army = null;
 
             /**
              * Airplane position.
-             * @type {(wire.game.FloatCoordinate$Properties|null)}
+             * @member {(wire.game.IFloatCoordinate|null|undefined)}position
+             * @memberof wire.game.Airplane
+             * @instance
              */
             Airplane.prototype.position = null;
 
             /**
              * Airplane direction.
-             * @type {number}
+             * @member {number}direction
+             * @memberof wire.game.Airplane
+             * @instance
              */
             Airplane.prototype.direction = 0;
 
             /**
              * Airplane speed.
-             * @type {number}
+             * @member {number}speed
+             * @memberof wire.game.Airplane
+             * @instance
              */
             Airplane.prototype.speed = 0;
 
             /**
              * Creates a new Airplane instance using the specified properties.
-             * @param {wire.game.Airplane$Properties=} [properties] Properties to set
+             * @function create
+             * @memberof wire.game.Airplane
+             * @static
+             * @param {wire.game.IAirplane=} [properties] Properties to set
              * @returns {wire.game.Airplane} Airplane instance
              */
             Airplane.create = function create(properties) {
@@ -2279,7 +2441,10 @@ export const wire = $root.wire = (() => {
 
             /**
              * Encodes the specified Airplane message. Does not implicitly {@link wire.game.Airplane.verify|verify} messages.
-             * @param {wire.game.Airplane$Properties} message Airplane message or plain object to encode
+             * @function encode
+             * @memberof wire.game.Airplane
+             * @static
+             * @param {wire.game.IAirplane} message Airplane message or plain object to encode
              * @param {$protobuf.Writer} [writer] Writer to encode to
              * @returns {$protobuf.Writer} Writer
              */
@@ -2301,7 +2466,10 @@ export const wire = $root.wire = (() => {
 
             /**
              * Encodes the specified Airplane message, length delimited. Does not implicitly {@link wire.game.Airplane.verify|verify} messages.
-             * @param {wire.game.Airplane$Properties} message Airplane message or plain object to encode
+             * @function encodeDelimited
+             * @memberof wire.game.Airplane
+             * @static
+             * @param {wire.game.IAirplane} message Airplane message or plain object to encode
              * @param {$protobuf.Writer} [writer] Writer to encode to
              * @returns {$protobuf.Writer} Writer
              */
@@ -2311,6 +2479,9 @@ export const wire = $root.wire = (() => {
 
             /**
              * Decodes an Airplane message from the specified reader or buffer.
+             * @function decode
+             * @memberof wire.game.Airplane
+             * @static
              * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
              * @param {number} [length] Message length if known beforehand
              * @returns {wire.game.Airplane} Airplane
@@ -2349,6 +2520,9 @@ export const wire = $root.wire = (() => {
 
             /**
              * Decodes an Airplane message from the specified reader or buffer, length delimited.
+             * @function decodeDelimited
+             * @memberof wire.game.Airplane
+             * @static
              * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
              * @returns {wire.game.Airplane} Airplane
              * @throws {Error} If the payload is not a reader or valid buffer
@@ -2356,14 +2530,17 @@ export const wire = $root.wire = (() => {
              */
             Airplane.decodeDelimited = function decodeDelimited(reader) {
                 if (!(reader instanceof $Reader))
-                    reader = $Reader(reader);
+                    reader = new $Reader(reader);
                 return this.decode(reader, reader.uint32());
             };
 
             /**
              * Verifies an Airplane message.
+             * @function verify
+             * @memberof wire.game.Airplane
+             * @static
              * @param {Object.<string,*>} message Plain object to verify
-             * @returns {?string} `null` if valid, otherwise the reason why it is not
+             * @returns {string|null} `null` if valid, otherwise the reason why it is not
              */
             Airplane.verify = function verify(message) {
                 if (typeof message !== "object" || message === null)
@@ -2377,7 +2554,7 @@ export const wire = $root.wire = (() => {
                         return "army." + error;
                 }
                 if (message.position != null && message.hasOwnProperty("position")) {
-                    let error = $root.wire.game.FloatCoordinate.verify(message.position);
+                    error = $root.wire.game.FloatCoordinate.verify(message.position);
                     if (error)
                         return "position." + error;
                 }
@@ -2392,6 +2569,9 @@ export const wire = $root.wire = (() => {
 
             /**
              * Creates an Airplane message from a plain object. Also converts values to their respective internal types.
+             * @function fromObject
+             * @memberof wire.game.Airplane
+             * @static
              * @param {Object.<string,*>} object Plain object
              * @returns {wire.game.Airplane} Airplane
              */
@@ -2419,18 +2599,12 @@ export const wire = $root.wire = (() => {
             };
 
             /**
-             * Creates an Airplane message from a plain object. Also converts values to their respective internal types.
-             * This is an alias of {@link wire.game.Airplane.fromObject}.
-             * @function
-             * @param {Object.<string,*>} object Plain object
-             * @returns {wire.game.Airplane} Airplane
-             */
-            Airplane.from = Airplane.fromObject;
-
-            /**
              * Creates a plain object from an Airplane message. Also converts values to other types if specified.
+             * @function toObject
+             * @memberof wire.game.Airplane
+             * @static
              * @param {wire.game.Airplane} message Airplane
-             * @param {$protobuf.ConversionOptions} [options] Conversion options
+             * @param {$protobuf.IConversionOptions} [options] Conversion options
              * @returns {Object.<string,*>} Plain object
              */
             Airplane.toObject = function toObject(message, options) {
@@ -2451,23 +2625,17 @@ export const wire = $root.wire = (() => {
                 if (message.position != null && message.hasOwnProperty("position"))
                     object.position = $root.wire.game.FloatCoordinate.toObject(message.position, options);
                 if (message.direction != null && message.hasOwnProperty("direction"))
-                    object.direction = message.direction;
+                    object.direction = options.json && !isFinite(message.direction) ? String(message.direction) : message.direction;
                 if (message.speed != null && message.hasOwnProperty("speed"))
-                    object.speed = message.speed;
+                    object.speed = options.json && !isFinite(message.speed) ? String(message.speed) : message.speed;
                 return object;
             };
 
             /**
-             * Creates a plain object from this Airplane message. Also converts values to other types if specified.
-             * @param {$protobuf.ConversionOptions} [options] Conversion options
-             * @returns {Object.<string,*>} Plain object
-             */
-            Airplane.prototype.toObject = function toObject(options) {
-                return this.constructor.toObject(this, options);
-            };
-
-            /**
              * Converts this Airplane to JSON.
+             * @function toJSON
+             * @memberof wire.game.Airplane
+             * @instance
              * @returns {Object.<string,*>} JSON object
              */
             Airplane.prototype.toJSON = function toJSON() {
@@ -2481,19 +2649,20 @@ export const wire = $root.wire = (() => {
 
             /**
              * Properties of an Island.
-             * @typedef wire.game.Island$Properties
-             * @type {Object}
-             * @property {string} [id] Island id.
-             * @property {wire.game.Army$Properties} [army] Island army.
-             * @property {wire.game.Coordinate$Properties} [position] Island position.
-             * @property {number} [size] Island size.
+             * @memberof wire.game
+             * @interface IIsland
+             * @property {string} [id] Island id
+             * @property {wire.game.IArmy} [army] Island army
+             * @property {wire.game.ICoordinate} [position] Island position
+             * @property {number} [size] Island size
              */
 
             /**
              * Constructs a new Island.
-             * @exports wire.game.Island
+             * @memberof wire.game
+             * @classdesc Represents an Island.
              * @constructor
-             * @param {wire.game.Island$Properties=} [properties] Properties to set
+             * @param {wire.game.IIsland=} [properties] Properties to set
              */
             function Island(properties) {
                 if (properties)
@@ -2504,31 +2673,42 @@ export const wire = $root.wire = (() => {
 
             /**
              * Island id.
-             * @type {string}
+             * @member {string}id
+             * @memberof wire.game.Island
+             * @instance
              */
             Island.prototype.id = "";
 
             /**
              * Island army.
-             * @type {(wire.game.Army$Properties|null)}
+             * @member {(wire.game.IArmy|null|undefined)}army
+             * @memberof wire.game.Island
+             * @instance
              */
             Island.prototype.army = null;
 
             /**
              * Island position.
-             * @type {(wire.game.Coordinate$Properties|null)}
+             * @member {(wire.game.ICoordinate|null|undefined)}position
+             * @memberof wire.game.Island
+             * @instance
              */
             Island.prototype.position = null;
 
             /**
              * Island size.
-             * @type {number}
+             * @member {number}size
+             * @memberof wire.game.Island
+             * @instance
              */
             Island.prototype.size = 0;
 
             /**
              * Creates a new Island instance using the specified properties.
-             * @param {wire.game.Island$Properties=} [properties] Properties to set
+             * @function create
+             * @memberof wire.game.Island
+             * @static
+             * @param {wire.game.IIsland=} [properties] Properties to set
              * @returns {wire.game.Island} Island instance
              */
             Island.create = function create(properties) {
@@ -2537,7 +2717,10 @@ export const wire = $root.wire = (() => {
 
             /**
              * Encodes the specified Island message. Does not implicitly {@link wire.game.Island.verify|verify} messages.
-             * @param {wire.game.Island$Properties} message Island message or plain object to encode
+             * @function encode
+             * @memberof wire.game.Island
+             * @static
+             * @param {wire.game.IIsland} message Island message or plain object to encode
              * @param {$protobuf.Writer} [writer] Writer to encode to
              * @returns {$protobuf.Writer} Writer
              */
@@ -2557,7 +2740,10 @@ export const wire = $root.wire = (() => {
 
             /**
              * Encodes the specified Island message, length delimited. Does not implicitly {@link wire.game.Island.verify|verify} messages.
-             * @param {wire.game.Island$Properties} message Island message or plain object to encode
+             * @function encodeDelimited
+             * @memberof wire.game.Island
+             * @static
+             * @param {wire.game.IIsland} message Island message or plain object to encode
              * @param {$protobuf.Writer} [writer] Writer to encode to
              * @returns {$protobuf.Writer} Writer
              */
@@ -2567,6 +2753,9 @@ export const wire = $root.wire = (() => {
 
             /**
              * Decodes an Island message from the specified reader or buffer.
+             * @function decode
+             * @memberof wire.game.Island
+             * @static
              * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
              * @param {number} [length] Message length if known beforehand
              * @returns {wire.game.Island} Island
@@ -2602,6 +2791,9 @@ export const wire = $root.wire = (() => {
 
             /**
              * Decodes an Island message from the specified reader or buffer, length delimited.
+             * @function decodeDelimited
+             * @memberof wire.game.Island
+             * @static
              * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
              * @returns {wire.game.Island} Island
              * @throws {Error} If the payload is not a reader or valid buffer
@@ -2609,14 +2801,17 @@ export const wire = $root.wire = (() => {
              */
             Island.decodeDelimited = function decodeDelimited(reader) {
                 if (!(reader instanceof $Reader))
-                    reader = $Reader(reader);
+                    reader = new $Reader(reader);
                 return this.decode(reader, reader.uint32());
             };
 
             /**
              * Verifies an Island message.
+             * @function verify
+             * @memberof wire.game.Island
+             * @static
              * @param {Object.<string,*>} message Plain object to verify
-             * @returns {?string} `null` if valid, otherwise the reason why it is not
+             * @returns {string|null} `null` if valid, otherwise the reason why it is not
              */
             Island.verify = function verify(message) {
                 if (typeof message !== "object" || message === null)
@@ -2630,7 +2825,7 @@ export const wire = $root.wire = (() => {
                         return "army." + error;
                 }
                 if (message.position != null && message.hasOwnProperty("position")) {
-                    let error = $root.wire.game.Coordinate.verify(message.position);
+                    error = $root.wire.game.Coordinate.verify(message.position);
                     if (error)
                         return "position." + error;
                 }
@@ -2642,6 +2837,9 @@ export const wire = $root.wire = (() => {
 
             /**
              * Creates an Island message from a plain object. Also converts values to their respective internal types.
+             * @function fromObject
+             * @memberof wire.game.Island
+             * @static
              * @param {Object.<string,*>} object Plain object
              * @returns {wire.game.Island} Island
              */
@@ -2667,18 +2865,12 @@ export const wire = $root.wire = (() => {
             };
 
             /**
-             * Creates an Island message from a plain object. Also converts values to their respective internal types.
-             * This is an alias of {@link wire.game.Island.fromObject}.
-             * @function
-             * @param {Object.<string,*>} object Plain object
-             * @returns {wire.game.Island} Island
-             */
-            Island.from = Island.fromObject;
-
-            /**
              * Creates a plain object from an Island message. Also converts values to other types if specified.
+             * @function toObject
+             * @memberof wire.game.Island
+             * @static
              * @param {wire.game.Island} message Island
-             * @param {$protobuf.ConversionOptions} [options] Conversion options
+             * @param {$protobuf.IConversionOptions} [options] Conversion options
              * @returns {Object.<string,*>} Plain object
              */
             Island.toObject = function toObject(message, options) {
@@ -2698,21 +2890,15 @@ export const wire = $root.wire = (() => {
                 if (message.position != null && message.hasOwnProperty("position"))
                     object.position = $root.wire.game.Coordinate.toObject(message.position, options);
                 if (message.size != null && message.hasOwnProperty("size"))
-                    object.size = message.size;
+                    object.size = options.json && !isFinite(message.size) ? String(message.size) : message.size;
                 return object;
             };
 
             /**
-             * Creates a plain object from this Island message. Also converts values to other types if specified.
-             * @param {$protobuf.ConversionOptions} [options] Conversion options
-             * @returns {Object.<string,*>} Plain object
-             */
-            Island.prototype.toObject = function toObject(options) {
-                return this.constructor.toObject(this, options);
-            };
-
-            /**
              * Converts this Island to JSON.
+             * @function toJSON
+             * @memberof wire.game.Island
+             * @instance
              * @returns {Object.<string,*>} JSON object
              */
             Island.prototype.toJSON = function toJSON() {
@@ -2726,22 +2912,23 @@ export const wire = $root.wire = (() => {
 
             /**
              * Properties of a Game.
-             * @typedef wire.game.Game$Properties
-             * @type {Object}
-             * @property {string} [id] Game id.
-             * @property {wire.game.Coordinate$Properties} [size] Game size.
-             * @property {wire.game.Player$Properties} [player1] Game player1.
-             * @property {wire.game.Player$Properties} [player2] Game player2.
-             * @property {wire.game.Player$Properties} [playerNeutral] Game playerNeutral.
-             * @property {Array.<wire.game.Island$Properties>} [islands] Game islands.
-             * @property {Array.<wire.game.Airplane$Properties>} [airplanes] Game airplanes.
+             * @memberof wire.game
+             * @interface IGame
+             * @property {string} [id] Game id
+             * @property {wire.game.ICoordinate} [size] Game size
+             * @property {wire.game.IPlayer} [player1] Game player1
+             * @property {wire.game.IPlayer} [player2] Game player2
+             * @property {wire.game.IPlayer} [playerNeutral] Game playerNeutral
+             * @property {Array.<wire.game.IIsland>} [islands] Game islands
+             * @property {Array.<wire.game.IAirplane>} [airplanes] Game airplanes
              */
 
             /**
              * Constructs a new Game.
-             * @exports wire.game.Game
+             * @memberof wire.game
+             * @classdesc Represents a Game.
              * @constructor
-             * @param {wire.game.Game$Properties=} [properties] Properties to set
+             * @param {wire.game.IGame=} [properties] Properties to set
              */
             function Game(properties) {
                 this.islands = [];
@@ -2754,49 +2941,66 @@ export const wire = $root.wire = (() => {
 
             /**
              * Game id.
-             * @type {string}
+             * @member {string}id
+             * @memberof wire.game.Game
+             * @instance
              */
             Game.prototype.id = "";
 
             /**
              * Game size.
-             * @type {(wire.game.Coordinate$Properties|null)}
+             * @member {(wire.game.ICoordinate|null|undefined)}size
+             * @memberof wire.game.Game
+             * @instance
              */
             Game.prototype.size = null;
 
             /**
              * Game player1.
-             * @type {(wire.game.Player$Properties|null)}
+             * @member {(wire.game.IPlayer|null|undefined)}player1
+             * @memberof wire.game.Game
+             * @instance
              */
             Game.prototype.player1 = null;
 
             /**
              * Game player2.
-             * @type {(wire.game.Player$Properties|null)}
+             * @member {(wire.game.IPlayer|null|undefined)}player2
+             * @memberof wire.game.Game
+             * @instance
              */
             Game.prototype.player2 = null;
 
             /**
              * Game playerNeutral.
-             * @type {(wire.game.Player$Properties|null)}
+             * @member {(wire.game.IPlayer|null|undefined)}playerNeutral
+             * @memberof wire.game.Game
+             * @instance
              */
             Game.prototype.playerNeutral = null;
 
             /**
              * Game islands.
-             * @type {Array.<wire.game.Island$Properties>}
+             * @member {Array.<wire.game.IIsland>}islands
+             * @memberof wire.game.Game
+             * @instance
              */
             Game.prototype.islands = $util.emptyArray;
 
             /**
              * Game airplanes.
-             * @type {Array.<wire.game.Airplane$Properties>}
+             * @member {Array.<wire.game.IAirplane>}airplanes
+             * @memberof wire.game.Game
+             * @instance
              */
             Game.prototype.airplanes = $util.emptyArray;
 
             /**
              * Creates a new Game instance using the specified properties.
-             * @param {wire.game.Game$Properties=} [properties] Properties to set
+             * @function create
+             * @memberof wire.game.Game
+             * @static
+             * @param {wire.game.IGame=} [properties] Properties to set
              * @returns {wire.game.Game} Game instance
              */
             Game.create = function create(properties) {
@@ -2805,7 +3009,10 @@ export const wire = $root.wire = (() => {
 
             /**
              * Encodes the specified Game message. Does not implicitly {@link wire.game.Game.verify|verify} messages.
-             * @param {wire.game.Game$Properties} message Game message or plain object to encode
+             * @function encode
+             * @memberof wire.game.Game
+             * @static
+             * @param {wire.game.IGame} message Game message or plain object to encode
              * @param {$protobuf.Writer} [writer] Writer to encode to
              * @returns {$protobuf.Writer} Writer
              */
@@ -2833,7 +3040,10 @@ export const wire = $root.wire = (() => {
 
             /**
              * Encodes the specified Game message, length delimited. Does not implicitly {@link wire.game.Game.verify|verify} messages.
-             * @param {wire.game.Game$Properties} message Game message or plain object to encode
+             * @function encodeDelimited
+             * @memberof wire.game.Game
+             * @static
+             * @param {wire.game.IGame} message Game message or plain object to encode
              * @param {$protobuf.Writer} [writer] Writer to encode to
              * @returns {$protobuf.Writer} Writer
              */
@@ -2843,6 +3053,9 @@ export const wire = $root.wire = (() => {
 
             /**
              * Decodes a Game message from the specified reader or buffer.
+             * @function decode
+             * @memberof wire.game.Game
+             * @static
              * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
              * @param {number} [length] Message length if known beforehand
              * @returns {wire.game.Game} Game
@@ -2891,6 +3104,9 @@ export const wire = $root.wire = (() => {
 
             /**
              * Decodes a Game message from the specified reader or buffer, length delimited.
+             * @function decodeDelimited
+             * @memberof wire.game.Game
+             * @static
              * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
              * @returns {wire.game.Game} Game
              * @throws {Error} If the payload is not a reader or valid buffer
@@ -2898,14 +3114,17 @@ export const wire = $root.wire = (() => {
              */
             Game.decodeDelimited = function decodeDelimited(reader) {
                 if (!(reader instanceof $Reader))
-                    reader = $Reader(reader);
+                    reader = new $Reader(reader);
                 return this.decode(reader, reader.uint32());
             };
 
             /**
              * Verifies a Game message.
+             * @function verify
+             * @memberof wire.game.Game
+             * @static
              * @param {Object.<string,*>} message Plain object to verify
-             * @returns {?string} `null` if valid, otherwise the reason why it is not
+             * @returns {string|null} `null` if valid, otherwise the reason why it is not
              */
             Game.verify = function verify(message) {
                 if (typeof message !== "object" || message === null)
@@ -2919,17 +3138,17 @@ export const wire = $root.wire = (() => {
                         return "size." + error;
                 }
                 if (message.player1 != null && message.hasOwnProperty("player1")) {
-                    let error = $root.wire.game.Player.verify(message.player1);
+                    error = $root.wire.game.Player.verify(message.player1);
                     if (error)
                         return "player1." + error;
                 }
                 if (message.player2 != null && message.hasOwnProperty("player2")) {
-                    let error = $root.wire.game.Player.verify(message.player2);
+                    error = $root.wire.game.Player.verify(message.player2);
                     if (error)
                         return "player2." + error;
                 }
                 if (message.playerNeutral != null && message.hasOwnProperty("playerNeutral")) {
-                    let error = $root.wire.game.Player.verify(message.playerNeutral);
+                    error = $root.wire.game.Player.verify(message.playerNeutral);
                     if (error)
                         return "playerNeutral." + error;
                 }
@@ -2937,7 +3156,7 @@ export const wire = $root.wire = (() => {
                     if (!Array.isArray(message.islands))
                         return "islands: array expected";
                     for (let i = 0; i < message.islands.length; ++i) {
-                        let error = $root.wire.game.Island.verify(message.islands[i]);
+                        error = $root.wire.game.Island.verify(message.islands[i]);
                         if (error)
                             return "islands." + error;
                     }
@@ -2946,7 +3165,7 @@ export const wire = $root.wire = (() => {
                     if (!Array.isArray(message.airplanes))
                         return "airplanes: array expected";
                     for (let i = 0; i < message.airplanes.length; ++i) {
-                        let error = $root.wire.game.Airplane.verify(message.airplanes[i]);
+                        error = $root.wire.game.Airplane.verify(message.airplanes[i]);
                         if (error)
                             return "airplanes." + error;
                     }
@@ -2956,6 +3175,9 @@ export const wire = $root.wire = (() => {
 
             /**
              * Creates a Game message from a plain object. Also converts values to their respective internal types.
+             * @function fromObject
+             * @memberof wire.game.Game
+             * @static
              * @param {Object.<string,*>} object Plain object
              * @returns {wire.game.Game} Game
              */
@@ -3009,18 +3231,12 @@ export const wire = $root.wire = (() => {
             };
 
             /**
-             * Creates a Game message from a plain object. Also converts values to their respective internal types.
-             * This is an alias of {@link wire.game.Game.fromObject}.
-             * @function
-             * @param {Object.<string,*>} object Plain object
-             * @returns {wire.game.Game} Game
-             */
-            Game.from = Game.fromObject;
-
-            /**
              * Creates a plain object from a Game message. Also converts values to other types if specified.
+             * @function toObject
+             * @memberof wire.game.Game
+             * @static
              * @param {wire.game.Game} message Game
-             * @param {$protobuf.ConversionOptions} [options] Conversion options
+             * @param {$protobuf.IConversionOptions} [options] Conversion options
              * @returns {Object.<string,*>} Plain object
              */
             Game.toObject = function toObject(message, options) {
@@ -3062,16 +3278,10 @@ export const wire = $root.wire = (() => {
             };
 
             /**
-             * Creates a plain object from this Game message. Also converts values to other types if specified.
-             * @param {$protobuf.ConversionOptions} [options] Conversion options
-             * @returns {Object.<string,*>} Plain object
-             */
-            Game.prototype.toObject = function toObject(options) {
-                return this.constructor.toObject(this, options);
-            };
-
-            /**
              * Converts this Game to JSON.
+             * @function toJSON
+             * @memberof wire.game.Game
+             * @instance
              * @returns {Object.<string,*>} JSON object
              */
             Game.prototype.toJSON = function toJSON() {

@@ -1,80 +1,65 @@
 import * as $protobuf from "protobufjs";
+import {Long} from "protobufjs";
 
-/**
- * Namespace wire.
- * @exports wire
- * @namespace
- */
+/** Namespace wire. */
 export namespace wire {
 
-    type ActionEnvelope$Properties = {
-        actionGameLeave?: wire.ActionGameLeave$Properties;
-        actionGameLaunch?: wire.ActionGameLaunch$Properties;
-    };
+    /** Properties of an ActionEnvelope. */
+    interface IActionEnvelope {
 
-    /**
-     * Constructs a new ActionEnvelope.
-     * @exports wire.ActionEnvelope
-     * @constructor
-     * @param {wire.ActionEnvelope$Properties=} [properties] Properties to set
-     */
+        /** ActionEnvelope actionGameLeave */
+        actionGameLeave?: wire.IActionGameLeave;
+
+        /** ActionEnvelope actionGameLaunch */
+        actionGameLaunch?: wire.IActionGameLaunch;
+    }
+
+    /** Represents an ActionEnvelope. */
     class ActionEnvelope {
 
         /**
          * Constructs a new ActionEnvelope.
-         * @exports wire.ActionEnvelope
-         * @constructor
-         * @param {wire.ActionEnvelope$Properties=} [properties] Properties to set
+         * @param [properties] Properties to set
          */
-        constructor(properties?: wire.ActionEnvelope$Properties);
+        constructor(properties?: wire.IActionEnvelope);
 
-        /**
-         * ActionEnvelope actionGameLeave.
-         * @type {(wire.ActionGameLeave$Properties|null)}
-         */
-        public actionGameLeave: (wire.ActionGameLeave$Properties|null);
+        /** ActionEnvelope actionGameLeave. */
+        public actionGameLeave?: (wire.IActionGameLeave|null);
 
-        /**
-         * ActionEnvelope actionGameLaunch.
-         * @type {(wire.ActionGameLaunch$Properties|null)}
-         */
-        public actionGameLaunch: (wire.ActionGameLaunch$Properties|null);
+        /** ActionEnvelope actionGameLaunch. */
+        public actionGameLaunch?: (wire.IActionGameLaunch|null);
 
-        /**
-         * ActionEnvelope action.
-         * @name wire.ActionEnvelope#action
-         * @type {string|undefined}
-         */
+        /** ActionEnvelope action. */
         public action?: string;
 
         /**
          * Creates a new ActionEnvelope instance using the specified properties.
-         * @param {wire.ActionEnvelope$Properties=} [properties] Properties to set
-         * @returns {wire.ActionEnvelope} ActionEnvelope instance
+         * @param [properties] Properties to set
+         * @returns ActionEnvelope instance
          */
-        public static create(properties?: wire.ActionEnvelope$Properties): wire.ActionEnvelope;
+        public static create(properties?: wire.IActionEnvelope): wire.ActionEnvelope;
 
         /**
          * Encodes the specified ActionEnvelope message. Does not implicitly {@link wire.ActionEnvelope.verify|verify} messages.
-         * @param {wire.ActionEnvelope$Properties} message ActionEnvelope message or plain object to encode
-         * @param {$protobuf.Writer} [writer] Writer to encode to
-         * @returns {$protobuf.Writer} Writer
+         * @param message ActionEnvelope message or plain object to encode
+         * @param [writer] Writer to encode to
+         * @returns Writer
          */
-        public static encode(message: wire.ActionEnvelope$Properties, writer?: $protobuf.Writer): $protobuf.Writer;
+        public static encode(message: wire.IActionEnvelope, writer?: $protobuf.Writer): $protobuf.Writer;
 
         /**
          * Encodes the specified ActionEnvelope message, length delimited. Does not implicitly {@link wire.ActionEnvelope.verify|verify} messages.
-         * @param {wire.ActionEnvelope$Properties} message ActionEnvelope message or plain object to encode
-         * @param {$protobuf.Writer} [writer] Writer to encode to
-         * @returns {$protobuf.Writer} Writer
+         * @param message ActionEnvelope message or plain object to encode
+         * @param [writer] Writer to encode to
+         * @returns Writer
          */
-        public static encodeDelimited(message: wire.ActionEnvelope$Properties, writer?: $protobuf.Writer): $protobuf.Writer;
+        public static encodeDelimited(message: wire.IActionEnvelope, writer?: $protobuf.Writer): $protobuf.Writer;
 
         /**
          * Decodes an ActionEnvelope message from the specified reader or buffer.
-         * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
-         * @param {number} [length] Message length if known beforehand
-         * @returns {wire.ActionEnvelope} ActionEnvelope
+         * @param reader Reader or buffer to decode from
+         * @param [length] Message length if known beforehand
+         * @returns ActionEnvelope
          * @throws {Error} If the payload is not a reader or valid buffer
          * @throws {$protobuf.util.ProtocolError} If required fields are missing
          */
@@ -82,8 +67,8 @@ export namespace wire {
 
         /**
          * Decodes an ActionEnvelope message from the specified reader or buffer, length delimited.
-         * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
-         * @returns {wire.ActionEnvelope} ActionEnvelope
+         * @param reader Reader or buffer to decode from
+         * @returns ActionEnvelope
          * @throws {Error} If the payload is not a reader or valid buffer
          * @throws {$protobuf.util.ProtocolError} If required fields are missing
          */
@@ -91,95 +76,74 @@ export namespace wire {
 
         /**
          * Verifies an ActionEnvelope message.
-         * @param {Object.<string,*>} message Plain object to verify
-         * @returns {?string} `null` if valid, otherwise the reason why it is not
+         * @param message Plain object to verify
+         * @returns `null` if valid, otherwise the reason why it is not
          */
-        public static verify(message: { [k: string]: any }): string;
+        public static verify(message: { [k: string]: any }): (string|null);
 
         /**
          * Creates an ActionEnvelope message from a plain object. Also converts values to their respective internal types.
-         * @param {Object.<string,*>} object Plain object
-         * @returns {wire.ActionEnvelope} ActionEnvelope
+         * @param object Plain object
+         * @returns ActionEnvelope
          */
         public static fromObject(object: { [k: string]: any }): wire.ActionEnvelope;
 
         /**
-         * Creates an ActionEnvelope message from a plain object. Also converts values to their respective internal types.
-         * This is an alias of {@link wire.ActionEnvelope.fromObject}.
-         * @function
-         * @param {Object.<string,*>} object Plain object
-         * @returns {wire.ActionEnvelope} ActionEnvelope
-         */
-        public static from(object: { [k: string]: any }): wire.ActionEnvelope;
-
-        /**
          * Creates a plain object from an ActionEnvelope message. Also converts values to other types if specified.
-         * @param {wire.ActionEnvelope} message ActionEnvelope
-         * @param {$protobuf.ConversionOptions} [options] Conversion options
-         * @returns {Object.<string,*>} Plain object
+         * @param message ActionEnvelope
+         * @param [options] Conversion options
+         * @returns Plain object
          */
-        public static toObject(message: wire.ActionEnvelope, options?: $protobuf.ConversionOptions): { [k: string]: any };
-
-        /**
-         * Creates a plain object from this ActionEnvelope message. Also converts values to other types if specified.
-         * @param {$protobuf.ConversionOptions} [options] Conversion options
-         * @returns {Object.<string,*>} Plain object
-         */
-        public toObject(options?: $protobuf.ConversionOptions): { [k: string]: any };
+        public static toObject(message: wire.ActionEnvelope, options?: $protobuf.IConversionOptions): { [k: string]: any };
 
         /**
          * Converts this ActionEnvelope to JSON.
-         * @returns {Object.<string,*>} JSON object
+         * @returns JSON object
          */
         public toJSON(): { [k: string]: any };
     }
 
-    type ActionGameLeave$Properties = {};
+    /** Properties of an ActionGameLeave. */
+    interface IActionGameLeave {
+    }
 
-    /**
-     * Constructs a new ActionGameLeave.
-     * @exports wire.ActionGameLeave
-     * @constructor
-     * @param {wire.ActionGameLeave$Properties=} [properties] Properties to set
-     */
+    /** Represents an ActionGameLeave. */
     class ActionGameLeave {
 
         /**
          * Constructs a new ActionGameLeave.
-         * @exports wire.ActionGameLeave
-         * @constructor
-         * @param {wire.ActionGameLeave$Properties=} [properties] Properties to set
+         * @param [properties] Properties to set
          */
-        constructor(properties?: wire.ActionGameLeave$Properties);
+        constructor(properties?: wire.IActionGameLeave);
 
         /**
          * Creates a new ActionGameLeave instance using the specified properties.
-         * @param {wire.ActionGameLeave$Properties=} [properties] Properties to set
-         * @returns {wire.ActionGameLeave} ActionGameLeave instance
+         * @param [properties] Properties to set
+         * @returns ActionGameLeave instance
          */
-        public static create(properties?: wire.ActionGameLeave$Properties): wire.ActionGameLeave;
+        public static create(properties?: wire.IActionGameLeave): wire.ActionGameLeave;
 
         /**
          * Encodes the specified ActionGameLeave message. Does not implicitly {@link wire.ActionGameLeave.verify|verify} messages.
-         * @param {wire.ActionGameLeave$Properties} message ActionGameLeave message or plain object to encode
-         * @param {$protobuf.Writer} [writer] Writer to encode to
-         * @returns {$protobuf.Writer} Writer
+         * @param message ActionGameLeave message or plain object to encode
+         * @param [writer] Writer to encode to
+         * @returns Writer
          */
-        public static encode(message: wire.ActionGameLeave$Properties, writer?: $protobuf.Writer): $protobuf.Writer;
+        public static encode(message: wire.IActionGameLeave, writer?: $protobuf.Writer): $protobuf.Writer;
 
         /**
          * Encodes the specified ActionGameLeave message, length delimited. Does not implicitly {@link wire.ActionGameLeave.verify|verify} messages.
-         * @param {wire.ActionGameLeave$Properties} message ActionGameLeave message or plain object to encode
-         * @param {$protobuf.Writer} [writer] Writer to encode to
-         * @returns {$protobuf.Writer} Writer
+         * @param message ActionGameLeave message or plain object to encode
+         * @param [writer] Writer to encode to
+         * @returns Writer
          */
-        public static encodeDelimited(message: wire.ActionGameLeave$Properties, writer?: $protobuf.Writer): $protobuf.Writer;
+        public static encodeDelimited(message: wire.IActionGameLeave, writer?: $protobuf.Writer): $protobuf.Writer;
 
         /**
          * Decodes an ActionGameLeave message from the specified reader or buffer.
-         * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
-         * @param {number} [length] Message length if known beforehand
-         * @returns {wire.ActionGameLeave} ActionGameLeave
+         * @param reader Reader or buffer to decode from
+         * @param [length] Message length if known beforehand
+         * @returns ActionGameLeave
          * @throws {Error} If the payload is not a reader or valid buffer
          * @throws {$protobuf.util.ProtocolError} If required fields are missing
          */
@@ -187,8 +151,8 @@ export namespace wire {
 
         /**
          * Decodes an ActionGameLeave message from the specified reader or buffer, length delimited.
-         * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
-         * @returns {wire.ActionGameLeave} ActionGameLeave
+         * @param reader Reader or buffer to decode from
+         * @returns ActionGameLeave
          * @throws {Error} If the payload is not a reader or valid buffer
          * @throws {$protobuf.util.ProtocolError} If required fields are missing
          */
@@ -196,110 +160,86 @@ export namespace wire {
 
         /**
          * Verifies an ActionGameLeave message.
-         * @param {Object.<string,*>} message Plain object to verify
-         * @returns {?string} `null` if valid, otherwise the reason why it is not
+         * @param message Plain object to verify
+         * @returns `null` if valid, otherwise the reason why it is not
          */
-        public static verify(message: { [k: string]: any }): string;
+        public static verify(message: { [k: string]: any }): (string|null);
 
         /**
          * Creates an ActionGameLeave message from a plain object. Also converts values to their respective internal types.
-         * @param {Object.<string,*>} object Plain object
-         * @returns {wire.ActionGameLeave} ActionGameLeave
+         * @param object Plain object
+         * @returns ActionGameLeave
          */
         public static fromObject(object: { [k: string]: any }): wire.ActionGameLeave;
 
         /**
-         * Creates an ActionGameLeave message from a plain object. Also converts values to their respective internal types.
-         * This is an alias of {@link wire.ActionGameLeave.fromObject}.
-         * @function
-         * @param {Object.<string,*>} object Plain object
-         * @returns {wire.ActionGameLeave} ActionGameLeave
-         */
-        public static from(object: { [k: string]: any }): wire.ActionGameLeave;
-
-        /**
          * Creates a plain object from an ActionGameLeave message. Also converts values to other types if specified.
-         * @param {wire.ActionGameLeave} message ActionGameLeave
-         * @param {$protobuf.ConversionOptions} [options] Conversion options
-         * @returns {Object.<string,*>} Plain object
+         * @param message ActionGameLeave
+         * @param [options] Conversion options
+         * @returns Plain object
          */
-        public static toObject(message: wire.ActionGameLeave, options?: $protobuf.ConversionOptions): { [k: string]: any };
-
-        /**
-         * Creates a plain object from this ActionGameLeave message. Also converts values to other types if specified.
-         * @param {$protobuf.ConversionOptions} [options] Conversion options
-         * @returns {Object.<string,*>} Plain object
-         */
-        public toObject(options?: $protobuf.ConversionOptions): { [k: string]: any };
+        public static toObject(message: wire.ActionGameLeave, options?: $protobuf.IConversionOptions): { [k: string]: any };
 
         /**
          * Converts this ActionGameLeave to JSON.
-         * @returns {Object.<string,*>} JSON object
+         * @returns JSON object
          */
         public toJSON(): { [k: string]: any };
     }
 
-    type ActionGameLaunch$Properties = {
-        fromId?: string;
-        toId?: string;
-    };
+    /** Properties of an ActionGameLaunch. */
+    interface IActionGameLaunch {
 
-    /**
-     * Constructs a new ActionGameLaunch.
-     * @exports wire.ActionGameLaunch
-     * @constructor
-     * @param {wire.ActionGameLaunch$Properties=} [properties] Properties to set
-     */
+        /** ActionGameLaunch fromId */
+        fromId?: string;
+
+        /** ActionGameLaunch toId */
+        toId?: string;
+    }
+
+    /** Represents an ActionGameLaunch. */
     class ActionGameLaunch {
 
         /**
          * Constructs a new ActionGameLaunch.
-         * @exports wire.ActionGameLaunch
-         * @constructor
-         * @param {wire.ActionGameLaunch$Properties=} [properties] Properties to set
+         * @param [properties] Properties to set
          */
-        constructor(properties?: wire.ActionGameLaunch$Properties);
+        constructor(properties?: wire.IActionGameLaunch);
 
-        /**
-         * ActionGameLaunch fromId.
-         * @type {string}
-         */
+        /** ActionGameLaunch fromId. */
         public fromId: string;
 
-        /**
-         * ActionGameLaunch toId.
-         * @type {string}
-         */
+        /** ActionGameLaunch toId. */
         public toId: string;
 
         /**
          * Creates a new ActionGameLaunch instance using the specified properties.
-         * @param {wire.ActionGameLaunch$Properties=} [properties] Properties to set
-         * @returns {wire.ActionGameLaunch} ActionGameLaunch instance
+         * @param [properties] Properties to set
+         * @returns ActionGameLaunch instance
          */
-        public static create(properties?: wire.ActionGameLaunch$Properties): wire.ActionGameLaunch;
+        public static create(properties?: wire.IActionGameLaunch): wire.ActionGameLaunch;
 
         /**
          * Encodes the specified ActionGameLaunch message. Does not implicitly {@link wire.ActionGameLaunch.verify|verify} messages.
-         * @param {wire.ActionGameLaunch$Properties} message ActionGameLaunch message or plain object to encode
-         * @param {$protobuf.Writer} [writer] Writer to encode to
-         * @returns {$protobuf.Writer} Writer
+         * @param message ActionGameLaunch message or plain object to encode
+         * @param [writer] Writer to encode to
+         * @returns Writer
          */
-        public static encode(message: wire.ActionGameLaunch$Properties, writer?: $protobuf.Writer): $protobuf.Writer;
+        public static encode(message: wire.IActionGameLaunch, writer?: $protobuf.Writer): $protobuf.Writer;
 
         /**
          * Encodes the specified ActionGameLaunch message, length delimited. Does not implicitly {@link wire.ActionGameLaunch.verify|verify} messages.
-         * @param {wire.ActionGameLaunch$Properties} message ActionGameLaunch message or plain object to encode
-         * @param {$protobuf.Writer} [writer] Writer to encode to
-         * @returns {$protobuf.Writer} Writer
+         * @param message ActionGameLaunch message or plain object to encode
+         * @param [writer] Writer to encode to
+         * @returns Writer
          */
-        public static encodeDelimited(message: wire.ActionGameLaunch$Properties, writer?: $protobuf.Writer): $protobuf.Writer;
+        public static encodeDelimited(message: wire.IActionGameLaunch, writer?: $protobuf.Writer): $protobuf.Writer;
 
         /**
          * Decodes an ActionGameLaunch message from the specified reader or buffer.
-         * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
-         * @param {number} [length] Message length if known beforehand
-         * @returns {wire.ActionGameLaunch} ActionGameLaunch
+         * @param reader Reader or buffer to decode from
+         * @param [length] Message length if known beforehand
+         * @returns ActionGameLaunch
          * @throws {Error} If the payload is not a reader or valid buffer
          * @throws {$protobuf.util.ProtocolError} If required fields are missing
          */
@@ -307,8 +247,8 @@ export namespace wire {
 
         /**
          * Decodes an ActionGameLaunch message from the specified reader or buffer, length delimited.
-         * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
-         * @returns {wire.ActionGameLaunch} ActionGameLaunch
+         * @param reader Reader or buffer to decode from
+         * @returns ActionGameLaunch
          * @throws {Error} If the payload is not a reader or valid buffer
          * @throws {$protobuf.util.ProtocolError} If required fields are missing
          */
@@ -316,124 +256,95 @@ export namespace wire {
 
         /**
          * Verifies an ActionGameLaunch message.
-         * @param {Object.<string,*>} message Plain object to verify
-         * @returns {?string} `null` if valid, otherwise the reason why it is not
+         * @param message Plain object to verify
+         * @returns `null` if valid, otherwise the reason why it is not
          */
-        public static verify(message: { [k: string]: any }): string;
+        public static verify(message: { [k: string]: any }): (string|null);
 
         /**
          * Creates an ActionGameLaunch message from a plain object. Also converts values to their respective internal types.
-         * @param {Object.<string,*>} object Plain object
-         * @returns {wire.ActionGameLaunch} ActionGameLaunch
+         * @param object Plain object
+         * @returns ActionGameLaunch
          */
         public static fromObject(object: { [k: string]: any }): wire.ActionGameLaunch;
 
         /**
-         * Creates an ActionGameLaunch message from a plain object. Also converts values to their respective internal types.
-         * This is an alias of {@link wire.ActionGameLaunch.fromObject}.
-         * @function
-         * @param {Object.<string,*>} object Plain object
-         * @returns {wire.ActionGameLaunch} ActionGameLaunch
-         */
-        public static from(object: { [k: string]: any }): wire.ActionGameLaunch;
-
-        /**
          * Creates a plain object from an ActionGameLaunch message. Also converts values to other types if specified.
-         * @param {wire.ActionGameLaunch} message ActionGameLaunch
-         * @param {$protobuf.ConversionOptions} [options] Conversion options
-         * @returns {Object.<string,*>} Plain object
+         * @param message ActionGameLaunch
+         * @param [options] Conversion options
+         * @returns Plain object
          */
-        public static toObject(message: wire.ActionGameLaunch, options?: $protobuf.ConversionOptions): { [k: string]: any };
-
-        /**
-         * Creates a plain object from this ActionGameLaunch message. Also converts values to other types if specified.
-         * @param {$protobuf.ConversionOptions} [options] Conversion options
-         * @returns {Object.<string,*>} Plain object
-         */
-        public toObject(options?: $protobuf.ConversionOptions): { [k: string]: any };
+        public static toObject(message: wire.ActionGameLaunch, options?: $protobuf.IConversionOptions): { [k: string]: any };
 
         /**
          * Converts this ActionGameLaunch to JSON.
-         * @returns {Object.<string,*>} JSON object
+         * @returns JSON object
          */
         public toJSON(): { [k: string]: any };
     }
 
-    type EventEnvelope$Properties = {
-        eventGameStart?: wire.EventGameStart$Properties;
-        eventGameOver?: wire.EventGameOver$Properties;
-        eventGameTick?: wire.EventGameTick$Properties;
-    };
+    /** Properties of an EventEnvelope. */
+    interface IEventEnvelope {
 
-    /**
-     * Constructs a new EventEnvelope.
-     * @exports wire.EventEnvelope
-     * @constructor
-     * @param {wire.EventEnvelope$Properties=} [properties] Properties to set
-     */
+        /** EventEnvelope eventGameStart */
+        eventGameStart?: wire.IEventGameStart;
+
+        /** EventEnvelope eventGameOver */
+        eventGameOver?: wire.IEventGameOver;
+
+        /** EventEnvelope eventGameTick */
+        eventGameTick?: wire.IEventGameTick;
+    }
+
+    /** Represents an EventEnvelope. */
     class EventEnvelope {
 
         /**
          * Constructs a new EventEnvelope.
-         * @exports wire.EventEnvelope
-         * @constructor
-         * @param {wire.EventEnvelope$Properties=} [properties] Properties to set
+         * @param [properties] Properties to set
          */
-        constructor(properties?: wire.EventEnvelope$Properties);
+        constructor(properties?: wire.IEventEnvelope);
 
-        /**
-         * EventEnvelope eventGameStart.
-         * @type {(wire.EventGameStart$Properties|null)}
-         */
-        public eventGameStart: (wire.EventGameStart$Properties|null);
+        /** EventEnvelope eventGameStart. */
+        public eventGameStart?: (wire.IEventGameStart|null);
 
-        /**
-         * EventEnvelope eventGameOver.
-         * @type {(wire.EventGameOver$Properties|null)}
-         */
-        public eventGameOver: (wire.EventGameOver$Properties|null);
+        /** EventEnvelope eventGameOver. */
+        public eventGameOver?: (wire.IEventGameOver|null);
 
-        /**
-         * EventEnvelope eventGameTick.
-         * @type {(wire.EventGameTick$Properties|null)}
-         */
-        public eventGameTick: (wire.EventGameTick$Properties|null);
+        /** EventEnvelope eventGameTick. */
+        public eventGameTick?: (wire.IEventGameTick|null);
 
-        /**
-         * EventEnvelope event.
-         * @name wire.EventEnvelope#event
-         * @type {string|undefined}
-         */
+        /** EventEnvelope event. */
         public event?: string;
 
         /**
          * Creates a new EventEnvelope instance using the specified properties.
-         * @param {wire.EventEnvelope$Properties=} [properties] Properties to set
-         * @returns {wire.EventEnvelope} EventEnvelope instance
+         * @param [properties] Properties to set
+         * @returns EventEnvelope instance
          */
-        public static create(properties?: wire.EventEnvelope$Properties): wire.EventEnvelope;
+        public static create(properties?: wire.IEventEnvelope): wire.EventEnvelope;
 
         /**
          * Encodes the specified EventEnvelope message. Does not implicitly {@link wire.EventEnvelope.verify|verify} messages.
-         * @param {wire.EventEnvelope$Properties} message EventEnvelope message or plain object to encode
-         * @param {$protobuf.Writer} [writer] Writer to encode to
-         * @returns {$protobuf.Writer} Writer
+         * @param message EventEnvelope message or plain object to encode
+         * @param [writer] Writer to encode to
+         * @returns Writer
          */
-        public static encode(message: wire.EventEnvelope$Properties, writer?: $protobuf.Writer): $protobuf.Writer;
+        public static encode(message: wire.IEventEnvelope, writer?: $protobuf.Writer): $protobuf.Writer;
 
         /**
          * Encodes the specified EventEnvelope message, length delimited. Does not implicitly {@link wire.EventEnvelope.verify|verify} messages.
-         * @param {wire.EventEnvelope$Properties} message EventEnvelope message or plain object to encode
-         * @param {$protobuf.Writer} [writer] Writer to encode to
-         * @returns {$protobuf.Writer} Writer
+         * @param message EventEnvelope message or plain object to encode
+         * @param [writer] Writer to encode to
+         * @returns Writer
          */
-        public static encodeDelimited(message: wire.EventEnvelope$Properties, writer?: $protobuf.Writer): $protobuf.Writer;
+        public static encodeDelimited(message: wire.IEventEnvelope, writer?: $protobuf.Writer): $protobuf.Writer;
 
         /**
          * Decodes an EventEnvelope message from the specified reader or buffer.
-         * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
-         * @param {number} [length] Message length if known beforehand
-         * @returns {wire.EventEnvelope} EventEnvelope
+         * @param reader Reader or buffer to decode from
+         * @param [length] Message length if known beforehand
+         * @returns EventEnvelope
          * @throws {Error} If the payload is not a reader or valid buffer
          * @throws {$protobuf.util.ProtocolError} If required fields are missing
          */
@@ -441,8 +352,8 @@ export namespace wire {
 
         /**
          * Decodes an EventEnvelope message from the specified reader or buffer, length delimited.
-         * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
-         * @returns {wire.EventEnvelope} EventEnvelope
+         * @param reader Reader or buffer to decode from
+         * @returns EventEnvelope
          * @throws {Error} If the payload is not a reader or valid buffer
          * @throws {$protobuf.util.ProtocolError} If required fields are missing
          */
@@ -450,110 +361,86 @@ export namespace wire {
 
         /**
          * Verifies an EventEnvelope message.
-         * @param {Object.<string,*>} message Plain object to verify
-         * @returns {?string} `null` if valid, otherwise the reason why it is not
+         * @param message Plain object to verify
+         * @returns `null` if valid, otherwise the reason why it is not
          */
-        public static verify(message: { [k: string]: any }): string;
+        public static verify(message: { [k: string]: any }): (string|null);
 
         /**
          * Creates an EventEnvelope message from a plain object. Also converts values to their respective internal types.
-         * @param {Object.<string,*>} object Plain object
-         * @returns {wire.EventEnvelope} EventEnvelope
+         * @param object Plain object
+         * @returns EventEnvelope
          */
         public static fromObject(object: { [k: string]: any }): wire.EventEnvelope;
 
         /**
-         * Creates an EventEnvelope message from a plain object. Also converts values to their respective internal types.
-         * This is an alias of {@link wire.EventEnvelope.fromObject}.
-         * @function
-         * @param {Object.<string,*>} object Plain object
-         * @returns {wire.EventEnvelope} EventEnvelope
-         */
-        public static from(object: { [k: string]: any }): wire.EventEnvelope;
-
-        /**
          * Creates a plain object from an EventEnvelope message. Also converts values to other types if specified.
-         * @param {wire.EventEnvelope} message EventEnvelope
-         * @param {$protobuf.ConversionOptions} [options] Conversion options
-         * @returns {Object.<string,*>} Plain object
+         * @param message EventEnvelope
+         * @param [options] Conversion options
+         * @returns Plain object
          */
-        public static toObject(message: wire.EventEnvelope, options?: $protobuf.ConversionOptions): { [k: string]: any };
-
-        /**
-         * Creates a plain object from this EventEnvelope message. Also converts values to other types if specified.
-         * @param {$protobuf.ConversionOptions} [options] Conversion options
-         * @returns {Object.<string,*>} Plain object
-         */
-        public toObject(options?: $protobuf.ConversionOptions): { [k: string]: any };
+        public static toObject(message: wire.EventEnvelope, options?: $protobuf.IConversionOptions): { [k: string]: any };
 
         /**
          * Converts this EventEnvelope to JSON.
-         * @returns {Object.<string,*>} JSON object
+         * @returns JSON object
          */
         public toJSON(): { [k: string]: any };
     }
 
-    type EventGameStart$Properties = {
-        playerId?: string;
-        tickInterval?: (number|Long);
-    };
+    /** Properties of an EventGameStart. */
+    interface IEventGameStart {
 
-    /**
-     * Constructs a new EventGameStart.
-     * @exports wire.EventGameStart
-     * @constructor
-     * @param {wire.EventGameStart$Properties=} [properties] Properties to set
-     */
+        /** EventGameStart playerId */
+        playerId?: string;
+
+        /** EventGameStart tickInterval */
+        tickInterval?: (number|Long);
+    }
+
+    /** Represents an EventGameStart. */
     class EventGameStart {
 
         /**
          * Constructs a new EventGameStart.
-         * @exports wire.EventGameStart
-         * @constructor
-         * @param {wire.EventGameStart$Properties=} [properties] Properties to set
+         * @param [properties] Properties to set
          */
-        constructor(properties?: wire.EventGameStart$Properties);
+        constructor(properties?: wire.IEventGameStart);
 
-        /**
-         * EventGameStart playerId.
-         * @type {string}
-         */
+        /** EventGameStart playerId. */
         public playerId: string;
 
-        /**
-         * EventGameStart tickInterval.
-         * @type {number|Long}
-         */
+        /** EventGameStart tickInterval. */
         public tickInterval: (number|Long);
 
         /**
          * Creates a new EventGameStart instance using the specified properties.
-         * @param {wire.EventGameStart$Properties=} [properties] Properties to set
-         * @returns {wire.EventGameStart} EventGameStart instance
+         * @param [properties] Properties to set
+         * @returns EventGameStart instance
          */
-        public static create(properties?: wire.EventGameStart$Properties): wire.EventGameStart;
+        public static create(properties?: wire.IEventGameStart): wire.EventGameStart;
 
         /**
          * Encodes the specified EventGameStart message. Does not implicitly {@link wire.EventGameStart.verify|verify} messages.
-         * @param {wire.EventGameStart$Properties} message EventGameStart message or plain object to encode
-         * @param {$protobuf.Writer} [writer] Writer to encode to
-         * @returns {$protobuf.Writer} Writer
+         * @param message EventGameStart message or plain object to encode
+         * @param [writer] Writer to encode to
+         * @returns Writer
          */
-        public static encode(message: wire.EventGameStart$Properties, writer?: $protobuf.Writer): $protobuf.Writer;
+        public static encode(message: wire.IEventGameStart, writer?: $protobuf.Writer): $protobuf.Writer;
 
         /**
          * Encodes the specified EventGameStart message, length delimited. Does not implicitly {@link wire.EventGameStart.verify|verify} messages.
-         * @param {wire.EventGameStart$Properties} message EventGameStart message or plain object to encode
-         * @param {$protobuf.Writer} [writer] Writer to encode to
-         * @returns {$protobuf.Writer} Writer
+         * @param message EventGameStart message or plain object to encode
+         * @param [writer] Writer to encode to
+         * @returns Writer
          */
-        public static encodeDelimited(message: wire.EventGameStart$Properties, writer?: $protobuf.Writer): $protobuf.Writer;
+        public static encodeDelimited(message: wire.IEventGameStart, writer?: $protobuf.Writer): $protobuf.Writer;
 
         /**
          * Decodes an EventGameStart message from the specified reader or buffer.
-         * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
-         * @param {number} [length] Message length if known beforehand
-         * @returns {wire.EventGameStart} EventGameStart
+         * @param reader Reader or buffer to decode from
+         * @param [length] Message length if known beforehand
+         * @returns EventGameStart
          * @throws {Error} If the payload is not a reader or valid buffer
          * @throws {$protobuf.util.ProtocolError} If required fields are missing
          */
@@ -561,8 +448,8 @@ export namespace wire {
 
         /**
          * Decodes an EventGameStart message from the specified reader or buffer, length delimited.
-         * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
-         * @returns {wire.EventGameStart} EventGameStart
+         * @param reader Reader or buffer to decode from
+         * @returns EventGameStart
          * @throws {Error} If the payload is not a reader or valid buffer
          * @throws {$protobuf.util.ProtocolError} If required fields are missing
          */
@@ -570,103 +457,80 @@ export namespace wire {
 
         /**
          * Verifies an EventGameStart message.
-         * @param {Object.<string,*>} message Plain object to verify
-         * @returns {?string} `null` if valid, otherwise the reason why it is not
+         * @param message Plain object to verify
+         * @returns `null` if valid, otherwise the reason why it is not
          */
-        public static verify(message: { [k: string]: any }): string;
+        public static verify(message: { [k: string]: any }): (string|null);
 
         /**
          * Creates an EventGameStart message from a plain object. Also converts values to their respective internal types.
-         * @param {Object.<string,*>} object Plain object
-         * @returns {wire.EventGameStart} EventGameStart
+         * @param object Plain object
+         * @returns EventGameStart
          */
         public static fromObject(object: { [k: string]: any }): wire.EventGameStart;
 
         /**
-         * Creates an EventGameStart message from a plain object. Also converts values to their respective internal types.
-         * This is an alias of {@link wire.EventGameStart.fromObject}.
-         * @function
-         * @param {Object.<string,*>} object Plain object
-         * @returns {wire.EventGameStart} EventGameStart
-         */
-        public static from(object: { [k: string]: any }): wire.EventGameStart;
-
-        /**
          * Creates a plain object from an EventGameStart message. Also converts values to other types if specified.
-         * @param {wire.EventGameStart} message EventGameStart
-         * @param {$protobuf.ConversionOptions} [options] Conversion options
-         * @returns {Object.<string,*>} Plain object
+         * @param message EventGameStart
+         * @param [options] Conversion options
+         * @returns Plain object
          */
-        public static toObject(message: wire.EventGameStart, options?: $protobuf.ConversionOptions): { [k: string]: any };
-
-        /**
-         * Creates a plain object from this EventGameStart message. Also converts values to other types if specified.
-         * @param {$protobuf.ConversionOptions} [options] Conversion options
-         * @returns {Object.<string,*>} Plain object
-         */
-        public toObject(options?: $protobuf.ConversionOptions): { [k: string]: any };
+        public static toObject(message: wire.EventGameStart, options?: $protobuf.IConversionOptions): { [k: string]: any };
 
         /**
          * Converts this EventGameStart to JSON.
-         * @returns {Object.<string,*>} JSON object
+         * @returns JSON object
          */
         public toJSON(): { [k: string]: any };
     }
 
-    type EventGameOver$Properties = {
-        winnerId?: string;
-    };
+    /** Properties of an EventGameOver. */
+    interface IEventGameOver {
 
-    /**
-     * Constructs a new EventGameOver.
-     * @exports wire.EventGameOver
-     * @constructor
-     * @param {wire.EventGameOver$Properties=} [properties] Properties to set
-     */
+        /** EventGameOver winnerId */
+        winnerId?: string;
+    }
+
+    /** Represents an EventGameOver. */
     class EventGameOver {
 
         /**
          * Constructs a new EventGameOver.
-         * @exports wire.EventGameOver
-         * @constructor
-         * @param {wire.EventGameOver$Properties=} [properties] Properties to set
+         * @param [properties] Properties to set
          */
-        constructor(properties?: wire.EventGameOver$Properties);
+        constructor(properties?: wire.IEventGameOver);
 
-        /**
-         * EventGameOver winnerId.
-         * @type {string}
-         */
+        /** EventGameOver winnerId. */
         public winnerId: string;
 
         /**
          * Creates a new EventGameOver instance using the specified properties.
-         * @param {wire.EventGameOver$Properties=} [properties] Properties to set
-         * @returns {wire.EventGameOver} EventGameOver instance
+         * @param [properties] Properties to set
+         * @returns EventGameOver instance
          */
-        public static create(properties?: wire.EventGameOver$Properties): wire.EventGameOver;
+        public static create(properties?: wire.IEventGameOver): wire.EventGameOver;
 
         /**
          * Encodes the specified EventGameOver message. Does not implicitly {@link wire.EventGameOver.verify|verify} messages.
-         * @param {wire.EventGameOver$Properties} message EventGameOver message or plain object to encode
-         * @param {$protobuf.Writer} [writer] Writer to encode to
-         * @returns {$protobuf.Writer} Writer
+         * @param message EventGameOver message or plain object to encode
+         * @param [writer] Writer to encode to
+         * @returns Writer
          */
-        public static encode(message: wire.EventGameOver$Properties, writer?: $protobuf.Writer): $protobuf.Writer;
+        public static encode(message: wire.IEventGameOver, writer?: $protobuf.Writer): $protobuf.Writer;
 
         /**
          * Encodes the specified EventGameOver message, length delimited. Does not implicitly {@link wire.EventGameOver.verify|verify} messages.
-         * @param {wire.EventGameOver$Properties} message EventGameOver message or plain object to encode
-         * @param {$protobuf.Writer} [writer] Writer to encode to
-         * @returns {$protobuf.Writer} Writer
+         * @param message EventGameOver message or plain object to encode
+         * @param [writer] Writer to encode to
+         * @returns Writer
          */
-        public static encodeDelimited(message: wire.EventGameOver$Properties, writer?: $protobuf.Writer): $protobuf.Writer;
+        public static encodeDelimited(message: wire.IEventGameOver, writer?: $protobuf.Writer): $protobuf.Writer;
 
         /**
          * Decodes an EventGameOver message from the specified reader or buffer.
-         * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
-         * @param {number} [length] Message length if known beforehand
-         * @returns {wire.EventGameOver} EventGameOver
+         * @param reader Reader or buffer to decode from
+         * @param [length] Message length if known beforehand
+         * @returns EventGameOver
          * @throws {Error} If the payload is not a reader or valid buffer
          * @throws {$protobuf.util.ProtocolError} If required fields are missing
          */
@@ -674,8 +538,8 @@ export namespace wire {
 
         /**
          * Decodes an EventGameOver message from the specified reader or buffer, length delimited.
-         * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
-         * @returns {wire.EventGameOver} EventGameOver
+         * @param reader Reader or buffer to decode from
+         * @returns EventGameOver
          * @throws {Error} If the payload is not a reader or valid buffer
          * @throws {$protobuf.util.ProtocolError} If required fields are missing
          */
@@ -683,103 +547,80 @@ export namespace wire {
 
         /**
          * Verifies an EventGameOver message.
-         * @param {Object.<string,*>} message Plain object to verify
-         * @returns {?string} `null` if valid, otherwise the reason why it is not
+         * @param message Plain object to verify
+         * @returns `null` if valid, otherwise the reason why it is not
          */
-        public static verify(message: { [k: string]: any }): string;
+        public static verify(message: { [k: string]: any }): (string|null);
 
         /**
          * Creates an EventGameOver message from a plain object. Also converts values to their respective internal types.
-         * @param {Object.<string,*>} object Plain object
-         * @returns {wire.EventGameOver} EventGameOver
+         * @param object Plain object
+         * @returns EventGameOver
          */
         public static fromObject(object: { [k: string]: any }): wire.EventGameOver;
 
         /**
-         * Creates an EventGameOver message from a plain object. Also converts values to their respective internal types.
-         * This is an alias of {@link wire.EventGameOver.fromObject}.
-         * @function
-         * @param {Object.<string,*>} object Plain object
-         * @returns {wire.EventGameOver} EventGameOver
-         */
-        public static from(object: { [k: string]: any }): wire.EventGameOver;
-
-        /**
          * Creates a plain object from an EventGameOver message. Also converts values to other types if specified.
-         * @param {wire.EventGameOver} message EventGameOver
-         * @param {$protobuf.ConversionOptions} [options] Conversion options
-         * @returns {Object.<string,*>} Plain object
+         * @param message EventGameOver
+         * @param [options] Conversion options
+         * @returns Plain object
          */
-        public static toObject(message: wire.EventGameOver, options?: $protobuf.ConversionOptions): { [k: string]: any };
-
-        /**
-         * Creates a plain object from this EventGameOver message. Also converts values to other types if specified.
-         * @param {$protobuf.ConversionOptions} [options] Conversion options
-         * @returns {Object.<string,*>} Plain object
-         */
-        public toObject(options?: $protobuf.ConversionOptions): { [k: string]: any };
+        public static toObject(message: wire.EventGameOver, options?: $protobuf.IConversionOptions): { [k: string]: any };
 
         /**
          * Converts this EventGameOver to JSON.
-         * @returns {Object.<string,*>} JSON object
+         * @returns JSON object
          */
         public toJSON(): { [k: string]: any };
     }
 
-    type EventGameTick$Properties = {
-        game?: wire.game.Game$Properties;
-    };
+    /** Properties of an EventGameTick. */
+    interface IEventGameTick {
 
-    /**
-     * Constructs a new EventGameTick.
-     * @exports wire.EventGameTick
-     * @constructor
-     * @param {wire.EventGameTick$Properties=} [properties] Properties to set
-     */
+        /** EventGameTick game */
+        game?: wire.game.IGame;
+    }
+
+    /** Represents an EventGameTick. */
     class EventGameTick {
 
         /**
          * Constructs a new EventGameTick.
-         * @exports wire.EventGameTick
-         * @constructor
-         * @param {wire.EventGameTick$Properties=} [properties] Properties to set
+         * @param [properties] Properties to set
          */
-        constructor(properties?: wire.EventGameTick$Properties);
+        constructor(properties?: wire.IEventGameTick);
 
-        /**
-         * EventGameTick game.
-         * @type {(wire.game.Game$Properties|null)}
-         */
-        public game: (wire.game.Game$Properties|null);
+        /** EventGameTick game. */
+        public game?: (wire.game.IGame|null);
 
         /**
          * Creates a new EventGameTick instance using the specified properties.
-         * @param {wire.EventGameTick$Properties=} [properties] Properties to set
-         * @returns {wire.EventGameTick} EventGameTick instance
+         * @param [properties] Properties to set
+         * @returns EventGameTick instance
          */
-        public static create(properties?: wire.EventGameTick$Properties): wire.EventGameTick;
+        public static create(properties?: wire.IEventGameTick): wire.EventGameTick;
 
         /**
          * Encodes the specified EventGameTick message. Does not implicitly {@link wire.EventGameTick.verify|verify} messages.
-         * @param {wire.EventGameTick$Properties} message EventGameTick message or plain object to encode
-         * @param {$protobuf.Writer} [writer] Writer to encode to
-         * @returns {$protobuf.Writer} Writer
+         * @param message EventGameTick message or plain object to encode
+         * @param [writer] Writer to encode to
+         * @returns Writer
          */
-        public static encode(message: wire.EventGameTick$Properties, writer?: $protobuf.Writer): $protobuf.Writer;
+        public static encode(message: wire.IEventGameTick, writer?: $protobuf.Writer): $protobuf.Writer;
 
         /**
          * Encodes the specified EventGameTick message, length delimited. Does not implicitly {@link wire.EventGameTick.verify|verify} messages.
-         * @param {wire.EventGameTick$Properties} message EventGameTick message or plain object to encode
-         * @param {$protobuf.Writer} [writer] Writer to encode to
-         * @returns {$protobuf.Writer} Writer
+         * @param message EventGameTick message or plain object to encode
+         * @param [writer] Writer to encode to
+         * @returns Writer
          */
-        public static encodeDelimited(message: wire.EventGameTick$Properties, writer?: $protobuf.Writer): $protobuf.Writer;
+        public static encodeDelimited(message: wire.IEventGameTick, writer?: $protobuf.Writer): $protobuf.Writer;
 
         /**
          * Decodes an EventGameTick message from the specified reader or buffer.
-         * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
-         * @param {number} [length] Message length if known beforehand
-         * @returns {wire.EventGameTick} EventGameTick
+         * @param reader Reader or buffer to decode from
+         * @param [length] Message length if known beforehand
+         * @returns EventGameTick
          * @throws {Error} If the payload is not a reader or valid buffer
          * @throws {$protobuf.util.ProtocolError} If required fields are missing
          */
@@ -787,8 +628,8 @@ export namespace wire {
 
         /**
          * Decodes an EventGameTick message from the specified reader or buffer, length delimited.
-         * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
-         * @returns {wire.EventGameTick} EventGameTick
+         * @param reader Reader or buffer to decode from
+         * @returns EventGameTick
          * @throws {Error} If the payload is not a reader or valid buffer
          * @throws {$protobuf.util.ProtocolError} If required fields are missing
          */
@@ -796,117 +637,89 @@ export namespace wire {
 
         /**
          * Verifies an EventGameTick message.
-         * @param {Object.<string,*>} message Plain object to verify
-         * @returns {?string} `null` if valid, otherwise the reason why it is not
+         * @param message Plain object to verify
+         * @returns `null` if valid, otherwise the reason why it is not
          */
-        public static verify(message: { [k: string]: any }): string;
+        public static verify(message: { [k: string]: any }): (string|null);
 
         /**
          * Creates an EventGameTick message from a plain object. Also converts values to their respective internal types.
-         * @param {Object.<string,*>} object Plain object
-         * @returns {wire.EventGameTick} EventGameTick
+         * @param object Plain object
+         * @returns EventGameTick
          */
         public static fromObject(object: { [k: string]: any }): wire.EventGameTick;
 
         /**
-         * Creates an EventGameTick message from a plain object. Also converts values to their respective internal types.
-         * This is an alias of {@link wire.EventGameTick.fromObject}.
-         * @function
-         * @param {Object.<string,*>} object Plain object
-         * @returns {wire.EventGameTick} EventGameTick
-         */
-        public static from(object: { [k: string]: any }): wire.EventGameTick;
-
-        /**
          * Creates a plain object from an EventGameTick message. Also converts values to other types if specified.
-         * @param {wire.EventGameTick} message EventGameTick
-         * @param {$protobuf.ConversionOptions} [options] Conversion options
-         * @returns {Object.<string,*>} Plain object
+         * @param message EventGameTick
+         * @param [options] Conversion options
+         * @returns Plain object
          */
-        public static toObject(message: wire.EventGameTick, options?: $protobuf.ConversionOptions): { [k: string]: any };
-
-        /**
-         * Creates a plain object from this EventGameTick message. Also converts values to other types if specified.
-         * @param {$protobuf.ConversionOptions} [options] Conversion options
-         * @returns {Object.<string,*>} Plain object
-         */
-        public toObject(options?: $protobuf.ConversionOptions): { [k: string]: any };
+        public static toObject(message: wire.EventGameTick, options?: $protobuf.IConversionOptions): { [k: string]: any };
 
         /**
          * Converts this EventGameTick to JSON.
-         * @returns {Object.<string,*>} JSON object
+         * @returns JSON object
          */
         public toJSON(): { [k: string]: any };
     }
 
-    /**
-     * Namespace game.
-     * @exports wire.game
-     * @namespace
-     */
+    /** Namespace game. */
     namespace game {
 
-        type Coordinate$Properties = {
-            x?: (number|Long);
-            y?: (number|Long);
-        };
+        /** Properties of a Coordinate. */
+        interface ICoordinate {
 
-        /**
-         * Constructs a new Coordinate.
-         * @exports wire.game.Coordinate
-         * @constructor
-         * @param {wire.game.Coordinate$Properties=} [properties] Properties to set
-         */
+            /** Coordinate x */
+            x?: (number|Long);
+
+            /** Coordinate y */
+            y?: (number|Long);
+        }
+
+        /** Represents a Coordinate. */
         class Coordinate {
 
             /**
              * Constructs a new Coordinate.
-             * @exports wire.game.Coordinate
-             * @constructor
-             * @param {wire.game.Coordinate$Properties=} [properties] Properties to set
+             * @param [properties] Properties to set
              */
-            constructor(properties?: wire.game.Coordinate$Properties);
+            constructor(properties?: wire.game.ICoordinate);
 
-            /**
-             * Coordinate x.
-             * @type {number|Long}
-             */
+            /** Coordinate x. */
             public x: (number|Long);
 
-            /**
-             * Coordinate y.
-             * @type {number|Long}
-             */
+            /** Coordinate y. */
             public y: (number|Long);
 
             /**
              * Creates a new Coordinate instance using the specified properties.
-             * @param {wire.game.Coordinate$Properties=} [properties] Properties to set
-             * @returns {wire.game.Coordinate} Coordinate instance
+             * @param [properties] Properties to set
+             * @returns Coordinate instance
              */
-            public static create(properties?: wire.game.Coordinate$Properties): wire.game.Coordinate;
+            public static create(properties?: wire.game.ICoordinate): wire.game.Coordinate;
 
             /**
              * Encodes the specified Coordinate message. Does not implicitly {@link wire.game.Coordinate.verify|verify} messages.
-             * @param {wire.game.Coordinate$Properties} message Coordinate message or plain object to encode
-             * @param {$protobuf.Writer} [writer] Writer to encode to
-             * @returns {$protobuf.Writer} Writer
+             * @param message Coordinate message or plain object to encode
+             * @param [writer] Writer to encode to
+             * @returns Writer
              */
-            public static encode(message: wire.game.Coordinate$Properties, writer?: $protobuf.Writer): $protobuf.Writer;
+            public static encode(message: wire.game.ICoordinate, writer?: $protobuf.Writer): $protobuf.Writer;
 
             /**
              * Encodes the specified Coordinate message, length delimited. Does not implicitly {@link wire.game.Coordinate.verify|verify} messages.
-             * @param {wire.game.Coordinate$Properties} message Coordinate message or plain object to encode
-             * @param {$protobuf.Writer} [writer] Writer to encode to
-             * @returns {$protobuf.Writer} Writer
+             * @param message Coordinate message or plain object to encode
+             * @param [writer] Writer to encode to
+             * @returns Writer
              */
-            public static encodeDelimited(message: wire.game.Coordinate$Properties, writer?: $protobuf.Writer): $protobuf.Writer;
+            public static encodeDelimited(message: wire.game.ICoordinate, writer?: $protobuf.Writer): $protobuf.Writer;
 
             /**
              * Decodes a Coordinate message from the specified reader or buffer.
-             * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
-             * @param {number} [length] Message length if known beforehand
-             * @returns {wire.game.Coordinate} Coordinate
+             * @param reader Reader or buffer to decode from
+             * @param [length] Message length if known beforehand
+             * @returns Coordinate
              * @throws {Error} If the payload is not a reader or valid buffer
              * @throws {$protobuf.util.ProtocolError} If required fields are missing
              */
@@ -914,8 +727,8 @@ export namespace wire {
 
             /**
              * Decodes a Coordinate message from the specified reader or buffer, length delimited.
-             * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
-             * @returns {wire.game.Coordinate} Coordinate
+             * @param reader Reader or buffer to decode from
+             * @returns Coordinate
              * @throws {Error} If the payload is not a reader or valid buffer
              * @throws {$protobuf.util.ProtocolError} If required fields are missing
              */
@@ -923,110 +736,86 @@ export namespace wire {
 
             /**
              * Verifies a Coordinate message.
-             * @param {Object.<string,*>} message Plain object to verify
-             * @returns {?string} `null` if valid, otherwise the reason why it is not
+             * @param message Plain object to verify
+             * @returns `null` if valid, otherwise the reason why it is not
              */
-            public static verify(message: { [k: string]: any }): string;
+            public static verify(message: { [k: string]: any }): (string|null);
 
             /**
              * Creates a Coordinate message from a plain object. Also converts values to their respective internal types.
-             * @param {Object.<string,*>} object Plain object
-             * @returns {wire.game.Coordinate} Coordinate
+             * @param object Plain object
+             * @returns Coordinate
              */
             public static fromObject(object: { [k: string]: any }): wire.game.Coordinate;
 
             /**
-             * Creates a Coordinate message from a plain object. Also converts values to their respective internal types.
-             * This is an alias of {@link wire.game.Coordinate.fromObject}.
-             * @function
-             * @param {Object.<string,*>} object Plain object
-             * @returns {wire.game.Coordinate} Coordinate
-             */
-            public static from(object: { [k: string]: any }): wire.game.Coordinate;
-
-            /**
              * Creates a plain object from a Coordinate message. Also converts values to other types if specified.
-             * @param {wire.game.Coordinate} message Coordinate
-             * @param {$protobuf.ConversionOptions} [options] Conversion options
-             * @returns {Object.<string,*>} Plain object
+             * @param message Coordinate
+             * @param [options] Conversion options
+             * @returns Plain object
              */
-            public static toObject(message: wire.game.Coordinate, options?: $protobuf.ConversionOptions): { [k: string]: any };
-
-            /**
-             * Creates a plain object from this Coordinate message. Also converts values to other types if specified.
-             * @param {$protobuf.ConversionOptions} [options] Conversion options
-             * @returns {Object.<string,*>} Plain object
-             */
-            public toObject(options?: $protobuf.ConversionOptions): { [k: string]: any };
+            public static toObject(message: wire.game.Coordinate, options?: $protobuf.IConversionOptions): { [k: string]: any };
 
             /**
              * Converts this Coordinate to JSON.
-             * @returns {Object.<string,*>} JSON object
+             * @returns JSON object
              */
             public toJSON(): { [k: string]: any };
         }
 
-        type FloatCoordinate$Properties = {
-            x?: number;
-            y?: number;
-        };
+        /** Properties of a FloatCoordinate. */
+        interface IFloatCoordinate {
 
-        /**
-         * Constructs a new FloatCoordinate.
-         * @exports wire.game.FloatCoordinate
-         * @constructor
-         * @param {wire.game.FloatCoordinate$Properties=} [properties] Properties to set
-         */
+            /** FloatCoordinate x */
+            x?: number;
+
+            /** FloatCoordinate y */
+            y?: number;
+        }
+
+        /** Represents a FloatCoordinate. */
         class FloatCoordinate {
 
             /**
              * Constructs a new FloatCoordinate.
-             * @exports wire.game.FloatCoordinate
-             * @constructor
-             * @param {wire.game.FloatCoordinate$Properties=} [properties] Properties to set
+             * @param [properties] Properties to set
              */
-            constructor(properties?: wire.game.FloatCoordinate$Properties);
+            constructor(properties?: wire.game.IFloatCoordinate);
 
-            /**
-             * FloatCoordinate x.
-             * @type {number}
-             */
+            /** FloatCoordinate x. */
             public x: number;
 
-            /**
-             * FloatCoordinate y.
-             * @type {number}
-             */
+            /** FloatCoordinate y. */
             public y: number;
 
             /**
              * Creates a new FloatCoordinate instance using the specified properties.
-             * @param {wire.game.FloatCoordinate$Properties=} [properties] Properties to set
-             * @returns {wire.game.FloatCoordinate} FloatCoordinate instance
+             * @param [properties] Properties to set
+             * @returns FloatCoordinate instance
              */
-            public static create(properties?: wire.game.FloatCoordinate$Properties): wire.game.FloatCoordinate;
+            public static create(properties?: wire.game.IFloatCoordinate): wire.game.FloatCoordinate;
 
             /**
              * Encodes the specified FloatCoordinate message. Does not implicitly {@link wire.game.FloatCoordinate.verify|verify} messages.
-             * @param {wire.game.FloatCoordinate$Properties} message FloatCoordinate message or plain object to encode
-             * @param {$protobuf.Writer} [writer] Writer to encode to
-             * @returns {$protobuf.Writer} Writer
+             * @param message FloatCoordinate message or plain object to encode
+             * @param [writer] Writer to encode to
+             * @returns Writer
              */
-            public static encode(message: wire.game.FloatCoordinate$Properties, writer?: $protobuf.Writer): $protobuf.Writer;
+            public static encode(message: wire.game.IFloatCoordinate, writer?: $protobuf.Writer): $protobuf.Writer;
 
             /**
              * Encodes the specified FloatCoordinate message, length delimited. Does not implicitly {@link wire.game.FloatCoordinate.verify|verify} messages.
-             * @param {wire.game.FloatCoordinate$Properties} message FloatCoordinate message or plain object to encode
-             * @param {$protobuf.Writer} [writer] Writer to encode to
-             * @returns {$protobuf.Writer} Writer
+             * @param message FloatCoordinate message or plain object to encode
+             * @param [writer] Writer to encode to
+             * @returns Writer
              */
-            public static encodeDelimited(message: wire.game.FloatCoordinate$Properties, writer?: $protobuf.Writer): $protobuf.Writer;
+            public static encodeDelimited(message: wire.game.IFloatCoordinate, writer?: $protobuf.Writer): $protobuf.Writer;
 
             /**
              * Decodes a FloatCoordinate message from the specified reader or buffer.
-             * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
-             * @param {number} [length] Message length if known beforehand
-             * @returns {wire.game.FloatCoordinate} FloatCoordinate
+             * @param reader Reader or buffer to decode from
+             * @param [length] Message length if known beforehand
+             * @returns FloatCoordinate
              * @throws {Error} If the payload is not a reader or valid buffer
              * @throws {$protobuf.util.ProtocolError} If required fields are missing
              */
@@ -1034,8 +823,8 @@ export namespace wire {
 
             /**
              * Decodes a FloatCoordinate message from the specified reader or buffer, length delimited.
-             * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
-             * @returns {wire.game.FloatCoordinate} FloatCoordinate
+             * @param reader Reader or buffer to decode from
+             * @returns FloatCoordinate
              * @throws {Error} If the payload is not a reader or valid buffer
              * @throws {$protobuf.util.ProtocolError} If required fields are missing
              */
@@ -1043,103 +832,80 @@ export namespace wire {
 
             /**
              * Verifies a FloatCoordinate message.
-             * @param {Object.<string,*>} message Plain object to verify
-             * @returns {?string} `null` if valid, otherwise the reason why it is not
+             * @param message Plain object to verify
+             * @returns `null` if valid, otherwise the reason why it is not
              */
-            public static verify(message: { [k: string]: any }): string;
+            public static verify(message: { [k: string]: any }): (string|null);
 
             /**
              * Creates a FloatCoordinate message from a plain object. Also converts values to their respective internal types.
-             * @param {Object.<string,*>} object Plain object
-             * @returns {wire.game.FloatCoordinate} FloatCoordinate
+             * @param object Plain object
+             * @returns FloatCoordinate
              */
             public static fromObject(object: { [k: string]: any }): wire.game.FloatCoordinate;
 
             /**
-             * Creates a FloatCoordinate message from a plain object. Also converts values to their respective internal types.
-             * This is an alias of {@link wire.game.FloatCoordinate.fromObject}.
-             * @function
-             * @param {Object.<string,*>} object Plain object
-             * @returns {wire.game.FloatCoordinate} FloatCoordinate
-             */
-            public static from(object: { [k: string]: any }): wire.game.FloatCoordinate;
-
-            /**
              * Creates a plain object from a FloatCoordinate message. Also converts values to other types if specified.
-             * @param {wire.game.FloatCoordinate} message FloatCoordinate
-             * @param {$protobuf.ConversionOptions} [options] Conversion options
-             * @returns {Object.<string,*>} Plain object
+             * @param message FloatCoordinate
+             * @param [options] Conversion options
+             * @returns Plain object
              */
-            public static toObject(message: wire.game.FloatCoordinate, options?: $protobuf.ConversionOptions): { [k: string]: any };
-
-            /**
-             * Creates a plain object from this FloatCoordinate message. Also converts values to other types if specified.
-             * @param {$protobuf.ConversionOptions} [options] Conversion options
-             * @returns {Object.<string,*>} Plain object
-             */
-            public toObject(options?: $protobuf.ConversionOptions): { [k: string]: any };
+            public static toObject(message: wire.game.FloatCoordinate, options?: $protobuf.IConversionOptions): { [k: string]: any };
 
             /**
              * Converts this FloatCoordinate to JSON.
-             * @returns {Object.<string,*>} JSON object
+             * @returns JSON object
              */
             public toJSON(): { [k: string]: any };
         }
 
-        type Player$Properties = {
-            id?: string;
-        };
+        /** Properties of a Player. */
+        interface IPlayer {
 
-        /**
-         * Constructs a new Player.
-         * @exports wire.game.Player
-         * @constructor
-         * @param {wire.game.Player$Properties=} [properties] Properties to set
-         */
+            /** Player id */
+            id?: string;
+        }
+
+        /** Represents a Player. */
         class Player {
 
             /**
              * Constructs a new Player.
-             * @exports wire.game.Player
-             * @constructor
-             * @param {wire.game.Player$Properties=} [properties] Properties to set
+             * @param [properties] Properties to set
              */
-            constructor(properties?: wire.game.Player$Properties);
+            constructor(properties?: wire.game.IPlayer);
 
-            /**
-             * Player id.
-             * @type {string}
-             */
+            /** Player id. */
             public id: string;
 
             /**
              * Creates a new Player instance using the specified properties.
-             * @param {wire.game.Player$Properties=} [properties] Properties to set
-             * @returns {wire.game.Player} Player instance
+             * @param [properties] Properties to set
+             * @returns Player instance
              */
-            public static create(properties?: wire.game.Player$Properties): wire.game.Player;
+            public static create(properties?: wire.game.IPlayer): wire.game.Player;
 
             /**
              * Encodes the specified Player message. Does not implicitly {@link wire.game.Player.verify|verify} messages.
-             * @param {wire.game.Player$Properties} message Player message or plain object to encode
-             * @param {$protobuf.Writer} [writer] Writer to encode to
-             * @returns {$protobuf.Writer} Writer
+             * @param message Player message or plain object to encode
+             * @param [writer] Writer to encode to
+             * @returns Writer
              */
-            public static encode(message: wire.game.Player$Properties, writer?: $protobuf.Writer): $protobuf.Writer;
+            public static encode(message: wire.game.IPlayer, writer?: $protobuf.Writer): $protobuf.Writer;
 
             /**
              * Encodes the specified Player message, length delimited. Does not implicitly {@link wire.game.Player.verify|verify} messages.
-             * @param {wire.game.Player$Properties} message Player message or plain object to encode
-             * @param {$protobuf.Writer} [writer] Writer to encode to
-             * @returns {$protobuf.Writer} Writer
+             * @param message Player message or plain object to encode
+             * @param [writer] Writer to encode to
+             * @returns Writer
              */
-            public static encodeDelimited(message: wire.game.Player$Properties, writer?: $protobuf.Writer): $protobuf.Writer;
+            public static encodeDelimited(message: wire.game.IPlayer, writer?: $protobuf.Writer): $protobuf.Writer;
 
             /**
              * Decodes a Player message from the specified reader or buffer.
-             * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
-             * @param {number} [length] Message length if known beforehand
-             * @returns {wire.game.Player} Player
+             * @param reader Reader or buffer to decode from
+             * @param [length] Message length if known beforehand
+             * @returns Player
              * @throws {Error} If the payload is not a reader or valid buffer
              * @throws {$protobuf.util.ProtocolError} If required fields are missing
              */
@@ -1147,8 +913,8 @@ export namespace wire {
 
             /**
              * Decodes a Player message from the specified reader or buffer, length delimited.
-             * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
-             * @returns {wire.game.Player} Player
+             * @param reader Reader or buffer to decode from
+             * @returns Player
              * @throws {Error} If the payload is not a reader or valid buffer
              * @throws {$protobuf.util.ProtocolError} If required fields are missing
              */
@@ -1156,110 +922,86 @@ export namespace wire {
 
             /**
              * Verifies a Player message.
-             * @param {Object.<string,*>} message Plain object to verify
-             * @returns {?string} `null` if valid, otherwise the reason why it is not
+             * @param message Plain object to verify
+             * @returns `null` if valid, otherwise the reason why it is not
              */
-            public static verify(message: { [k: string]: any }): string;
+            public static verify(message: { [k: string]: any }): (string|null);
 
             /**
              * Creates a Player message from a plain object. Also converts values to their respective internal types.
-             * @param {Object.<string,*>} object Plain object
-             * @returns {wire.game.Player} Player
+             * @param object Plain object
+             * @returns Player
              */
             public static fromObject(object: { [k: string]: any }): wire.game.Player;
 
             /**
-             * Creates a Player message from a plain object. Also converts values to their respective internal types.
-             * This is an alias of {@link wire.game.Player.fromObject}.
-             * @function
-             * @param {Object.<string,*>} object Plain object
-             * @returns {wire.game.Player} Player
-             */
-            public static from(object: { [k: string]: any }): wire.game.Player;
-
-            /**
              * Creates a plain object from a Player message. Also converts values to other types if specified.
-             * @param {wire.game.Player} message Player
-             * @param {$protobuf.ConversionOptions} [options] Conversion options
-             * @returns {Object.<string,*>} Plain object
+             * @param message Player
+             * @param [options] Conversion options
+             * @returns Plain object
              */
-            public static toObject(message: wire.game.Player, options?: $protobuf.ConversionOptions): { [k: string]: any };
-
-            /**
-             * Creates a plain object from this Player message. Also converts values to other types if specified.
-             * @param {$protobuf.ConversionOptions} [options] Conversion options
-             * @returns {Object.<string,*>} Plain object
-             */
-            public toObject(options?: $protobuf.ConversionOptions): { [k: string]: any };
+            public static toObject(message: wire.game.Player, options?: $protobuf.IConversionOptions): { [k: string]: any };
 
             /**
              * Converts this Player to JSON.
-             * @returns {Object.<string,*>} JSON object
+             * @returns JSON object
              */
             public toJSON(): { [k: string]: any };
         }
 
-        type Army$Properties = {
-            ownerId?: string;
-            strength?: (number|Long);
-        };
+        /** Properties of an Army. */
+        interface IArmy {
 
-        /**
-         * Constructs a new Army.
-         * @exports wire.game.Army
-         * @constructor
-         * @param {wire.game.Army$Properties=} [properties] Properties to set
-         */
+            /** Army ownerId */
+            ownerId?: string;
+
+            /** Army strength */
+            strength?: (number|Long);
+        }
+
+        /** Represents an Army. */
         class Army {
 
             /**
              * Constructs a new Army.
-             * @exports wire.game.Army
-             * @constructor
-             * @param {wire.game.Army$Properties=} [properties] Properties to set
+             * @param [properties] Properties to set
              */
-            constructor(properties?: wire.game.Army$Properties);
+            constructor(properties?: wire.game.IArmy);
 
-            /**
-             * Army ownerId.
-             * @type {string}
-             */
+            /** Army ownerId. */
             public ownerId: string;
 
-            /**
-             * Army strength.
-             * @type {number|Long}
-             */
+            /** Army strength. */
             public strength: (number|Long);
 
             /**
              * Creates a new Army instance using the specified properties.
-             * @param {wire.game.Army$Properties=} [properties] Properties to set
-             * @returns {wire.game.Army} Army instance
+             * @param [properties] Properties to set
+             * @returns Army instance
              */
-            public static create(properties?: wire.game.Army$Properties): wire.game.Army;
+            public static create(properties?: wire.game.IArmy): wire.game.Army;
 
             /**
              * Encodes the specified Army message. Does not implicitly {@link wire.game.Army.verify|verify} messages.
-             * @param {wire.game.Army$Properties} message Army message or plain object to encode
-             * @param {$protobuf.Writer} [writer] Writer to encode to
-             * @returns {$protobuf.Writer} Writer
+             * @param message Army message or plain object to encode
+             * @param [writer] Writer to encode to
+             * @returns Writer
              */
-            public static encode(message: wire.game.Army$Properties, writer?: $protobuf.Writer): $protobuf.Writer;
+            public static encode(message: wire.game.IArmy, writer?: $protobuf.Writer): $protobuf.Writer;
 
             /**
              * Encodes the specified Army message, length delimited. Does not implicitly {@link wire.game.Army.verify|verify} messages.
-             * @param {wire.game.Army$Properties} message Army message or plain object to encode
-             * @param {$protobuf.Writer} [writer] Writer to encode to
-             * @returns {$protobuf.Writer} Writer
+             * @param message Army message or plain object to encode
+             * @param [writer] Writer to encode to
+             * @returns Writer
              */
-            public static encodeDelimited(message: wire.game.Army$Properties, writer?: $protobuf.Writer): $protobuf.Writer;
+            public static encodeDelimited(message: wire.game.IArmy, writer?: $protobuf.Writer): $protobuf.Writer;
 
             /**
              * Decodes an Army message from the specified reader or buffer.
-             * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
-             * @param {number} [length] Message length if known beforehand
-             * @returns {wire.game.Army} Army
+             * @param reader Reader or buffer to decode from
+             * @param [length] Message length if known beforehand
+             * @returns Army
              * @throws {Error} If the payload is not a reader or valid buffer
              * @throws {$protobuf.util.ProtocolError} If required fields are missing
              */
@@ -1267,8 +1009,8 @@ export namespace wire {
 
             /**
              * Decodes an Army message from the specified reader or buffer, length delimited.
-             * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
-             * @returns {wire.game.Army} Army
+             * @param reader Reader or buffer to decode from
+             * @returns Army
              * @throws {Error} If the payload is not a reader or valid buffer
              * @throws {$protobuf.util.ProtocolError} If required fields are missing
              */
@@ -1276,131 +1018,104 @@ export namespace wire {
 
             /**
              * Verifies an Army message.
-             * @param {Object.<string,*>} message Plain object to verify
-             * @returns {?string} `null` if valid, otherwise the reason why it is not
+             * @param message Plain object to verify
+             * @returns `null` if valid, otherwise the reason why it is not
              */
-            public static verify(message: { [k: string]: any }): string;
+            public static verify(message: { [k: string]: any }): (string|null);
 
             /**
              * Creates an Army message from a plain object. Also converts values to their respective internal types.
-             * @param {Object.<string,*>} object Plain object
-             * @returns {wire.game.Army} Army
+             * @param object Plain object
+             * @returns Army
              */
             public static fromObject(object: { [k: string]: any }): wire.game.Army;
 
             /**
-             * Creates an Army message from a plain object. Also converts values to their respective internal types.
-             * This is an alias of {@link wire.game.Army.fromObject}.
-             * @function
-             * @param {Object.<string,*>} object Plain object
-             * @returns {wire.game.Army} Army
-             */
-            public static from(object: { [k: string]: any }): wire.game.Army;
-
-            /**
              * Creates a plain object from an Army message. Also converts values to other types if specified.
-             * @param {wire.game.Army} message Army
-             * @param {$protobuf.ConversionOptions} [options] Conversion options
-             * @returns {Object.<string,*>} Plain object
+             * @param message Army
+             * @param [options] Conversion options
+             * @returns Plain object
              */
-            public static toObject(message: wire.game.Army, options?: $protobuf.ConversionOptions): { [k: string]: any };
-
-            /**
-             * Creates a plain object from this Army message. Also converts values to other types if specified.
-             * @param {$protobuf.ConversionOptions} [options] Conversion options
-             * @returns {Object.<string,*>} Plain object
-             */
-            public toObject(options?: $protobuf.ConversionOptions): { [k: string]: any };
+            public static toObject(message: wire.game.Army, options?: $protobuf.IConversionOptions): { [k: string]: any };
 
             /**
              * Converts this Army to JSON.
-             * @returns {Object.<string,*>} JSON object
+             * @returns JSON object
              */
             public toJSON(): { [k: string]: any };
         }
 
-        type Airplane$Properties = {
-            id?: string;
-            army?: wire.game.Army$Properties;
-            position?: wire.game.FloatCoordinate$Properties;
-            direction?: number;
-            speed?: number;
-        };
+        /** Properties of an Airplane. */
+        interface IAirplane {
 
-        /**
-         * Constructs a new Airplane.
-         * @exports wire.game.Airplane
-         * @constructor
-         * @param {wire.game.Airplane$Properties=} [properties] Properties to set
-         */
+            /** Airplane id */
+            id?: string;
+
+            /** Airplane army */
+            army?: wire.game.IArmy;
+
+            /** Airplane position */
+            position?: wire.game.IFloatCoordinate;
+
+            /** Airplane direction */
+            direction?: number;
+
+            /** Airplane speed */
+            speed?: number;
+        }
+
+        /** Represents an Airplane. */
         class Airplane {
 
             /**
              * Constructs a new Airplane.
-             * @exports wire.game.Airplane
-             * @constructor
-             * @param {wire.game.Airplane$Properties=} [properties] Properties to set
+             * @param [properties] Properties to set
              */
-            constructor(properties?: wire.game.Airplane$Properties);
+            constructor(properties?: wire.game.IAirplane);
 
-            /**
-             * Airplane id.
-             * @type {string}
-             */
+            /** Airplane id. */
             public id: string;
 
-            /**
-             * Airplane army.
-             * @type {(wire.game.Army$Properties|null)}
-             */
-            public army: (wire.game.Army$Properties|null);
+            /** Airplane army. */
+            public army?: (wire.game.IArmy|null);
 
-            /**
-             * Airplane position.
-             * @type {(wire.game.FloatCoordinate$Properties|null)}
-             */
-            public position: (wire.game.FloatCoordinate$Properties|null);
+            /** Airplane position. */
+            public position?: (wire.game.IFloatCoordinate|null);
 
-            /**
-             * Airplane direction.
-             * @type {number}
-             */
+            /** Airplane direction. */
             public direction: number;
 
-            /**
-             * Airplane speed.
-             * @type {number}
-             */
+            /** Airplane speed. */
             public speed: number;
 
             /**
              * Creates a new Airplane instance using the specified properties.
-             * @param {wire.game.Airplane$Properties=} [properties] Properties to set
-             * @returns {wire.game.Airplane} Airplane instance
+             * @param [properties] Properties to set
+             * @returns Airplane instance
              */
-            public static create(properties?: wire.game.Airplane$Properties): wire.game.Airplane;
+            public static create(properties?: wire.game.IAirplane): wire.game.Airplane;
 
             /**
              * Encodes the specified Airplane message. Does not implicitly {@link wire.game.Airplane.verify|verify} messages.
-             * @param {wire.game.Airplane$Properties} message Airplane message or plain object to encode
-             * @param {$protobuf.Writer} [writer] Writer to encode to
-             * @returns {$protobuf.Writer} Writer
+             * @param message Airplane message or plain object to encode
+             * @param [writer] Writer to encode to
+             * @returns Writer
              */
-            public static encode(message: wire.game.Airplane$Properties, writer?: $protobuf.Writer): $protobuf.Writer;
+            public static encode(message: wire.game.IAirplane, writer?: $protobuf.Writer): $protobuf.Writer;
 
             /**
              * Encodes the specified Airplane message, length delimited. Does not implicitly {@link wire.game.Airplane.verify|verify} messages.
-             * @param {wire.game.Airplane$Properties} message Airplane message or plain object to encode
-             * @param {$protobuf.Writer} [writer] Writer to encode to
-             * @returns {$protobuf.Writer} Writer
+             * @param message Airplane message or plain object to encode
+             * @param [writer] Writer to encode to
+             * @returns Writer
              */
-            public static encodeDelimited(message: wire.game.Airplane$Properties, writer?: $protobuf.Writer): $protobuf.Writer;
+            public static encodeDelimited(message: wire.game.IAirplane, writer?: $protobuf.Writer): $protobuf.Writer;
 
             /**
              * Decodes an Airplane message from the specified reader or buffer.
-             * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
-             * @param {number} [length] Message length if known beforehand
-             * @returns {wire.game.Airplane} Airplane
+             * @param reader Reader or buffer to decode from
+             * @param [length] Message length if known beforehand
+             * @returns Airplane
              * @throws {Error} If the payload is not a reader or valid buffer
              * @throws {$protobuf.util.ProtocolError} If required fields are missing
              */
@@ -1408,8 +1123,8 @@ export namespace wire {
 
             /**
              * Decodes an Airplane message from the specified reader or buffer, length delimited.
-             * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
-             * @returns {wire.game.Airplane} Airplane
+             * @param reader Reader or buffer to decode from
+             * @returns Airplane
              * @throws {Error} If the payload is not a reader or valid buffer
              * @throws {$protobuf.util.ProtocolError} If required fields are missing
              */
@@ -1417,124 +1132,98 @@ export namespace wire {
 
             /**
              * Verifies an Airplane message.
-             * @param {Object.<string,*>} message Plain object to verify
-             * @returns {?string} `null` if valid, otherwise the reason why it is not
+             * @param message Plain object to verify
+             * @returns `null` if valid, otherwise the reason why it is not
              */
-            public static verify(message: { [k: string]: any }): string;
+            public static verify(message: { [k: string]: any }): (string|null);
 
             /**
              * Creates an Airplane message from a plain object. Also converts values to their respective internal types.
-             * @param {Object.<string,*>} object Plain object
-             * @returns {wire.game.Airplane} Airplane
+             * @param object Plain object
+             * @returns Airplane
              */
             public static fromObject(object: { [k: string]: any }): wire.game.Airplane;
 
             /**
-             * Creates an Airplane message from a plain object. Also converts values to their respective internal types.
-             * This is an alias of {@link wire.game.Airplane.fromObject}.
-             * @function
-             * @param {Object.<string,*>} object Plain object
-             * @returns {wire.game.Airplane} Airplane
-             */
-            public static from(object: { [k: string]: any }): wire.game.Airplane;
-
-            /**
              * Creates a plain object from an Airplane message. Also converts values to other types if specified.
-             * @param {wire.game.Airplane} message Airplane
-             * @param {$protobuf.ConversionOptions} [options] Conversion options
-             * @returns {Object.<string,*>} Plain object
+             * @param message Airplane
+             * @param [options] Conversion options
+             * @returns Plain object
              */
-            public static toObject(message: wire.game.Airplane, options?: $protobuf.ConversionOptions): { [k: string]: any };
-
-            /**
-             * Creates a plain object from this Airplane message. Also converts values to other types if specified.
-             * @param {$protobuf.ConversionOptions} [options] Conversion options
-             * @returns {Object.<string,*>} Plain object
-             */
-            public toObject(options?: $protobuf.ConversionOptions): { [k: string]: any };
+            public static toObject(message: wire.game.Airplane, options?: $protobuf.IConversionOptions): { [k: string]: any };
 
             /**
              * Converts this Airplane to JSON.
-             * @returns {Object.<string,*>} JSON object
+             * @returns JSON object
              */
             public toJSON(): { [k: string]: any };
         }
 
-        type Island$Properties = {
-            id?: string;
-            army?: wire.game.Army$Properties;
-            position?: wire.game.Coordinate$Properties;
-            size?: number;
-        };
+        /** Properties of an Island. */
+        interface IIsland {
 
-        /**
-         * Constructs a new Island.
-         * @exports wire.game.Island
-         * @constructor
-         * @param {wire.game.Island$Properties=} [properties] Properties to set
-         */
+            /** Island id */
+            id?: string;
+
+            /** Island army */
+            army?: wire.game.IArmy;
+
+            /** Island position */
+            position?: wire.game.ICoordinate;
+
+            /** Island size */
+            size?: number;
+        }
+
+        /** Represents an Island. */
         class Island {
 
             /**
              * Constructs a new Island.
-             * @exports wire.game.Island
-             * @constructor
-             * @param {wire.game.Island$Properties=} [properties] Properties to set
+             * @param [properties] Properties to set
              */
-            constructor(properties?: wire.game.Island$Properties);
+            constructor(properties?: wire.game.IIsland);
 
-            /**
-             * Island id.
-             * @type {string}
-             */
+            /** Island id. */
             public id: string;
 
-            /**
-             * Island army.
-             * @type {(wire.game.Army$Properties|null)}
-             */
-            public army: (wire.game.Army$Properties|null);
+            /** Island army. */
+            public army?: (wire.game.IArmy|null);
 
-            /**
-             * Island position.
-             * @type {(wire.game.Coordinate$Properties|null)}
-             */
-            public position: (wire.game.Coordinate$Properties|null);
+            /** Island position. */
+            public position?: (wire.game.ICoordinate|null);
 
-            /**
-             * Island size.
-             * @type {number}
-             */
+            /** Island size. */
             public size: number;
 
             /**
              * Creates a new Island instance using the specified properties.
-             * @param {wire.game.Island$Properties=} [properties] Properties to set
-             * @returns {wire.game.Island} Island instance
+             * @param [properties] Properties to set
+             * @returns Island instance
              */
-            public static create(properties?: wire.game.Island$Properties): wire.game.Island;
+            public static create(properties?: wire.game.IIsland): wire.game.Island;
 
             /**
              * Encodes the specified Island message. Does not implicitly {@link wire.game.Island.verify|verify} messages.
-             * @param {wire.game.Island$Properties} message Island message or plain object to encode
-             * @param {$protobuf.Writer} [writer] Writer to encode to
-             * @returns {$protobuf.Writer} Writer
+             * @param message Island message or plain object to encode
+             * @param [writer] Writer to encode to
+             * @returns Writer
              */
-            public static encode(message: wire.game.Island$Properties, writer?: $protobuf.Writer): $protobuf.Writer;
+            public static encode(message: wire.game.IIsland, writer?: $protobuf.Writer): $protobuf.Writer;
 
             /**
              * Encodes the specified Island message, length delimited. Does not implicitly {@link wire.game.Island.verify|verify} messages.
-             * @param {wire.game.Island$Properties} message Island message or plain object to encode
-             * @param {$protobuf.Writer} [writer] Writer to encode to
-             * @returns {$protobuf.Writer} Writer
+             * @param message Island message or plain object to encode
+             * @param [writer] Writer to encode to
+             * @returns Writer
              */
-            public static encodeDelimited(message: wire.game.Island$Properties, writer?: $protobuf.Writer): $protobuf.Writer;
+            public static encodeDelimited(message: wire.game.IIsland, writer?: $protobuf.Writer): $protobuf.Writer;
 
             /**
              * Decodes an Island message from the specified reader or buffer.
-             * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
-             * @param {number} [length] Message length if known beforehand
-             * @returns {wire.game.Island} Island
+             * @param reader Reader or buffer to decode from
+             * @param [length] Message length if known beforehand
+             * @returns Island
              * @throws {Error} If the payload is not a reader or valid buffer
              * @throws {$protobuf.util.ProtocolError} If required fields are missing
              */
@@ -1542,8 +1231,8 @@ export namespace wire {
 
             /**
              * Decodes an Island message from the specified reader or buffer, length delimited.
-             * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
-             * @returns {wire.game.Island} Island
+             * @param reader Reader or buffer to decode from
+             * @returns Island
              * @throws {Error} If the payload is not a reader or valid buffer
              * @throws {$protobuf.util.ProtocolError} If required fields are missing
              */
@@ -1551,145 +1240,116 @@ export namespace wire {
 
             /**
              * Verifies an Island message.
-             * @param {Object.<string,*>} message Plain object to verify
-             * @returns {?string} `null` if valid, otherwise the reason why it is not
+             * @param message Plain object to verify
+             * @returns `null` if valid, otherwise the reason why it is not
              */
-            public static verify(message: { [k: string]: any }): string;
+            public static verify(message: { [k: string]: any }): (string|null);
 
             /**
              * Creates an Island message from a plain object. Also converts values to their respective internal types.
-             * @param {Object.<string,*>} object Plain object
-             * @returns {wire.game.Island} Island
+             * @param object Plain object
+             * @returns Island
              */
             public static fromObject(object: { [k: string]: any }): wire.game.Island;
 
             /**
-             * Creates an Island message from a plain object. Also converts values to their respective internal types.
-             * This is an alias of {@link wire.game.Island.fromObject}.
-             * @function
-             * @param {Object.<string,*>} object Plain object
-             * @returns {wire.game.Island} Island
-             */
-            public static from(object: { [k: string]: any }): wire.game.Island;
-
-            /**
              * Creates a plain object from an Island message. Also converts values to other types if specified.
-             * @param {wire.game.Island} message Island
-             * @param {$protobuf.ConversionOptions} [options] Conversion options
-             * @returns {Object.<string,*>} Plain object
+             * @param message Island
+             * @param [options] Conversion options
+             * @returns Plain object
              */
-            public static toObject(message: wire.game.Island, options?: $protobuf.ConversionOptions): { [k: string]: any };
-
-            /**
-             * Creates a plain object from this Island message. Also converts values to other types if specified.
-             * @param {$protobuf.ConversionOptions} [options] Conversion options
-             * @returns {Object.<string,*>} Plain object
-             */
-            public toObject(options?: $protobuf.ConversionOptions): { [k: string]: any };
+            public static toObject(message: wire.game.Island, options?: $protobuf.IConversionOptions): { [k: string]: any };
 
             /**
              * Converts this Island to JSON.
-             * @returns {Object.<string,*>} JSON object
+             * @returns JSON object
              */
             public toJSON(): { [k: string]: any };
         }
 
-        type Game$Properties = {
-            id?: string;
-            size?: wire.game.Coordinate$Properties;
-            player1?: wire.game.Player$Properties;
-            player2?: wire.game.Player$Properties;
-            playerNeutral?: wire.game.Player$Properties;
-            islands?: wire.game.Island$Properties[];
-            airplanes?: wire.game.Airplane$Properties[];
-        };
+        /** Properties of a Game. */
+        interface IGame {
 
-        /**
-         * Constructs a new Game.
-         * @exports wire.game.Game
-         * @constructor
-         * @param {wire.game.Game$Properties=} [properties] Properties to set
-         */
+            /** Game id */
+            id?: string;
+
+            /** Game size */
+            size?: wire.game.ICoordinate;
+
+            /** Game player1 */
+            player1?: wire.game.IPlayer;
+
+            /** Game player2 */
+            player2?: wire.game.IPlayer;
+
+            /** Game playerNeutral */
+            playerNeutral?: wire.game.IPlayer;
+
+            /** Game islands */
+            islands?: wire.game.IIsland[];
+
+            /** Game airplanes */
+            airplanes?: wire.game.IAirplane[];
+        }
+
+        /** Represents a Game. */
         class Game {
 
             /**
              * Constructs a new Game.
-             * @exports wire.game.Game
-             * @constructor
-             * @param {wire.game.Game$Properties=} [properties] Properties to set
+             * @param [properties] Properties to set
              */
-            constructor(properties?: wire.game.Game$Properties);
+            constructor(properties?: wire.game.IGame);
 
-            /**
-             * Game id.
-             * @type {string}
-             */
+            /** Game id. */
             public id: string;
 
-            /**
-             * Game size.
-             * @type {(wire.game.Coordinate$Properties|null)}
-             */
-            public size: (wire.game.Coordinate$Properties|null);
+            /** Game size. */
+            public size?: (wire.game.ICoordinate|null);
 
-            /**
-             * Game player1.
-             * @type {(wire.game.Player$Properties|null)}
-             */
-            public player1: (wire.game.Player$Properties|null);
+            /** Game player1. */
+            public player1?: (wire.game.IPlayer|null);
 
-            /**
-             * Game player2.
-             * @type {(wire.game.Player$Properties|null)}
-             */
-            public player2: (wire.game.Player$Properties|null);
+            /** Game player2. */
+            public player2?: (wire.game.IPlayer|null);
 
-            /**
-             * Game playerNeutral.
-             * @type {(wire.game.Player$Properties|null)}
-             */
-            public playerNeutral: (wire.game.Player$Properties|null);
+            /** Game playerNeutral. */
+            public playerNeutral?: (wire.game.IPlayer|null);
 
-            /**
-             * Game islands.
-             * @type {Array.<wire.game.Island$Properties>}
-             */
-            public islands: wire.game.Island$Properties[];
+            /** Game islands. */
+            public islands: wire.game.IIsland[];
 
-            /**
-             * Game airplanes.
-             * @type {Array.<wire.game.Airplane$Properties>}
-             */
-            public airplanes: wire.game.Airplane$Properties[];
+            /** Game airplanes. */
+            public airplanes: wire.game.IAirplane[];
 
             /**
              * Creates a new Game instance using the specified properties.
-             * @param {wire.game.Game$Properties=} [properties] Properties to set
-             * @returns {wire.game.Game} Game instance
+             * @param [properties] Properties to set
+             * @returns Game instance
              */
-            public static create(properties?: wire.game.Game$Properties): wire.game.Game;
+            public static create(properties?: wire.game.IGame): wire.game.Game;
 
             /**
              * Encodes the specified Game message. Does not implicitly {@link wire.game.Game.verify|verify} messages.
-             * @param {wire.game.Game$Properties} message Game message or plain object to encode
-             * @param {$protobuf.Writer} [writer] Writer to encode to
-             * @returns {$protobuf.Writer} Writer
+             * @param message Game message or plain object to encode
+             * @param [writer] Writer to encode to
+             * @returns Writer
              */
-            public static encode(message: wire.game.Game$Properties, writer?: $protobuf.Writer): $protobuf.Writer;
+            public static encode(message: wire.game.IGame, writer?: $protobuf.Writer): $protobuf.Writer;
 
             /**
              * Encodes the specified Game message, length delimited. Does not implicitly {@link wire.game.Game.verify|verify} messages.
-             * @param {wire.game.Game$Properties} message Game message or plain object to encode
-             * @param {$protobuf.Writer} [writer] Writer to encode to
-             * @returns {$protobuf.Writer} Writer
+             * @param message Game message or plain object to encode
+             * @param [writer] Writer to encode to
+             * @returns Writer
              */
-            public static encodeDelimited(message: wire.game.Game$Properties, writer?: $protobuf.Writer): $protobuf.Writer;
+            public static encodeDelimited(message: wire.game.IGame, writer?: $protobuf.Writer): $protobuf.Writer;
 
             /**
              * Decodes a Game message from the specified reader or buffer.
-             * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
-             * @param {number} [length] Message length if known beforehand
-             * @returns {wire.game.Game} Game
+             * @param reader Reader or buffer to decode from
+             * @param [length] Message length if known beforehand
+             * @returns Game
              * @throws {Error} If the payload is not a reader or valid buffer
              * @throws {$protobuf.util.ProtocolError} If required fields are missing
              */
@@ -1697,8 +1357,8 @@ export namespace wire {
 
             /**
              * Decodes a Game message from the specified reader or buffer, length delimited.
-             * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
-             * @returns {wire.game.Game} Game
+             * @param reader Reader or buffer to decode from
+             * @returns Game
              * @throws {Error} If the payload is not a reader or valid buffer
              * @throws {$protobuf.util.ProtocolError} If required fields are missing
              */
@@ -1706,45 +1366,29 @@ export namespace wire {
 
             /**
              * Verifies a Game message.
-             * @param {Object.<string,*>} message Plain object to verify
-             * @returns {?string} `null` if valid, otherwise the reason why it is not
+             * @param message Plain object to verify
+             * @returns `null` if valid, otherwise the reason why it is not
              */
-            public static verify(message: { [k: string]: any }): string;
+            public static verify(message: { [k: string]: any }): (string|null);
 
             /**
              * Creates a Game message from a plain object. Also converts values to their respective internal types.
-             * @param {Object.<string,*>} object Plain object
-             * @returns {wire.game.Game} Game
+             * @param object Plain object
+             * @returns Game
              */
             public static fromObject(object: { [k: string]: any }): wire.game.Game;
 
             /**
-             * Creates a Game message from a plain object. Also converts values to their respective internal types.
-             * This is an alias of {@link wire.game.Game.fromObject}.
-             * @function
-             * @param {Object.<string,*>} object Plain object
-             * @returns {wire.game.Game} Game
-             */
-            public static from(object: { [k: string]: any }): wire.game.Game;
-
-            /**
              * Creates a plain object from a Game message. Also converts values to other types if specified.
-             * @param {wire.game.Game} message Game
-             * @param {$protobuf.ConversionOptions} [options] Conversion options
-             * @returns {Object.<string,*>} Plain object
+             * @param message Game
+             * @param [options] Conversion options
+             * @returns Plain object
              */
-            public static toObject(message: wire.game.Game, options?: $protobuf.ConversionOptions): { [k: string]: any };
-
-            /**
-             * Creates a plain object from this Game message. Also converts values to other types if specified.
-             * @param {$protobuf.ConversionOptions} [options] Conversion options
-             * @returns {Object.<string,*>} Plain object
-             */
-            public toObject(options?: $protobuf.ConversionOptions): { [k: string]: any };
+            public static toObject(message: wire.game.Game, options?: $protobuf.IConversionOptions): { [k: string]: any };
 
             /**
              * Converts this Game to JSON.
-             * @returns {Object.<string,*>} JSON object
+             * @returns JSON object
              */
             public toJSON(): { [k: string]: any };
         }
