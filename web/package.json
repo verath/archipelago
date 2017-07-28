@@ -24,8 +24,8 @@
   },
   "scripts": {
     "lint": "eslint **/*.js",
-    "build:dev": "webpack --progress ",
-    "build:prod": "webpack -p --progress --devtool source-map"
+    "build:dev": "webpack",
+    "build:prod": "webpack -p"
   },
   "dependencies": {
     "eventemitter3": "^2.0.3",
