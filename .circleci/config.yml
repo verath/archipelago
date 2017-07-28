@@ -13,9 +13,14 @@ jobs:
         - image: circleci/node:6
     steps:
       - checkout
+      - restore_cache:
+          keys: [ v1-frontend-yarn-{{ checksum "web/yarn.lock" }} ]
       - run: cd web && yarn install
       - run: cd web && yarn run lint
       - run: cd web && yarn run build:prod
+      - save_cache:
+          key: v1-frontend-yarn-{{ checksum "web/yarn.lock" }}
+          paths: [ ~/.cache/yarn ]
 workflows:
   version: 2
   build_and_test:
