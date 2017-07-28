@@ -4,7 +4,7 @@ jobs:
   build:
     docker:
       - image: circleci/golang:1.8
-    working_directory: /go/src/github.com/{{ORG_NAME}}/{{REPO_NAME}}
+    working_directory: /go/src/github.com/verath/archipelago
     steps:
       - checkout
       - run: go test -v -race -timeout 30s ./...
