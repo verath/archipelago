@@ -18,7 +18,7 @@ jobs:
             - v1-frontend-yarn-{{ checksum "web/yarn.lock" }}
       - run: cd web && yarn install
       - run: cd web && yarn run lint
-      - run: cd web && yarn run build:prod
+      - run: cd web && yarn run build:prod -- --display-error-details --devtool source-map
       - save_cache:
           key: v1-frontend-yarn-{{ checksum "web/yarn.lock" }}
           paths: 
