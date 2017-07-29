@@ -1,14 +1,27 @@
 
 version: 2
 jobs:
-  build_backend:
+  test_backend:
     docker:
       - image: circleci/golang:1.8
     working_directory: /go/src/github.com/verath/archipelago
     steps:
       - checkout
+      - run: go build -v
       - run: go test -v -race -timeout 30s ./...
-  
+
+  publish_backend_docker:
+    docker:
+      - image: docker:stable
+    steps:
+      - checkout
+      - setup_remote_docker
+      - run: |
+          TAG=1.0.0-$CIRCLE_SHA1
+          docker build -f Dockerfile.backend -t $DOCKER_USER/archipelago-backend:$TAG .
+          docker login -u $DOCKER_USER -p $DOCKER_PASS
+          docker push $DOCKER_USER/archipelago-backend:$TAG
+
   build_frontend:
     docker:
       - image: circleci/node:6
@@ -56,9 +69,18 @@ workflows:
   version: 2
   build_frontend_backend:
     jobs:
-      - build_backend
+      - test_backend
       - build_frontend
+      - publish_backend_docker:
+          requires:
+            - test_backend
+          filters:
+            branches:
+              only: master
       - aws_deploy:
           requires:
-            - build_backend
             - build_frontend
+            - publish_backend_docker
+          filters:
+            branches:
+              only: master

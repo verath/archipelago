@@ -1,0 +1,5 @@
+.*
+assets
+proto
+web/dist
+web/node_modules
