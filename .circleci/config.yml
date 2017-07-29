@@ -8,36 +8,57 @@ jobs:
     steps:
       - checkout
       - run: go test -v -race -timeout 30s ./...
+  
   build_frontend:
     docker:
-        - image: verath/archipelago-dev-frontend:1.0.1
+      - image: circleci/node:6
     steps:
       - checkout
       - restore_cache:
           keys: 
             - v1-frontend-yarn-{{ checksum "web/yarn.lock" }}
-      # Install frontend deps, lint and build
       - run: cd web && yarn install
       - run: cd web && yarn run lint
       - run: cd web && yarn run build:prod -- --display-error-details --devtool source-map
       - save_cache:
           key: v1-frontend-yarn-{{ checksum "web/yarn.lock" }}
-          paths: 
+          paths:
             - ~/.cache/yarn
-      # Deploy the built files to our S3 bucket
+      - persist_to_workspace:
+          root: .
+          paths:
+            - web/dist
+
+  aws_deploy:
+    docker:
+      - image: circleci/buildpack-deps:jessie
+    working_directory: ~/project
+    steps:
+      - attach_workspace:
+          at: ~/project
+      - run:
+          name: Install awscli
+          command: |
+            sudo apt-get -y -q update
+            sudo apt-get -y -q install python3-dev python3-pip
+            sudo pip3 install --upgrade pip
+            sudo pip3 install --upgrade awscli
       - deploy:
           name: Deploy frontend to S3
           command: |
-              if [ "${CIRCLE_BRANCH}" == "master" ]; then
-                aws s3 sync web/dist s3://archipelago-frontend --delete
-              else
-                echo "Not master branch so not deploying"
-              fi
+            if [ "${CIRCLE_BRANCH}" == "master" ]; then
+              aws s3 sync web/dist s3://archipelago-frontend --delete
+            else
+              echo "Not master branch so not deploying"
+            fi
+
 workflows:
   version: 2
   build_frontend_backend:
     jobs:
       - build_backend
-      - build_frontend:
+      - build_frontend
+      - aws_deploy:
           requires:
             - build_backend
+            - build_frontend
