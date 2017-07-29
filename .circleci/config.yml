@@ -26,7 +26,7 @@ jobs:
             python3 --version
             curl -O https://bootstrap.pypa.io/get-pip.py
             python3 get-pip.py --user
-            pip install awscli --upgrade --user
+            pip3 install awscli --upgrade --user
             aws --version
       # Install frontend deps, lint and build
       - run: cd web && yarn install
