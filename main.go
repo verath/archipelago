@@ -56,6 +56,9 @@ func main() {
 	}
 
 	http.Handle("/ws", archipelagoServer.WebsocketHandler())
+	http.HandleFunc("/healthcheck", func(w http.ResponseWriter, r *http.Request) {
+		w.Write([]byte("OK"))
+	})
 	if serveStatic {
 		staticPath := "./web/dist"
 		// Explicitly set a max-age of 0 for service worker script.
@@ -65,9 +68,6 @@ func main() {
 		})
 		http.Handle("/", http.FileServer(http.Dir(staticPath)))
 	}
-	http.HandleFunc("/healthcheck", func(w http.ResponseWriter, r *http.Request) {
-		w.Write([]byte("OK"))
-	})
 	httpServer := &http.Server{
 		Addr:         serverAddr,
 		ReadTimeout:  httpReadTimeout,
