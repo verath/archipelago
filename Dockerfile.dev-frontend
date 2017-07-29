@@ -16,4 +16,4 @@ RUN sudo apt-get -y update && \
 RUN sudo pip3 install -U pip
 
 # Install the AWS CLI
-RUN pip3 install awscli --upgrade --user
+RUN sudo pip3 install awscli --upgrade
