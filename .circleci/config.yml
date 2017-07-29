@@ -50,6 +50,6 @@ workflows:
   build_frontend_backend:
     jobs:
       - build_backend
-      - build_frontend
+      - build_frontend:
           requires:
             - build_backend
