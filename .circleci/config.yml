@@ -23,6 +23,14 @@ jobs:
           key: v1-frontend-yarn-{{ checksum "web/yarn.lock" }}
           paths: 
             - ~/.cache/yarn
+      - deploy:
+          name: Deploy frontend to S3
+          command: |
+              if [ "${CIRCLE_BRANCH}" == "master" ]; then
+                aws s3 sync web/dist s3://archipelago-frontend --delete
+              else
+                echo "Not master branch so not deploying"
+              fi
 workflows:
   version: 2
   build_frontend_backend:
