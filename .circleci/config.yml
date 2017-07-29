@@ -16,6 +16,19 @@ jobs:
       - restore_cache:
           keys: 
             - v1-frontend-yarn-{{ checksum "web/yarn.lock" }}
+      # Install python and the aws cli:
+      - run:
+          name: Install awscli
+          working_directory: /tmp
+          command: |
+            apt-get -y -qq update
+            apt-get -y -qq install python3
+            python3 --version
+            curl -O https://bootstrap.pypa.io/get-pip.py
+            python3 get-pip.py --user
+            pip install awscli --upgrade --user
+            aws --version
+      # Install frontend deps, lint and build
       - run: cd web && yarn install
       - run: cd web && yarn run lint
       - run: cd web && yarn run build:prod -- --display-error-details --devtool source-map
@@ -23,6 +36,7 @@ jobs:
           key: v1-frontend-yarn-{{ checksum "web/yarn.lock" }}
           paths: 
             - ~/.cache/yarn
+      # Deploy the built files to our S3 bucket
       - deploy:
           name: Deploy frontend to S3
           command: |
