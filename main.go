@@ -23,14 +23,11 @@ func main() {
 	var (
 		debug       bool
 		serveStatic bool
-		staticPath  string
 		serverAddr  string
 		profileMode string
 	)
 	flag.BoolVar(&debug, "debug", false, "Set to true to log debug messages.")
 	flag.BoolVar(&serveStatic, "servestatic", false, "Enable serving of static assets.")
-	flag.StringVar(&staticPath, "staticpath", "./web/dist", "Specifies the path to static assets "+
-		"directory. Only applicable if servestatic is true.")
 	flag.StringVar(&serverAddr, "addr", ":8080", "TCP address for the http server to listen on.")
 	flag.StringVar(&profileMode, "profile", "", "Enable profiling mode, one of [cpu, mem, mutex, block]")
 	flag.Parse()
@@ -60,6 +57,7 @@ func main() {
 
 	http.Handle("/ws", archipelagoServer.WebsocketHandler())
 	if serveStatic {
+		staticPath := "./web/dist"
 		// Explicitly set a max-age of 0 for service worker script.
 		http.HandleFunc("/sw.js", func(w http.ResponseWriter, r *http.Request) {
 			w.Header().Set("Cache-Control", "max-age=0")
