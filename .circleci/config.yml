@@ -18,7 +18,7 @@ jobs:
       - setup_remote_docker
       - run: |
           TAG=1.0.0-$CIRCLE_SHA1
-          docker build -f Dockerfile.backend -t verath/archipelago-backend:$TAG .
+          docker build -f dockerfiles/Dockerfile.backend -t verath/archipelago-backend:$TAG .
           docker login -u $DOCKER_USER -p $DOCKER_PASS
           docker push verath/archipelago-backend:$TAG
 
@@ -52,6 +52,15 @@ jobs:
       - deploy:
           name: Deploy frontend to S3
           command: |
+            if [ "${CIRCLE_BRANCH}" == "master" ]; then
+              aws s3 sync web/dist s3://archipelago-frontend --delete
+            else
+              echo "Not master branch so not deploying"
+            fi
+      - deploy:
+          name: Deploy backend to EC2 container service
+          command: |
+            DOCKER_TAG=1.0.0-$CIRCLE_SHA1
             if [ "${CIRCLE_BRANCH}" == "master" ]; then
               aws s3 sync web/dist s3://archipelago-frontend --delete
             else
