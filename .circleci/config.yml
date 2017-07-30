@@ -76,13 +76,15 @@ jobs:
               # "aws_ecs_task.json" created in publish_backend_docker
               aws ecs register-task-definition \
                   --region eu-west-1 \
-                  --cli-input-json file://aws_ecs_task.json
+                  --cli-input-json file://aws_ecs_task.json \
+                  > /dev/null
               # Update the ecs service to use our new task definition
               aws ecs update-service \
                   --region eu-west-1 \
                   --cluster archipelago-backend-cluster \
                   --service archipelago-backend-service \
-                  --task-definition archipelago-backend
+                  --task-definition archipelago-backend \
+                  > /dev/null
             else
               echo "Not master branch, not deploying"
             fi
