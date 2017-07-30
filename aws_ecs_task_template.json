@@ -1,0 +1,26 @@
+{
+  "family": "archipelago-backend",
+  "containerDefinitions": [
+    {
+      "name": "archipelago-backend-container",
+      "essential": true,
+      "memory": 300,
+      "image": "{{DOCKER_IMAGE}}",
+      "portMappings": [
+        {
+          "hostPort": 80,
+          "containerPort": 8080,
+          "protocol": "tcp"
+        }
+      ],
+      "logConfiguration": {
+        "logDriver": "awslogs",
+        "options": {
+          "awslogs-group": "archipelago/backend",
+          "awslogs-region": "eu-west-1",
+          "awslogs-stream-prefix": "ecs-{{DOCKER_IMAGE}}"
+        }
+      }
+    }
+  ]
+}

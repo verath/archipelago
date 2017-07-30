@@ -16,11 +16,22 @@ jobs:
     steps:
       - checkout
       - setup_remote_docker
-      - run: |
-          TAG=1.0.0-$CIRCLE_SHA1
-          docker build -f dockerfiles/Dockerfile.backend -t verath/archipelago-backend:$TAG .
-          docker login -u $DOCKER_USER -p $DOCKER_PASS
-          docker push verath/archipelago-backend:$TAG
+      - run:
+          name: Build and push docker image to verath/archipelago-backend
+          command: |
+            DOCKER_IMAGE=verath/archipelago-backend:1.0.0-$CIRCLE_SHA1
+            docker build -f dockerfiles/Dockerfile.backend -t $DOCKER_IMAGE .
+            docker login -u $DOCKER_USER -p $DOCKER_PASS
+            docker push $DOCKER_IMAGE
+            echo "Pushed $DOCKER_IMAGE"
+            # Replace the image placeholder with the newly pushed docker
+            # image in the AWS ECS task definition template
+            sed "s/{{DOCKER_IMAGE}}/$DOCKER_IMAGE/g" \
+                aws_ecs_task_template.json > aws_ecs_task.json
+      - persist_to_workspace:
+          root: .
+          paths:
+            - aws_ecs_task.json
 
   build_frontend:
     docker:
@@ -55,8 +66,24 @@ jobs:
             if [ "${CIRCLE_BRANCH}" == "master" ]; then
               aws s3 sync web/dist s3://archipelago.rocks --delete
             else
-              echo "Not master branch so not deploying"
+              echo "Not master branch, not deploying"
             fi
+      - deploy:
+          name: Deploy backend to ECS
+          command: |
+          if [ "${CIRCLE_BRANCH}" == "master" ]; then
+            # Register a new task definition using the input file
+            # "aws_ecs_task.json" created in publish_backend_docker
+            aws ecs register-task-definition \
+                --cli-input-json file://aws_ecs_task.json
+            # Update the ecs service to use our new task definition
+            aws ecs update-service \
+                --cluster archipelago-backend-cluster \
+                --service archipelago-backend-service \
+                --task-definition archipelago-backend
+          else
+            echo "Not master branch, not deploying"
+          fi
 
 workflows:
   version: 2
