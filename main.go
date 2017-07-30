@@ -11,6 +11,7 @@ import (
 	"os"
 	"os/signal"
 	"path"
+	"syscall"
 	"time"
 )
 
@@ -88,18 +89,19 @@ func main() {
 	}
 }
 
-// lifetimeContext returns a context that is cancelled on the first SIGINT or
-// SIGKILL signal received. The application is force closed if more than
-// one signal is received.
+// lifetimeContext returns a context that is cancelled on the first SIGINT, SIGTERM,
+// or SIGKILL signal received. The application is force closed if more than one
+// signal is received.
 func lifetimeContext(logger *logrus.Logger) context.Context {
 	ctx, cancel := context.WithCancel(context.Background())
-	stopSigs := make(chan os.Signal, 2)
-	signal.Notify(stopSigs, os.Interrupt, os.Kill)
+	stopSigs := []os.Signal{os.Interrupt, os.Kill, syscall.SIGTERM}
+	stopCh := make(chan os.Signal, len(stopSigs))
+	signal.Notify(stopCh, stopSigs...)
 	go func() {
-		<-stopSigs
+		<-stopCh
 		logger.Info("Caught interrupt, shutting down")
 		cancel()
-		<-stopSigs
+		<-stopCh
 		logger.Fatal("Caught second interrupt, force closing")
 	}()
 	return ctx
