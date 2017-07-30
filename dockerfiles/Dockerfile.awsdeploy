@@ -1,0 +1,13 @@
+# Dockerfile for a container that has the AWS CLI installed, used
+# during CI to deploy the service to AWS
+#
+# docker build -t verath/archipelago-awsdeploy -f dockerfiles/Dockerfile.awsdeploy .
+
+FROM debian:jessie
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+                python3-dev \
+                python3-pip \
+        && rm -rf /var/lib/apt/lists/*
+
+RUN pip3 install --upgrade awscli
