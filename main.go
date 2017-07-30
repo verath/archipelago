@@ -79,6 +79,7 @@ func main() {
 	errCh := make(chan error)
 	go func() { errCh <- archipelagoServer.Run(ctx) }()
 	go func() { errCh <- runHTTPServer(ctx, httpServer) }()
+	logger.Infof("Archipelago backend started: '%s'", serverAddr)
 	err = <-errCh
 	cancel()
 	<-errCh
@@ -87,6 +88,7 @@ func main() {
 	} else {
 		logger.Fatalf("Error caught in main: %+v", err)
 	}
+	logger.Info("Archipelago backend stopped.")
 }
 
 // lifetimeContext returns a context that is cancelled on the first SIGINT, SIGTERM,
