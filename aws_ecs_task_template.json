@@ -18,7 +18,7 @@
         "options": {
           "awslogs-group": "archipelago/backend",
           "awslogs-region": "eu-west-1",
-          "awslogs-stream-prefix": "ecs-{{DOCKER_IMAGE}}"
+          "awslogs-stream-prefix": "ecs-archipelago-backend"
         }
       }
     }
