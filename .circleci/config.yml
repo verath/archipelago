@@ -26,7 +26,7 @@ jobs:
             echo "Pushed $DOCKER_IMAGE"
             # Replace the image placeholder with the newly pushed docker
             # image in the AWS ECS task definition template
-            sed "s/{{DOCKER_IMAGE}}/$DOCKER_IMAGE/g" \
+            sed "s,{{DOCKER_IMAGE}},$DOCKER_IMAGE,g" \
                 aws_ecs_task_template.json > aws_ecs_task.json
       - persist_to_workspace:
           root: .
