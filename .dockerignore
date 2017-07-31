@@ -1,5 +1,5 @@
 .*
 assets
+config
 proto
-web/dist
-web/node_modules
+web

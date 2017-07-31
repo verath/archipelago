@@ -1,6 +1,6 @@
 # Dockerfile for the go backend application
 #
-# docker build -t verath/archipelago-backend -f dockerfiles/Dockerfile.backend .
+# docker build -t verath/archipelago-backend .
 
 FROM golang:1.8-alpine
 
