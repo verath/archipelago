@@ -30,7 +30,7 @@ jobs:
           paths:
             - web/dist
 
-   docker_publish:
+  docker_publish:
     docker:
       - image: docker:stable
     steps:
