@@ -7,7 +7,6 @@ import (
 	"github.com/verath/archipelago/lib/common"
 	"net/http"
 	"sync"
-	"time"
 )
 
 // wsVersion is the version of the websocket protocol that the server
@@ -16,12 +15,7 @@ import (
 const wsVersion = "2"
 
 // The websocket.Upgrader used for all upgrades from http -> ws.
-var wsUpgrader = websocket.Upgrader{
-	HandshakeTimeout: 10 * time.Second,
-	CheckOrigin: func(r *http.Request) bool {
-		return true
-	},
-}
+var wsUpgrader = websocket.Upgrader{}
 
 // WSConnectionHandler is a handler that handles new WSConnections.
 type WSConnectionHandler interface {
