@@ -1,7 +1,7 @@
 
 version: 2
 jobs:
-  test_backend:
+  build_backend:
     docker:
       - image: circleci/golang:1.8
     working_directory: /go/src/github.com/verath/archipelago
@@ -9,29 +9,6 @@ jobs:
       - checkout
       - run: go build -v
       - run: go test -v -race -timeout 30s ./...
-
-  publish_backend_docker:
-    docker:
-      - image: docker:stable
-    steps:
-      - checkout
-      - setup_remote_docker
-      - run:
-          name: Build and push docker image to verath/archipelago-backend
-          command: |
-            DOCKER_IMAGE=verath/archipelago-backend:1.0.0-$CIRCLE_SHA1
-            docker build -f dockerfiles/Dockerfile.backend -t $DOCKER_IMAGE .
-            docker login -u $DOCKER_USER -p $DOCKER_PASS
-            docker push $DOCKER_IMAGE
-            echo "Pushed $DOCKER_IMAGE"
-            # Replace the image placeholder with the newly pushed docker
-            # image in the AWS ECS task definition template
-            sed "s,{{DOCKER_IMAGE}},$DOCKER_IMAGE,g" \
-                aws_ecs_task_template.json > aws_ecs_task.json
-      - persist_to_workspace:
-          root: .
-          paths:
-            - aws_ecs_task.json
 
   build_frontend:
     docker:
@@ -53,58 +30,28 @@ jobs:
           paths:
             - web/dist
 
-  aws_deploy:
+   docker_publish:
     docker:
-      - image: verath/archipelago-awsdeploy
-    working_directory: ~/project
+      - image: docker:stable
     steps:
-      - attach_workspace:
-          at: ~/project
-      - deploy:
-          name: Deploy frontend to S3
+      - checkout
+      - setup_remote_docker
+      - run:
+          name: Build and push backend docker image
           command: |
-            if [ "${CIRCLE_BRANCH}" == "master" ]; then
-              aws s3 sync web/dist s3://archipelago.rocks --delete
-            else
-              echo "Not master branch, not deploying"
-            fi
-      - deploy:
-          name: Deploy backend to ECS
-          command: |
-            if [ "${CIRCLE_BRANCH}" == "master" ]; then
-              # Register a new task definition using the input file
-              # "aws_ecs_task.json" created in publish_backend_docker
-              aws ecs register-task-definition \
-                  --region eu-west-1 \
-                  --cli-input-json file://aws_ecs_task.json \
-                  > /dev/null
-              # Update the ecs service to use our new task definition
-              aws ecs update-service \
-                  --region eu-west-1 \
-                  --cluster archipelago-backend-cluster \
-                  --service archipelago-backend-service \
-                  --task-definition archipelago-backend \
-                  > /dev/null
-            else
-              echo "Not master branch, not deploying"
-            fi
+            docker build --pull -t verath/archipelago-backend:master .
+            docker login -u $DOCKER_USER -p $DOCKER_PASS
+            docker push verath/archipelago-backend:master
 
 workflows:
   version: 2
   build_frontend_backend:
     jobs:
-      - test_backend
+      - build_backend
       - build_frontend
-      - publish_backend_docker:
+      - docker_publish:
           requires:
-            - test_backend
-          filters:
-            branches:
-              only: master
-      - aws_deploy:
-          requires:
-            - build_frontend
-            - publish_backend_docker
+            - build_backend
           filters:
             branches:
               only: master
