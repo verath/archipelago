@@ -41,8 +41,8 @@ server {
 	ssl_certificate /etc/letsencrypt/live/playarchipelago.com/fullchain.pem;
 	ssl_certificate_key /etc/letsencrypt/live/playarchipelago.com/privkey.pem;
 
-	access_log /var/log/playarchipelago.com/nginx.access.log;
-	error_log  /var/log/playarchipelago.com/nginx.error.log;
+	access_log /var/log/nginx/playarchipelago.access.log;
+	error_log  /var/log/nginx/playarchipelago.error.log;
 
 	root /home/deploy/go/src/github.com/verath/archipelago/web/dist;
 	index index.html;
