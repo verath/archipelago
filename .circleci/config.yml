@@ -58,7 +58,7 @@ jobs:
       - deploy:
           name: Deploy frontend to firebase
           working_directory: ~/project/web
-          command: yarn run deploy -- --token "$FIREBASE_TOKEN"
+          command: ./node_modules/.bin/firebase deploy --token $FIREBASE_TOKEN
 
 workflows:
   version: 2
