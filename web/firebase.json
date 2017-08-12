@@ -1,0 +1,43 @@
+{
+  "hosting": {
+    "public": "dist",
+    "ignore": [
+      "firebase.json",
+      "**/.*",
+      "**/node_modules/**"
+    ],
+    "headers": [
+      {
+        "source": "/sw.js",
+        "headers": [
+          {
+            "key": "Cache-Control",
+            "value": "max-age=0"
+          }
+        ]
+      },
+      {
+        "source": "**",
+        "headers": [
+          {
+            "key": "X-Frame-Options",
+            "value": "SAMEORIGIN"
+          },
+          {
+            "key": "X-Content-Type-Options",
+            "value": "nosniff"
+          },
+          {
+            "key": "X-XSS-Protection",
+            "value": "1; mode=block"
+          },
+          {
+            "key": "Content-Security-Policy",
+            "value": "default-src 'none'; base-uri 'self'; block-all-mixed-content; child-src 'self'; connect-src 'self' wss://ws.playarchipelago.com; img-src 'self' data:; manifest-src 'self'; script-src 'self' 'unsafe-eval'; style-src 'self'; worker-src 'self';"
+          }
+        ]
+      }
+    ]
+  }
+}
+
