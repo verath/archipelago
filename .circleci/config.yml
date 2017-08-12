@@ -55,7 +55,10 @@ jobs:
       - run: cd web && yarn install
       - attach_workspace:
           at: ~/project
-      - deploy: cd web && yarn deploy -- --token $FIREBSAE_TOKEN
+      - deploy:
+          name: Deploy frontend to firebase
+          working_directory: ~/project/web
+          command: yarn deploy -- --token $FIREBSAE_TOKEN
 
 workflows:
   version: 2
