@@ -84,12 +84,6 @@ $ go run main.go -debug -servestatic
 This should start the server, and make it available at 
 [http://localhost:8080](http://localhost:8080) by default.
 
-### Production
-
-There are obviously many ways to run a project in a production environment.
-An example configuration used for the host running the [playarchipelago.com](https://playarchipelago.com)
-domain is provided in the [config](./config) folder.
-
 ## Developing
 
 ### Protocol Buffers (protobuf)

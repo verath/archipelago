@@ -1,0 +1,22 @@
+# docker-compose file for the backend service.
+#
+# docker-compose up -d
+
+version: "3"
+services:
+  backend:
+    image: verath/archipelago-backend:master
+    ports:
+      - "8080:8080"
+    deploy:
+      restart_policy:
+        condition: on-failure
+      resources:
+        limits:
+          cpus: "0.8"
+          memory: 400M
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "100k"
+        max-file: "5"

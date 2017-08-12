@@ -6,10 +6,9 @@ server {
 	listen [::]:80 default_server;
 	listen 443 ssl http2 default_server;
 	listen [::]:443 ssl http2 default_server;
-	# Self-signed ("invalid") certificates, requried to talk ssl
+	# Self-signed ("invalid") certificates, required to talk ssl
 	ssl_certificate /etc/ssl/certs/nginx-selfsigned.crt;
 	ssl_certificate_key /etc/ssl/private/nginx-selfsigned.key;
-
 	access_log off;
 	return 444;
 }
