@@ -1,6 +1,6 @@
-# docker-compose file for the backend service.
+# docker swarm (stack?) file for the backend service.
 #
-# docker-compose up -d
+# docker stack deploy archipelago --compose-file docker-compose.yml
 
 version: "3"
 services:
