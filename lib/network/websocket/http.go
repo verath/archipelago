@@ -6,6 +6,8 @@ import (
 	"github.com/pkg/errors"
 	"github.com/verath/archipelago/lib/common"
 	"net/http"
+	"net/url"
+	"strings"
 	"sync"
 )
 
@@ -15,7 +17,31 @@ import (
 const wsVersion = "2"
 
 // The websocket.Upgrader used for all upgrades from http -> ws.
-var wsUpgrader = websocket.Upgrader{}
+var wsUpgrader = websocket.Upgrader{
+	CheckOrigin: func(req *http.Request) bool {
+		// If we are accessed through localhost, allow all origins
+		hostURL := &url.URL{Host: req.Host}
+		if hostURL.Hostname() == "localhost" || hostURL.Hostname() == "127.0.0.1" {
+			return true
+		}
+		origin := req.Header["Origin"]
+		if len(origin) == 0 {
+			return true
+		}
+		originURL, err := url.Parse(origin[0])
+		if err != nil {
+			return false
+		}
+		originHostname := originURL.Hostname()
+		if originHostname == "playarchipelago.com" {
+			return true
+		}
+		if strings.HasSuffix(originHostname, ".playarchipelago.com") {
+			return true
+		}
+		return false
+	},
+}
 
 // WSConnectionHandler is a handler that handles new WSConnections.
 type WSConnectionHandler interface {

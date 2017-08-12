@@ -24,12 +24,6 @@ const WS_VERSION = "2";
 const WS_HOST_PROD = "ws.playarchipelago.com";
 
 /**
- * The host for the websocket endpoint in development
- * @type {string}
- */
-const WS_HOST_DEV = "127.0.0.1:8080";
-
-/**
  * List of hostnames that indicates that the site is hosted locally and
  * should connect to the development websocket endpoint.
  * @type {[string]}
@@ -95,7 +89,7 @@ class Main {
         this._progressText.setText("Finding a game");
 
         let protocol = (window.location.protocol === "https:") ? "wss://" : "ws://";
-        let host = (DEVELOPMENT_HOSTNAMES.indexOf(window.location.hostname) === -1) ? WS_HOST_PROD : WS_HOST_DEV;
+        let host = (DEVELOPMENT_HOSTNAMES.indexOf(window.location.hostname) === -1) ? WS_HOST_PROD : window.location.hostname;
         let connection = new Connection(protocol + host + "/ws?v=" + WS_VERSION);
         let gameModel = new GameModel();
         let gameView = new GameView(this._resourceHolder, this._renderer, gameModel);
