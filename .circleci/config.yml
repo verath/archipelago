@@ -25,6 +25,7 @@ jobs:
           key: v1-frontend-yarn-{{ checksum "web/yarn.lock" }}
           paths:
             - ~/.cache/yarn
+            - web/node_modules
       - persist_to_workspace:
           root: .
           paths:
