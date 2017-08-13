@@ -17,12 +17,13 @@ jobs:
       - checkout
       - restore_cache:
           keys: 
-            - v1-frontend-yarn-{{ checksum "web/yarn.lock" }}
+            - v2-frontend-yarn-{{ checksum "web/yarn.lock" }}
+            - v2-frontend-yarn-
       - run: cd web && yarn install
       - run: cd web && yarn run lint
       - run: cd web && yarn run build:prod -- --display-error-details --devtool source-map
       - save_cache:
-          key: v1-frontend-yarn-{{ checksum "web/yarn.lock" }}
+          key: v2-frontend-yarn-{{ checksum "web/yarn.lock" }}
           paths:
             - ~/.cache/yarn
             - web/node_modules
@@ -52,7 +53,8 @@ jobs:
       - checkout
       - restore_cache:
           keys:
-            - v1-frontend-yarn-{{ checksum "web/yarn.lock" }}
+            - v2-frontend-yarn-{{ checksum "web/yarn.lock" }}
+            - v2-frontend-yarn-
       - run: cd web && yarn install
       - attach_workspace:
           at: ~/project
