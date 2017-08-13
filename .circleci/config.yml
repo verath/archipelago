@@ -64,7 +64,7 @@ jobs:
             cd web && yarn install
             # Add our server remote public key to known_hosts
             mkdir -p ~/.ssh
-            echo "$SSH_SERVER_HOSTKEY" > ~/.ssh/known_hosts
+            echo 'ws.playarchipelago.com ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDazWfFxpfso8v7tzh9jr0HnInPcg2GyiVP5LP/ErjVirsftf+1gk4D9RVsYvv+cjt571FvlgYJCBgOnoYXaz6Ud+qzcutE3y9s6AoeRvQXwrrhj1bUlNUTxhn1ywDQ6C68wnWjK3u0uH2PsdHybfNhSe64Mc/EuqAAxa4rwFNEEgjBbL2dT0y750tFDMsZFLRK9Mt74cmRTQbzYrbf1HBM8XHVHtC13vvd5Yi3IK85fZpSRklz4Fb08GUgQLcx+qjFsR3FNKFgHxa2ub0UWWedH1qLB3ku4NR85eP3+vtOrbxOg2tr5seiINiGed3h5y62At2YnCEnqGl2eCWnIKPB' > ~/.ssh/known_hosts
       - deploy:
           name: Deploy frontend to firebase
           working_directory: ~/project/web
