@@ -10,7 +10,7 @@ if [[ -n "$(docker ps --quiet --filter="name=archipelago")" ]]; then
 fi
 
 stopped_container_id=$(docker ps --quiet --all --filter="name=archipelago")
-if [[ -n "$(docker ps --quiet --filter="name=archipelago")" ]]; then
+if [[ -n "$(docker ps --quiet --all --filter="name=archipelago")" ]]; then
     docker rm ${stopped_container_id}
 fi
 
