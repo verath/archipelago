@@ -45,7 +45,7 @@ jobs:
             docker login -u $DOCKER_USER -p $DOCKER_PASS
             docker push verath/archipelago-backend:master
 
-  deploy_frontend:
+  deploy:
     docker:
       - image: circleci/node:6
     working_directory: ~/project
@@ -55,13 +55,23 @@ jobs:
           keys:
             - v2-frontend-yarn-{{ checksum "web/yarn.lock" }}
             - v2-frontend-yarn-
-      - run: cd web && yarn install
       - attach_workspace:
           at: ~/project
+      - run:
+          name: "Setup deploy prerequisites"
+          command: |
+            # yarn install to get the firebase cli
+            cd web && yarn install
+            # Add our server remote public key to known_hosts
+            mkdir -p ~/.ssh
+            echo "$SSH_SERVER_HOSTKEY" > ~/.ssh/known_hosts
       - deploy:
           name: Deploy frontend to firebase
           working_directory: ~/project/web
           command: ./node_modules/.bin/firebase deploy --token "$FIREBASE_TOKEN"
+      - deploy:
+          name: Deploy backend to ws.playarchipelago.com
+          command: ssh circleci@ws.playarchipelago.com "./update_archipelago.sh"
 
 workflows:
   version: 2
@@ -75,9 +85,11 @@ workflows:
           filters:
             branches:
               only: master
-      - deploy_frontend:
+      - deploy:
           requires:
             - build_frontend
+            - build_backend
+            - docker_publish_backend
           filters:
             branches:
               only: master
