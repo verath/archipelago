@@ -23,6 +23,7 @@ ratings:
 exclude_paths:
   - config/
   - vendor/
-  - "**.pb.go"
+  - "**/*_test.go"
+  - "**/*.pb.go"
   - "**/*.d.ts"
   - "**/*proto_bundle.js"
