@@ -6,7 +6,7 @@ with the same name.
 ![Screenshot Archipelago](assets/screenshot1.png)
 
 [![CircleCI](https://circleci.com/gh/verath/archipelago.svg?style=svg)](https://circleci.com/gh/verath/archipelago)
-[![Go Report Card](https://goreportcard.com/badge/github.com/verath/archipelago)](https://goreportcard.com/report/github.com/verath/archipelago)
+[![Codeclimate Maintainability](https://api.codeclimate.com/v1/badges/4ae6b5cd15e1050fd3d3/maintainability)](https://codeclimate.com/github/verath/archipelago/maintainability)
 
 The game can be played at https://playarchipelago.com.
 

@@ -1,0 +1,28 @@
+engines:
+  fixme:
+    enabled: true
+  golint:
+    enabled: true
+  gofmt:
+    enabled: true
+  govet:
+    enabled: true
+  csslint:
+    enabled: true
+  eslint:
+    enabled: true
+    config:
+      config: web/.eslintrc.json
+
+ratings:
+  paths:
+    - "**.go"
+    - "**.js"
+    - "**.css"
+
+exclude_paths:
+  - config/
+  - vendor/
+  - "**.pb.go"
+  - "**/*.d.ts"
+  - "**/*proto_bundle.js"
