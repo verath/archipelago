@@ -23,7 +23,12 @@ module.exports = {
                 exclude: /node_modules/,
                 loader: "babel-loader",
                 options: {
-                    presets: [["es2015", {"modules": false}]]
+                    presets: [
+                        ["babel-preset-env", {
+                            "modules": false,
+                            "targets": {"browsers": ["last 2 versions"]}
+                        }]
+                    ]
                 }
             },
             {
