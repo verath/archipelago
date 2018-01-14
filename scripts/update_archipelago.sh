@@ -50,7 +50,7 @@ if [[ -n "$stopped_container_id" ]]; then
 fi
 
 echo "Starting container"
-docker run -d --name=archipelago --restart=on-failure -p 8080:8080 verath/archipelago-backend:master
+docker run -d --name=archipelago --restart=always -p 8080:8080 verath/archipelago-backend:master
 
 old_images=$(docker images --filter "dangling=true" --quiet --no-trunc)
 if [[ -n "$old_images" ]]; then
