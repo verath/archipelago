@@ -89,7 +89,7 @@ func (srv *Server) handleWSConnection(ctx context.Context, conn *websocket.WSCon
 		}
 	}()
 	if err := srv.gameCoordinator.AddClient(ctx, wireClient); err != nil {
-		errors.Wrap(err, "Error in game coordinator when handling client")
+		return errors.Wrap(err, "Error in game coordinator when handling client")
 	}
 	return nil
 }
