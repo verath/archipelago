@@ -34,7 +34,7 @@
 
 [[constraint]]
   name = "github.com/gorilla/websocket"
-  revision = "462d5c5828f6203e4047c47be2920315937be380"
+  revision = "5ed622c449da6d44c3c8329331ff47a9e5844f71"
 
 [[constraint]]
   name = "github.com/pkg/errors"
