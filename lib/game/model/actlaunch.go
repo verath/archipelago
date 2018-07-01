@@ -44,7 +44,7 @@ func (act *actionLaunch) Apply(game *Game) ([]Event, error) {
 		return nil, NewIllegalActionError(errors.New("fromIsland == toIsland"))
 	}
 	if !fromIsland.IsOwnedBy(owningPlayer) {
-		return nil, NewIllegalActionError(errors.New( "fromIsland is not owned by sending player"))
+		return nil, NewIllegalActionError(errors.New("fromIsland is not owned by sending player"))
 	}
 	if fromIsland.Strength() < 2 {
 		return nil, NewIllegalActionError(errors.New("from island strength < 2"))
