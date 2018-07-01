@@ -89,7 +89,10 @@ class Main {
         this._progressText.setText("Finding a game");
 
         let protocol = (window.location.protocol === "https:") ? "wss://" : "ws://";
-        let host = (DEVELOPMENT_HOSTNAMES.indexOf(window.location.hostname) === -1) ? WS_HOST_PROD : window.location.hostname;
+        let host = WS_HOST_PROD;
+        if (DEVELOPMENT_HOSTNAMES.indexOf(window.location.hostname) !== -1) {
+            host = window.location.hostname + ":" + window.location.port;
+        }
         let connection = new Connection(protocol + host + "/ws?v=" + WS_VERSION);
         let gameModel = new GameModel();
         let gameView = new GameView(this._resourceHolder, this._renderer, gameModel);
