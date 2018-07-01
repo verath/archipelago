@@ -38,7 +38,7 @@
 
 [[constraint]]
   name = "github.com/pkg/errors"
-  revision = "c605e284fe17294bda444b34710735b29d1a9d90"
+  branch = "master"
 
 [[constraint]]
   name = "github.com/pkg/profile"

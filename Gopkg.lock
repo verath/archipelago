@@ -17,9 +17,10 @@
   revision = "462d5c5828f6203e4047c47be2920315937be380"
 
 [[projects]]
+  branch = "master"
   name = "github.com/pkg/errors"
   packages = ["."]
-  revision = "c605e284fe17294bda444b34710735b29d1a9d90"
+  revision = "816c9085562cd7ee03e7f8188a1cfd942858cded"
 
 [[projects]]
   name = "github.com/pkg/profile"
@@ -35,6 +36,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "f19e1492a7300ca3b1184a7d8f74f4d4549467e4ad0823094cb1f370f5da1a2b"
+  inputs-digest = "ee7299333284d13f13bb03a3c4e5b89b8001ca1884bc98ad6613592b873e0cfc"
   solver-name = "gps-cdcl"
   solver-version = 1
