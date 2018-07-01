@@ -2,14 +2,15 @@ package archipelago
 
 import (
 	"context"
-	"github.com/Sirupsen/logrus"
+	"sync"
+
 	"github.com/pkg/errors"
+	"github.com/sirupsen/logrus"
 	"github.com/verath/archipelago/lib/common"
 	"github.com/verath/archipelago/lib/game"
 	"github.com/verath/archipelago/lib/network"
 	"github.com/verath/archipelago/lib/network/websocket"
 	"github.com/verath/archipelago/lib/wire"
-	"sync"
 )
 
 // Server is the main entry point to the game server. It connects the different

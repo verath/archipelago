@@ -2,12 +2,13 @@ package game
 
 import (
 	"context"
-	"github.com/Sirupsen/logrus"
-	"github.com/pkg/errors"
-	"github.com/verath/archipelago/lib/common"
-	"github.com/verath/archipelago/lib/game/model"
 	"sync"
 	"time"
+
+	"github.com/pkg/errors"
+	"github.com/sirupsen/logrus"
+	"github.com/verath/archipelago/lib/common"
+	"github.com/verath/archipelago/lib/game/model"
 )
 
 const defaultTickInterval time.Duration = time.Second / 3

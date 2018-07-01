@@ -48,7 +48,7 @@ is used to bundle the frontend application (including js, css and images).
 The backend is written in go and uses [dep](https://github.com/golang/dep) for managing 
 vendor dependencies. The backend relies primarily on the go standard library, but 
 uses [Gorilla/WebSocket](https://github.com/gorilla/websocket) for WebSocket handling, 
-[Logrus](https://github.com/Sirupsen/logrus) for logging, and [pkg/errors](https://github.com/pkg/errors) 
+[Logrus](https://github.com/sirupsen/logrus) for logging, and [pkg/errors](https://github.com/pkg/errors) 
 for better error handling. 
 
 The backend code is found in the [lib](./lib) directory.

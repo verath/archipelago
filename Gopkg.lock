@@ -2,11 +2,6 @@
 
 
 [[projects]]
-  name = "github.com/Sirupsen/logrus"
-  packages = ["."]
-  revision = "51dc0fc64317a2861273909081f9c315786533eb"
-
-[[projects]]
   name = "github.com/golang/protobuf"
   packages = ["proto"]
   revision = "b4deda0973fb4c70b50d226b1af49f3da59f5265"
@@ -30,6 +25,11 @@
   version = "v1.2.1"
 
 [[projects]]
+  name = "github.com/sirupsen/logrus"
+  packages = ["."]
+  revision = "51dc0fc64317a2861273909081f9c315786533eb"
+
+[[projects]]
   name = "golang.org/x/sys"
   packages = ["unix"]
   revision = "abf9c25f54453410d0c6668e519582a9e1115027"
@@ -37,6 +37,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "7c74ca94c2fe90dc95df83d47ce5e8ab66777d47dbab7384a530545ba541a0ab"
+  inputs-digest = "3eea7a4c77e569e6c72c7ca704ba5121bb95161dc3925d97a907a699077fd918"
   solver-name = "gps-cdcl"
   solver-version = 1

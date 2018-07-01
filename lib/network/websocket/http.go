@@ -1,14 +1,15 @@
 package websocket
 
 import (
-	"github.com/Sirupsen/logrus"
-	"github.com/gorilla/websocket"
-	"github.com/pkg/errors"
-	"github.com/verath/archipelago/lib/common"
 	"net/http"
 	"net/url"
 	"strings"
 	"sync"
+
+	"github.com/gorilla/websocket"
+	"github.com/pkg/errors"
+	"github.com/sirupsen/logrus"
+	"github.com/verath/archipelago/lib/common"
 )
 
 // wsVersion is the version of the websocket protocol that the server

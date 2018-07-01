@@ -2,11 +2,12 @@ package game
 
 import (
 	"context"
-	"github.com/Sirupsen/logrus"
-	"github.com/verath/archipelago/lib/game/model"
 	"io/ioutil"
 	"testing"
 	"time"
+
+	"github.com/sirupsen/logrus"
+	"github.com/verath/archipelago/lib/game/model"
 )
 
 var log = &logrus.Logger{
