@@ -45,7 +45,7 @@ is used to bundle the frontend application (including js, css and images).
 
 ### Backend
 
-The backend is written in go and uses [Godep](https://github.com/tools/godep) for managing 
+The backend is written in go and uses [dep](https://github.com/golang/dep) for managing 
 vendor dependencies. The backend relies primarily on the go standard library, but 
 uses [Gorilla/WebSocket](https://github.com/gorilla/websocket) for WebSocket handling, 
 [Logrus](https://github.com/Sirupsen/logrus) for logging, and [pkg/errors](https://github.com/pkg/errors) 

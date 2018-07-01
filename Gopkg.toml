@@ -1,0 +1,49 @@
+# Gopkg.toml example
+#
+# Refer to https://github.com/golang/dep/blob/master/docs/Gopkg.toml.md
+# for detailed Gopkg.toml documentation.
+#
+# required = ["github.com/user/thing/cmd/thing"]
+# ignored = ["github.com/user/project/pkgX", "bitbucket.org/user/project/pkgA/pkgY"]
+#
+# [[constraint]]
+#   name = "github.com/user/project"
+#   version = "1.0.0"
+#
+# [[constraint]]
+#   name = "github.com/user/project2"
+#   branch = "dev"
+#   source = "github.com/myfork/project2"
+#
+# [[override]]
+#   name = "github.com/x/y"
+#   version = "2.4.0"
+#
+# [prune]
+#   non-go = false
+#   go-tests = true
+#   unused-packages = true
+
+[[constraint]]
+  name = "github.com/Sirupsen/logrus"
+  revision = "51dc0fc64317a2861273909081f9c315786533eb"
+
+[[constraint]]
+  name = "github.com/golang/protobuf"
+  revision = "0a4f71a498b7c4812f64969510bcb4eca251e33a"
+
+[[constraint]]
+  name = "github.com/gorilla/websocket"
+  revision = "462d5c5828f6203e4047c47be2920315937be380"
+
+[[constraint]]
+  name = "github.com/pkg/errors"
+  revision = "c605e284fe17294bda444b34710735b29d1a9d90"
+
+[[constraint]]
+  name = "github.com/pkg/profile"
+  version = "^1.2.1"
+
+[prune]
+  go-tests = true
+  unused-packages = true
