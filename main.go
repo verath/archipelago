@@ -3,16 +3,17 @@ package main
 import (
 	"context"
 	"flag"
-	"github.com/Sirupsen/logrus"
-	"github.com/pkg/errors"
-	"github.com/pkg/profile"
-	"github.com/verath/archipelago/lib"
 	"net/http"
 	"os"
 	"os/signal"
 	"path"
 	"syscall"
 	"time"
+
+	"github.com/Sirupsen/logrus"
+	"github.com/pkg/errors"
+	"github.com/pkg/profile"
+	"github.com/verath/archipelago/lib"
 )
 
 const (
@@ -37,18 +38,11 @@ func main() {
 	logger.Formatter = &logrus.TextFormatter{}
 	if debug {
 		logger.Level = logrus.DebugLevel
+		logger.Info("Debug logging enabled")
 	}
-	// Setup profiling, if profile flag was set
-	switch profileMode {
-	case "cpu":
-		defer profile.Start(profile.NoShutdownHook, profile.ProfilePath("."), profile.CPUProfile).Stop()
-	case "mem":
-		defer profile.Start(profile.NoShutdownHook, profile.ProfilePath("."), profile.MemProfile).Stop()
-	case "mutex":
-		defer profile.Start(profile.NoShutdownHook, profile.ProfilePath("."), profile.MutexProfile).Stop()
-	case "block":
-		defer profile.Start(profile.NoShutdownHook, profile.ProfilePath("."), profile.BlockProfile).Stop()
-	default:
+
+	if profileMode != "" {
+		defer startProfiling(profileMode)()
 	}
 
 	archipelagoServer, err := archipelago.New(logger)
@@ -89,6 +83,24 @@ func main() {
 		logger.Fatalf("Error caught in main: %+v", err)
 	}
 	logger.Info("Archipelago backend stopped.")
+}
+
+// startProfiling starts profiling for the given profileMode. See
+// pkg/profile. Returns a function that should be called when profiling
+// should be stopped.
+func startProfiling(profileMode string) func() {
+	switch profileMode {
+	case "cpu":
+		return profile.Start(profile.NoShutdownHook, profile.ProfilePath("."), profile.CPUProfile).Stop
+	case "mem":
+		return profile.Start(profile.NoShutdownHook, profile.ProfilePath("."), profile.MemProfile).Stop
+	case "mutex":
+		return profile.Start(profile.NoShutdownHook, profile.ProfilePath("."), profile.MutexProfile).Stop
+	case "block":
+		return profile.Start(profile.NoShutdownHook, profile.ProfilePath("."), profile.BlockProfile).Stop
+	default:
+		return func() {}
+	}
 }
 
 // lifetimeContext returns a context that is cancelled on the first SIGINT, SIGTERM,
