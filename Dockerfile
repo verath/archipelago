@@ -2,7 +2,7 @@
 #
 # docker build -t verath/archipelago-backend .
 
-FROM golang:1.9.2-alpine
+FROM golang:1.10-alpine
 
 COPY *.go /go/src/github.com/verath/archipelago/
 COPY lib /go/src/github.com/verath/archipelago/lib/
