@@ -1,5 +1,4 @@
 import * as $protobuf from "protobufjs";
-import {Long} from "protobufjs";
 
 /** Namespace wire. */
 export namespace wire {
@@ -8,14 +7,14 @@ export namespace wire {
     interface IActionEnvelope {
 
         /** ActionEnvelope actionGameLeave */
-        actionGameLeave?: wire.IActionGameLeave;
+        actionGameLeave?: (wire.IActionGameLeave|null);
 
         /** ActionEnvelope actionGameLaunch */
-        actionGameLaunch?: wire.IActionGameLaunch;
+        actionGameLaunch?: (wire.IActionGameLaunch|null);
     }
 
     /** Represents an ActionEnvelope. */
-    class ActionEnvelope {
+    class ActionEnvelope implements IActionEnvelope {
 
         /**
          * Constructs a new ActionEnvelope.
@@ -30,7 +29,7 @@ export namespace wire {
         public actionGameLaunch?: (wire.IActionGameLaunch|null);
 
         /** ActionEnvelope action. */
-        public action?: string;
+        public action?: ("actionGameLeave"|"actionGameLaunch");
 
         /**
          * Creates a new ActionEnvelope instance using the specified properties.
@@ -108,7 +107,7 @@ export namespace wire {
     }
 
     /** Represents an ActionGameLeave. */
-    class ActionGameLeave {
+    class ActionGameLeave implements IActionGameLeave {
 
         /**
          * Constructs a new ActionGameLeave.
@@ -191,14 +190,14 @@ export namespace wire {
     interface IActionGameLaunch {
 
         /** ActionGameLaunch fromId */
-        fromId?: string;
+        fromId?: (string|null);
 
         /** ActionGameLaunch toId */
-        toId?: string;
+        toId?: (string|null);
     }
 
     /** Represents an ActionGameLaunch. */
-    class ActionGameLaunch {
+    class ActionGameLaunch implements IActionGameLaunch {
 
         /**
          * Constructs a new ActionGameLaunch.
@@ -287,17 +286,17 @@ export namespace wire {
     interface IEventEnvelope {
 
         /** EventEnvelope eventGameStart */
-        eventGameStart?: wire.IEventGameStart;
+        eventGameStart?: (wire.IEventGameStart|null);
 
         /** EventEnvelope eventGameOver */
-        eventGameOver?: wire.IEventGameOver;
+        eventGameOver?: (wire.IEventGameOver|null);
 
         /** EventEnvelope eventGameTick */
-        eventGameTick?: wire.IEventGameTick;
+        eventGameTick?: (wire.IEventGameTick|null);
     }
 
     /** Represents an EventEnvelope. */
-    class EventEnvelope {
+    class EventEnvelope implements IEventEnvelope {
 
         /**
          * Constructs a new EventEnvelope.
@@ -315,7 +314,7 @@ export namespace wire {
         public eventGameTick?: (wire.IEventGameTick|null);
 
         /** EventEnvelope event. */
-        public event?: string;
+        public event?: ("eventGameStart"|"eventGameOver"|"eventGameTick");
 
         /**
          * Creates a new EventEnvelope instance using the specified properties.
@@ -392,14 +391,14 @@ export namespace wire {
     interface IEventGameStart {
 
         /** EventGameStart playerId */
-        playerId?: string;
+        playerId?: (string|null);
 
         /** EventGameStart tickInterval */
-        tickInterval?: (number|Long);
+        tickInterval?: (number|Long|null);
     }
 
     /** Represents an EventGameStart. */
-    class EventGameStart {
+    class EventGameStart implements IEventGameStart {
 
         /**
          * Constructs a new EventGameStart.
@@ -488,11 +487,11 @@ export namespace wire {
     interface IEventGameOver {
 
         /** EventGameOver winnerId */
-        winnerId?: string;
+        winnerId?: (string|null);
     }
 
     /** Represents an EventGameOver. */
-    class EventGameOver {
+    class EventGameOver implements IEventGameOver {
 
         /**
          * Constructs a new EventGameOver.
@@ -578,11 +577,11 @@ export namespace wire {
     interface IEventGameTick {
 
         /** EventGameTick game */
-        game?: wire.game.IGame;
+        game?: (wire.game.IGame|null);
     }
 
     /** Represents an EventGameTick. */
-    class EventGameTick {
+    class EventGameTick implements IEventGameTick {
 
         /**
          * Constructs a new EventGameTick.
@@ -671,14 +670,14 @@ export namespace wire {
         interface ICoordinate {
 
             /** Coordinate x */
-            x?: (number|Long);
+            x?: (number|Long|null);
 
             /** Coordinate y */
-            y?: (number|Long);
+            y?: (number|Long|null);
         }
 
         /** Represents a Coordinate. */
-        class Coordinate {
+        class Coordinate implements ICoordinate {
 
             /**
              * Constructs a new Coordinate.
@@ -767,14 +766,14 @@ export namespace wire {
         interface IFloatCoordinate {
 
             /** FloatCoordinate x */
-            x?: number;
+            x?: (number|null);
 
             /** FloatCoordinate y */
-            y?: number;
+            y?: (number|null);
         }
 
         /** Represents a FloatCoordinate. */
-        class FloatCoordinate {
+        class FloatCoordinate implements IFloatCoordinate {
 
             /**
              * Constructs a new FloatCoordinate.
@@ -863,11 +862,11 @@ export namespace wire {
         interface IPlayer {
 
             /** Player id */
-            id?: string;
+            id?: (string|null);
         }
 
         /** Represents a Player. */
-        class Player {
+        class Player implements IPlayer {
 
             /**
              * Constructs a new Player.
@@ -953,14 +952,14 @@ export namespace wire {
         interface IArmy {
 
             /** Army ownerId */
-            ownerId?: string;
+            ownerId?: (string|null);
 
             /** Army strength */
-            strength?: (number|Long);
+            strength?: (number|Long|null);
         }
 
         /** Represents an Army. */
-        class Army {
+        class Army implements IArmy {
 
             /**
              * Constructs a new Army.
@@ -1049,23 +1048,23 @@ export namespace wire {
         interface IAirplane {
 
             /** Airplane id */
-            id?: string;
+            id?: (string|null);
 
             /** Airplane army */
-            army?: wire.game.IArmy;
+            army?: (wire.game.IArmy|null);
 
             /** Airplane position */
-            position?: wire.game.IFloatCoordinate;
+            position?: (wire.game.IFloatCoordinate|null);
 
             /** Airplane direction */
-            direction?: number;
+            direction?: (number|null);
 
             /** Airplane speed */
-            speed?: number;
+            speed?: (number|null);
         }
 
         /** Represents an Airplane. */
-        class Airplane {
+        class Airplane implements IAirplane {
 
             /**
              * Constructs a new Airplane.
@@ -1163,20 +1162,20 @@ export namespace wire {
         interface IIsland {
 
             /** Island id */
-            id?: string;
+            id?: (string|null);
 
             /** Island army */
-            army?: wire.game.IArmy;
+            army?: (wire.game.IArmy|null);
 
             /** Island position */
-            position?: wire.game.ICoordinate;
+            position?: (wire.game.ICoordinate|null);
 
             /** Island size */
-            size?: number;
+            size?: (number|null);
         }
 
         /** Represents an Island. */
-        class Island {
+        class Island implements IIsland {
 
             /**
              * Constructs a new Island.
@@ -1271,29 +1270,29 @@ export namespace wire {
         interface IGame {
 
             /** Game id */
-            id?: string;
+            id?: (string|null);
 
             /** Game size */
-            size?: wire.game.ICoordinate;
+            size?: (wire.game.ICoordinate|null);
 
             /** Game player1 */
-            player1?: wire.game.IPlayer;
+            player1?: (wire.game.IPlayer|null);
 
             /** Game player2 */
-            player2?: wire.game.IPlayer;
+            player2?: (wire.game.IPlayer|null);
 
             /** Game playerNeutral */
-            playerNeutral?: wire.game.IPlayer;
+            playerNeutral?: (wire.game.IPlayer|null);
 
             /** Game islands */
-            islands?: wire.game.IIsland[];
+            islands?: (wire.game.IIsland[]|null);
 
             /** Game airplanes */
-            airplanes?: wire.game.IAirplane[];
+            airplanes?: (wire.game.IAirplane[]|null);
         }
 
         /** Represents a Game. */
-        class Game {
+        class Game implements IGame {
 
             /**
              * Constructs a new Game.

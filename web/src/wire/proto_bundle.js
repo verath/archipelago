@@ -22,14 +22,15 @@ export const wire = $root.wire = (() => {
          * Properties of an ActionEnvelope.
          * @memberof wire
          * @interface IActionEnvelope
-         * @property {wire.IActionGameLeave} [actionGameLeave] ActionEnvelope actionGameLeave
-         * @property {wire.IActionGameLaunch} [actionGameLaunch] ActionEnvelope actionGameLaunch
+         * @property {wire.IActionGameLeave|null} [actionGameLeave] ActionEnvelope actionGameLeave
+         * @property {wire.IActionGameLaunch|null} [actionGameLaunch] ActionEnvelope actionGameLaunch
          */
 
         /**
          * Constructs a new ActionEnvelope.
          * @memberof wire
          * @classdesc Represents an ActionEnvelope.
+         * @implements IActionEnvelope
          * @constructor
          * @param {wire.IActionEnvelope=} [properties] Properties to set
          */
@@ -42,7 +43,7 @@ export const wire = $root.wire = (() => {
 
         /**
          * ActionEnvelope actionGameLeave.
-         * @member {(wire.IActionGameLeave|null|undefined)}actionGameLeave
+         * @member {wire.IActionGameLeave|null|undefined} actionGameLeave
          * @memberof wire.ActionEnvelope
          * @instance
          */
@@ -50,7 +51,7 @@ export const wire = $root.wire = (() => {
 
         /**
          * ActionEnvelope actionGameLaunch.
-         * @member {(wire.IActionGameLaunch|null|undefined)}actionGameLaunch
+         * @member {wire.IActionGameLaunch|null|undefined} actionGameLaunch
          * @memberof wire.ActionEnvelope
          * @instance
          */
@@ -61,7 +62,7 @@ export const wire = $root.wire = (() => {
 
         /**
          * ActionEnvelope action.
-         * @member {string|undefined} action
+         * @member {"actionGameLeave"|"actionGameLaunch"|undefined} action
          * @memberof wire.ActionEnvelope
          * @instance
          */
@@ -176,17 +177,21 @@ export const wire = $root.wire = (() => {
             let properties = {};
             if (message.actionGameLeave != null && message.hasOwnProperty("actionGameLeave")) {
                 properties.action = 1;
-                let error = $root.wire.ActionGameLeave.verify(message.actionGameLeave);
-                if (error)
-                    return "actionGameLeave." + error;
+                {
+                    let error = $root.wire.ActionGameLeave.verify(message.actionGameLeave);
+                    if (error)
+                        return "actionGameLeave." + error;
+                }
             }
             if (message.actionGameLaunch != null && message.hasOwnProperty("actionGameLaunch")) {
                 if (properties.action === 1)
                     return "action: multiple values";
                 properties.action = 1;
-                error = $root.wire.ActionGameLaunch.verify(message.actionGameLaunch);
-                if (error)
-                    return "actionGameLaunch." + error;
+                {
+                    let error = $root.wire.ActionGameLaunch.verify(message.actionGameLaunch);
+                    if (error)
+                        return "actionGameLaunch." + error;
+                }
             }
             return null;
         };
@@ -268,6 +273,7 @@ export const wire = $root.wire = (() => {
          * Constructs a new ActionGameLeave.
          * @memberof wire
          * @classdesc Represents an ActionGameLeave.
+         * @implements IActionGameLeave
          * @constructor
          * @param {wire.IActionGameLeave=} [properties] Properties to set
          */
@@ -421,14 +427,15 @@ export const wire = $root.wire = (() => {
          * Properties of an ActionGameLaunch.
          * @memberof wire
          * @interface IActionGameLaunch
-         * @property {string} [fromId] ActionGameLaunch fromId
-         * @property {string} [toId] ActionGameLaunch toId
+         * @property {string|null} [fromId] ActionGameLaunch fromId
+         * @property {string|null} [toId] ActionGameLaunch toId
          */
 
         /**
          * Constructs a new ActionGameLaunch.
          * @memberof wire
          * @classdesc Represents an ActionGameLaunch.
+         * @implements IActionGameLaunch
          * @constructor
          * @param {wire.IActionGameLaunch=} [properties] Properties to set
          */
@@ -441,7 +448,7 @@ export const wire = $root.wire = (() => {
 
         /**
          * ActionGameLaunch fromId.
-         * @member {string}fromId
+         * @member {string} fromId
          * @memberof wire.ActionGameLaunch
          * @instance
          */
@@ -449,7 +456,7 @@ export const wire = $root.wire = (() => {
 
         /**
          * ActionGameLaunch toId.
-         * @member {string}toId
+         * @member {string} toId
          * @memberof wire.ActionGameLaunch
          * @instance
          */
@@ -630,15 +637,16 @@ export const wire = $root.wire = (() => {
          * Properties of an EventEnvelope.
          * @memberof wire
          * @interface IEventEnvelope
-         * @property {wire.IEventGameStart} [eventGameStart] EventEnvelope eventGameStart
-         * @property {wire.IEventGameOver} [eventGameOver] EventEnvelope eventGameOver
-         * @property {wire.IEventGameTick} [eventGameTick] EventEnvelope eventGameTick
+         * @property {wire.IEventGameStart|null} [eventGameStart] EventEnvelope eventGameStart
+         * @property {wire.IEventGameOver|null} [eventGameOver] EventEnvelope eventGameOver
+         * @property {wire.IEventGameTick|null} [eventGameTick] EventEnvelope eventGameTick
          */
 
         /**
          * Constructs a new EventEnvelope.
          * @memberof wire
          * @classdesc Represents an EventEnvelope.
+         * @implements IEventEnvelope
          * @constructor
          * @param {wire.IEventEnvelope=} [properties] Properties to set
          */
@@ -651,7 +659,7 @@ export const wire = $root.wire = (() => {
 
         /**
          * EventEnvelope eventGameStart.
-         * @member {(wire.IEventGameStart|null|undefined)}eventGameStart
+         * @member {wire.IEventGameStart|null|undefined} eventGameStart
          * @memberof wire.EventEnvelope
          * @instance
          */
@@ -659,7 +667,7 @@ export const wire = $root.wire = (() => {
 
         /**
          * EventEnvelope eventGameOver.
-         * @member {(wire.IEventGameOver|null|undefined)}eventGameOver
+         * @member {wire.IEventGameOver|null|undefined} eventGameOver
          * @memberof wire.EventEnvelope
          * @instance
          */
@@ -667,7 +675,7 @@ export const wire = $root.wire = (() => {
 
         /**
          * EventEnvelope eventGameTick.
-         * @member {(wire.IEventGameTick|null|undefined)}eventGameTick
+         * @member {wire.IEventGameTick|null|undefined} eventGameTick
          * @memberof wire.EventEnvelope
          * @instance
          */
@@ -678,7 +686,7 @@ export const wire = $root.wire = (() => {
 
         /**
          * EventEnvelope event.
-         * @member {string|undefined} event
+         * @member {"eventGameStart"|"eventGameOver"|"eventGameTick"|undefined} event
          * @memberof wire.EventEnvelope
          * @instance
          */
@@ -798,25 +806,31 @@ export const wire = $root.wire = (() => {
             let properties = {};
             if (message.eventGameStart != null && message.hasOwnProperty("eventGameStart")) {
                 properties.event = 1;
-                let error = $root.wire.EventGameStart.verify(message.eventGameStart);
-                if (error)
-                    return "eventGameStart." + error;
+                {
+                    let error = $root.wire.EventGameStart.verify(message.eventGameStart);
+                    if (error)
+                        return "eventGameStart." + error;
+                }
             }
             if (message.eventGameOver != null && message.hasOwnProperty("eventGameOver")) {
                 if (properties.event === 1)
                     return "event: multiple values";
                 properties.event = 1;
-                error = $root.wire.EventGameOver.verify(message.eventGameOver);
-                if (error)
-                    return "eventGameOver." + error;
+                {
+                    let error = $root.wire.EventGameOver.verify(message.eventGameOver);
+                    if (error)
+                        return "eventGameOver." + error;
+                }
             }
             if (message.eventGameTick != null && message.hasOwnProperty("eventGameTick")) {
                 if (properties.event === 1)
                     return "event: multiple values";
                 properties.event = 1;
-                error = $root.wire.EventGameTick.verify(message.eventGameTick);
-                if (error)
-                    return "eventGameTick." + error;
+                {
+                    let error = $root.wire.EventGameTick.verify(message.eventGameTick);
+                    if (error)
+                        return "eventGameTick." + error;
+                }
             }
             return null;
         };
@@ -902,14 +916,15 @@ export const wire = $root.wire = (() => {
          * Properties of an EventGameStart.
          * @memberof wire
          * @interface IEventGameStart
-         * @property {string} [playerId] EventGameStart playerId
-         * @property {number|Long} [tickInterval] EventGameStart tickInterval
+         * @property {string|null} [playerId] EventGameStart playerId
+         * @property {number|Long|null} [tickInterval] EventGameStart tickInterval
          */
 
         /**
          * Constructs a new EventGameStart.
          * @memberof wire
          * @classdesc Represents an EventGameStart.
+         * @implements IEventGameStart
          * @constructor
          * @param {wire.IEventGameStart=} [properties] Properties to set
          */
@@ -922,7 +937,7 @@ export const wire = $root.wire = (() => {
 
         /**
          * EventGameStart playerId.
-         * @member {string}playerId
+         * @member {string} playerId
          * @memberof wire.EventGameStart
          * @instance
          */
@@ -930,7 +945,7 @@ export const wire = $root.wire = (() => {
 
         /**
          * EventGameStart tickInterval.
-         * @member {number|Long}tickInterval
+         * @member {number|Long} tickInterval
          * @memberof wire.EventGameStart
          * @instance
          */
@@ -1125,13 +1140,14 @@ export const wire = $root.wire = (() => {
          * Properties of an EventGameOver.
          * @memberof wire
          * @interface IEventGameOver
-         * @property {string} [winnerId] EventGameOver winnerId
+         * @property {string|null} [winnerId] EventGameOver winnerId
          */
 
         /**
          * Constructs a new EventGameOver.
          * @memberof wire
          * @classdesc Represents an EventGameOver.
+         * @implements IEventGameOver
          * @constructor
          * @param {wire.IEventGameOver=} [properties] Properties to set
          */
@@ -1144,7 +1160,7 @@ export const wire = $root.wire = (() => {
 
         /**
          * EventGameOver winnerId.
-         * @member {string}winnerId
+         * @member {string} winnerId
          * @memberof wire.EventGameOver
          * @instance
          */
@@ -1311,13 +1327,14 @@ export const wire = $root.wire = (() => {
          * Properties of an EventGameTick.
          * @memberof wire
          * @interface IEventGameTick
-         * @property {wire.game.IGame} [game] EventGameTick game
+         * @property {wire.game.IGame|null} [game] EventGameTick game
          */
 
         /**
          * Constructs a new EventGameTick.
          * @memberof wire
          * @classdesc Represents an EventGameTick.
+         * @implements IEventGameTick
          * @constructor
          * @param {wire.IEventGameTick=} [properties] Properties to set
          */
@@ -1330,7 +1347,7 @@ export const wire = $root.wire = (() => {
 
         /**
          * EventGameTick game.
-         * @member {(wire.game.IGame|null|undefined)}game
+         * @member {wire.game.IGame|null|undefined} game
          * @memberof wire.EventGameTick
          * @instance
          */
@@ -1511,14 +1528,15 @@ export const wire = $root.wire = (() => {
              * Properties of a Coordinate.
              * @memberof wire.game
              * @interface ICoordinate
-             * @property {number|Long} [x] Coordinate x
-             * @property {number|Long} [y] Coordinate y
+             * @property {number|Long|null} [x] Coordinate x
+             * @property {number|Long|null} [y] Coordinate y
              */
 
             /**
              * Constructs a new Coordinate.
              * @memberof wire.game
              * @classdesc Represents a Coordinate.
+             * @implements ICoordinate
              * @constructor
              * @param {wire.game.ICoordinate=} [properties] Properties to set
              */
@@ -1531,7 +1549,7 @@ export const wire = $root.wire = (() => {
 
             /**
              * Coordinate x.
-             * @member {number|Long}x
+             * @member {number|Long} x
              * @memberof wire.game.Coordinate
              * @instance
              */
@@ -1539,7 +1557,7 @@ export const wire = $root.wire = (() => {
 
             /**
              * Coordinate y.
-             * @member {number|Long}y
+             * @member {number|Long} y
              * @memberof wire.game.Coordinate
              * @instance
              */
@@ -1748,14 +1766,15 @@ export const wire = $root.wire = (() => {
              * Properties of a FloatCoordinate.
              * @memberof wire.game
              * @interface IFloatCoordinate
-             * @property {number} [x] FloatCoordinate x
-             * @property {number} [y] FloatCoordinate y
+             * @property {number|null} [x] FloatCoordinate x
+             * @property {number|null} [y] FloatCoordinate y
              */
 
             /**
              * Constructs a new FloatCoordinate.
              * @memberof wire.game
              * @classdesc Represents a FloatCoordinate.
+             * @implements IFloatCoordinate
              * @constructor
              * @param {wire.game.IFloatCoordinate=} [properties] Properties to set
              */
@@ -1768,7 +1787,7 @@ export const wire = $root.wire = (() => {
 
             /**
              * FloatCoordinate x.
-             * @member {number}x
+             * @member {number} x
              * @memberof wire.game.FloatCoordinate
              * @instance
              */
@@ -1776,7 +1795,7 @@ export const wire = $root.wire = (() => {
 
             /**
              * FloatCoordinate y.
-             * @member {number}y
+             * @member {number} y
              * @memberof wire.game.FloatCoordinate
              * @instance
              */
@@ -1957,13 +1976,14 @@ export const wire = $root.wire = (() => {
              * Properties of a Player.
              * @memberof wire.game
              * @interface IPlayer
-             * @property {string} [id] Player id
+             * @property {string|null} [id] Player id
              */
 
             /**
              * Constructs a new Player.
              * @memberof wire.game
              * @classdesc Represents a Player.
+             * @implements IPlayer
              * @constructor
              * @param {wire.game.IPlayer=} [properties] Properties to set
              */
@@ -1976,7 +1996,7 @@ export const wire = $root.wire = (() => {
 
             /**
              * Player id.
-             * @member {string}id
+             * @member {string} id
              * @memberof wire.game.Player
              * @instance
              */
@@ -2143,14 +2163,15 @@ export const wire = $root.wire = (() => {
              * Properties of an Army.
              * @memberof wire.game
              * @interface IArmy
-             * @property {string} [ownerId] Army ownerId
-             * @property {number|Long} [strength] Army strength
+             * @property {string|null} [ownerId] Army ownerId
+             * @property {number|Long|null} [strength] Army strength
              */
 
             /**
              * Constructs a new Army.
              * @memberof wire.game
              * @classdesc Represents an Army.
+             * @implements IArmy
              * @constructor
              * @param {wire.game.IArmy=} [properties] Properties to set
              */
@@ -2163,7 +2184,7 @@ export const wire = $root.wire = (() => {
 
             /**
              * Army ownerId.
-             * @member {string}ownerId
+             * @member {string} ownerId
              * @memberof wire.game.Army
              * @instance
              */
@@ -2171,7 +2192,7 @@ export const wire = $root.wire = (() => {
 
             /**
              * Army strength.
-             * @member {number|Long}strength
+             * @member {number|Long} strength
              * @memberof wire.game.Army
              * @instance
              */
@@ -2366,17 +2387,18 @@ export const wire = $root.wire = (() => {
              * Properties of an Airplane.
              * @memberof wire.game
              * @interface IAirplane
-             * @property {string} [id] Airplane id
-             * @property {wire.game.IArmy} [army] Airplane army
-             * @property {wire.game.IFloatCoordinate} [position] Airplane position
-             * @property {number} [direction] Airplane direction
-             * @property {number} [speed] Airplane speed
+             * @property {string|null} [id] Airplane id
+             * @property {wire.game.IArmy|null} [army] Airplane army
+             * @property {wire.game.IFloatCoordinate|null} [position] Airplane position
+             * @property {number|null} [direction] Airplane direction
+             * @property {number|null} [speed] Airplane speed
              */
 
             /**
              * Constructs a new Airplane.
              * @memberof wire.game
              * @classdesc Represents an Airplane.
+             * @implements IAirplane
              * @constructor
              * @param {wire.game.IAirplane=} [properties] Properties to set
              */
@@ -2389,7 +2411,7 @@ export const wire = $root.wire = (() => {
 
             /**
              * Airplane id.
-             * @member {string}id
+             * @member {string} id
              * @memberof wire.game.Airplane
              * @instance
              */
@@ -2397,7 +2419,7 @@ export const wire = $root.wire = (() => {
 
             /**
              * Airplane army.
-             * @member {(wire.game.IArmy|null|undefined)}army
+             * @member {wire.game.IArmy|null|undefined} army
              * @memberof wire.game.Airplane
              * @instance
              */
@@ -2405,7 +2427,7 @@ export const wire = $root.wire = (() => {
 
             /**
              * Airplane position.
-             * @member {(wire.game.IFloatCoordinate|null|undefined)}position
+             * @member {wire.game.IFloatCoordinate|null|undefined} position
              * @memberof wire.game.Airplane
              * @instance
              */
@@ -2413,7 +2435,7 @@ export const wire = $root.wire = (() => {
 
             /**
              * Airplane direction.
-             * @member {number}direction
+             * @member {number} direction
              * @memberof wire.game.Airplane
              * @instance
              */
@@ -2421,7 +2443,7 @@ export const wire = $root.wire = (() => {
 
             /**
              * Airplane speed.
-             * @member {number}speed
+             * @member {number} speed
              * @memberof wire.game.Airplane
              * @instance
              */
@@ -2554,7 +2576,7 @@ export const wire = $root.wire = (() => {
                         return "army." + error;
                 }
                 if (message.position != null && message.hasOwnProperty("position")) {
-                    error = $root.wire.game.FloatCoordinate.verify(message.position);
+                    let error = $root.wire.game.FloatCoordinate.verify(message.position);
                     if (error)
                         return "position." + error;
                 }
@@ -2651,16 +2673,17 @@ export const wire = $root.wire = (() => {
              * Properties of an Island.
              * @memberof wire.game
              * @interface IIsland
-             * @property {string} [id] Island id
-             * @property {wire.game.IArmy} [army] Island army
-             * @property {wire.game.ICoordinate} [position] Island position
-             * @property {number} [size] Island size
+             * @property {string|null} [id] Island id
+             * @property {wire.game.IArmy|null} [army] Island army
+             * @property {wire.game.ICoordinate|null} [position] Island position
+             * @property {number|null} [size] Island size
              */
 
             /**
              * Constructs a new Island.
              * @memberof wire.game
              * @classdesc Represents an Island.
+             * @implements IIsland
              * @constructor
              * @param {wire.game.IIsland=} [properties] Properties to set
              */
@@ -2673,7 +2696,7 @@ export const wire = $root.wire = (() => {
 
             /**
              * Island id.
-             * @member {string}id
+             * @member {string} id
              * @memberof wire.game.Island
              * @instance
              */
@@ -2681,7 +2704,7 @@ export const wire = $root.wire = (() => {
 
             /**
              * Island army.
-             * @member {(wire.game.IArmy|null|undefined)}army
+             * @member {wire.game.IArmy|null|undefined} army
              * @memberof wire.game.Island
              * @instance
              */
@@ -2689,7 +2712,7 @@ export const wire = $root.wire = (() => {
 
             /**
              * Island position.
-             * @member {(wire.game.ICoordinate|null|undefined)}position
+             * @member {wire.game.ICoordinate|null|undefined} position
              * @memberof wire.game.Island
              * @instance
              */
@@ -2697,7 +2720,7 @@ export const wire = $root.wire = (() => {
 
             /**
              * Island size.
-             * @member {number}size
+             * @member {number} size
              * @memberof wire.game.Island
              * @instance
              */
@@ -2825,7 +2848,7 @@ export const wire = $root.wire = (() => {
                         return "army." + error;
                 }
                 if (message.position != null && message.hasOwnProperty("position")) {
-                    error = $root.wire.game.Coordinate.verify(message.position);
+                    let error = $root.wire.game.Coordinate.verify(message.position);
                     if (error)
                         return "position." + error;
                 }
@@ -2914,19 +2937,20 @@ export const wire = $root.wire = (() => {
              * Properties of a Game.
              * @memberof wire.game
              * @interface IGame
-             * @property {string} [id] Game id
-             * @property {wire.game.ICoordinate} [size] Game size
-             * @property {wire.game.IPlayer} [player1] Game player1
-             * @property {wire.game.IPlayer} [player2] Game player2
-             * @property {wire.game.IPlayer} [playerNeutral] Game playerNeutral
-             * @property {Array.<wire.game.IIsland>} [islands] Game islands
-             * @property {Array.<wire.game.IAirplane>} [airplanes] Game airplanes
+             * @property {string|null} [id] Game id
+             * @property {wire.game.ICoordinate|null} [size] Game size
+             * @property {wire.game.IPlayer|null} [player1] Game player1
+             * @property {wire.game.IPlayer|null} [player2] Game player2
+             * @property {wire.game.IPlayer|null} [playerNeutral] Game playerNeutral
+             * @property {Array.<wire.game.IIsland>|null} [islands] Game islands
+             * @property {Array.<wire.game.IAirplane>|null} [airplanes] Game airplanes
              */
 
             /**
              * Constructs a new Game.
              * @memberof wire.game
              * @classdesc Represents a Game.
+             * @implements IGame
              * @constructor
              * @param {wire.game.IGame=} [properties] Properties to set
              */
@@ -2941,7 +2965,7 @@ export const wire = $root.wire = (() => {
 
             /**
              * Game id.
-             * @member {string}id
+             * @member {string} id
              * @memberof wire.game.Game
              * @instance
              */
@@ -2949,7 +2973,7 @@ export const wire = $root.wire = (() => {
 
             /**
              * Game size.
-             * @member {(wire.game.ICoordinate|null|undefined)}size
+             * @member {wire.game.ICoordinate|null|undefined} size
              * @memberof wire.game.Game
              * @instance
              */
@@ -2957,7 +2981,7 @@ export const wire = $root.wire = (() => {
 
             /**
              * Game player1.
-             * @member {(wire.game.IPlayer|null|undefined)}player1
+             * @member {wire.game.IPlayer|null|undefined} player1
              * @memberof wire.game.Game
              * @instance
              */
@@ -2965,7 +2989,7 @@ export const wire = $root.wire = (() => {
 
             /**
              * Game player2.
-             * @member {(wire.game.IPlayer|null|undefined)}player2
+             * @member {wire.game.IPlayer|null|undefined} player2
              * @memberof wire.game.Game
              * @instance
              */
@@ -2973,7 +2997,7 @@ export const wire = $root.wire = (() => {
 
             /**
              * Game playerNeutral.
-             * @member {(wire.game.IPlayer|null|undefined)}playerNeutral
+             * @member {wire.game.IPlayer|null|undefined} playerNeutral
              * @memberof wire.game.Game
              * @instance
              */
@@ -2981,7 +3005,7 @@ export const wire = $root.wire = (() => {
 
             /**
              * Game islands.
-             * @member {Array.<wire.game.IIsland>}islands
+             * @member {Array.<wire.game.IIsland>} islands
              * @memberof wire.game.Game
              * @instance
              */
@@ -2989,7 +3013,7 @@ export const wire = $root.wire = (() => {
 
             /**
              * Game airplanes.
-             * @member {Array.<wire.game.IAirplane>}airplanes
+             * @member {Array.<wire.game.IAirplane>} airplanes
              * @memberof wire.game.Game
              * @instance
              */
@@ -3138,17 +3162,17 @@ export const wire = $root.wire = (() => {
                         return "size." + error;
                 }
                 if (message.player1 != null && message.hasOwnProperty("player1")) {
-                    error = $root.wire.game.Player.verify(message.player1);
+                    let error = $root.wire.game.Player.verify(message.player1);
                     if (error)
                         return "player1." + error;
                 }
                 if (message.player2 != null && message.hasOwnProperty("player2")) {
-                    error = $root.wire.game.Player.verify(message.player2);
+                    let error = $root.wire.game.Player.verify(message.player2);
                     if (error)
                         return "player2." + error;
                 }
                 if (message.playerNeutral != null && message.hasOwnProperty("playerNeutral")) {
-                    error = $root.wire.game.Player.verify(message.playerNeutral);
+                    let error = $root.wire.game.Player.verify(message.playerNeutral);
                     if (error)
                         return "playerNeutral." + error;
                 }
@@ -3156,7 +3180,7 @@ export const wire = $root.wire = (() => {
                     if (!Array.isArray(message.islands))
                         return "islands: array expected";
                     for (let i = 0; i < message.islands.length; ++i) {
-                        error = $root.wire.game.Island.verify(message.islands[i]);
+                        let error = $root.wire.game.Island.verify(message.islands[i]);
                         if (error)
                             return "islands." + error;
                     }
@@ -3165,7 +3189,7 @@ export const wire = $root.wire = (() => {
                     if (!Array.isArray(message.airplanes))
                         return "airplanes: array expected";
                     for (let i = 0; i < message.airplanes.length; ++i) {
-                        error = $root.wire.game.Airplane.verify(message.airplanes[i]);
+                        let error = $root.wire.game.Airplane.verify(message.airplanes[i]);
                         if (error)
                             return "airplanes." + error;
                     }

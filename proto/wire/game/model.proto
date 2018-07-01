@@ -1,6 +1,6 @@
 syntax = "proto3";
 package wire.game;
-option go_package = "lib/wire/game";
+option go_package = "github.com/verath/archipelago/lib/wire/game";
 
 message Coordinate {
     int64 x = 1;

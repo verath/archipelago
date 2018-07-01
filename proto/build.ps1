@@ -5,10 +5,6 @@
 
 $ErrorActionPreference = "Stop"
 $project_root = (Resolve-Path (Join-Path $PSScriptRoot "\..\")).Path
-# import prefix for the go language imports. This is required as we run from
-# the project root rather than the go root. Note that this will be prefixed
-# to every import in the generated .pb.go file.
-$go_import_prefix = "github.com/verath/archipelago/"
 
 $js_out_dir = (Resolve-Path "$project_root\web\src\wire").Path
 $js_bundle = "$js_out_dir\proto_bundle.js"
@@ -29,7 +25,7 @@ $proto_packages = Get-ChildItem -Recurse -Directory .\proto | Resolve-Path -Rela
 Write-Host "Protobuf definitions:"
 foreach($package in $proto_packages) {
     Write-Host "`t $package"
-    Get-ChildItem -File -Filter *.proto $package | foreach {
+    Get-ChildItem -File -Filter *.proto $package | ForEach-Object {
         Write-Host "`t`t $_"
     }
 }
@@ -37,7 +33,7 @@ Write-Host ""
 
 # Remove old .pb.go files, in case we removed some .proto file
 Write-Host "Removing previously generated go files:"
-Get-ChildItem -File -Recurse lib\*.pb.go | foreach {
+Get-ChildItem -File -Recurse lib\*.pb.go | ForEach-Object {
     Write-Host "`t $(Resolve-Path -Relative $_.FullName)" -ForegroundColor Red
     Remove-Item $_
 }
@@ -46,26 +42,23 @@ Write-Host ""
 # Build new .pb.go files from the found proto packages.
 Write-Host "Generating go files:"
 foreach($package in $proto_packages) {
-    protoc -I . --go_out=import_prefix=$($go_import_prefix):. $package\*.proto
+    $package_files = Get-ChildItem $package\*.proto | Resolve-Path -Relative
+    $protoc_opts = @("--proto_path=proto", "--go_out=paths=source_relative:lib")
+    $protoc_opts += $package_files
+    &protoc $protoc_opts
     if (-not $?) {
         Pop-Location
         exit
     }
 }
-Get-ChildItem -File -Recurse lib\*.pb.go | foreach {
+Get-ChildItem -File -Recurse lib\*.pb.go | ForEach-Object {
     Write-Host "`t $(Resolve-Path -Relative $_.FullName)" -ForegroundColor Green
 }
 Write-Host ""
 
-# Fix import path and format the generated .go files.
-Get-ChildItem -File -Recurse lib\*.pb.go | foreach {
-    # HACK: Due to the import_prefix setting of the go_out every package is prefixed
-    # with $go_import_prefix. We only want this for imports to our lib, as such we
-    # strip this prefix from all other imports.
-    # Fix when protobuf: https://github.com/golang/protobuf/pull/64#issuecomment-288121664
-    (Get-Content $_) -replace "$go_import_prefix(github\.com|golang\.org|google\.golang\.org)", '$1' | Set-Content $_
-
-    gofmt -s -w $_
+# Run gofmt on the generated .go files 
+Get-ChildItem -File -Recurse lib\*.pb.go | ForEach-Object {
+    &gofmt -s -w $_
 }
 
 Write-Host "Generating .js bundle"
@@ -77,5 +70,4 @@ Write-Host "Generating .d.ts bundle (TypeScript definitions)"
 &$pbts --out $ts_bundle $js_bundle | Out-Host
 Write-Host "`t $(Resolve-Path -Relative $ts_bundle)" -ForegroundColor Green
 Write-Host ""
-
 Pop-Location
