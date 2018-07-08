@@ -2,17 +2,12 @@ package game
 
 import (
 	"context"
-	"io/ioutil"
 	"testing"
 	"time"
 
-	"github.com/sirupsen/logrus"
 	"github.com/verath/archipelago/lib/game/model"
+	"github.com/verath/archipelago/lib/game/testutil"
 )
-
-var log = &logrus.Logger{
-	Out: ioutil.Discard,
-}
 
 // Type implementing the Action interface as a function
 type actionFunc func(game *model.Game) ([]model.Event, error)
@@ -23,7 +18,7 @@ func (f actionFunc) Apply(g *model.Game) ([]model.Event, error) {
 
 func TestGameLoop_Start_Stop(t *testing.T) {
 	game := &model.Game{}
-	gl, _ := newGameLoop(log, game)
+	gl, _ := newGameLoop(testutil.DiscardLogger, game)
 	ctx, cancel := context.WithCancel(context.Background())
 
 	go func() {
@@ -37,7 +32,7 @@ func TestGameLoop_Start_Stop(t *testing.T) {
 func TestGameLoop_AddAction(t *testing.T) {
 	game := &model.Game{}
 	ctx := context.Background()
-	gl, _ := newGameLoop(log, game)
+	gl, _ := newGameLoop(testutil.DiscardLogger, game)
 
 	t.Log("Adding actions to game loop...")
 	a1Applied := false
@@ -75,7 +70,7 @@ func TestGameLoop_AddAction_RealTick(t *testing.T) {
 	}
 
 	game := &model.Game{}
-	gl, _ := newGameLoop(log, game)
+	gl, _ := newGameLoop(testutil.DiscardLogger, game)
 	gl.tickInterval = time.Millisecond
 	ctx, cancel := context.WithCancel(context.Background())
 	timesApplied := 0
