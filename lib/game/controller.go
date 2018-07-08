@@ -7,40 +7,33 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/verath/archipelago/lib/common"
 	"github.com/verath/archipelago/lib/game/model"
+	"sync"
 )
 
 // The game controller represents a single game. It starts and handles
-// communication between the game loop and the player connections.
+// communication between the game loop and the player proxies.
 type controller struct {
 	logEntry *logrus.Entry
 
 	gameLoop *gameLoop
-	p1Proxy  *playerProxy
-	p2Proxy  *playerProxy
+
+	playersMu sync.RWMutex
+	// players is a list of players that the controller reads actions
+	// from, and sends event to. This list may shrink while the game
+	// is running due to players leaving.
+	players []*playerProxy
 }
 
 // newController creates a new game controller.
-func newController(log *logrus.Logger, game *model.Game, p1Client, p2Client Client) (*controller, error) {
+func newController(log *logrus.Logger, gameLoop *gameLoop, players ... *playerProxy) (*controller, error) {
 	logEntry := common.ModuleLogEntryWithID(log, "game/controller")
-
-	gameLoop, err := newGameLoop(log, game)
-	if err != nil {
-		return nil, errors.Wrap(err, "Error creating gameLoop")
+	if len(players) == 0 {
+		return nil, errors.New("there must be at least one player")
 	}
-	p1Proxy, err := newPlayerProxy(game.Player1(), p1Client)
-	if err != nil {
-		return nil, errors.Wrap(err, "Error creating player1 proxy")
-	}
-	p2Proxy, err := newPlayerProxy(game.Player2(), p2Client)
-	if err != nil {
-		return nil, errors.Wrap(err, "Error creating player2 proxy")
-	}
-
 	return &controller{
 		logEntry: logEntry,
 		gameLoop: gameLoop,
-		p1Proxy:  p1Proxy,
-		p2Proxy:  p2Proxy,
+		players:  players,
 	}, nil
 }
 
@@ -60,35 +53,49 @@ func (ctrl *controller) run(ctx context.Context) error {
 	ctrl.gameLoop.SetEventHandler(ctrl)
 	defer ctrl.gameLoop.SetEventHandler(nil)
 
-	// Start the action forwarding loop
+	// Start the action forwarding loop and the game loop
 	ctx, cancel := context.WithCancel(ctx)
-	actionErrCh := make(chan error)
-	go func() { actionErrCh <- ctrl.actionLoop(ctx) }()
-	// Before returning control, make sure the action loop has finished
-	defer func() {
-		ctrl.logEntry.Debug("Stopping the action loop")
-		cancel()
-		<-actionErrCh
-	}()
-	// Run the game loop until it finishes
-	err := ctrl.gameLoop.Run(ctx)
-	return errors.Wrap(err, "Error while running game loop")
-}
-
-// Broadcast an event to both the player proxies simultaneously. Blocks until both
-// events have been sent.
-func (ctrl *controller) broadcastEvent(ctx context.Context, evt model.Event) error {
 	errCh := make(chan error)
-	go func() { errCh <- ctrl.p1Proxy.WriteEvent(ctx, evt) }()
-	go func() { errCh <- ctrl.p2Proxy.WriteEvent(ctx, evt) }()
-	err, err2 := <-errCh, <-errCh
-	if err == nil {
-		err = err2
-	}
-	return errors.Wrapf(err, "Failed broadcasting event of type: %T", evt)
+	go func() {
+		err := ctrl.actionLoop(ctx)
+		errCh <- errors.Wrap(err, "error in actionLoop")
+	}()
+	go func() {
+		err := ctrl.gameLoop.Run(ctx)
+		errCh <- errors.Wrap(err, "error in gameLoop")
+	}()
+	err := <-errCh
+	cancel()
+	<-errCh
+	return err
 }
 
-// handleEvent forwards the event to both players, and blocks until the event
+// broadcastEvent broadcast an event to all players simultaneously. Blocks until
+// all events have been sent. broadcastEvent return an error if any write to a
+// player failed.
+func (ctrl *controller) broadcastEvent(ctx context.Context, evt model.Event) error {
+	ctrl.playersMu.RLock()
+	players := make([]*playerProxy, len(ctrl.players))
+	copy(players, ctrl.players)
+	ctrl.playersMu.RUnlock()
+
+	errCh := make(chan error)
+	for _, player := range players {
+		go func(player *playerProxy) {
+			errCh <- player.WriteEvent(ctx, evt)
+		}(player)
+	}
+	// Wait for all writes to finish, return first error (if any)
+	var err error
+	for range players {
+		if err2 := <-errCh; err == nil {
+			err = err2
+		}
+	}
+	return errors.Wrapf(err, "failed broadcasting event of type: %T", evt)
+}
+
+// handleEvent forwards the event to all players, and blocks until the event
 // has been successfully sent. Called by the gameLoop for each event produced.
 func (ctrl *controller) handleEvent(ctx context.Context, evt model.Event) {
 	if err := ctrl.broadcastEvent(ctx, evt); err != nil {
@@ -97,13 +104,13 @@ func (ctrl *controller) handleEvent(ctx context.Context, evt model.Event) {
 }
 
 // playerActionLoop is a helper method for reading actions from one player
-// and sending them to the actionCh. Blocks until an error occurs or the context
-// is canceled. Always returns a non-nil error.
-func (ctrl *controller) playerActionLoop(ctx context.Context, proxy *playerProxy, actionCh chan<- model.Action) error {
+// and sending them to the actionCh. Blocks until an error occurs or the
+// context is canceled. Always returns a non-nil error.
+func (ctrl *controller) playerActionLoop(ctx context.Context, player *playerProxy, actionCh chan<- model.Action) error {
 	for {
-		act, err := proxy.ReadAction(ctx)
+		act, err := player.ReadAction(ctx)
 		if err != nil {
-			return errors.Wrap(err, "Could not get action from proxy")
+			return errors.Wrap(err, "could not read action from player")
 		}
 		select {
 		case actionCh <- act:
@@ -113,50 +120,82 @@ func (ctrl *controller) playerActionLoop(ctx context.Context, proxy *playerProxy
 	}
 }
 
-// The actionLoop takes actions from both players and forwards them
-// to the gameLoop. Blocks until an error occurs or the context
-// is canceled. Always returns a non-nil error.
+// removePlayer removes the given player from the controller, making
+// it no longer part of the players receiving game events. Returns
+// an error if the player could not be found.
+func (ctrl *controller) removePlayer(playerToRemove *playerProxy) error {
+	ctrl.playersMu.Lock()
+	defer ctrl.playersMu.Unlock()
+	for i, player := range ctrl.players {
+		if player == playerToRemove {
+			ctrl.players[i] = ctrl.players[len(ctrl.players)-1]
+			ctrl.players[len(ctrl.players)-1] = nil
+			ctrl.players = ctrl.players[:len(ctrl.players)-1]
+			return nil
+		}
+	}
+	return errors.New("tried to remove player that did not exist")
+}
+
+// The actionLoop takes actions from all players and forwards them
+// to the gameLoop. If reading actions from a player fails, that
+// player is removed from the controller. actionLoop blocks until
+// the context is cancelled or an error occurs.
 func (ctrl *controller) actionLoop(ctx context.Context) error {
 	// A struct holding both an error and the proxy in which the error occurred,
 	// used so we can share the handling of the error
 	type actionLoopError struct {
-		error error
-		proxy *playerProxy
+		error  error
+		player *playerProxy
 	}
 	ctx, cancel := context.WithCancel(ctx)
 	actionCh := make(chan model.Action)
-	errCh := make(chan actionLoopError)
+	actionErrCh := make(chan actionLoopError)
 
-	// Spawn a actions reading loop for each player, both broadcasting
+	// Spawn an action reading loop for each player, each broadcasting
 	// new actions to a shared actionCh channel.
-	go func() {
-		err := ctrl.playerActionLoop(ctx, ctrl.p1Proxy, actionCh)
-		errCh <- actionLoopError{err, ctrl.p1Proxy}
-	}()
-	go func() {
-		err := ctrl.playerActionLoop(ctx, ctrl.p2Proxy, actionCh)
-		errCh <- actionLoopError{err, ctrl.p2Proxy}
-	}()
+	for _, player := range ctrl.players {
+		go func(player *playerProxy) {
+			err := ctrl.playerActionLoop(ctx, player, actionCh)
+			actionErrCh <- actionLoopError{err, player}
+		}(player)
+	}
 
-	// Read actions from the actionCh channel and forward them to the
-	// gameLoop, applying them to the game. If an error is posted on the
-	// errCh, then a player leave action is created for that player,
-	// resulting in a game over with the remaining player as the winner.
-	for {
+	// Read actions from the actionCh channel and forward them to the gameLoop,
+	// which applies them to the game. If an error is posted on the errCh,
+	// then a player leave action is created for that player and the player is
+	// removed from the controller.
+	remainingPlayers := len(ctrl.players)
+	var err error
+	for err == nil {
 		select {
 		case act := <-actionCh:
 			ctrl.gameLoop.AddAction(act)
-		case err := <-errCh:
+		case actLoopErr := <-actionErrCh:
+			remainingPlayers -= 1
+			if removeErr := ctrl.removePlayer(actLoopErr.player); removeErr != nil {
+				err = errors.Wrap(removeErr, "could not remove player")
+				break
+			}
 			leavePlayerAct := &model.PlayerActionLeave{}
-			leaveAct := leavePlayerAct.ToAction(err.proxy.playerID)
+			leaveAct := leavePlayerAct.ToAction(actLoopErr.player.playerID)
 			ctrl.gameLoop.AddAction(leaveAct)
-			cancel()
-			<-errCh
 			ctrl.logEntry.WithFields(logrus.Fields{
-				logrus.ErrorKey: err.error,
-				"PlayerID":      err.proxy.playerID,
-			}).Debug("Error in action loop")
-			return err.error
+				logrus.ErrorKey: actLoopErr.error,
+				"PlayerID":      actLoopErr.player.playerID,
+			}).Debug("error in action loop, sending leave action for player")
+		case <-ctx.Done():
+			err = ctx.Err()
+			break
 		}
 	}
+
+	// Wait for remaining (if any) player action reading loops to finish
+	cancel()
+	for i := 0; i < remainingPlayers; i++ {
+		<-actionErrCh
+	}
+	close(actionCh)
+	close(actionErrCh)
+	return err
 }

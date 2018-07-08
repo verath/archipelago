@@ -133,7 +133,19 @@ func (c *Coordinator) startGame(ctx context.Context, p1Client Client, p2Client C
 	if err != nil {
 		return errors.Wrap(err, "Error creating game")
 	}
-	ctrl, err := newController(c.logEntry.Logger, game, p1Client, p2Client)
+	gameLoop, err := newGameLoop(c.logEntry.Logger, game)
+	if err != nil {
+		return errors.Wrap(err, "Error creating gameLoop")
+	}
+	p1Proxy, err := newPlayerProxy(game.Player1(), p1Client)
+	if err != nil {
+		return errors.Wrap(err, "Error creating player1 proxy")
+	}
+	p2Proxy, err := newPlayerProxy(game.Player2(), p2Client)
+	if err != nil {
+		return errors.Wrap(err, "Error creating player2 proxy")
+	}
+	ctrl, err := newController(c.logEntry.Logger, gameLoop, p1Proxy, p2Proxy)
 	if err != nil {
 		return errors.Wrap(err, "Error creating game controller")
 	}
