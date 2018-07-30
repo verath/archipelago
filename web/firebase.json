@@ -34,6 +34,10 @@
           {
             "key": "Content-Security-Policy",
             "value": "default-src 'none'; base-uri 'self'; block-all-mixed-content; child-src 'self'; connect-src 'self' wss://ws.playarchipelago.com; img-src 'self' data:; manifest-src 'self'; script-src 'self' 'unsafe-eval'; style-src 'self'; worker-src 'self';"
+          },
+          {
+            "key": "Referrer-Policy",
+            "value": "strict-origin"
           }
         ]
       }
