@@ -1,0 +1,14 @@
+github.com/golang/protobuf v1.1.0 h1:0iH4Ffd/meGoXqF2lSAhZHt8X+cPgkfn/cb6Cce5Vpc=
+github.com/golang/protobuf v1.1.0/go.mod h1:6lQm79b+lXiMfvg/cZm0SGofjICqVBUtrP5yJMmIC1U=
+github.com/gorilla/websocket v1.2.1-0.20180605202552-5ed622c449da h1:stgWSEBZWsUvnmItMW+abV+o9NqjPLSEjYOww8mS2a8=
+github.com/gorilla/websocket v1.2.1-0.20180605202552-5ed622c449da/go.mod h1:E7qHFY5m1UJ88s3WnNqhKjPHQ0heANvMoAMk2YaljkQ=
+github.com/pkg/errors v0.8.1-0.20180311214515-816c9085562c h1:SZvPVPsWE261bl8uxQ6Siq+ExNmYomz4CTU9E0ALgj4=
+github.com/pkg/errors v0.8.1-0.20180311214515-816c9085562c/go.mod h1:bwawxfHBFNV+L2hUp1rHADufV3IMtnDRdf1r5NINEl0=
+github.com/pkg/profile v1.2.1 h1:F++O52m40owAmADcojzM+9gyjmMOY/T4oYJkgFDH8RE=
+github.com/pkg/profile v1.2.1/go.mod h1:hJw3o1OdXxsrSjjVksARp5W95eeEaEfptyVZyv6JUPA=
+github.com/sirupsen/logrus v1.0.5 h1:8c8b5uO0zS4X6RPl/sd1ENwSkIc0/H2PaHxE3udaE8I=
+github.com/sirupsen/logrus v1.0.5/go.mod h1:pMByvHTf9Beacp5x1UXfOR9xyW/9antXMhjMPG0dEzc=
+golang.org/x/crypto v0.0.0-20180621125126-a49355c7e3f8 h1:h7zdf0RiEvWbYBKIx4b+q41xoUVnMmvsGZnIVE5syG8=
+golang.org/x/crypto v0.0.0-20180621125126-a49355c7e3f8/go.mod h1:6SG95UA2DQfeDnfUPMdvaQW0Q7yPrPDi9nlGo2tz2b4=
+golang.org/x/sys v0.0.0-20180627142611-7138fd3d9dc8 h1:RI4LLZfYDSosZMJ7FzhhEQbwo7tA8Bp9Vhml1PukQsg=
+golang.org/x/sys v0.0.0-20180627142611-7138fd3d9dc8/go.mod h1:STP8DvDyc/dI5b8T5hshtkjS+E42TnysNCUPdjciGhY=

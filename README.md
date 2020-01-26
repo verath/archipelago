@@ -60,16 +60,16 @@ To run and build the project, make sure to have the following installed:
 * [Node.JS](https://nodejs.org/en/download/)
 * [Yarn](https://yarnpkg.com/en/docs/install)
 
-Then download the project to your `GOPATH`:
+Then clone the project:
 ```
-$ go get github.com/verath/archipelago
+$ git clone git@github.com:verath/archipelago.git
 ```
 
 This will include all dependencies required for the backend code. However, the client 
 side dependencies are not included in the repo and have to be fetched via yarn, and then built/bundled:
 
 ```
-$ cd $GOPATH/src/github.com/verath/archipelago/web
+$ cd web
 $ yarn install
 $ yarn run build:prod
 ```
@@ -77,7 +77,6 @@ $ yarn run build:prod
 Now run the project as a go project, e.g. using `go run` from the root directory:
 
 ```
-$ cd $GOPATH/src/github.com/verath/archipelago
 $ go run main.go -debug -servestatic
 ```
 
