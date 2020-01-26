@@ -2,16 +2,25 @@
 #
 # docker build -t verath/archipelago-backend .
 
-FROM golang:1.13-alpine
+# BUILD stage
+FROM golang:1.13 as builder
+WORKDIR /app
+ENV GO111MODULE=on
+ENV GOOS=linux
+ENV CGO_ENABLED=0
+# Resolve dependencies
+COPY go.mod .
+COPY go.sum .
+RUN go mod download
+# Build
+COPY *.go .
+COPY lib ./lib
+RUN go build -a -v
 
-COPY *.go /go/src/github.com/verath/archipelago/
-COPY lib /go/src/github.com/verath/archipelago/lib/
-COPY vendor /go/src/github.com/verath/archipelago/vendor/
-
-RUN go install github.com/verath/archipelago
-
-RUN rm -rf /go/src
-
+# APP stage
+FROM alpine:latest
 EXPOSE 8080
-
-ENTRYPOINT ["archipelago"]
+WORKDIR /root/
+RUN apk update && apk add ca-certificates && rm -rf /var/cache/apk/*
+COPY --from=builder /app/archipelago .
+ENTRYPOINT ["./archipelago"]
