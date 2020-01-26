@@ -13,7 +13,7 @@ $ts_bundle = "$js_out_dir\proto_bundle.d.ts"
 $pbjs = (Resolve-Path "$project_root\web\node_modules\.bin\pbjs.cmd").Path
 $pbts = (Resolve-Path "$project_root\web\node_modules\.bin\pbts.cmd").Path
 
-# Run from the project root (i.e. usually $GOPATH/src/github.com/verath/archipelago)
+# Run from the project root
 Push-Location -Path $project_root
 
 # Relative paths to each subdirectory in the proto directory, each containing
