@@ -11,7 +11,7 @@ jobs:
 
   build_frontend:
     docker:
-      - image: node:8.11
+      - image: node:lts
     steps:
       - checkout
       - restore_cache:
@@ -46,7 +46,7 @@ jobs:
 
   deploy:
     docker:
-      - image: node:8.11
+      - image: node:lts
     working_directory: ~/project
     steps:
       - checkout
