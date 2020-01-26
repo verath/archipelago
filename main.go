@@ -13,7 +13,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/pkg/profile"
 	"github.com/sirupsen/logrus"
-	"github.com/verath/archipelago/lib"
+	archipelago "github.com/verath/archipelago/lib"
 )
 
 const (
