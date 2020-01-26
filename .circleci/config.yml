@@ -3,8 +3,7 @@ version: 2
 jobs:
   build_backend:
     docker:
-      - image: golang:1.10
-    working_directory: /go/src/github.com/verath/archipelago
+      - image: golang:1.13
     steps:
       - checkout
       - run: go build -v
