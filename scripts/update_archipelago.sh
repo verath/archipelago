@@ -49,11 +49,8 @@ if [[ -n "$stopped_container_id" ]]; then
     docker rm ${stopped_container_id}
 fi
 
-echo "Starting container"
+echo "Starting archipelago container"
 docker run -d --name=archipelago --restart=always -p 8080:8080 verath/archipelago-backend:master
 
-old_images=$(docker images --filter "dangling=true" --quiet --no-trunc)
-if [[ -n "$old_images" ]]; then
-    echo "Removing old images"
-    docker rmi ${old_images}
-fi
+echo "Cleanup: running docker system prune"
+docker system prune -f
