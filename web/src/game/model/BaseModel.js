@@ -1,6 +1,6 @@
 import EventEmitter from "eventemitter3";
 
-/** @type {Symbol}*/
+/** @type {symbol}*/
 const EVENT_CHANGE = Symbol("Change Event");
 
 export default class BaseModel {

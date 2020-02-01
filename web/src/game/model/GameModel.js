@@ -4,6 +4,7 @@ import Coordinate from "./Coordinate.js";
 import PlayerModel from "./PlayerModel.js";
 import IslandModel from "./IslandModel.js";
 import LocalAirplaneModel from "./LocalAirplaneModel.js";
+import { wire } from "../../wire/proto_bundle.js";
 
 export default class GameModel extends BaseModel {
 
@@ -63,7 +64,7 @@ export default class GameModel extends BaseModel {
     }
 
     /**
-     * @param {[wire.game.Airplane]} airplanes
+     * @param {wire.game.IAirplane[]} airplanes
      * @returns {Boolean}
      * @private
      */
@@ -75,7 +76,7 @@ export default class GameModel extends BaseModel {
         this._airplanes = airplanes.map(airplaneData => {
             let airplane = this.airplaneById(airplaneData.id);
             if (!airplane) {
-                airplane = new AirplaneModel(this, airplaneData);
+                airplane = new AirplaneModel(this);
                 // An airplane was added
                 changed = true;
             }
@@ -90,7 +91,7 @@ export default class GameModel extends BaseModel {
     }
 
     /**
-     * @param {[wire.game.Island]} islands
+     * @param {wire.game.IIsland[]} islands
      * @returns {Boolean}
      * @private
      */
@@ -168,14 +169,14 @@ export default class GameModel extends BaseModel {
     }
 
     /**
-     * @returns {[IslandModel]}
+     * @returns {IslandModel[]}
      */
     get islands() {
         return this._islands;
     }
 
     /**
-     * @returns {[AirplaneModel]}
+     * @returns {AirplaneModel[]}
      */
     get airplanes() {
         return this._airplanes;

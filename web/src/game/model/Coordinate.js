@@ -55,10 +55,9 @@ export default class Coordinate {
     }
 
     /**
-     * @param {Number} newX
-     * @param {Number} newY
+     * @param {{x: Number, y: Number}} newPos
      */
-    set({x: newX, y: newY}) {
+    set({ x: newX, y: newY }) {
         this.x = newX;
         this.y = newY;
     }
@@ -73,5 +72,4 @@ export default class Coordinate {
             this._y === other.y
         );
     }
-
 }

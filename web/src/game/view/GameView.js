@@ -1,10 +1,15 @@
-import * as PIXI from "pixijs";
 import EventEmitter from "eventemitter3";
-import IslandSprite from "./IslandSprite.js";
-import AirplaneSprite from "./AirplaneSprite.js";
+import * as PIXI from "pixi.js";
+import ResourceHolder from "../../resource/ResourceHolder.js";
+import AirplaneModel from "../model/AirplaneModel.js";
+import GameModel from "../model/GameModel.js";
+import IslandModel from "../model/IslandModel.js";
 import AirplanePool from "./AirplanePool.js";
+import AirplaneSprite from "./AirplaneSprite.js";
+import IslandSprite from "./IslandSprite.js";
+import { WebGLRenderer, CanvasRenderer } from "pixi.js/lib/core";
 
-/** @type {Symbol}*/
+/** @type {symbol}*/
 const EVENT_ISLAND_CLICKED = Symbol("EVENT_ISLAND_CLICKED");
 
 export const TILE_WIDTH = 128;

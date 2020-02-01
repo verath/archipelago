@@ -1,4 +1,6 @@
+import { wire } from "../../wire/proto_bundle.js";
 import BaseModel from "./BaseModel.js";
+import GameModel from "./GameModel.js";
 
 /**
  * @extends BaseModel

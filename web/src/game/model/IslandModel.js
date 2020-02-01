@@ -1,4 +1,6 @@
+import { wire } from "../../wire/proto_bundle.js";
 import Coordinate from "./Coordinate.js";
+import GameModel from "./GameModel.js";
 import OwnableModel from "./OwnableModel.js";
 
 export default class IslandModel extends OwnableModel {
@@ -60,7 +62,7 @@ export default class IslandModel extends OwnableModel {
     }
 
     /**
-     * @param {wire.game.Island} islandData
+     * @param {wire.game.IIsland} islandData
      * @override
      */
     _update(islandData) {

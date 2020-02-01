@@ -10,7 +10,7 @@ const CopyWebpackPlugin = require("copy-webpack-plugin");
 module.exports = {
     entry: {
         main: "./src/main.js",
-        vendor: ["pixijs", "eventemitter3", "protobufjs"]
+        vendor: ["pixi.js", "eventemitter3", "protobufjs"]
     },
     output: {
         filename: "[name].[chunkhash].js",
@@ -43,11 +43,6 @@ module.exports = {
                 options: {name: "[name].[hash].[ext]"},
             },
         ]
-    },
-    resolve: {
-        alias: {
-            pixijs: path.resolve(__dirname, "node_modules/pixi.js"),
-        }
     },
     plugins: [
         new HtmlWebpackPlugin({

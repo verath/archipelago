@@ -1,6 +1,10 @@
 import EventEmitter from "eventemitter3";
-import * as PIXI from "pixijs";
-import {wire} from "../../wire/proto_bundle.js";
+import * as PIXI from "pixi.js";
+import Connection from "../../network/Connection.js";
+import { wire } from "../../wire/proto_bundle.js";
+import GameModel from "../model/GameModel.js";
+import IslandModel from "../model/IslandModel.js";
+import GameView from "../view/GameView.js";
 
 const EVENT_GAME_START = Symbol("EVENT_GAME_START");
 

@@ -1,4 +1,4 @@
-import * as PIXI from "pixijs";
+import * as PIXI from "pixi.js";
 import ResourceHolder from "./ResourceHolder.js";
 
 import {
