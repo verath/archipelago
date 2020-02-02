@@ -108,6 +108,9 @@ func (gl *gameLoop) tickLoop(ctx context.Context) error {
 	defer ticker.Stop()
 	lastTick := time.Now()
 	for {
+		if gl.isGameOver() {
+			return nil
+		}
 		select {
 		case <-ctx.Done():
 			return ctx.Err()
@@ -121,10 +124,6 @@ func (gl *gameLoop) tickLoop(ctx context.Context) error {
 				return errors.Wrap(err, "Error when performing tick")
 			}
 			lastTick = time.Now()
-		}
-		// Check for game over after each tick, and stop the loop if game is over
-		if gl.isGameOver() {
-			return nil
 		}
 	}
 }
