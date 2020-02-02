@@ -1,9 +1,11 @@
-import * as PIXI from "pixijs";
+import * as PIXI from "pixi.js";
+import { TEXTURE_ISLAND1, TEXTURE_ISLAND2, TEXTURE_ISLAND3, TEXTURE_ISLAND4, TEXTURE_SELECTED } from "../../images";
+import ResourceHolder from "../../resource/ResourceHolder.js";
+import IslandModel from "../model/IslandModel.js";
 import BaseSprite from "./BaseSprite.js";
-import {COLOR_FILL_ENEMY, COLOR_FILL_NEUTRAL, COLOR_FILL_SELF, FONT_FAMILY_DEFAULT} from "./constants.js";
-import {TILE_HEIGHT, TILE_WIDTH} from "./GameView.js";
+import { COLOR_FILL_ENEMY, COLOR_FILL_NEUTRAL, COLOR_FILL_SELF, FONT_FAMILY_DEFAULT } from "./constants.js";
+import { TILE_HEIGHT, TILE_WIDTH } from "./GameView.js";
 
-import {TEXTURE_ISLAND1, TEXTURE_ISLAND2, TEXTURE_ISLAND3, TEXTURE_ISLAND4, TEXTURE_SELECTED} from "../../images";
 
 const EVENT_CLICK = Symbol("EVENT_CLICK");
 

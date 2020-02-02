@@ -1,15 +1,14 @@
-import "./main.css";
-
-import * as OfflinePluginRuntime from "offline-plugin/runtime";
-import * as PIXI from "pixijs";
+import * as PIXI from "pixi.js";
 import GameController from "./game/controller/GameController.js";
 import GameModel from "./game/model/GameModel.js";
 import GameView from "./game/view/GameView.js";
+import "./main.css";
 import Connection from "./network/Connection.js";
-import ResourceLoader from "./resource/ResourceLoader.js";
 import ProgressText from "./ProgressText.js";
+import ResourceHolder from "./resource/ResourceHolder";
+import ResourceLoader from "./resource/ResourceLoader.js";
+import { WebGLRenderer, CanvasRenderer } from "pixi.js/lib/core";
 
-OfflinePluginRuntime.install();
 
 /**
  * The version of the websocket protocol we expect.
@@ -26,7 +25,7 @@ const WS_HOST_PROD = "ws.playarchipelago.com";
 /**
  * List of hostnames that indicates that the site is hosted locally and
  * should connect to the development websocket endpoint.
- * @type {[string]}
+ * @type string[]
  */
 const DEVELOPMENT_HOSTNAMES = ["localhost", "127.0.0.1"];
 
@@ -104,6 +103,7 @@ class Main {
 }
 
 (function main() {
+    /**@type {HTMLDivElement}*/ 
     let progressTextWrapElem = document.querySelector("#progress-text-wrap");
     let progressText = new ProgressText(progressTextWrapElem);
 

@@ -1,3 +1,5 @@
+import AirplaneSprite from "./AirplaneSprite";
+
 /**
  * @typedef {function} AirplaneCreatorFunc
  * @returns {AirplaneSprite}
@@ -10,7 +12,7 @@ export default class AirplanePool {
      */
     constructor(initialSize, creatorFunc) {
         /**
-         * @type {[AirplaneSprite]}
+         * @type {AirplaneSprite[]}
          * @private
          */
         this._sprites = [];

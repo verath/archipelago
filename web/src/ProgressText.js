@@ -1,7 +1,7 @@
 export default class ProgressText {
     /**
      *
-     * @param {Element} progressTextWrapElem
+     * @param {HTMLDivElement} progressTextWrapElem
      */
     constructor(progressTextWrapElem) {
         /**

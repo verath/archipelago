@@ -1,9 +1,11 @@
-import * as PIXI from "pixijs";
-import {TILE_HEIGHT, TILE_WIDTH} from "./GameView.js";
+import * as PIXI from "pixi.js";
+import { TEXTURE_AIRPLANE } from "../../images";
+import ResourceHolder from "../../resource/ResourceHolder.js";
+import AirplaneModel from "../model/AirplaneModel.js";
 import BaseSprite from "./BaseSprite.js";
-import {COLOR_FILL_ENEMY, COLOR_FILL_NEUTRAL, COLOR_FILL_SELF, COLOR_STROKE, FONT_FAMILY_DEFAULT} from "./constants.js";
+import { COLOR_FILL_ENEMY, COLOR_FILL_NEUTRAL, COLOR_FILL_SELF, COLOR_STROKE, FONT_FAMILY_DEFAULT } from "./constants.js";
+import { TILE_HEIGHT, TILE_WIDTH } from "./GameView.js";
 
-import {TEXTURE_AIRPLANE} from "../../images";
 
 /**
  * @extends BaseSprite

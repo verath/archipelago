@@ -1,4 +1,6 @@
+import { wire } from "../../wire/proto_bundle.js";
 import Coordinate from "./Coordinate.js";
+import GameModel from "./GameModel.js";
 import OwnableModel from "./OwnableModel.js";
 
 const MILLISECONDS_PER_NANOSECOND = 1e6;
