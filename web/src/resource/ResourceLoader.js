@@ -32,6 +32,7 @@ export default class ResourceLoader {
                 /** @type {Map<string, PIXI.Texture>} */
                 let textures = new Map();
                 for (let textureId of TEXTURES) {
+                    // eslint-disable-next-line no-prototype-builtins
                     if (!resources.hasOwnProperty(textureId)) {
                         continue;
                     }

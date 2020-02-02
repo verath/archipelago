@@ -26,7 +26,7 @@
     "webpack-merge": "^4.2.2"
   },
   "scripts": {
-    "lint": "eslint **/*.js",
+    "lint": "eslint \"**/*.js\"",
     "build:dev": "webpack --config webpack.dev.js",
     "build:prod": "webpack --config webpack.prod.js",
     "deploy": "firebase deploy --non-interactive"

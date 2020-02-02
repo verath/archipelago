@@ -31,7 +31,7 @@ module.exports = {
             },
             {
                 test: /\.css$/i,
-                use: [MiniCssExtractPlugin.loader, 'css-loader'],
+                use: [MiniCssExtractPlugin.loader, "css-loader"],
             },
             {
                 test: /\.(jpg|png|svg)$/,
@@ -53,9 +53,9 @@ module.exports = {
         ])
     ],
     optimization: {
-        runtimeChunk: 'single',
+        runtimeChunk: "single",
         splitChunks: {
-            chunks: 'all',
+            chunks: "all",
         },
     }
 };
