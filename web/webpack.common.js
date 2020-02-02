@@ -50,7 +50,10 @@ module.exports = {
         }),
         new CopyWebpackPlugin([
             { from: "src/static", to: "static" }
-        ])
+        ]),
+        new CopyWebpackPlugin([
+            { from: "src/sw.js", to: "." }
+        ]),
     ],
     optimization: {
         runtimeChunk: "single",
