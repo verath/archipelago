@@ -1,4 +1,3 @@
-import * as OfflinePluginRuntime from "offline-plugin/runtime";
 import * as PIXI from "pixi.js";
 import GameController from "./game/controller/GameController.js";
 import GameModel from "./game/model/GameModel.js";
@@ -10,8 +9,6 @@ import ResourceHolder from "./resource/ResourceHolder";
 import ResourceLoader from "./resource/ResourceLoader.js";
 import { WebGLRenderer, CanvasRenderer } from "pixi.js/lib/core";
 
-
-OfflinePluginRuntime.install();
 
 /**
  * The version of the websocket protocol we expect.
