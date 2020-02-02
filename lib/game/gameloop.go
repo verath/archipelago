@@ -113,7 +113,11 @@ func (gl *gameLoop) tickLoop(ctx context.Context) error {
 			return ctx.Err()
 		case <-ticker.C:
 			elapsed := time.Since(lastTick)
-			if err := gl.tick(ctx, elapsed); err != nil {
+			actions := gl.getActions()
+			// Append tick and "check game over" events each tick.
+			actions = append(actions, &model.ActionTick{Delta: elapsed})
+			actions = append(actions, &model.ActionCheckGameOver{})
+			if err := gl.applyActions(ctx, actions); err != nil {
 				return errors.Wrap(err, "Error when performing tick")
 			}
 			lastTick = time.Now()
@@ -123,25 +127,6 @@ func (gl *gameLoop) tickLoop(ctx context.Context) error {
 			return nil
 		}
 	}
-}
-
-// Perform a tick on the game; Applies all queued actions on the game
-// sequentially, making it safe for the applied actions to modify the
-// game-state. A TickAction is always added as the last action during
-// a tick.
-func (gl *gameLoop) tick(ctx context.Context, delta time.Duration) error {
-	actions := gl.getActions()
-	// Add a tick actions as the last action to our local actions slice.
-	actions = append(actions, &model.ActionTick{Delta: delta})
-	for _, action := range actions {
-		if err := gl.applyAction(ctx, action); err != nil {
-			return errors.Wrap(err, "Error applying action")
-		}
-		if gl.isGameOver() {
-			break
-		}
-	}
-	return nil
 }
 
 // getActions swaps the current slice of actions with a new empty slice,
@@ -156,6 +141,20 @@ func (gl *gameLoop) getActions() []model.Action {
 	actions := gl.actions
 	gl.actions = make([]model.Action, 0, newLen)
 	return actions
+}
+
+// applyActions applies actions on the game sequentially, making it safe
+// for the applied actions to modify the game-state.
+func (gl *gameLoop) applyActions(ctx context.Context, actions []model.Action) error {
+	for _, action := range actions {
+		if err := gl.applyAction(ctx, action); err != nil {
+			return errors.Wrap(err, "Error applying action")
+		}
+		if gl.isGameOver() {
+			break
+		}
+	}
+	return nil
 }
 
 // applyAction applies a single action to the game, and handles each

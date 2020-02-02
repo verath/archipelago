@@ -25,9 +25,6 @@ func (ta *ActionTick) Apply(game *Game) ([]Event, error) {
 	if err := ta.updateIslands(game, ta.Delta); err != nil {
 		return nil, errors.Wrap(err, "Could not update islands")
 	}
-	if gameOver, winner := ta.isGameOver(game); gameOver {
-		return []Event{NewEventGameOver(winner)}, nil
-	}
 	tickEvt := &EventTick{Game: game.Copy()}
 	return []Event{tickEvt}, nil
 }
@@ -113,39 +110,4 @@ func (ta *ActionTick) updateIslands(g *Game, delta time.Duration) error {
 		island.SetGrowthRemainder(remainder)
 	}
 	return nil
-}
-
-// isGameOver checks if the current game is over. A game is over when a
-// player no longer controls any islands or airplanes. If the game is over,
-// the winner is also returned. For a tie, the returned player is nil.
-func (ta *ActionTick) isGameOver(g *Game) (gameOver bool, winner *Player) {
-	player1Alive := false
-	player2Alive := false
-	for _, airplane := range g.Airplanes() {
-		if airplane.Owner().Equals(g.Player1()) {
-			player1Alive = true
-		} else if airplane.Owner().Equals(g.Player2()) {
-			player2Alive = true
-		}
-		if player1Alive && player2Alive {
-			return false, nil
-		}
-	}
-	for _, island := range g.Islands() {
-		if island.Owner().Equals(g.Player1()) {
-			player1Alive = true
-		} else if island.Owner().Equals(g.Player2()) {
-			player2Alive = true
-		}
-		if player1Alive && player2Alive {
-			return false, nil
-		}
-	}
-	if player1Alive {
-		return true, g.Player1()
-	} else if player2Alive {
-		return true, g.Player2()
-	} else {
-		return true, nil
-	}
 }
