@@ -157,6 +157,8 @@ export default class GameController {
         // Close the connection, and stop view animation
         this._connection.disconnect();
         this._ticker.stop();
+
+        this._gameView.render();
         // TODO: show game over screen...
         if (isWinner) {
             alert("Game Over\nYou Won!");
