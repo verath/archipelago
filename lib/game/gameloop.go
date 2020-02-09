@@ -168,7 +168,7 @@ func (gl *gameLoop) applyAction(ctx context.Context, action model.Action) error 
 	events, err := action.Apply(gl.game)
 	if err != nil {
 		if _, ok := err.(*model.IllegalActionError); ok {
-			gl.logEntry.Warnf("Ignoring illegal action error: %v", err)
+			gl.logEntry.Debugf("Ignoring illegal action error: %v", err)
 			return nil
 		}
 		return errors.Wrapf(err, "Error applying action: %+v (%T)", action, action)
