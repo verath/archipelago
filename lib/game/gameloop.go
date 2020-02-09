@@ -3,6 +3,7 @@ package game
 import (
 	"context"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/pkg/errors"
@@ -28,8 +29,8 @@ type gameLoop struct {
 	tickInterval time.Duration
 	// The game instance on which actions are to be applied
 	game *model.Game
-	// Flag for if the game has completed
-	gameOver bool
+	// Flag set to 1 once the game has completed.
+	gameOver int32
 
 	eventHandlerMu sync.Mutex
 	// A handler to handle events produced when applying actions
@@ -74,6 +75,10 @@ func (gl *gameLoop) SetEventHandler(eventHandler eventHandler) {
 
 // Adds an action to be processed in the next tick.
 func (gl *gameLoop) AddAction(action model.Action) {
+	if gl.isGameOver() {
+		// No more actions will be processed if game is over.
+		return
+	}
 	gl.actionsMu.Lock()
 	gl.actions = append(gl.actions, action)
 	gl.actionsMu.Unlock()
@@ -92,12 +97,13 @@ func (gl *gameLoop) Run(ctx context.Context) error {
 
 // setGameOver sets the game over flag to true
 func (gl *gameLoop) setGameOver() {
-	gl.gameOver = true
+	gl.logEntry.Debug("gameOver set")
+	atomic.StoreInt32(&gl.gameOver, 1)
 }
 
 // isGameOver checks if the game over flag has been set
 func (gl *gameLoop) isGameOver() bool {
-	return gl.gameOver
+	return atomic.LoadInt32(&gl.gameOver) == 1
 }
 
 // Performs a "tick" each tickInterval. The tick is what updates the game, by applying
