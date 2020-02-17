@@ -16,9 +16,9 @@ type EventGameOver struct {
 }
 
 // NewEventGameOver creates a new EventGameOver with the WinnerID of
-// the specified player, or an empty WinnerID if winner is nil.
+// the specified player, or InvalidID as WinnerID if winner is nil.
 func NewEventGameOver(winner *Player) *EventGameOver {
-	var winnerID PlayerID
+	var winnerID PlayerID = PlayerID(InvalidID)
 	if winner != nil {
 		winnerID = winner.ID()
 	}
