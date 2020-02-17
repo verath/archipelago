@@ -59,16 +59,18 @@ export default class AirplaneSprite extends BaseSprite {
         let size = Math.min(airplane.strength, 60) / 60;
         let scale = size * (0.8 - 0.25) + 0.25;
         this.scale.set(scale, scale);
-
-        if (airplane.owner.isSelf()) {
-            this.tint = COLOR_FILL_SELF;
-        } else {
-            this.tint = COLOR_FILL_ENEMY;
-        }
     }
 
     _onModelChanged() {
         let airplane = /** @type {AirplaneModel} */ (this._model);
+
+        if (airplane.owner.isSelf()) {
+            this.tint = COLOR_FILL_SELF;
+        } else if (airplane.owner.isNeutral()) {
+            this.tint = COLOR_FILL_NEUTRAL;
+        } else {
+            this.tint = COLOR_FILL_ENEMY;
+        }
 
         // Update our position, account for anchor being in the center
         let x = airplane.position.x * TILE_WIDTH + TILE_WIDTH / 2;
