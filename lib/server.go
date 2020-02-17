@@ -85,8 +85,12 @@ func (srv *Server) handleWSConnection(ctx context.Context, conn *websocket.WSCon
 	go func() {
 		defer srv.clientsWG.Done()
 		err := client.Run(ctx)
-		if err != nil && errors.Cause(err) != context.Canceled {
-			srv.logEntry.Debugf("Client stopped with an error: %+v", err)
+		if err != nil {
+			if errors.Cause(err) == context.Canceled {
+				srv.logEntry.Debugf("client stopped with ctx error: %v", err)
+			} else {
+				srv.logEntry.Errorf("client stopped with error: %+v", err)
+			}
 		}
 	}()
 	if err := srv.gameCoordinator.AddClient(ctx, wireClient); err != nil {
