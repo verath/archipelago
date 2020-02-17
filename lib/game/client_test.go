@@ -16,14 +16,26 @@ type mockClient struct {
 }
 
 func (c *mockClient) Disconnect() {
+	if c.DisconnectFunc == nil {
+		panic("mockClient: DisconnectFunc == nil")
+	}
 	c.DisconnectFunc()
 }
 func (c *mockClient) DisconnectCh() <-chan struct{} {
+	if c.DisconnectChFunc == nil {
+		panic("mockClient: DisconnectChFunc == nil")
+	}
 	return c.DisconnectChFunc()
 }
 func (c *mockClient) WritePlayerEvent(ctx context.Context, evt model.PlayerEvent) error {
+	if c.WritePlayerEventFunc == nil {
+		panic("mockClient: WritePlayerEventFunc == nil")
+	}
 	return c.WritePlayerEventFunc(ctx, evt)
 }
 func (c *mockClient) ReadPlayerAction(ctx context.Context) (model.PlayerAction, error) {
+	if c.ReadPlayerActionFunc == nil {
+		panic("mockClient: ReadPlayerActionFunc == nil")
+	}
 	return c.ReadPlayerActionFunc(ctx)
 }
