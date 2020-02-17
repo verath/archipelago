@@ -2,6 +2,7 @@ package game
 
 import (
 	"context"
+
 	"github.com/pkg/errors"
 	"github.com/verath/archipelago/lib/game/model"
 )
@@ -47,4 +48,9 @@ func (pp *playerProxy) ReadAction(ctx context.Context) (model.Action, error) {
 		return nil, errors.Wrap(err, "Error reading player action from Client")
 	}
 	return playerAction.ToAction(pp.playerID), nil
+}
+
+// Disconnect disconnects the underlying Client.
+func (pp *playerProxy) Disconnect() {
+	pp.client.Disconnect()
 }
