@@ -158,8 +158,12 @@ func (c *Coordinator) startGame(ctx context.Context, p1Client Client, p2Client C
 		gameCtx, cancel := context.WithTimeout(ctx, maxGameDuration)
 		defer cancel()
 		err := ctrl.run(gameCtx)
-		if err != nil && errors.Cause(err) != context.Canceled {
-			c.logEntry.Errorf("Game stopped with an error: %+v", err)
+		if err != nil {
+			if errors.Cause(err) == context.Canceled {
+				c.logEntry.Debugf("game stopped with ctx error: %v", err)
+			} else {
+				c.logEntry.Errorf("game stopped with error: %+v", err)
+			}
 		}
 		// Disconnect the clients after the game is over
 		p1Client.Disconnect()
