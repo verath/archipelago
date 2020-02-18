@@ -65,14 +65,20 @@ func main() {
 
 	ctx, cancel := context.WithCancel(lifetimeContext(logger))
 	errCh := make(chan error)
-	go func() { errCh <- archipelagoServer.Run(ctx) }()
-	go func() { errCh <- runHTTPServer(ctx, httpServer) }()
+	go func() {
+		err := archipelagoServer.Run(ctx)
+		errCh <- errors.Wrap(err, "archipelagoServer error")
+	}()
+	go func() {
+		err := runHTTPServer(ctx, httpServer)
+		errCh <- errors.Wrap(err, "httpServer error")
+	}()
 	logger.Infof("Archipelago backend started: '%s'", serverAddr)
 	err = <-errCh
 	cancel()
 	<-errCh
 	if errors.Cause(err) == context.Canceled {
-		logger.Debugf("Error caught in main: %+v", err)
+		logger.Debugf("Error caught in main: %v", err)
 	} else {
 		logger.Fatalf("Error caught in main: %+v", err)
 	}
@@ -119,7 +125,10 @@ func lifetimeContext(logger *logrus.Logger) context.Context {
 // occurs or the context is cancelled.
 func runHTTPServer(ctx context.Context, server *http.Server) error {
 	errCh := make(chan error)
-	go func() { errCh <- server.ListenAndServe() }()
+	go func() {
+		err := server.ListenAndServe()
+		errCh <- errors.Wrap(err, "ListenAndServe error")
+	}()
 	select {
 	case err := <-errCh:
 		return err
