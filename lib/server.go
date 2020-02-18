@@ -48,7 +48,7 @@ func (srv *Server) Run(ctx context.Context) error {
 	defer srv.logEntry.Info("Stopped")
 	ctx, cancel := context.WithCancel(ctx)
 	srv.wsHandler.SetConnectionHandler(srv.wsConnectionHandler(ctx))
-	err := srv.gameCoordinator.Run(ctx)
+	err := errors.Wrap(srv.gameCoordinator.Run(ctx), "gameCoordinator error")
 	srv.wsHandler.SetConnectionHandler(nil)
 	cancel()
 	srv.logEntry.Debug("Waiting for clients to stop...")
