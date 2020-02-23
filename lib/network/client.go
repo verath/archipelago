@@ -8,6 +8,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"github.com/verath/archipelago/lib/common"
+	"golang.org/x/time/rate"
 )
 
 const (
@@ -22,6 +23,12 @@ const (
 	// clientShutdownWait is the max time the client will wait for the
 	// underlying connection to cleanly shutdown before force closing.
 	clientShutdownWait = 10 * time.Second
+
+	// clientReadLimitRate is the rate limit bucket refil rate in seconds.
+	clientReadLimitRate = rate.Limit(10)
+
+	// clientReadLimitBurst is the rate limit bucket size.
+	clientReadLimitBurst = 10
 )
 
 // ErrClientDisconnected is the error returned when trying to read or write
@@ -181,7 +188,11 @@ func (c *Client) writePump(ctx context.Context, writeQueue <-chan *writeRequest,
 // readPump continuously reads messages from the connection and posts them
 // on the readQueue.
 func (c *Client) readPump(ctx context.Context, readQueue chan<- []byte, disconnectCh <-chan struct{}) error {
+	limiter := rate.NewLimiter(clientReadLimitRate, clientReadLimitBurst)
 	for {
+		if !limiter.Allow() {
+			return errors.New("client read rate limit exceeded")
+		}
 		msg, err := c.conn.ReadMessage(ctx)
 		if err != nil {
 			return errors.Wrap(err, "error reading from connection")

@@ -10,4 +10,5 @@ require (
 	github.com/pkg/profile v1.4.0
 	github.com/sirupsen/logrus v1.4.2
 	golang.org/x/sys v0.0.0-20200124204421-9fbb57f87de9 // indirect
+	golang.org/x/time v0.0.0-20191024005414-555d28b269f0
 )
