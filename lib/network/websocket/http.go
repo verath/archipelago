@@ -5,6 +5,7 @@ import (
 	"net/url"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/gorilla/websocket"
 	"github.com/pkg/errors"
@@ -19,6 +20,7 @@ const wsVersion = "2"
 
 // The websocket.Upgrader used for all upgrades from http -> ws.
 var wsUpgrader = websocket.Upgrader{
+	HandshakeTimeout: 10 * time.Second,
 	CheckOrigin: func(req *http.Request) bool {
 		// If we are accessed through localhost, allow all origins
 		hostURL := &url.URL{Host: req.Host}
