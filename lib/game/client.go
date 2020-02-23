@@ -9,7 +9,9 @@ import (
 // A Client represents a (remote) player connection that can be
 // written to and read from.
 type Client interface {
-	// Disconnect disconnects the Client.
+	// Disconnect requests that the Client disconnects unblocking any current
+	// reads and writes. Disconnect should not block. After the first call,
+	// Disconnect is a no-op.
 	Disconnect()
 	// DisconnectCh returns a channel that is closed when the Client
 	// is disconnected.
