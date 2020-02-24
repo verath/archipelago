@@ -38,7 +38,8 @@ func createIslands(p1, p2, pn *model.Player, size model.Coordinate, gameRand *ra
 	neutralSizes := []model.IslandSize{model.IslandSizeTiny, model.IslandSizeSmall, model.IslandSizeMedium}
 	for x := 0; x < size.X; x++ {
 		for y := 0; y < size.Y; y++ {
-			if gameRand.Intn(100) >= 20 {
+			// 25% tiles should be islands.
+			if gameRand.Intn(100) >= 25 {
 				continue
 			}
 			pos := model.Coordinate{x, y}
