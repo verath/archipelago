@@ -81,7 +81,7 @@ export default class IslandSprite extends BaseSprite {
 
         // Set scale depending on the island size. Island size is 0-1,
         // we scale that to make sure they are not too small.
-        let scale = (island.size * 0.6 + 0.4);
+        let scale = (island.size * 0.8 + 0.2);
         this.scale.set(scale, scale);
 
         // Update our position, account for anchor being in the center
