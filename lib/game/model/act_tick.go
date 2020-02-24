@@ -1,9 +1,10 @@
 package model
 
 import (
-	"github.com/pkg/errors"
 	"math"
 	"time"
+
+	"github.com/pkg/errors"
 )
 
 // ActionTick is an action that performs a tick (i.e. update)
@@ -85,29 +86,35 @@ func (ta *ActionTick) updateAirplanes(g *Game, delta time.Duration) error {
 
 func (ta *ActionTick) updateIslands(g *Game, delta time.Duration) error {
 	for _, island := range g.Islands() {
-		if island.Owner().Equals(g.PlayerNeutral()) {
-			// Neutral islands does not grow in strength
-			continue
-		}
 		size := float64(island.Size())
-		if float64(island.Strength()) >= (IslandGrowthCap * size) {
-			continue
+		// Determine change for delta, based on island size.
+		var change time.Duration
+		if island.Owner().Equals(g.PlayerNeutral()) {
+			// Armies on neutral islands decrease over time, scaled inversely
+			// by island size.
+			change = -1 * time.Duration((1-size)*float64(delta))
+		} else {
+			// Armies on player controller islands increase over time, scaled
+			// by islands size.
+			change = time.Duration(size * float64(delta))
 		}
-		// Account for the island size. We do this by scaling the
-		// time delta by the size factor of the island. I.e. a size
-		// factor of 0.5 means the "time will move" at half the pace
-		// for that island.
-		increment := time.Duration(size * float64(delta))
-		// Calculate the whole number of added strength, storing
-		// the remaining "fractions" as the growth remainder. Note
-		// that we are doing calculations on time.Duration(=int64)
-		// here, but the reasoning stays the same.
+		// Calculate the whole number of added strength, storing the remaining
+		// "fractions" as the growth remainder.
 		remainder := island.GrowthRemainder()
-		addedStrength := (remainder + increment) / IslandGrowthInterval
-		remainder = (remainder + increment) % IslandGrowthInterval
+		addedStrength := (remainder + change) / IslandGrowthInterval
+		newRemainder := (remainder + change) % IslandGrowthInterval
 		newStrength := island.Strength() + int64(addedStrength)
-		island.SetStrength(newStrength)
-		island.SetGrowthRemainder(remainder)
+		// Limit incremented strength to IslandGrowthCap, decremented to 0.
+		newStrengthOk := false
+		if change > 0 {
+			newStrengthOk = float64(newStrength) < IslandGrowthCap*size
+		} else if change < 0 {
+			newStrengthOk = newStrength >= 0
+		}
+		if newStrengthOk {
+			island.SetStrength(newStrength)
+		}
+		island.SetGrowthRemainder(newRemainder)
 	}
 	return nil
 }

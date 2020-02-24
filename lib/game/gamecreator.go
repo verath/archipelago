@@ -29,9 +29,10 @@ func createPlayers() (p1, p2, pn *model.Player, err error) {
 
 func createIslands(p1, p2, pn *model.Player, size model.Coordinate, gameRand *rand.Rand) ([]*model.Island, error) {
 	type islandData struct {
-		Size     model.IslandSize
-		Strength int64
-		Player   *model.Player
+		Size            model.IslandSize
+		Strength        int64
+		Player          *model.Player
+		GrowthRemainder time.Duration
 	}
 	islandMap := make(map[model.Coordinate]islandData)
 
@@ -46,13 +47,14 @@ func createIslands(p1, p2, pn *model.Player, size model.Coordinate, gameRand *ra
 			pos := model.Coordinate{x, y}
 			size := neutralSizes[gameRand.Intn(len(neutralSizes))]
 			strength := gameRand.Int63n(int64(size*model.IslandGrowthCap)) + 10
-			islandMap[pos] = islandData{size, strength, pn}
+			growthRemainder := time.Millisecond * time.Duration(gameRand.Int63n(1000))
+			islandMap[pos] = islandData{size, strength, pn, growthRemainder}
 		}
 	}
 
 	// Set top left to player 1 island, bottom right to player 2 island
-	islandMap[model.Coordinate{0, 0}] = islandData{model.IslandSizeLarge, 20, p1}
-	islandMap[model.Coordinate{size.X - 1, size.Y - 1}] = islandData{model.IslandSizeLarge, 20, p2}
+	islandMap[model.Coordinate{0, 0}] = islandData{model.IslandSizeLarge, 20, p1, 0}
+	islandMap[model.Coordinate{size.X - 1, size.Y - 1}] = islandData{model.IslandSizeLarge, 20, p2, 0}
 
 	// Transform the map to a slice of islands
 	var islands []*model.Island
@@ -61,6 +63,7 @@ func createIslands(p1, p2, pn *model.Player, size model.Coordinate, gameRand *ra
 		if err != nil {
 			return nil, errors.Wrapf(err, "Error creating island (data: %v)", data)
 		}
+		island.SetGrowthRemainder(data.GrowthRemainder)
 		islands = append(islands, island)
 	}
 	return islands, nil
