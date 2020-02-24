@@ -1,10 +1,11 @@
 package game
 
 import (
-	"github.com/pkg/errors"
-	"github.com/verath/archipelago/lib/game/model"
 	"math/rand"
 	"time"
+
+	"github.com/pkg/errors"
+	"github.com/verath/archipelago/lib/game/model"
 )
 
 func createPlayers() (p1, p2, pn *model.Player, err error) {
@@ -44,7 +45,7 @@ func createIslands(p1, p2, pn *model.Player, size model.Coordinate, gameRand *ra
 			}
 			pos := model.Coordinate{x, y}
 			size := neutralSizes[gameRand.Intn(len(neutralSizes))]
-			strength := gameRand.Int63n(22) + 4 // 4-25
+			strength := gameRand.Int63n(int64(size*model.IslandGrowthCap)) + 10
 			islandMap[pos] = islandData{size, strength, pn}
 		}
 	}
