@@ -31,7 +31,7 @@ type controller struct {
 }
 
 // newController creates a new game controller.
-func newController(log *logrus.Logger, gameLoop *gameLoop, players ...*playerProxy) (*controller, error) {
+func newController(log *logrus.Logger, gameLoop *gameLoop, players []*playerProxy) (*controller, error) {
 	logEntry := common.ModuleLogEntryWithID(log, "game/controller")
 	if len(players) == 0 {
 		return nil, errors.New("there must be at least one player")

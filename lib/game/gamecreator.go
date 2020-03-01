@@ -8,26 +8,22 @@ import (
 	"github.com/verath/archipelago/lib/game/model"
 )
 
-func createPlayers() (p1, p2, pn *model.Player, err error) {
-	p1, err = model.NewPlayer()
+func createPlayers(numPlayers int) ([]*model.Player, *model.Player, error) {
+	playerNeutral, err := model.NewPlayer()
 	if err != nil {
-		err = errors.Wrap(err, "Error creating p1")
-		return
+		return nil, nil, errors.Wrap(err, "error creating playerNeutral")
 	}
-	p2, err = model.NewPlayer()
-	if err != nil {
-		err = errors.Wrap(err, "Error creating p2")
-		return
+	players := make([]*model.Player, numPlayers)
+	for i := 0; i < numPlayers; i++ {
+		players[i], err = model.NewPlayer()
+		if err != nil {
+			return nil, nil, errors.Wrap(err, "error creating player")
+		}
 	}
-	pn, err = model.NewPlayer()
-	if err != nil {
-		err = errors.Wrap(err, "Error creating pn")
-		return
-	}
-	return
+	return players, playerNeutral, nil
 }
 
-func createIslands(p1, p2, pn *model.Player, size model.Coordinate, gameRand *rand.Rand) ([]*model.Island, error) {
+func createIslands(players []*model.Player, playerNeutral *model.Player, size model.Coordinate, gameRand *rand.Rand) ([]*model.Island, error) {
 	type islandData struct {
 		Size            model.IslandSize
 		Strength        int64
@@ -35,7 +31,6 @@ func createIslands(p1, p2, pn *model.Player, size model.Coordinate, gameRand *ra
 		GrowthRemainder time.Duration
 	}
 	islandMap := make(map[model.Coordinate]islandData)
-
 	// Randomize the neutral islands
 	neutralSizes := []model.IslandSize{model.IslandSizeTiny, model.IslandSizeSmall, model.IslandSizeMedium}
 	for x := 0; x < size.X; x++ {
@@ -48,15 +43,18 @@ func createIslands(p1, p2, pn *model.Player, size model.Coordinate, gameRand *ra
 			size := neutralSizes[gameRand.Intn(len(neutralSizes))]
 			strength := gameRand.Int63n(int64(size*model.IslandGrowthCap)) + 10
 			growthRemainder := time.Millisecond * time.Duration(gameRand.Int63n(1000))
-			islandMap[pos] = islandData{size, strength, pn, growthRemainder}
+			islandMap[pos] = islandData{size, strength, playerNeutral, growthRemainder}
 		}
 	}
-
-	// Set top left to player 1 island, bottom right to player 2 island
-	islandMap[model.Coordinate{0, 0}] = islandData{model.IslandSizeLarge, 20, p1, 0}
-	islandMap[model.Coordinate{size.X - 1, size.Y - 1}] = islandData{model.IslandSizeLarge, 20, p2, 0}
-
-	// Transform the map to a slice of islands
+	// Randomize player island positions.
+	// TODO: Evenly distribute on board, prevent close positions.
+	boardPerm := gameRand.Perm(size.X * size.Y)
+	for i := range players {
+		x, y := boardPerm[i]%size.X, boardPerm[i]/size.X
+		pos := model.Coordinate{x, y}
+		islandMap[pos] = islandData{model.IslandSizeLarge, 20, players[i], 0}
+	}
+	// Transform the map to a slice of islands.
 	var islands []*model.Island
 	for pos, data := range islandMap {
 		island, err := model.NewIsland(pos, data.Size, data.Strength, data.Player)
@@ -69,24 +67,24 @@ func createIslands(p1, p2, pn *model.Player, size model.Coordinate, gameRand *ra
 	return islands, nil
 }
 
-// createBasicGame creates a new instance of a Game model.
-func createBasicGame() (*model.Game, error) {
+// createBasicGame creates a new instance of a Game model with numPlayers
+// players.
+func createBasicGame(numPlayers int) (*model.Game, error) {
+	size := model.Coordinate{7, 7}
+	players, playerNeutral, err := createPlayers(numPlayers)
+	if err != nil {
+		return nil, errors.Wrap(err, "error creating players")
+	}
 	seed := time.Now().UnixNano()
 	gameRand := rand.New(rand.NewSource(seed))
-
-	size := model.Coordinate{7, 7}
-
-	p1, p2, pn, err := createPlayers()
-	if err != nil {
-		return nil, errors.Wrap(err, "Error creating players")
-	}
-
-	islands, err := createIslands(p1, p2, pn, size, gameRand)
+	islands, err := createIslands(players, playerNeutral, size, gameRand)
 	if err != nil {
 		return nil, errors.Wrap(err, "Error creating islands")
 	}
-
-	gameBuilder := model.NewGameBuilder(size, p1, p2, pn)
+	gameBuilder := model.NewGameBuilder(size, playerNeutral)
+	for _, player := range players {
+		gameBuilder.AddPlayer(player)
+	}
 	for _, island := range islands {
 		gameBuilder.AddIsland(island)
 	}

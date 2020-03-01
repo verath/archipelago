@@ -13,6 +13,7 @@ import (
 // the game controller is run.
 func TestController_Run_BroadcastsGameStart(t *testing.T) {
 	game := model.CreateDummyGameEmpty()
+	p1, _ := game.Players()[0], game.Players()[1]
 	gameLoop, err := newGameLoop(testutil.DiscardLogger, game)
 	if err != nil {
 		t.Fatalf("expected no error creating game loop, got: %+v", err)
@@ -37,13 +38,13 @@ func TestController_Run_BroadcastsGameStart(t *testing.T) {
 			return ctx.Err()
 		},
 	}
-	player, err := newPlayerProxy(game.Player1(), client)
+	player, err := newPlayerProxy(p1, client)
 	if err != nil {
 		t.Fatalf("expected no error creating player proxy, got: %+v", err)
 	}
 
 	// Setup, run controller
-	ctrl, err := newController(testutil.DiscardLogger, gameLoop, player)
+	ctrl, err := newController(testutil.DiscardLogger, gameLoop, []*playerProxy{player})
 	if err != nil {
 		t.Fatalf("Expected no error, got: %+v", err)
 	}

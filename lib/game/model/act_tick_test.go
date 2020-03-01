@@ -34,11 +34,12 @@ func TestTickAction_Apply_Islands(t *testing.T) {
 
 func TestTickAction_Apply_Airplanes(t *testing.T) {
 	game := CreateDummyGameSimple()
+	p1, _ := game.Players()[0], game.Players()[1]
 	fromIsland := game.Island("p1")
 	toIsland := game.Island("bottom-left")
 
 	// Add an airplane from 0,0 -> 0,8, moving at a speed of one coordinate/sec
-	airplane := NewAirplane(fromIsland, toIsland, game.Player1(), 10)
+	airplane := NewAirplane(fromIsland, toIsland, p1, 10)
 	airplane.SetSpeed(1 / float64(time.Second))
 	game.AddAirplane(airplane)
 
@@ -57,11 +58,12 @@ func TestTickAction_Apply_Airplanes(t *testing.T) {
 
 func TestTickAction_Apply_Airplane_Arrival(t *testing.T) {
 	game := CreateDummyGameSimple()
+	p1, _ := game.Players()[0], game.Players()[1]
 	fromIsland := game.Island("p1")
 	toIsland := game.Island("bottom-left")
 
 	// Add an airplane from 0,0 -> 0,8, moving at a speed of one coordinate/sec
-	airplane := NewAirplane(fromIsland, toIsland, game.Player1(), 10)
+	airplane := NewAirplane(fromIsland, toIsland, p1, 10)
 	airplane.SetSpeed(1 / float64(time.Second))
 	game.AddAirplane(airplane)
 
