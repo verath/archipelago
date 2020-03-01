@@ -12,10 +12,14 @@ func EncodeGame(game *model.Game) *Game {
 	for _, island := range game.Islands() {
 		islands = append(islands, EncodeIsland(island))
 	}
+	if len(game.Players()) != 2 {
+		// FIXME
+		panic("can only encode games with exactly 2 players")
+	}
 	return &Game{
 		Id:            string(game.ID()),
-		Player1:       EncodePlayer(game.Player1()),
-		Player2:       EncodePlayer(game.Player2()),
+		Player1:       EncodePlayer(game.Players()[0]),
+		Player2:       EncodePlayer(game.Players()[1]),
 		PlayerNeutral: EncodePlayer(game.PlayerNeutral()),
 		Size:          EncodeCoordinate(game.Size()),
 		Airplanes:     airplanes,

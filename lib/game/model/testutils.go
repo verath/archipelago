@@ -5,13 +5,17 @@ func CreateDummyGameEmpty() *Game {
 	p1, _ := NewPlayer()
 	p2, _ := NewPlayer()
 	pn, _ := NewPlayer()
-	return NewGameBuilder(Coordinate{9, 9}, p1, p2, pn).BuildOrPanic()
+	return NewGameBuilder(Coordinate{9, 9}, pn).
+		AddPlayer(p1).
+		AddPlayer(p2).
+		BuildOrPanic()
 }
 
 // CreateDummyGameSimple Creates a 9x9 board with 3 islands:
 //  * (0,0) - player 1 island
 //  * (8,8) - player 2 island
 //  * (4,4) - neutral island
+//  * (0,8) - neutral island
 // All starting with a strength of 10 and a growth interval of 1/second
 func CreateDummyGameSimple() *Game {
 	p1, _ := NewPlayer()
@@ -22,7 +26,9 @@ func CreateDummyGameSimple() *Game {
 	neIsland, _ := NewIslandWithID(IslandID("pn"), Coordinate{4, 4}, IslandSizeMedium, 10, pn)
 	ne2Island, _ := NewIslandWithID(IslandID("bottom-left"), Coordinate{0, 8}, IslandSizeMedium, 10, pn)
 
-	return NewGameBuilder(Coordinate{9, 9}, p1, p2, pn).
+	return NewGameBuilder(Coordinate{9, 9}, pn).
+		AddPlayer(p1).
+		AddPlayer(p2).
 		AddIsland(p1Island).
 		AddIsland(p2Island).
 		AddIsland(neIsland).

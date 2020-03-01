@@ -3,13 +3,14 @@ package wire_test
 import (
 	"bytes"
 	"context"
+	"reflect"
+	"testing"
+	"time"
+
 	"github.com/golang/protobuf/proto"
 	"github.com/pkg/errors"
 	"github.com/verath/archipelago/lib/game/model"
 	"github.com/verath/archipelago/lib/wire"
-	"reflect"
-	"testing"
-	"time"
 )
 
 func protoMarshalOrPanic(pb proto.Message) []byte {
@@ -163,7 +164,10 @@ var (
 		p1, _ := model.NewPlayer()
 		p2, _ := model.NewPlayer()
 		pn, _ := model.NewPlayer()
-		return model.NewGameBuilder(model.Coordinate{X: 9, Y: 9}, p1, p2, pn).BuildOrPanic()
+		gb := model.NewGameBuilder(model.Coordinate{X: 9, Y: 9}, pn)
+		gb.AddPlayer(p1)
+		gb.AddPlayer(p2)
+		return gb.BuildOrPanic()
 	})()
 	eventGameTick = (&model.EventTick{
 		Game: emptyGame,

@@ -77,29 +77,34 @@ func (c *Coordinator) nextClient(ctx context.Context) (Client, error) {
 	}
 }
 
-// awaitClients waits for two player connections to be made. If successful, the
-// methods returns two started clients. These clients *must* be stopped. If the
-// method returns an error the clients can be assumed to be stopped.
-func (c *Coordinator) awaitClients(ctx context.Context) (Client, Client, error) {
-	p1Client, err := c.nextClient(ctx)
-	if err != nil {
-		return nil, nil, errors.Wrap(err, "Error when getting a Client")
-	}
-	for {
-		p2Client, err := c.nextClient(ctx)
+// awaitClients blocks until numClients Client connections has been made,
+// returning a slice of the connected Clients. It is the callers responsibility
+// to disconnect any clients returned. awaitClients does not return any clients
+// on error.
+func (c *Coordinator) awaitClients(ctx context.Context, numClients int) ([]Client, error) {
+	clients := make([]Client, 0, numClients)
+	for len(clients) < numClients {
+		// Wait for the next client to connect.
+		newClient, err := c.nextClient(ctx)
 		if err != nil {
-			p1Client.Disconnect()
-			return nil, nil, errors.Wrap(err, "Error when getting a Client")
+			disconnectAll(clients)
+			return nil, errors.Wrap(err, "error awaiting next client")
 		}
-		select {
-		case <-p1Client.DisconnectCh():
-			// p1 disconnected while waiting for p2. Set p1=p2
-			// and find a new p2.
-			p1Client = p2Client
-		default:
-			return p1Client, p2Client, nil
+		clients = clients[:len(clients)+1]
+		clients[len(clients)-1] = newClient
+		// Remove any client that disconnected.
+		i := 0
+		for _, client := range clients {
+			select {
+			case <-client.DisconnectCh():
+			default:
+				clients[i] = client
+				i++
+			}
 		}
+		clients = clients[:i]
 	}
+	return clients, nil
 }
 
 // run runs the main "loop" of the game coordinator. The loop waits for
@@ -107,29 +112,30 @@ func (c *Coordinator) awaitClients(ctx context.Context) (Client, Client, error) 
 // pair of players. This method blocks until the context is cancelled or
 // an error occurs. Always returns a non-nil error.
 func (c *Coordinator) run(ctx context.Context) error {
+	clientsPerGame := 2
 	for {
-		p1Client, p2Client, err := c.awaitClients(ctx)
+		clients, err := c.awaitClients(ctx, clientsPerGame)
 		if err != nil {
 			return errors.Wrap(err, "Error when awaiting clients")
 		}
 
 		c.logEntry.Debug("Starting a new game")
-		err = c.startGame(ctx, p1Client, p2Client)
+		err = c.startGame(ctx, clients)
 		if err != nil {
 			// As we still own the clients here, make sure we stop them
-			// before quiting ourselves
-			p1Client.Disconnect()
-			p2Client.Disconnect()
+			// before quiting ourselves.
+			disconnectAll(clients)
 			return errors.Wrap(err, "Error starting game")
 		}
 	}
 }
 
-// startGame starts a new game for the two clients. The game is run on a new goroutine.
-// This method blocks until the game has been created, but not until it has finished
-// running.
-func (c *Coordinator) startGame(ctx context.Context, p1Client Client, p2Client Client) error {
-	game, err := createBasicGame()
+// startGame starts a new game for the given clients. The game is run on a new
+// goroutine. This method blocks until the game has been created, but not until
+// it has finished running.
+func (c *Coordinator) startGame(ctx context.Context, clients []Client) error {
+	numClients := len(clients)
+	game, err := createBasicGame(numClients)
 	if err != nil {
 		return errors.Wrap(err, "Error creating game")
 	}
@@ -137,15 +143,14 @@ func (c *Coordinator) startGame(ctx context.Context, p1Client Client, p2Client C
 	if err != nil {
 		return errors.Wrap(err, "Error creating gameLoop")
 	}
-	p1Proxy, err := newPlayerProxy(game.Player1(), p1Client)
-	if err != nil {
-		return errors.Wrap(err, "Error creating player1 proxy")
+	playerProxies := make([]*playerProxy, numClients)
+	for i, player := range game.Players() {
+		playerProxies[i], err = newPlayerProxy(player, clients[i])
+		if err != nil {
+			return errors.Wrapf(err, "error creating player proxy")
+		}
 	}
-	p2Proxy, err := newPlayerProxy(game.Player2(), p2Client)
-	if err != nil {
-		return errors.Wrap(err, "Error creating player2 proxy")
-	}
-	ctrl, err := newController(c.logEntry.Logger, gameLoop, p1Proxy, p2Proxy)
+	ctrl, err := newController(c.logEntry.Logger, gameLoop, playerProxies)
 	if err != nil {
 		return errors.Wrap(err, "Error creating game controller")
 	}
@@ -165,9 +170,15 @@ func (c *Coordinator) startGame(ctx context.Context, p1Client Client, p2Client C
 				c.logEntry.Errorf("game stopped with error: %+v", err)
 			}
 		}
-		// Disconnect the clients after the game is over
-		p1Client.Disconnect()
-		p2Client.Disconnect()
+		// Disconnect the clients after the game is over.
+		disconnectAll(clients)
 	}()
 	return nil
+}
+
+// disconnectAll calls Disconnect on each client.
+func disconnectAll(clients []Client) {
+	for _, c := range clients {
+		c.Disconnect()
+	}
 }

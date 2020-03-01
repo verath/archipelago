@@ -11,12 +11,13 @@ func newLaunchAction(from, to IslandID, playerID PlayerID) *actionLaunch {
 
 func TestLaunchAction_Apply(t *testing.T) {
 	game := CreateDummyGameSimple()
+	p1, _ := game.Players()[0], game.Players()[1]
 	fromIsland := game.Island("p1")
 	toIsland := game.Island("p2")
 
 	t.Log("Launching airplane from our island to enemy island...")
 
-	la := newLaunchAction(fromIsland.ID(), toIsland.ID(), game.Player1().ID())
+	la := newLaunchAction(fromIsland.ID(), toIsland.ID(), p1.ID())
 	if _, err := la.Apply(game); err != nil {
 		t.Errorf("Expected no error got: %v", err)
 	}
@@ -39,17 +40,18 @@ func TestLaunchAction_Apply(t *testing.T) {
 
 func TestLaunchAction_Apply_DifferentOwner(t *testing.T) {
 	game := CreateDummyGameSimple()
+	_, p2 := game.Players()[0], game.Players()[1]
 	fromIsland := game.Island("p1")
 	toIsland := game.Island("p2")
 
 	t.Log("Launching airplane from enemy controlled island...")
-	la := newLaunchAction(fromIsland.ID(), toIsland.ID(), game.Player2().ID())
+	la := newLaunchAction(fromIsland.ID(), toIsland.ID(), p2.ID())
 	if _, err := la.Apply(game); err == nil {
 		t.Error("Expected an error, got nil")
 	}
 
 	t.Log("Launching airplane from neutral controlled island...")
-	la = newLaunchAction(fromIsland.ID(), toIsland.ID(), game.Player2().ID())
+	la = newLaunchAction(fromIsland.ID(), toIsland.ID(), p2.ID())
 	if _, err := la.Apply(game); err == nil {
 		t.Error("Expected an error, got nil")
 	}
@@ -57,17 +59,18 @@ func TestLaunchAction_Apply_DifferentOwner(t *testing.T) {
 
 func TestLaunchAction_Apply_NonExistingIslands(t *testing.T) {
 	game := CreateDummyGameSimple()
+	p1, _ := game.Players()[0], game.Players()[1]
 	fromIsland := game.Island("p1")
 	toIsland := game.Island("p2")
 
 	t.Log("Launching airplane from non-existing island...")
-	la := newLaunchAction("-", toIsland.ID(), game.Player1().ID())
+	la := newLaunchAction("-", toIsland.ID(), p1.ID())
 	if _, err := la.Apply(game); err == nil {
 		t.Error("Expected an error, got nil")
 	}
 
 	t.Log("Launching airplane to non-existing island...")
-	la = newLaunchAction(fromIsland.ID(), "-", game.Player1().ID())
+	la = newLaunchAction(fromIsland.ID(), "-", p1.ID())
 	if _, err := la.Apply(game); err == nil {
 		t.Error("Expected an error, got nil")
 	}
@@ -75,12 +78,13 @@ func TestLaunchAction_Apply_NonExistingIslands(t *testing.T) {
 
 func TestLaunchAction_Apply_NoIslandArmy(t *testing.T) {
 	game := CreateDummyGameSimple()
+	p1, _ := game.Players()[0], game.Players()[1]
 	fromIsland := game.Island("p1")
 	toIsland := game.Island("p2")
 
 	t.Log("Launching airplane from island with strength < 2...")
 	fromIsland.SetStrength(1)
-	la := newLaunchAction(fromIsland.ID(), toIsland.ID(), game.Player1().ID())
+	la := newLaunchAction(fromIsland.ID(), toIsland.ID(), p1.ID())
 	if _, err := la.Apply(game); err == nil {
 		t.Error("Expected an error, got nil")
 	}
