@@ -95,7 +95,7 @@ export default class GameController {
             throw new Error("Start event when already started");
         }
         this._started = true;
-        this._gameModel.playerId = evtStart.playerId;
+        this._gameModel.myPlayerId = evtStart.playerId;
         this._gameModel.serverTickInterval = evtStart.tickInterval;
         // Starts the ticker, calling this._onTick
         this._ticker.start();
@@ -118,7 +118,7 @@ export default class GameController {
      * @private
      */
     _onGameOverEvent(evtGameOver) {
-        this._onGameOver(evtGameOver.winnerId === this._gameModel.playerId);
+        this._onGameOver(evtGameOver.winnerId === this._gameModel.myPlayerId);
     }
 
     /**
