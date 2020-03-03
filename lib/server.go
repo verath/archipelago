@@ -89,7 +89,7 @@ func (srv *Server) handleWSConnection(ctx context.Context, conn *websocket.WSCon
 			if errors.Cause(err) == context.Canceled {
 				srv.logEntry.Debugf("client stopped with ctx error: %v", err)
 			} else {
-				srv.logEntry.Errorf("client stopped with error: %+v", err)
+				srv.logEntry.Debugf("client stopped with error: %+v", err)
 			}
 		}
 	}()
