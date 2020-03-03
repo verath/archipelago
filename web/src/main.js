@@ -14,7 +14,7 @@ import { WebGLRenderer, CanvasRenderer } from "pixi.js/lib/core";
  * The version of the websocket protocol we expect.
  * @type {string}
  */
-const WS_VERSION = "2";
+const WS_VERSION = "3";
 
 /**
  * The host for the websocket endpoint in production

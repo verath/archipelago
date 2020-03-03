@@ -37,7 +37,11 @@ export default class OwnableModel extends BaseModel {
      * @returns {?PlayerModel}
      */
     get owner() {
-        return this._gameModel.playerById(this._ownerId);
+        if (this._ownerId === this._gameModel.playerNeutral.id) {
+            return this._gameModel.playerNeutral;
+        } else {
+            return this._gameModel.playerById(this._ownerId);
+        }
     }
 
     /**

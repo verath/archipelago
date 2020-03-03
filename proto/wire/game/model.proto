@@ -39,11 +39,10 @@ message Island {
 message Game {
     string id = 1;
     Coordinate size = 2;
-    Player player1 = 3;
-    Player player2 = 4;
-    Player player_neutral = 5;
-    repeated Island islands = 6;
-    repeated Airplane airplanes = 7;
+    Player player_neutral = 3;
+    repeated Player players = 4;
+    repeated Island islands = 5;
+    repeated Airplane airplanes = 6;
 }
 
 

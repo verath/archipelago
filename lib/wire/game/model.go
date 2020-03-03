@@ -4,6 +4,10 @@ import "github.com/verath/archipelago/lib/game/model"
 
 // EncodeGame transforms a game model Game to its wire representation
 func EncodeGame(game *model.Game) *Game {
+	players := make([]*Player, 0)
+	for _, player := range game.Players() {
+		players = append(players, EncodePlayer(player))
+	}
 	airplanes := make([]*Airplane, 0)
 	for _, airplane := range game.Airplanes() {
 		airplanes = append(airplanes, EncodeAirplane(airplane))
@@ -12,16 +16,11 @@ func EncodeGame(game *model.Game) *Game {
 	for _, island := range game.Islands() {
 		islands = append(islands, EncodeIsland(island))
 	}
-	if len(game.Players()) != 2 {
-		// FIXME
-		panic("can only encode games with exactly 2 players")
-	}
 	return &Game{
 		Id:            string(game.ID()),
-		Player1:       EncodePlayer(game.Players()[0]),
-		Player2:       EncodePlayer(game.Players()[1]),
-		PlayerNeutral: EncodePlayer(game.PlayerNeutral()),
 		Size:          EncodeCoordinate(game.Size()),
+		PlayerNeutral: EncodePlayer(game.PlayerNeutral()),
+		Players:       players,
 		Airplanes:     airplanes,
 		Islands:       islands,
 	}
