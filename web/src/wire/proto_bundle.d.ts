@@ -77,14 +77,14 @@ export namespace wire {
          * @param message Plain object to verify
          * @returns `null` if valid, otherwise the reason why it is not
          */
-        public static verify(message: [ 'object' ].<string, any>): (string|null);
+        public static verify(message: { [k: string]: any }): (string|null);
 
         /**
          * Creates an ActionEnvelope message from a plain object. Also converts values to their respective internal types.
          * @param object Plain object
          * @returns ActionEnvelope
          */
-        public static fromObject(object: [ 'object' ].<string, any>): wire.ActionEnvelope;
+        public static fromObject(object: { [k: string]: any }): wire.ActionEnvelope;
 
         /**
          * Creates a plain object from an ActionEnvelope message. Also converts values to other types if specified.
@@ -92,13 +92,13 @@ export namespace wire {
          * @param [options] Conversion options
          * @returns Plain object
          */
-        public static toObject(message: wire.ActionEnvelope, options?: $protobuf.IConversionOptions): [ 'object' ].<string, any>;
+        public static toObject(message: wire.ActionEnvelope, options?: $protobuf.IConversionOptions): { [k: string]: any };
 
         /**
          * Converts this ActionEnvelope to JSON.
          * @returns JSON object
          */
-        public toJSON(): [ 'object' ].<string, any>;
+        public toJSON(): { [k: string]: any };
     }
 
     /** Properties of an ActionGameLeave. */
@@ -161,14 +161,14 @@ export namespace wire {
          * @param message Plain object to verify
          * @returns `null` if valid, otherwise the reason why it is not
          */
-        public static verify(message: [ 'object' ].<string, any>): (string|null);
+        public static verify(message: { [k: string]: any }): (string|null);
 
         /**
          * Creates an ActionGameLeave message from a plain object. Also converts values to their respective internal types.
          * @param object Plain object
          * @returns ActionGameLeave
          */
-        public static fromObject(object: [ 'object' ].<string, any>): wire.ActionGameLeave;
+        public static fromObject(object: { [k: string]: any }): wire.ActionGameLeave;
 
         /**
          * Creates a plain object from an ActionGameLeave message. Also converts values to other types if specified.
@@ -176,13 +176,13 @@ export namespace wire {
          * @param [options] Conversion options
          * @returns Plain object
          */
-        public static toObject(message: wire.ActionGameLeave, options?: $protobuf.IConversionOptions): [ 'object' ].<string, any>;
+        public static toObject(message: wire.ActionGameLeave, options?: $protobuf.IConversionOptions): { [k: string]: any };
 
         /**
          * Converts this ActionGameLeave to JSON.
          * @returns JSON object
          */
-        public toJSON(): [ 'object' ].<string, any>;
+        public toJSON(): { [k: string]: any };
     }
 
     /** Properties of an ActionGameLaunch. */
@@ -257,14 +257,14 @@ export namespace wire {
          * @param message Plain object to verify
          * @returns `null` if valid, otherwise the reason why it is not
          */
-        public static verify(message: [ 'object' ].<string, any>): (string|null);
+        public static verify(message: { [k: string]: any }): (string|null);
 
         /**
          * Creates an ActionGameLaunch message from a plain object. Also converts values to their respective internal types.
          * @param object Plain object
          * @returns ActionGameLaunch
          */
-        public static fromObject(object: [ 'object' ].<string, any>): wire.ActionGameLaunch;
+        public static fromObject(object: { [k: string]: any }): wire.ActionGameLaunch;
 
         /**
          * Creates a plain object from an ActionGameLaunch message. Also converts values to other types if specified.
@@ -272,13 +272,13 @@ export namespace wire {
          * @param [options] Conversion options
          * @returns Plain object
          */
-        public static toObject(message: wire.ActionGameLaunch, options?: $protobuf.IConversionOptions): [ 'object' ].<string, any>;
+        public static toObject(message: wire.ActionGameLaunch, options?: $protobuf.IConversionOptions): { [k: string]: any };
 
         /**
          * Converts this ActionGameLaunch to JSON.
          * @returns JSON object
          */
-        public toJSON(): [ 'object' ].<string, any>;
+        public toJSON(): { [k: string]: any };
     }
 
     /** Properties of an EventEnvelope. */
@@ -362,14 +362,14 @@ export namespace wire {
          * @param message Plain object to verify
          * @returns `null` if valid, otherwise the reason why it is not
          */
-        public static verify(message: [ 'object' ].<string, any>): (string|null);
+        public static verify(message: { [k: string]: any }): (string|null);
 
         /**
          * Creates an EventEnvelope message from a plain object. Also converts values to their respective internal types.
          * @param object Plain object
          * @returns EventEnvelope
          */
-        public static fromObject(object: [ 'object' ].<string, any>): wire.EventEnvelope;
+        public static fromObject(object: { [k: string]: any }): wire.EventEnvelope;
 
         /**
          * Creates a plain object from an EventEnvelope message. Also converts values to other types if specified.
@@ -377,13 +377,13 @@ export namespace wire {
          * @param [options] Conversion options
          * @returns Plain object
          */
-        public static toObject(message: wire.EventEnvelope, options?: $protobuf.IConversionOptions): [ 'object' ].<string, any>;
+        public static toObject(message: wire.EventEnvelope, options?: $protobuf.IConversionOptions): { [k: string]: any };
 
         /**
          * Converts this EventEnvelope to JSON.
          * @returns JSON object
          */
-        public toJSON(): [ 'object' ].<string, any>;
+        public toJSON(): { [k: string]: any };
     }
 
     /** Properties of an EventGameStart. */
@@ -458,14 +458,14 @@ export namespace wire {
          * @param message Plain object to verify
          * @returns `null` if valid, otherwise the reason why it is not
          */
-        public static verify(message: [ 'object' ].<string, any>): (string|null);
+        public static verify(message: { [k: string]: any }): (string|null);
 
         /**
          * Creates an EventGameStart message from a plain object. Also converts values to their respective internal types.
          * @param object Plain object
          * @returns EventGameStart
          */
-        public static fromObject(object: [ 'object' ].<string, any>): wire.EventGameStart;
+        public static fromObject(object: { [k: string]: any }): wire.EventGameStart;
 
         /**
          * Creates a plain object from an EventGameStart message. Also converts values to other types if specified.
@@ -473,13 +473,13 @@ export namespace wire {
          * @param [options] Conversion options
          * @returns Plain object
          */
-        public static toObject(message: wire.EventGameStart, options?: $protobuf.IConversionOptions): [ 'object' ].<string, any>;
+        public static toObject(message: wire.EventGameStart, options?: $protobuf.IConversionOptions): { [k: string]: any };
 
         /**
          * Converts this EventGameStart to JSON.
          * @returns JSON object
          */
-        public toJSON(): [ 'object' ].<string, any>;
+        public toJSON(): { [k: string]: any };
     }
 
     /** Properties of an EventGameOver. */
@@ -548,14 +548,14 @@ export namespace wire {
          * @param message Plain object to verify
          * @returns `null` if valid, otherwise the reason why it is not
          */
-        public static verify(message: [ 'object' ].<string, any>): (string|null);
+        public static verify(message: { [k: string]: any }): (string|null);
 
         /**
          * Creates an EventGameOver message from a plain object. Also converts values to their respective internal types.
          * @param object Plain object
          * @returns EventGameOver
          */
-        public static fromObject(object: [ 'object' ].<string, any>): wire.EventGameOver;
+        public static fromObject(object: { [k: string]: any }): wire.EventGameOver;
 
         /**
          * Creates a plain object from an EventGameOver message. Also converts values to other types if specified.
@@ -563,13 +563,13 @@ export namespace wire {
          * @param [options] Conversion options
          * @returns Plain object
          */
-        public static toObject(message: wire.EventGameOver, options?: $protobuf.IConversionOptions): [ 'object' ].<string, any>;
+        public static toObject(message: wire.EventGameOver, options?: $protobuf.IConversionOptions): { [k: string]: any };
 
         /**
          * Converts this EventGameOver to JSON.
          * @returns JSON object
          */
-        public toJSON(): [ 'object' ].<string, any>;
+        public toJSON(): { [k: string]: any };
     }
 
     /** Properties of an EventGameTick. */
@@ -638,14 +638,14 @@ export namespace wire {
          * @param message Plain object to verify
          * @returns `null` if valid, otherwise the reason why it is not
          */
-        public static verify(message: [ 'object' ].<string, any>): (string|null);
+        public static verify(message: { [k: string]: any }): (string|null);
 
         /**
          * Creates an EventGameTick message from a plain object. Also converts values to their respective internal types.
          * @param object Plain object
          * @returns EventGameTick
          */
-        public static fromObject(object: [ 'object' ].<string, any>): wire.EventGameTick;
+        public static fromObject(object: { [k: string]: any }): wire.EventGameTick;
 
         /**
          * Creates a plain object from an EventGameTick message. Also converts values to other types if specified.
@@ -653,13 +653,13 @@ export namespace wire {
          * @param [options] Conversion options
          * @returns Plain object
          */
-        public static toObject(message: wire.EventGameTick, options?: $protobuf.IConversionOptions): [ 'object' ].<string, any>;
+        public static toObject(message: wire.EventGameTick, options?: $protobuf.IConversionOptions): { [k: string]: any };
 
         /**
          * Converts this EventGameTick to JSON.
          * @returns JSON object
          */
-        public toJSON(): [ 'object' ].<string, any>;
+        public toJSON(): { [k: string]: any };
     }
 
     /** Namespace game. */
@@ -737,14 +737,14 @@ export namespace wire {
              * @param message Plain object to verify
              * @returns `null` if valid, otherwise the reason why it is not
              */
-            public static verify(message: [ 'object' ].<string, any>): (string|null);
+            public static verify(message: { [k: string]: any }): (string|null);
 
             /**
              * Creates a Coordinate message from a plain object. Also converts values to their respective internal types.
              * @param object Plain object
              * @returns Coordinate
              */
-            public static fromObject(object: [ 'object' ].<string, any>): wire.game.Coordinate;
+            public static fromObject(object: { [k: string]: any }): wire.game.Coordinate;
 
             /**
              * Creates a plain object from a Coordinate message. Also converts values to other types if specified.
@@ -752,13 +752,13 @@ export namespace wire {
              * @param [options] Conversion options
              * @returns Plain object
              */
-            public static toObject(message: wire.game.Coordinate, options?: $protobuf.IConversionOptions): [ 'object' ].<string, any>;
+            public static toObject(message: wire.game.Coordinate, options?: $protobuf.IConversionOptions): { [k: string]: any };
 
             /**
              * Converts this Coordinate to JSON.
              * @returns JSON object
              */
-            public toJSON(): [ 'object' ].<string, any>;
+            public toJSON(): { [k: string]: any };
         }
 
         /** Properties of a FloatCoordinate. */
@@ -833,14 +833,14 @@ export namespace wire {
              * @param message Plain object to verify
              * @returns `null` if valid, otherwise the reason why it is not
              */
-            public static verify(message: [ 'object' ].<string, any>): (string|null);
+            public static verify(message: { [k: string]: any }): (string|null);
 
             /**
              * Creates a FloatCoordinate message from a plain object. Also converts values to their respective internal types.
              * @param object Plain object
              * @returns FloatCoordinate
              */
-            public static fromObject(object: [ 'object' ].<string, any>): wire.game.FloatCoordinate;
+            public static fromObject(object: { [k: string]: any }): wire.game.FloatCoordinate;
 
             /**
              * Creates a plain object from a FloatCoordinate message. Also converts values to other types if specified.
@@ -848,13 +848,13 @@ export namespace wire {
              * @param [options] Conversion options
              * @returns Plain object
              */
-            public static toObject(message: wire.game.FloatCoordinate, options?: $protobuf.IConversionOptions): [ 'object' ].<string, any>;
+            public static toObject(message: wire.game.FloatCoordinate, options?: $protobuf.IConversionOptions): { [k: string]: any };
 
             /**
              * Converts this FloatCoordinate to JSON.
              * @returns JSON object
              */
-            public toJSON(): [ 'object' ].<string, any>;
+            public toJSON(): { [k: string]: any };
         }
 
         /** Properties of a Player. */
@@ -923,14 +923,14 @@ export namespace wire {
              * @param message Plain object to verify
              * @returns `null` if valid, otherwise the reason why it is not
              */
-            public static verify(message: [ 'object' ].<string, any>): (string|null);
+            public static verify(message: { [k: string]: any }): (string|null);
 
             /**
              * Creates a Player message from a plain object. Also converts values to their respective internal types.
              * @param object Plain object
              * @returns Player
              */
-            public static fromObject(object: [ 'object' ].<string, any>): wire.game.Player;
+            public static fromObject(object: { [k: string]: any }): wire.game.Player;
 
             /**
              * Creates a plain object from a Player message. Also converts values to other types if specified.
@@ -938,13 +938,13 @@ export namespace wire {
              * @param [options] Conversion options
              * @returns Plain object
              */
-            public static toObject(message: wire.game.Player, options?: $protobuf.IConversionOptions): [ 'object' ].<string, any>;
+            public static toObject(message: wire.game.Player, options?: $protobuf.IConversionOptions): { [k: string]: any };
 
             /**
              * Converts this Player to JSON.
              * @returns JSON object
              */
-            public toJSON(): [ 'object' ].<string, any>;
+            public toJSON(): { [k: string]: any };
         }
 
         /** Properties of an Army. */
@@ -1019,14 +1019,14 @@ export namespace wire {
              * @param message Plain object to verify
              * @returns `null` if valid, otherwise the reason why it is not
              */
-            public static verify(message: [ 'object' ].<string, any>): (string|null);
+            public static verify(message: { [k: string]: any }): (string|null);
 
             /**
              * Creates an Army message from a plain object. Also converts values to their respective internal types.
              * @param object Plain object
              * @returns Army
              */
-            public static fromObject(object: [ 'object' ].<string, any>): wire.game.Army;
+            public static fromObject(object: { [k: string]: any }): wire.game.Army;
 
             /**
              * Creates a plain object from an Army message. Also converts values to other types if specified.
@@ -1034,13 +1034,13 @@ export namespace wire {
              * @param [options] Conversion options
              * @returns Plain object
              */
-            public static toObject(message: wire.game.Army, options?: $protobuf.IConversionOptions): [ 'object' ].<string, any>;
+            public static toObject(message: wire.game.Army, options?: $protobuf.IConversionOptions): { [k: string]: any };
 
             /**
              * Converts this Army to JSON.
              * @returns JSON object
              */
-            public toJSON(): [ 'object' ].<string, any>;
+            public toJSON(): { [k: string]: any };
         }
 
         /** Properties of an Airplane. */
@@ -1133,14 +1133,14 @@ export namespace wire {
              * @param message Plain object to verify
              * @returns `null` if valid, otherwise the reason why it is not
              */
-            public static verify(message: [ 'object' ].<string, any>): (string|null);
+            public static verify(message: { [k: string]: any }): (string|null);
 
             /**
              * Creates an Airplane message from a plain object. Also converts values to their respective internal types.
              * @param object Plain object
              * @returns Airplane
              */
-            public static fromObject(object: [ 'object' ].<string, any>): wire.game.Airplane;
+            public static fromObject(object: { [k: string]: any }): wire.game.Airplane;
 
             /**
              * Creates a plain object from an Airplane message. Also converts values to other types if specified.
@@ -1148,13 +1148,13 @@ export namespace wire {
              * @param [options] Conversion options
              * @returns Plain object
              */
-            public static toObject(message: wire.game.Airplane, options?: $protobuf.IConversionOptions): [ 'object' ].<string, any>;
+            public static toObject(message: wire.game.Airplane, options?: $protobuf.IConversionOptions): { [k: string]: any };
 
             /**
              * Converts this Airplane to JSON.
              * @returns JSON object
              */
-            public toJSON(): [ 'object' ].<string, any>;
+            public toJSON(): { [k: string]: any };
         }
 
         /** Properties of an Island. */
@@ -1241,14 +1241,14 @@ export namespace wire {
              * @param message Plain object to verify
              * @returns `null` if valid, otherwise the reason why it is not
              */
-            public static verify(message: [ 'object' ].<string, any>): (string|null);
+            public static verify(message: { [k: string]: any }): (string|null);
 
             /**
              * Creates an Island message from a plain object. Also converts values to their respective internal types.
              * @param object Plain object
              * @returns Island
              */
-            public static fromObject(object: [ 'object' ].<string, any>): wire.game.Island;
+            public static fromObject(object: { [k: string]: any }): wire.game.Island;
 
             /**
              * Creates a plain object from an Island message. Also converts values to other types if specified.
@@ -1256,13 +1256,13 @@ export namespace wire {
              * @param [options] Conversion options
              * @returns Plain object
              */
-            public static toObject(message: wire.game.Island, options?: $protobuf.IConversionOptions): [ 'object' ].<string, any>;
+            public static toObject(message: wire.game.Island, options?: $protobuf.IConversionOptions): { [k: string]: any };
 
             /**
              * Converts this Island to JSON.
              * @returns JSON object
              */
-            public toJSON(): [ 'object' ].<string, any>;
+            public toJSON(): { [k: string]: any };
         }
 
         /** Properties of a Game. */
@@ -1274,14 +1274,11 @@ export namespace wire {
             /** Game size */
             size?: (wire.game.ICoordinate|null);
 
-            /** Game player1 */
-            player1?: (wire.game.IPlayer|null);
-
-            /** Game player2 */
-            player2?: (wire.game.IPlayer|null);
-
             /** Game playerNeutral */
             playerNeutral?: (wire.game.IPlayer|null);
+
+            /** Game players */
+            players?: (wire.game.IPlayer[]|null);
 
             /** Game islands */
             islands?: (wire.game.IIsland[]|null);
@@ -1305,20 +1302,17 @@ export namespace wire {
             /** Game size. */
             public size?: (wire.game.ICoordinate|null);
 
-            /** Game player1. */
-            public player1?: (wire.game.IPlayer|null);
-
-            /** Game player2. */
-            public player2?: (wire.game.IPlayer|null);
-
             /** Game playerNeutral. */
             public playerNeutral?: (wire.game.IPlayer|null);
 
+            /** Game players. */
+            public players: wire.game.IPlayer[];
+
             /** Game islands. */
-            public islands: [ 'Array' ].<wire.game.IIsland>;
+            public islands: wire.game.IIsland[];
 
             /** Game airplanes. */
-            public airplanes: [ 'Array' ].<wire.game.IAirplane>;
+            public airplanes: wire.game.IAirplane[];
 
             /**
              * Creates a new Game instance using the specified properties.
@@ -1367,14 +1361,14 @@ export namespace wire {
              * @param message Plain object to verify
              * @returns `null` if valid, otherwise the reason why it is not
              */
-            public static verify(message: [ 'object' ].<string, any>): (string|null);
+            public static verify(message: { [k: string]: any }): (string|null);
 
             /**
              * Creates a Game message from a plain object. Also converts values to their respective internal types.
              * @param object Plain object
              * @returns Game
              */
-            public static fromObject(object: [ 'object' ].<string, any>): wire.game.Game;
+            public static fromObject(object: { [k: string]: any }): wire.game.Game;
 
             /**
              * Creates a plain object from a Game message. Also converts values to other types if specified.
@@ -1382,13 +1376,13 @@ export namespace wire {
              * @param [options] Conversion options
              * @returns Plain object
              */
-            public static toObject(message: wire.game.Game, options?: $protobuf.IConversionOptions): [ 'object' ].<string, any>;
+            public static toObject(message: wire.game.Game, options?: $protobuf.IConversionOptions): { [k: string]: any };
 
             /**
              * Converts this Game to JSON.
              * @returns JSON object
              */
-            public toJSON(): [ 'object' ].<string, any>;
+            public toJSON(): { [k: string]: any };
         }
     }
 }

@@ -2939,9 +2939,8 @@ export const wire = $root.wire = (() => {
              * @interface IGame
              * @property {string|null} [id] Game id
              * @property {wire.game.ICoordinate|null} [size] Game size
-             * @property {wire.game.IPlayer|null} [player1] Game player1
-             * @property {wire.game.IPlayer|null} [player2] Game player2
              * @property {wire.game.IPlayer|null} [playerNeutral] Game playerNeutral
+             * @property {Array.<wire.game.IPlayer>|null} [players] Game players
              * @property {Array.<wire.game.IIsland>|null} [islands] Game islands
              * @property {Array.<wire.game.IAirplane>|null} [airplanes] Game airplanes
              */
@@ -2955,6 +2954,7 @@ export const wire = $root.wire = (() => {
              * @param {wire.game.IGame=} [properties] Properties to set
              */
             function Game(properties) {
+                this.players = [];
                 this.islands = [];
                 this.airplanes = [];
                 if (properties)
@@ -2980,28 +2980,20 @@ export const wire = $root.wire = (() => {
             Game.prototype.size = null;
 
             /**
-             * Game player1.
-             * @member {wire.game.IPlayer|null|undefined} player1
-             * @memberof wire.game.Game
-             * @instance
-             */
-            Game.prototype.player1 = null;
-
-            /**
-             * Game player2.
-             * @member {wire.game.IPlayer|null|undefined} player2
-             * @memberof wire.game.Game
-             * @instance
-             */
-            Game.prototype.player2 = null;
-
-            /**
              * Game playerNeutral.
              * @member {wire.game.IPlayer|null|undefined} playerNeutral
              * @memberof wire.game.Game
              * @instance
              */
             Game.prototype.playerNeutral = null;
+
+            /**
+             * Game players.
+             * @member {Array.<wire.game.IPlayer>} players
+             * @memberof wire.game.Game
+             * @instance
+             */
+            Game.prototype.players = $util.emptyArray;
 
             /**
              * Game islands.
@@ -3047,18 +3039,17 @@ export const wire = $root.wire = (() => {
                     writer.uint32(/* id 1, wireType 2 =*/10).string(message.id);
                 if (message.size != null && message.hasOwnProperty("size"))
                     $root.wire.game.Coordinate.encode(message.size, writer.uint32(/* id 2, wireType 2 =*/18).fork()).ldelim();
-                if (message.player1 != null && message.hasOwnProperty("player1"))
-                    $root.wire.game.Player.encode(message.player1, writer.uint32(/* id 3, wireType 2 =*/26).fork()).ldelim();
-                if (message.player2 != null && message.hasOwnProperty("player2"))
-                    $root.wire.game.Player.encode(message.player2, writer.uint32(/* id 4, wireType 2 =*/34).fork()).ldelim();
                 if (message.playerNeutral != null && message.hasOwnProperty("playerNeutral"))
-                    $root.wire.game.Player.encode(message.playerNeutral, writer.uint32(/* id 5, wireType 2 =*/42).fork()).ldelim();
+                    $root.wire.game.Player.encode(message.playerNeutral, writer.uint32(/* id 3, wireType 2 =*/26).fork()).ldelim();
+                if (message.players != null && message.players.length)
+                    for (let i = 0; i < message.players.length; ++i)
+                        $root.wire.game.Player.encode(message.players[i], writer.uint32(/* id 4, wireType 2 =*/34).fork()).ldelim();
                 if (message.islands != null && message.islands.length)
                     for (let i = 0; i < message.islands.length; ++i)
-                        $root.wire.game.Island.encode(message.islands[i], writer.uint32(/* id 6, wireType 2 =*/50).fork()).ldelim();
+                        $root.wire.game.Island.encode(message.islands[i], writer.uint32(/* id 5, wireType 2 =*/42).fork()).ldelim();
                 if (message.airplanes != null && message.airplanes.length)
                     for (let i = 0; i < message.airplanes.length; ++i)
-                        $root.wire.game.Airplane.encode(message.airplanes[i], writer.uint32(/* id 7, wireType 2 =*/58).fork()).ldelim();
+                        $root.wire.game.Airplane.encode(message.airplanes[i], writer.uint32(/* id 6, wireType 2 =*/50).fork()).ldelim();
                 return writer;
             };
 
@@ -3100,20 +3091,19 @@ export const wire = $root.wire = (() => {
                         message.size = $root.wire.game.Coordinate.decode(reader, reader.uint32());
                         break;
                     case 3:
-                        message.player1 = $root.wire.game.Player.decode(reader, reader.uint32());
-                        break;
-                    case 4:
-                        message.player2 = $root.wire.game.Player.decode(reader, reader.uint32());
-                        break;
-                    case 5:
                         message.playerNeutral = $root.wire.game.Player.decode(reader, reader.uint32());
                         break;
-                    case 6:
+                    case 4:
+                        if (!(message.players && message.players.length))
+                            message.players = [];
+                        message.players.push($root.wire.game.Player.decode(reader, reader.uint32()));
+                        break;
+                    case 5:
                         if (!(message.islands && message.islands.length))
                             message.islands = [];
                         message.islands.push($root.wire.game.Island.decode(reader, reader.uint32()));
                         break;
-                    case 7:
+                    case 6:
                         if (!(message.airplanes && message.airplanes.length))
                             message.airplanes = [];
                         message.airplanes.push($root.wire.game.Airplane.decode(reader, reader.uint32()));
@@ -3161,20 +3151,19 @@ export const wire = $root.wire = (() => {
                     if (error)
                         return "size." + error;
                 }
-                if (message.player1 != null && message.hasOwnProperty("player1")) {
-                    let error = $root.wire.game.Player.verify(message.player1);
-                    if (error)
-                        return "player1." + error;
-                }
-                if (message.player2 != null && message.hasOwnProperty("player2")) {
-                    let error = $root.wire.game.Player.verify(message.player2);
-                    if (error)
-                        return "player2." + error;
-                }
                 if (message.playerNeutral != null && message.hasOwnProperty("playerNeutral")) {
                     let error = $root.wire.game.Player.verify(message.playerNeutral);
                     if (error)
                         return "playerNeutral." + error;
+                }
+                if (message.players != null && message.hasOwnProperty("players")) {
+                    if (!Array.isArray(message.players))
+                        return "players: array expected";
+                    for (let i = 0; i < message.players.length; ++i) {
+                        let error = $root.wire.game.Player.verify(message.players[i]);
+                        if (error)
+                            return "players." + error;
+                    }
                 }
                 if (message.islands != null && message.hasOwnProperty("islands")) {
                     if (!Array.isArray(message.islands))
@@ -3216,20 +3205,20 @@ export const wire = $root.wire = (() => {
                         throw TypeError(".wire.game.Game.size: object expected");
                     message.size = $root.wire.game.Coordinate.fromObject(object.size);
                 }
-                if (object.player1 != null) {
-                    if (typeof object.player1 !== "object")
-                        throw TypeError(".wire.game.Game.player1: object expected");
-                    message.player1 = $root.wire.game.Player.fromObject(object.player1);
-                }
-                if (object.player2 != null) {
-                    if (typeof object.player2 !== "object")
-                        throw TypeError(".wire.game.Game.player2: object expected");
-                    message.player2 = $root.wire.game.Player.fromObject(object.player2);
-                }
                 if (object.playerNeutral != null) {
                     if (typeof object.playerNeutral !== "object")
                         throw TypeError(".wire.game.Game.playerNeutral: object expected");
                     message.playerNeutral = $root.wire.game.Player.fromObject(object.playerNeutral);
+                }
+                if (object.players) {
+                    if (!Array.isArray(object.players))
+                        throw TypeError(".wire.game.Game.players: array expected");
+                    message.players = [];
+                    for (let i = 0; i < object.players.length; ++i) {
+                        if (typeof object.players[i] !== "object")
+                            throw TypeError(".wire.game.Game.players: object expected");
+                        message.players[i] = $root.wire.game.Player.fromObject(object.players[i]);
+                    }
                 }
                 if (object.islands) {
                     if (!Array.isArray(object.islands))
@@ -3268,26 +3257,26 @@ export const wire = $root.wire = (() => {
                     options = {};
                 let object = {};
                 if (options.arrays || options.defaults) {
+                    object.players = [];
                     object.islands = [];
                     object.airplanes = [];
                 }
                 if (options.defaults) {
                     object.id = "";
                     object.size = null;
-                    object.player1 = null;
-                    object.player2 = null;
                     object.playerNeutral = null;
                 }
                 if (message.id != null && message.hasOwnProperty("id"))
                     object.id = message.id;
                 if (message.size != null && message.hasOwnProperty("size"))
                     object.size = $root.wire.game.Coordinate.toObject(message.size, options);
-                if (message.player1 != null && message.hasOwnProperty("player1"))
-                    object.player1 = $root.wire.game.Player.toObject(message.player1, options);
-                if (message.player2 != null && message.hasOwnProperty("player2"))
-                    object.player2 = $root.wire.game.Player.toObject(message.player2, options);
                 if (message.playerNeutral != null && message.hasOwnProperty("playerNeutral"))
                     object.playerNeutral = $root.wire.game.Player.toObject(message.playerNeutral, options);
+                if (message.players && message.players.length) {
+                    object.players = [];
+                    for (let j = 0; j < message.players.length; ++j)
+                        object.players[j] = $root.wire.game.Player.toObject(message.players[j], options);
+                }
                 if (message.islands && message.islands.length) {
                     object.islands = [];
                     for (let j = 0; j < message.islands.length; ++j)

@@ -21,19 +21,13 @@ export default class GameModel extends BaseModel {
          * @member {PlayerModel}
          * @private
          */
-        this._player1 = new PlayerModel(this);
-
-        /**
-         * @member {PlayerModel}
-         * @private
-         */
-        this._player2 = new PlayerModel(this);
-
-        /**
-         * @member {PlayerModel}
-         * @private
-         */
         this._playerNeutral = new PlayerModel(this);
+
+        /**
+         * @member [PlayerModel]
+         * @private
+         */
+        this._players = [];
 
         /**
          * @member [IslandModel]
@@ -61,6 +55,33 @@ export default class GameModel extends BaseModel {
          * @private
          */
         this._serverTickInterval = 1;
+    }
+
+    /**
+     * @param {wire.game.IPlayer[]} players 
+     * @returns {Boolean}
+     * @private
+     */
+    _updatePlayers(players) {
+        let changed = false;
+        let numPlayers = this._players.length;
+
+        // Update each player, create new ones if necessary.
+        this._players = players.map(playerData => {
+            let player = this.playerById(playerData.id);
+            if (!player) {
+                player = new PlayerModel(this);
+                // A player was added.
+                changed = true;
+            }
+            player.update(playerData);
+            return player;
+        });
+        if (numPlayers !== this._players.length) {
+            // A player was removed.
+            changed = true;
+        }
+        return changed;
     }
 
     /**
@@ -128,15 +149,16 @@ export default class GameModel extends BaseModel {
             this._size.set(gameData.size);
             changed = true;
         }
+        this._playerNeutral.update(gameData.playerNeutral);
+        if (this._updatePlayers(gameData.players)) {
+            changed = true;
+        }
         if (this._updateAirplanes(gameData.airplanes)) {
             changed = true;
         }
         if (this._updateIslands(gameData.islands)) {
             changed = true;
         }
-        this._player1.update(gameData.player1);
-        this._player2.update(gameData.player2);
-        this._playerNeutral.update(gameData.playerNeutral);
         return changed;
     }
 
@@ -145,20 +167,6 @@ export default class GameModel extends BaseModel {
      */
     get size() {
         return this._size;
-    }
-
-    /**
-     * @returns {PlayerModel}
-     */
-    get player1() {
-        return this._player1;
-    }
-
-    /**
-     * @returns {PlayerModel}
-     */
-    get player2() {
-        return this._player2;
     }
 
     /**
@@ -238,14 +246,7 @@ export default class GameModel extends BaseModel {
      * @returns {?PlayerModel} The player, if found.
      */
     playerById(playerId) {
-        if (this._player1.id === playerId) {
-            return this._player1;
-        } else if (this._player2.id === playerId) {
-            return this._player2;
-        } else if (this._playerNeutral.id === playerId) {
-            return this._playerNeutral;
-        }
-        return null;
+        return this._players.find(playerModel => playerModel.id === playerId) || null;
     }
 
     /**

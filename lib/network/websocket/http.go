@@ -16,7 +16,7 @@ import (
 // wsVersion is the version of the websocket protocol that the server
 // is currently implementing. Used to make sure that the client "talks"
 // the same version as we do.
-const wsVersion = "2"
+const wsVersion = "3"
 
 // The websocket.Upgrader used for all upgrades from http -> ws.
 var wsUpgrader = websocket.Upgrader{
