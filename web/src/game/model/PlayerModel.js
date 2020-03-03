@@ -25,7 +25,7 @@ export default class PlayerModel extends BaseModel {
      * @returns {boolean}
      */
     isSelf() {
-        return (this.id === this._gameModel.playerId);
+        return (this.id === this._gameModel.myPlayerId);
     }
 
     /**

@@ -52,7 +52,7 @@ export default class GameModel extends BaseModel {
          * @type {?string}
          * @private
          */
-        this._playerId = null;
+        this._myPlayerId = null;
 
         /**
          * The approximate tick interval (i.e. time between ticks)
@@ -183,18 +183,19 @@ export default class GameModel extends BaseModel {
     }
 
     /**
+     * Player id that we are representing.
      * @returns {?string}
      */
-    get playerId() {
-        return this._playerId;
+    get myPlayerId() {
+        return this._myPlayerId;
     }
 
     /**
      * @param {?string} playerId
      */
-    set playerId(playerId) {
-        if (this._playerId !== playerId) {
-            this._playerId = playerId;
+    set myPlayerId(playerId) {
+        if (this._myPlayerId !== playerId) {
+            this._myPlayerId = playerId;
             this._emitChanged();
         }
     }
