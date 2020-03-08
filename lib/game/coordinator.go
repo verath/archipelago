@@ -2,6 +2,7 @@ package game
 
 import (
 	"context"
+	"math"
 	"sync"
 	"time"
 
@@ -19,7 +20,15 @@ const (
 	// The max number of clients in the client queue
 	// TODO(2017-01-13): What is an appropriate number here?
 	clientQueueSize = 2
+
+	// additionalClientsTimeout is the time that we wait for new clients when
+	// we have the minimum required clients connected to start a new game.
+	additionalClientsTimeout = 8 * time.Second
 )
+
+// errNextClientTimeout is returned when no new client connection was made
+// before timeout.
+var errNextClientTimeout = errors.New("next client timeout")
 
 // The Coordinator is responsible for connecting players to a game. Once enough
 // players has been found so that a game can be created, the game coordinator
@@ -66,44 +75,60 @@ func (c *Coordinator) AddClient(ctx context.Context, client Client) error {
 	}
 }
 
-// nextClient returns a Client from the clientsCh. This method blocks
-// until a Client can be retrieved or the context is cancelled.
-func (c *Coordinator) nextClient(ctx context.Context) (Client, error) {
+// nextClientWithTimeout returns the next client added to clientsCh.
+// Blocks for at most timeout, or until the context is canceled.
+// Returns errNextClientTimeout if waiting was aborted due to timeout.
+func (c *Coordinator) nextClientWithTimeout(ctx context.Context, timeout time.Duration) (Client, error) {
+	t := time.NewTimer(timeout)
+	defer t.Stop()
 	select {
 	case client := <-c.clientsCh:
 		return client, nil
+	case <-t.C:
+		return nil, errNextClientTimeout
 	case <-ctx.Done():
 		return nil, ctx.Err()
 	}
 }
 
-// awaitClients blocks until numClients Client connections has been made,
-// returning a slice of the connected Clients. It is the callers responsibility
-// to disconnect any clients returned. awaitClients does not return any clients
-// on error.
-func (c *Coordinator) awaitClients(ctx context.Context, numClients int) ([]Client, error) {
-	clients := make([]Client, 0, numClients)
-	for len(clients) < numClients {
-		// Wait for the next client to connect.
-		newClient, err := c.nextClient(ctx)
+// awaitClients returns a slice of at least minNumClients and at most
+// maxNumClients newly connected Clients. awaitClients does not return any
+// Clients on error.
+// It is responsibility of the caller to disconnect any Clients returned.
+func (c *Coordinator) awaitClients(ctx context.Context, minNumClients, maxNumClients int) (clients []Client, err error) {
+	clients = make([]Client, 0, maxNumClients)
+	defer func() {
 		if err != nil {
 			disconnectAll(clients)
-			return nil, errors.Wrap(err, "error awaiting next client")
+			clients = nil
 		}
-		clients = clients[:len(clients)+1]
-		clients[len(clients)-1] = newClient
-		// Remove any client that disconnected.
-		i := 0
-		for _, client := range clients {
-			select {
-			case <-client.DisconnectCh():
-			default:
-				clients[i] = client
-				i++
-			}
+	}()
+	for {
+		// Wait for the next client to connect. With >= minNumClients we wait
+		// for at most additionalClientsTimeout.
+		timeout := time.Duration(math.MaxInt64)
+		timeoutExpired := false
+		if len(clients) >= minNumClients {
+			timeout = additionalClientsTimeout
 		}
-		clients = clients[:i]
+		nextClient, err := c.nextClientWithTimeout(ctx, timeout)
+		if err == nil {
+			clients = clients[:len(clients)+1]
+			clients[len(clients)-1] = nextClient
+			c.logEntry.Debug("awaitClients: new client")
+		} else if errors.Cause(err) == errNextClientTimeout {
+			timeoutExpired = true
+			c.logEntry.Debug("awaitClients: timeout")
+		} else {
+			return nil, errors.Wrap(err, "error waiting for next client")
+		}
+		// Prune disconnected clients, *then* test exit conditions.
+		clients = removeDisconnected(clients)
+		if len(clients) == maxNumClients || timeoutExpired && len(clients) >= minNumClients {
+			break
+		}
 	}
+	c.logEntry.WithField("numClients", len(clients)).Debug("awaitClients: done")
 	return clients, nil
 }
 
@@ -112,9 +137,10 @@ func (c *Coordinator) awaitClients(ctx context.Context, numClients int) ([]Clien
 // pair of players. This method blocks until the context is cancelled or
 // an error occurs. Always returns a non-nil error.
 func (c *Coordinator) run(ctx context.Context) error {
-	clientsPerGame := 2
+	minClientsPerGame := 2
+	maxClientsPerGame := 10
 	for {
-		clients, err := c.awaitClients(ctx, clientsPerGame)
+		clients, err := c.awaitClients(ctx, minClientsPerGame, maxClientsPerGame)
 		if err != nil {
 			return errors.Wrap(err, "Error when awaiting clients")
 		}
@@ -174,6 +200,23 @@ func (c *Coordinator) startGame(ctx context.Context, clients []Client) error {
 		disconnectAll(clients)
 	}()
 	return nil
+}
+
+// removeDisconnected removes any client that has disconnected from the
+// provided clients slice.
+func removeDisconnected(clients []Client) []Client {
+	j := 0
+	for i, client := range clients {
+		select {
+		case <-client.DisconnectCh():
+			// Unset in backing array.
+			clients[i] = nil
+		default:
+			clients[j] = client
+			j++
+		}
+	}
+	return clients[:j]
 }
 
 // disconnectAll calls Disconnect on each client.
