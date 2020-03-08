@@ -1,16 +1,23 @@
 import * as PIXI from "pixi.js";
-import { TEXTURE_ISLAND1, TEXTURE_ISLAND2, TEXTURE_ISLAND3, TEXTURE_ISLAND4, TEXTURE_SELECTED } from "../../images";
+import * as images from "../../images";
 import ResourceHolder from "../../resource/ResourceHolder.js";
 import IslandModel from "../model/IslandModel.js";
 import BaseSprite from "./BaseSprite.js";
-import { COLOR_FILL_ENEMY, COLOR_FILL_NEUTRAL, COLOR_FILL_SELF, FONT_FAMILY_DEFAULT } from "./constants.js";
+import { FONT_FAMILY_DEFAULT } from "./constants.js";
 import { TILE_HEIGHT, TILE_WIDTH } from "./GameView.js";
 
 
 const EVENT_CLICK = Symbol("EVENT_CLICK");
 
-const ISLAND_TEXTURES = [TEXTURE_ISLAND1, TEXTURE_ISLAND2, TEXTURE_ISLAND3, TEXTURE_ISLAND4];
-const SELECTED_TEXTURE = TEXTURE_SELECTED;
+const ISLAND_TEXTURES = [
+    images.TEXTURE_ISLAND1,
+    images.TEXTURE_ISLAND2,
+    images.TEXTURE_ISLAND3,
+    images.TEXTURE_ISLAND4,
+    images.TEXTURE_ISLAND5,
+    images.TEXTURE_ISLAND6
+];
+const SELECTED_TEXTURE = images.TEXTURE_SELECTED;
 
 /**
  * @extends BaseSprite
@@ -58,7 +65,8 @@ export default class IslandSprite extends BaseSprite {
         let strengthText = new PIXI.Text("", {
             fontFamily: FONT_FAMILY_DEFAULT,
             fontSize: 50,
-            align: "center"
+            align: "center",
+            strokeThickness: 1,
         });
         strengthText.anchor.set(0.5, 0.5);
         strengthText.x = (TILE_WIDTH / 2);
@@ -96,10 +104,11 @@ export default class IslandSprite extends BaseSprite {
         let y = island.position.y * TILE_HEIGHT + TILE_HEIGHT / 2;
         this.position.set(x, y);
 
+        this.tint = island.owner.color.fill;
         this._updateStrengthText(island);
 
         // Apply a random 90deg step rotation to sprite, to simulate variety.
-        let rotations = [0, Math.PI * 1 / 2, Math.PI, Math.PI * 3 / 2]
+        const rotations = [0, Math.PI * 1 / 2, Math.PI, Math.PI * 3 / 2];
         this.rotation = rotations[Math.floor(Math.random() * rotations.length)];
         this._strengthText.rotation -= this.rotation;
     }
@@ -107,6 +116,7 @@ export default class IslandSprite extends BaseSprite {
     _onModelChanged() {
         let island = /** @type {IslandModel} */ (this._model);
 
+        this.tint = island.owner.color.fill;
         this._updateStrengthText(island);
         // Show island selected indicator
         if (island.selected) {
@@ -124,13 +134,8 @@ export default class IslandSprite extends BaseSprite {
      */
     _updateStrengthText(island) {
         this._strengthText.text = "" + island.strength;
-        if (island.owner.isSelf()) {
-            this._strengthText.style.fill = COLOR_FILL_SELF;
-        } else if (island.owner.isNeutral()) {
-            this._strengthText.style.fill = COLOR_FILL_NEUTRAL;
-        } else {
-            this._strengthText.style.fill = COLOR_FILL_ENEMY;
-        }
+        this._strengthText.style.fill = island.owner.color.textFill;
+        this._strengthText.style.stroke = island.owner.color.textStroke;
     }
 
     _onClicked() {

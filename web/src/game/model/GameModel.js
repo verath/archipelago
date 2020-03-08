@@ -2,6 +2,7 @@ import BaseModel from "./BaseModel.js";
 import AirplaneModel from "./AirplaneModel.js";
 import Coordinate from "./Coordinate.js";
 import PlayerModel from "./PlayerModel.js";
+import { PLAYER_COLORS, PLAYER_COLOR_NEUTRAL } from "./PlayerColors.js";
 import IslandModel from "./IslandModel.js";
 import LocalAirplaneModel from "./LocalAirplaneModel.js";
 import { wire } from "../../wire/proto_bundle.js";
@@ -67,14 +68,16 @@ export default class GameModel extends BaseModel {
         let numPlayers = this._players.length;
 
         // Update each player, create new ones if necessary.
-        this._players = players.map(playerData => {
+        this._players = players.map((playerData, index) => {
             let player = this.playerById(playerData.id);
             if (!player) {
                 player = new PlayerModel(this);
                 // A player was added.
                 changed = true;
             }
-            player.update(playerData);
+            let color = PLAYER_COLORS[index % PLAYER_COLORS.length];
+            let playerDataWithColor = {color, ...playerData};
+            player.update(playerDataWithColor);
             return player;
         });
         if (numPlayers !== this._players.length) {
@@ -149,7 +152,9 @@ export default class GameModel extends BaseModel {
             this._size.set(gameData.size);
             changed = true;
         }
-        this._playerNeutral.update(gameData.playerNeutral);
+        const playerNeutralData = gameData.playerNeutral;
+        const playerNeutralDataWithColor = {color: PLAYER_COLOR_NEUTRAL, ...playerNeutralData};
+        this._playerNeutral.update(playerNeutralDataWithColor);
         if (this._updatePlayers(gameData.players)) {
             changed = true;
         }

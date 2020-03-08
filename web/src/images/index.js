@@ -4,6 +4,8 @@ import TEXTURE_ISLAND1 from "./island1.png";
 import TEXTURE_ISLAND2 from "./island2.png";
 import TEXTURE_ISLAND3 from "./island3.png";
 import TEXTURE_ISLAND4 from "./island4.png";
+import TEXTURE_ISLAND5 from "./island5.png";
+import TEXTURE_ISLAND6 from "./island6.png";
 import TEXTURE_SELECTED from "./selected.png";
 
 export {
@@ -13,5 +15,7 @@ export {
     TEXTURE_ISLAND2,
     TEXTURE_ISLAND3,
     TEXTURE_ISLAND4,
+    TEXTURE_ISLAND5,
+    TEXTURE_ISLAND6,
     TEXTURE_SELECTED
 };

@@ -1,22 +1,17 @@
 import * as PIXI from "pixi.js";
 import ResourceHolder from "./ResourceHolder.js";
 
-import {
-    TEXTURE_AIRPLANE,
-    TEXTURE_ISLAND1,
-    TEXTURE_ISLAND2,
-    TEXTURE_ISLAND3,
-    TEXTURE_ISLAND4,
-    TEXTURE_SELECTED
-} from "../images";
+import * as images from "../images";
 
 const TEXTURES = [
-    TEXTURE_AIRPLANE,
-    TEXTURE_ISLAND1,
-    TEXTURE_ISLAND2,
-    TEXTURE_ISLAND3,
-    TEXTURE_ISLAND4,
-    TEXTURE_SELECTED
+    images.TEXTURE_AIRPLANE,
+    images.TEXTURE_ISLAND1,
+    images.TEXTURE_ISLAND2,
+    images.TEXTURE_ISLAND3,
+    images.TEXTURE_ISLAND4,
+    images.TEXTURE_ISLAND5,
+    images.TEXTURE_ISLAND6,
+    images.TEXTURE_SELECTED
 ];
 
 export default class ResourceLoader {
