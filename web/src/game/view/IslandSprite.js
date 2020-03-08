@@ -97,6 +97,11 @@ export default class IslandSprite extends BaseSprite {
         this.position.set(x, y);
 
         this._updateStrengthText(island);
+
+        // Apply a random 90deg step rotation to sprite, to simulate variety.
+        let rotations = [0, Math.PI * 1 / 2, Math.PI, Math.PI * 3 / 2]
+        this.rotation = rotations[Math.floor(Math.random() * rotations.length)];
+        this._strengthText.rotation -= this.rotation;
     }
 
     _onModelChanged() {
