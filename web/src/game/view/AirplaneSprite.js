@@ -3,7 +3,7 @@ import { TEXTURE_AIRPLANE } from "../../images";
 import ResourceHolder from "../../resource/ResourceHolder.js";
 import AirplaneModel from "../model/AirplaneModel.js";
 import BaseSprite from "./BaseSprite.js";
-import { COLOR_FILL_ENEMY, COLOR_FILL_NEUTRAL, COLOR_FILL_SELF, COLOR_STROKE, FONT_FAMILY_DEFAULT } from "./constants.js";
+import { FONT_FAMILY_DEFAULT } from "./constants.js";
 import { TILE_HEIGHT, TILE_WIDTH } from "./GameView.js";
 
 
@@ -37,8 +37,8 @@ export default class AirplaneSprite extends BaseSprite {
             fontFamily: FONT_FAMILY_DEFAULT,
             fontSize: 50,
             align: "center",
-            fill: COLOR_FILL_NEUTRAL,
-            stroke: COLOR_STROKE,
+            fill: 0xeeeeee,
+            stroke: 0x111111,
             strokeThickness: 3
         });
         strengthText.anchor.set(0.5, 0.5);
@@ -63,15 +63,8 @@ export default class AirplaneSprite extends BaseSprite {
 
     _onModelChanged() {
         let airplane = /** @type {AirplaneModel} */ (this._model);
-
-        if (airplane.owner.isSelf()) {
-            this.tint = COLOR_FILL_SELF;
-        } else if (airplane.owner.isNeutral()) {
-            this.tint = COLOR_FILL_NEUTRAL;
-        } else {
-            this.tint = COLOR_FILL_ENEMY;
-        }
-
+        // Update fill color.
+        this.tint = airplane.owner.color.fill;
         // Update our position, account for anchor being in the center
         let x = airplane.position.x * TILE_WIDTH + TILE_WIDTH / 2;
         let y = airplane.position.y * TILE_HEIGHT + TILE_HEIGHT / 2;
