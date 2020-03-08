@@ -71,6 +71,10 @@ func createIslands(players []*model.Player, playerNeutral *model.Player, size mo
 // players.
 func createBasicGame(numPlayers int) (*model.Game, error) {
 	size := model.Coordinate{7, 7}
+	if numPlayers > 5 {
+		size.X += 2
+		size.Y += 2
+	}
 	players, playerNeutral, err := createPlayers(numPlayers)
 	if err != nil {
 		return nil, errors.Wrap(err, "error creating players")
