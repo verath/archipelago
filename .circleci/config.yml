@@ -3,7 +3,7 @@ version: 2
 jobs:
   build_backend:
     docker:
-      - image: golang:1.13
+      - image: golang:1.14
     steps:
       - checkout
       - run: go build -v
