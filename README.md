@@ -1,9 +1,9 @@
 # Archipelago
 
-A 2-player web-based clone of the [android game](https://play.google.com/store/apps/details?id=com.sgg.archipelago_kr) 
+A web-based multiplayer clone of the [android game](https://play.google.com/store/apps/details?id=com.sgg.archipelago_kr) 
 with the same name.
 
-![Screenshot Archipelago](assets/screenshot1.png)
+![Screenshot Archipelago](assets/screenshot2.png)
 
 [![CircleCI](https://circleci.com/gh/verath/archipelago.svg?style=svg)](https://circleci.com/gh/verath/archipelago)
 [![Codeclimate Maintainability](https://api.codeclimate.com/v1/badges/4ae6b5cd15e1050fd3d3/maintainability)](https://codeclimate.com/github/verath/archipelago/maintainability)
@@ -13,8 +13,8 @@ The game can be played at https://playarchipelago.com.
 ## The Archipelago game
 
 The game is about controlling islands by sending airplanes. Each players starts controlling a single 
-island. In addition, there are multiple islands, controlled by neither of the two players. Each 
-island has an army, that for player-controlled islands increases over time. A player may at anytime 
+island. In addition, there are multiple islands, controlled by neither player. Each island
+has an army, that for player-controlled islands increases over time. A player may at anytime
 choose to send an airplane from an island that the player controls to any other island. The airplane 
 is created with half the army strength of the island, subtracted from the island.
 
@@ -28,7 +28,7 @@ As an airplane reaches its destination different things happen:
      2. If the resulting island army size is `== 0`, then control of the island is given to the 
      neutral player.
 
-The game is over when a player no longer controls any islands or airplanes.
+The game is over when there is only a single player controlling any islands or airplanes.
 
 ## Project Overview
 
@@ -40,13 +40,13 @@ using protocol buffers defined in the [proto](./proto) directory.
 
 The frontend project is found in the [web](./web) directory. It is based on [Pixi.js](https://github.com/pixijs/pixi.js) 
 for WebGL/canvas rendering. The frontend is written in ES6, and is transpiled to ES5 via Babel. 
-[Yarn](https://yarnpkg.com/lang/en/) is used to manage dependencies, and [Webpack2](https://webpack.js.org/) 
+[Yarn](https://yarnpkg.com/lang/en/) is used to manage dependencies, and [Webpack4](https://webpack.js.org/) 
 is used to bundle the frontend application (including js, css and images).
 
 ### Backend
 
-The backend is written in go and uses [dep](https://github.com/golang/dep) for managing 
-vendor dependencies. The backend relies primarily on the go standard library, but 
+The backend is written in go and uses standard go modules for managing
+dependencies. The backend relies primarily on the go standard library, but
 uses [Gorilla/WebSocket](https://github.com/gorilla/websocket) for WebSocket handling, 
 [Logrus](https://github.com/sirupsen/logrus) for logging, and [pkg/errors](https://github.com/pkg/errors) 
 for better error handling. 
@@ -66,7 +66,8 @@ $ git clone git@github.com:verath/archipelago.git
 ```
 
 This will include all dependencies required for the backend code. However, the client 
-side dependencies are not included in the repo and have to be fetched via yarn, and then built/bundled:
+side dependencies are not included in the repo and have to be fetched via yarn,
+and then built/bundled:
 
 ```
 $ cd web
