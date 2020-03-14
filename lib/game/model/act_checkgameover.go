@@ -14,9 +14,9 @@ func (act *ActionCheckGameOver) Apply(game *Game) ([]Event, error) {
 	return nil, nil
 }
 
-// isAlive returns true if player p is still alive in game g. An alive player
-// has control of at least one island or airplane.
-func isAlive(g *Game, p *Player) bool {
+// checkAlive returns true if player p is still alive in game g. An alive
+// player has control of at least one island or airplane.
+func checkAlive(g *Game, p *Player) bool {
 	for _, island := range g.Islands() {
 		if island.Owner().Equals(p) {
 			return true
@@ -36,12 +36,16 @@ func isAlive(g *Game, p *Player) bool {
 // winner.
 // If no players are alive then nil is returned as winner.
 func isGameOver(g *Game) (gameOver bool, winner *Player) {
-	// TODO: Add isDead flag on Player to skip checking known dead.
 	alivePlayers := make([]*Player, 0)
 	for _, player := range g.Players() {
-		if isAlive(g, player) {
-			alivePlayers = append(alivePlayers, player)
+		if !player.IsAlive() {
+			continue
 		}
+		if !checkAlive(g, player) {
+			player.SetAlive(false)
+			continue
+		}
+		alivePlayers = append(alivePlayers, player)
 	}
 	if len(alivePlayers) == 0 {
 		return true, nil
