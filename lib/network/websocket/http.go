@@ -18,32 +18,27 @@ import (
 // the same version as we do.
 const wsVersion = "3"
 
-// The websocket.Upgrader used for all upgrades from http -> ws.
-var wsUpgrader = websocket.Upgrader{
-	HandshakeTimeout: 10 * time.Second,
-	CheckOrigin: func(req *http.Request) bool {
-		// If we are accessed through localhost, allow all origins
-		hostURL := &url.URL{Host: req.Host}
-		if hostURL.Hostname() == "localhost" || hostURL.Hostname() == "127.0.0.1" {
-			return true
-		}
-		origin := req.Header["Origin"]
-		if len(origin) == 0 {
-			return true
-		}
-		originURL, err := url.Parse(origin[0])
-		if err != nil {
-			return false
-		}
-		originHostname := originURL.Hostname()
-		if originHostname == "playarchipelago.com" {
-			return true
-		}
-		if strings.HasSuffix(originHostname, ".playarchipelago.com") {
-			return true
-		}
+func noOriginCheck(*http.Request) bool {
+	return true
+}
+
+func strictOriginCheck(req *http.Request) bool {
+	origin := req.Header["Origin"]
+	if len(origin) == 0 {
+		return true
+	}
+	originURL, err := url.Parse(origin[0])
+	if err != nil {
 		return false
-	},
+	}
+	originHostname := originURL.Hostname()
+	if originHostname == "playarchipelago.com" {
+		return true
+	}
+	if strings.HasSuffix(originHostname, ".playarchipelago.com") {
+		return true
+	}
+	return false
 }
 
 // WSConnectionHandler is a handler that handles new WSConnections.
@@ -66,14 +61,24 @@ func (f WSConnectionHandlerFunc) HandleWSConnection(conn *WSConnection) error {
 type UpgradeHandler struct {
 	logEntry *logrus.Entry
 
+	wsUpgrader websocket.Upgrader
+
 	connHandlerMu sync.RWMutex
 	connHandler   WSConnectionHandler
 }
 
 // NewUpgradeHandler creates a new UpgradeHandler.
-func NewUpgradeHandler(log *logrus.Logger) (*UpgradeHandler, error) {
+func NewUpgradeHandler(log *logrus.Logger, skipWSOriginCheck bool) (*UpgradeHandler, error) {
+	checkOriginFunc := strictOriginCheck
+	if skipWSOriginCheck {
+		checkOriginFunc = noOriginCheck
+	}
 	return &UpgradeHandler{
 		logEntry: common.ModuleLogEntry(log, "websocket/UpgradeHandler"),
+		wsUpgrader: websocket.Upgrader{
+			HandshakeTimeout: 10 * time.Second,
+			CheckOrigin:      checkOriginFunc,
+		},
 	}, nil
 }
 
@@ -92,7 +97,7 @@ func (h *UpgradeHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
 		return
 	}
-	wsConn, err := wsUpgrader.Upgrade(w, r, nil)
+	wsConn, err := h.wsUpgrader.Upgrade(w, r, nil)
 	if err != nil {
 		h.logEntry.Warnf("Failed upgrading to websocket: %+v", err)
 		return

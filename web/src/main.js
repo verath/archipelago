@@ -17,17 +17,17 @@ import { WebGLRenderer, CanvasRenderer } from "pixi.js/lib/core";
 const WS_VERSION = "3";
 
 /**
- * The host for the websocket endpoint in production
+ * The host for the websocket endpoint in production.
  * @type {string}
  */
-const WS_HOST_PROD = "ws.playarchipelago.com";
+const PRODUCTION_WS_HOST = "ws.playarchipelago.com";
 
 /**
- * List of hostnames that indicates that the site is hosted locally and
- * should connect to the development websocket endpoint.
- * @type string[]
+ * List of hostnames that indicates that the site is hosted in production and
+ * should connect to the production websocket endpoint.
+ * @type {string}
  */
-const DEVELOPMENT_HOSTNAMES = ["localhost", "127.0.0.1"];
+const PRODUCTION_HOSTNAME = "playarchipelago.com"
 
 class Main {
 
@@ -88,8 +88,9 @@ class Main {
         this._progressText.setText("Finding a game");
 
         let protocol = (window.location.protocol === "https:") ? "wss://" : "ws://";
-        let host = WS_HOST_PROD;
-        if (DEVELOPMENT_HOSTNAMES.indexOf(window.location.hostname) !== -1) {
+        let host = PRODUCTION_WS_HOST;
+        // Override ws host in development.
+        if (window.location.hostname !== PRODUCTION_HOSTNAME) {
             host = window.location.hostname + ":" + window.location.port;
         }
         let connection = new Connection(protocol + host + "/ws?v=" + WS_VERSION);

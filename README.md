@@ -78,7 +78,7 @@ $ yarn run build:prod
 Now run the project as a go project, e.g. using `go run` from the root directory:
 
 ```
-$ go run main.go -debug -servestatic
+$ go run main.go -debug -serveStatic -skipWSOriginCheck
 ```
 
 This should start the server, and make it available at 

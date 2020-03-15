@@ -22,13 +22,15 @@ const (
 
 func main() {
 	var (
-		debug       bool
-		serveStatic bool
-		serverAddr  string
-		profileMode string
+		debug             bool
+		serveStatic       bool
+		skipWSOriginCheck bool
+		serverAddr        string
+		profileMode       string
 	)
 	flag.BoolVar(&debug, "debug", false, "Set to true to log debug messages.")
-	flag.BoolVar(&serveStatic, "servestatic", false, "Enable serving of static assets.")
+	flag.BoolVar(&serveStatic, "serveStatic", false, "Enable serving of static assets.")
+	flag.BoolVar(&skipWSOriginCheck, "skipWSOriginCheck", false, "")
 	flag.StringVar(&serverAddr, "addr", ":8080", "TCP address for the http server to listen on.")
 	flag.StringVar(&profileMode, "profile", "", "Enable profiling mode, one of [cpu, mem, mutex, block]")
 	flag.Parse()
@@ -39,12 +41,17 @@ func main() {
 		logger.Level = logrus.DebugLevel
 		logger.Info("Debug logging enabled")
 	}
-
+	if serveStatic {
+		logger.Info("Serving static resources.")
+	}
+	if skipWSOriginCheck {
+		logger.Info("Skipping WebSocket origin check.")
+	}
 	if profileMode != "" {
 		defer startProfiling(profileMode)()
 	}
 
-	archipelagoServer, err := archipelago.New(logger)
+	archipelagoServer, err := archipelago.New(logger, skipWSOriginCheck)
 	if err != nil {
 		logger.Fatalf("Error creating game: %+v", err)
 	}
