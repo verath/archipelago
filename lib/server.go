@@ -24,9 +24,10 @@ type Server struct {
 }
 
 // New returns a new Server using the provided logger.
-func New(log *logrus.Logger) (*Server, error) {
+// skipWSOriginCheck controls if websocket origin checking is disabled.
+func New(log *logrus.Logger, skipWSOriginCheck bool) (*Server, error) {
 	logEntry := common.ModuleLogEntry(log, "server")
-	wsHandler, err := websocket.NewUpgradeHandler(log)
+	wsHandler, err := websocket.NewUpgradeHandler(log, skipWSOriginCheck)
 	if err != nil {
 		return nil, errors.Wrap(err, "Error creating websocket upgrade handler")
 	}
