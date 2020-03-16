@@ -27,7 +27,7 @@ const PRODUCTION_WS_HOST = "ws.playarchipelago.com";
  * should connect to the production websocket endpoint.
  * @type {string}
  */
-const PRODUCTION_HOSTNAME = "playarchipelago.com"
+const PRODUCTION_HOSTNAME = "playarchipelago.com";
 
 class Main {
 

@@ -112,3 +112,23 @@ func TestTickAction_Apply_EmptyGame(t *testing.T) {
 		t.Errorf("Expected no error, got: %v", err)
 	}
 }
+
+func TestTickAction_Apply_FogOfWar(t *testing.T) {
+	// GIVEN
+	game := CreateDummyGameSimple()
+	i1 := game.Island("p1")
+	i2 := game.Island("p2")
+	p1 := game.Players()[0]
+	// WHEN
+	ta := ActionTick{1 * time.Second}
+	if _, err := ta.Apply(game); err != nil {
+		t.Errorf("Expected no error, got: %v", err)
+	}
+	// THEN i1 (owned by p1) is not in FoW, but i2 (not owned by p1) is in FoW.
+	if p1.IsInFogOfWar(i1.Position()) {
+		t.Error("i1 was in FoW")
+	}
+	if !p1.IsInFogOfWar(i2.Position()) {
+		t.Error("i2 was not in FoW")
+	}
+}

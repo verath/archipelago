@@ -16,21 +16,18 @@ type ActionTick struct {
 }
 
 // Apply applies the ActionTick to the game instance.
-func (ta *ActionTick) Apply(game *Game) ([]Event, error) {
-	if ta.Delta < 0 {
+func (at *ActionTick) Apply(game *Game) ([]Event, error) {
+	if at.Delta < 0 {
 		return nil, errors.New("Delta must be positive")
 	}
-	if err := ta.updateAirplanes(game, ta.Delta); err != nil {
-		return nil, errors.Wrap(err, "Could not update airplanes")
-	}
-	if err := ta.updateIslands(game, ta.Delta); err != nil {
-		return nil, errors.Wrap(err, "Could not update islands")
-	}
+	at.updateAirplanes(game, at.Delta)
+	at.updateIslands(game, at.Delta)
+	at.updateFogOfWar(game, at.Delta)
 	tickEvt := &EventTick{Game: game.Copy()}
 	return []Event{tickEvt}, nil
 }
 
-func (ta *ActionTick) updateAirplanes(g *Game, delta time.Duration) error {
+func (*ActionTick) updateAirplanes(g *Game, delta time.Duration) {
 	var arrivals []*Airplane
 	for _, airplane := range g.Airplanes() {
 		speed := airplane.Speed()
@@ -81,10 +78,9 @@ func (ta *ActionTick) updateAirplanes(g *Game, delta time.Duration) error {
 
 		g.RemoveAirplane(airplane)
 	}
-	return nil
 }
 
-func (ta *ActionTick) updateIslands(g *Game, delta time.Duration) error {
+func (*ActionTick) updateIslands(g *Game, delta time.Duration) {
 	for _, island := range g.Islands() {
 		size := float64(island.Size())
 		// Determine change for delta, based on island size.
@@ -116,5 +112,63 @@ func (ta *ActionTick) updateIslands(g *Game, delta time.Duration) error {
 		}
 		island.SetGrowthRemainder(newRemainder)
 	}
-	return nil
+}
+
+func (*ActionTick) generateFogOfWar(g *Game, player *Player) map[Coordinate]struct{} {
+	fogOfWarTiles := make(map[Coordinate]bool, g.Size().X*g.Size().Y)
+	// clearArea clears FoW for tiles in a radius centered center.
+	clearArea := func(center Coordinate, radius int) {
+		xStart := center.X - radius
+		xEnd := center.X + radius
+		yStart := center.Y - radius
+		yEnd := center.Y + radius
+		for x := xStart; x <= xEnd; x++ {
+			for y := yStart; y <= yEnd; y++ {
+				c := Coordinate{X: x, Y: y}
+				if _, ok := fogOfWarTiles[c]; ok {
+					fogOfWarTiles[c] = false
+				}
+			}
+		}
+	}
+	// Initially mark all game tiles as in FoW.
+	for x := 0; x < g.Size().X; x++ {
+		for y := 0; y < g.Size().Y; y++ {
+			fogOfWarTiles[Coordinate{X: x, Y: y}] = true
+		}
+	}
+	// Clear FoW from tiles around islands.
+	for _, island := range g.Islands() {
+		if island.IsOwnedBy(player) {
+			if island.Size() == IslandSizeLarge {
+				clearArea(island.Position(), 2)
+			} else {
+				clearArea(island.Position(), 1)
+			}
+		}
+	}
+	// Clear FoW from tiles around airplanes.
+	for _, airplane := range g.Airplanes() {
+		if airplane.IsOwnedBy(player) {
+			clearArea(airplane.Position().ToCoordinate(), 1)
+		}
+	}
+	// Translate tile map to set of unique coordinates.
+	fogOfWar := make(map[Coordinate]struct{}, 0)
+	for coordinate, isFog := range fogOfWarTiles {
+		if isFog {
+			fogOfWar[coordinate] = struct{}{}
+		}
+	}
+	return fogOfWar
+}
+
+func (at *ActionTick) updateFogOfWar(g *Game, delta time.Duration) {
+	for _, player := range g.Players() {
+		var playerFogOfWar map[Coordinate]struct{}
+		if player.IsAlive() {
+			playerFogOfWar = at.generateFogOfWar(g, player)
+		}
+		player.SetFogOfWar(playerFogOfWar)
+	}
 }

@@ -51,14 +51,8 @@ export default class AirplaneSprite extends BaseSprite {
         super._onAdded();
         let airplane = /** @type {AirplaneModel} */ (this._model);
 
-        this._strengthText.text = "" + airplane.strength;
-
-        // Set our scale depending on the strength we are carrying.
-        // The scaling is capped to strength 60, and a scale factor
-        // between 0.25 to 0.8.
-        let size = Math.min(airplane.strength, 60) / 60;
-        let scale = size * (0.8 - 0.25) + 0.25;
-        this.scale.set(scale, scale);
+        this._updateStrengthText(airplane);
+        this._updateScale(airplane);
     }
 
     _onModelChanged() {
@@ -71,7 +65,36 @@ export default class AirplaneSprite extends BaseSprite {
         this.position.set(x, y);
         // Update rotation to match the direction we are heading
         this.rotation = airplane.direction;
+
+        this._updateStrengthText(airplane);
+        this._updateScale(airplane);
+    }
+
+    /**
+     * 
+     * @param {AirplaneModel} airplane 
+     */
+    _updateStrengthText(airplane) {
+        if (airplane.strength >= 0) {
+            this._strengthText.text = "" + airplane.strength;
+        } else {
+            // Negative strength => in FoW.
+            this._strengthText.text = "";
+        }
         // Negate for the text so that it is displayed non-rotated
         this._strengthText.rotation = -airplane.direction;
+    }
+
+    /**
+     * 
+     * @param {AirplaneModel} airplane 
+     */
+    _updateScale(airplane) {
+        // Set our scale depending on the strength we are carrying.
+        // The scaling is capped to strength 60, and a scale factor
+        // between 0.25 to 0.8.
+        let size = Math.min(airplane.strength, 60) / 60;
+        let scale = size * (0.8 - 0.25) + 0.25;
+        this.scale.set(scale, scale);
     }
 }

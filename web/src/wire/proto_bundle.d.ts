@@ -862,6 +862,9 @@ export namespace wire {
 
             /** Player id */
             id?: (string|null);
+
+            /** Player fogOfWar */
+            fogOfWar?: (wire.game.ICoordinate[]|null);
         }
 
         /** Represents a Player. */
@@ -875,6 +878,9 @@ export namespace wire {
 
             /** Player id. */
             public id: string;
+
+            /** Player fogOfWar. */
+            public fogOfWar: wire.game.ICoordinate[];
 
             /**
              * Creates a new Player instance using the specified properties.

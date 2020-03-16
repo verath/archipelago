@@ -38,8 +38,13 @@ func EncodeFloatCoordinate(coordinate model.FloatCoordinate) *FloatCoordinate {
 
 // EncodePlayer transforms a game model Player to its wire representation
 func EncodePlayer(player *model.Player) *Player {
+	fogOfWar := make([]*Coordinate, 0)
+	for coordinate := range player.FogOfWar() {
+		fogOfWar = append(fogOfWar, EncodeCoordinate(coordinate))
+	}
 	return &Player{
-		Id: string(player.ID()),
+		Id:       string(player.ID()),
+		FogOfWar: fogOfWar,
 	}
 }
 
