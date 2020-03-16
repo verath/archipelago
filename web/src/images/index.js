@@ -7,6 +7,7 @@ import TEXTURE_ISLAND4 from "./island4.png";
 import TEXTURE_ISLAND5 from "./island5.png";
 import TEXTURE_ISLAND6 from "./island6.png";
 import TEXTURE_SELECTED from "./selected.png";
+import TEXTURE_FOG from "./fog.png";
 
 export {
     TEXTURE_AIRPLANE,
@@ -17,5 +18,6 @@ export {
     TEXTURE_ISLAND4,
     TEXTURE_ISLAND5,
     TEXTURE_ISLAND6,
-    TEXTURE_SELECTED
+    TEXTURE_SELECTED,
+    TEXTURE_FOG,
 };

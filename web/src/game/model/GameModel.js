@@ -31,16 +31,22 @@ export default class GameModel extends BaseModel {
         this._players = [];
 
         /**
-         * @member [IslandModel]
+         * @type {IslandModel[]}
          * @private
          */
         this._islands = [];
 
         /**
-         * @member [AirplaneModel]
+         * @type {AirplaneModel[]}
          * @private
          */
         this._airplanes = [];
+
+        /**
+         * @type {Coordinate[]}
+         * @private
+         */
+        this._myFogOfWar = [];
 
         /**
          * Our player's id, i.e. the player we represent.
@@ -142,6 +148,23 @@ export default class GameModel extends BaseModel {
     }
 
     /**
+     * 
+     * @param {(wire.game.ICoordinate[]|null)} fogOfWar
+     * @returns {boolean}
+     * @private
+     */
+    _updateMyFogOfWar(fogOfWar) {
+        fogOfWar = fogOfWar || [];
+        // TODO: Check if fogOfWar actually changed.
+        let changed = true;
+        if (changed) {
+            // TODO: Could probably reuse Coordinate objects instead.
+            this._myFogOfWar = fogOfWar.map(c => new Coordinate(c.x, c.y));
+        }
+        return changed;
+    }
+
+    /**
      * @param gameData {wire.game.Game}
      * @override
      * @inheritDoc
@@ -162,6 +185,11 @@ export default class GameModel extends BaseModel {
             changed = true;
         }
         if (this._updateIslands(gameData.islands)) {
+            changed = true;
+        }
+        let myPlayer = gameData.players.find(p => p.id === this.myPlayerId);
+        let myFogOfWar = (myPlayer) ? myPlayer.fogOfWar : null;
+        if (this._updateMyFogOfWar(myFogOfWar)) {
             changed = true;
         }
         return changed;
@@ -193,6 +221,13 @@ export default class GameModel extends BaseModel {
      */
     get airplanes() {
         return this._airplanes;
+    }
+
+    /**
+     * @returns {Coordinate[]}
+     */
+    get myFogOfWar() {
+        return this._myFogOfWar;
     }
 
     /**

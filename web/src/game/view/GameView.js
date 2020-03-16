@@ -1,5 +1,7 @@
 import EventEmitter from "eventemitter3";
 import * as PIXI from "pixi.js";
+import { WebGLRenderer, CanvasRenderer } from "pixi.js/lib/core";
+
 import ResourceHolder from "../../resource/ResourceHolder.js";
 import AirplaneModel from "../model/AirplaneModel.js";
 import GameModel from "../model/GameModel.js";
@@ -7,7 +9,7 @@ import IslandModel from "../model/IslandModel.js";
 import AirplanePool from "./AirplanePool.js";
 import AirplaneSprite from "./AirplaneSprite.js";
 import IslandSprite from "./IslandSprite.js";
-import { WebGLRenderer, CanvasRenderer } from "pixi.js/lib/core";
+import FogOfWarSprite from "./FogOfWarSprite.js";
 
 /** @type {symbol}*/
 const EVENT_ISLAND_CLICKED = Symbol("EVENT_ISLAND_CLICKED");
@@ -54,10 +56,32 @@ export default class GameView {
         this._stageHeight = 0;
 
         /**
-         * @member {Container}
+         * The stage is the PIXI container that we render.
+         * @type {PIXI.Container}
          * @private
          */
         this._stage = new PIXI.Container();
+        
+        /**
+         * The "layer" holding island sprites.
+         * @type {PIXI.Container}
+         * @private
+         */
+        this._layerIslands = new PIXI.Container();
+
+        /**
+         * The "layer" holding airplane sprites
+         * @type {PIXI.Container}
+         * @private
+         */
+        this._layerAirplanes = new PIXI.Container();
+
+        /**
+         * The "layer" holding fog of war sprites
+         * @type {PIXI.Container}
+         * @private
+         */
+        this._layerFogOfWar = new PIXI.Container();
 
         /**
          * @member EventEmitter
@@ -85,6 +109,11 @@ export default class GameView {
          */
         this._airplanes = new Map();
 
+        // Add the layers to the stage, FoW > airplanes > islands.
+        this._stage.addChild(this._layerIslands);
+        this._stage.addChild(this._layerAirplanes);
+        this._stage.addChild(this._layerFogOfWar);
+
         // Start listening for model changes
         this._gameModel.addChangeListener(this._onModelChange, this);
     }
@@ -104,7 +133,7 @@ export default class GameView {
     _addAirplane(airplaneModel) {
         let airplane = this._airplanePool.get();
         airplane.model = airplaneModel;
-        this._stage.addChild(airplane);
+        this._layerAirplanes.addChild(airplane);
         this._airplanes.set(airplaneModel.id, airplane);
     }
 
@@ -113,7 +142,7 @@ export default class GameView {
             return;
         }
         let airplane = this._airplanes.get(id);
-        this._stage.removeChild(airplane);
+        this._layerAirplanes.removeChild(airplane);
         this._airplanes.delete(id);
         this._airplanePool.put(airplane);
     }
@@ -126,7 +155,7 @@ export default class GameView {
         let island = new IslandSprite(this._resourceHolder);
         island.model = islandModel;
         island.addClickListener(this._onIslandClicked, this);
-        this._stage.addChild(island);
+        this._layerIslands.addChild(island);
         this._islands.set(islandModel.id, island);
     }
 
@@ -152,14 +181,38 @@ export default class GameView {
             idsToRemove.forEach(id => this._removeAirplane(id));
         }
 
-        // Check if the game model has changed size, if so we resize ourselves
+        // Check if the game model has changed size, if so we resize ourselves and
+        // recreate the fog of war tiles.
         let newStageWidth = this._gameModel.size.x * TILE_WIDTH;
         let newStageHeight = this._gameModel.size.y * TILE_HEIGHT;
         if (newStageWidth !== this._stageWidth || newStageHeight !== this._stageHeight) {
             this._stageWidth = this._gameModel.size.x * TILE_WIDTH;
             this._stageHeight = this._gameModel.size.y * TILE_HEIGHT;
             this.resize();
+
+            // Note that the FoW layer is created such that the child index
+            // corresponds to the board position. I.e. given an (x, y) one can
+            // lookup the FoW Sprite by index: y * boardSizeX + x.
+            this._layerFogOfWar.removeChildren();
+            for (let y = 0; y < this._gameModel.size.y; y++) {
+                for (let x = 0; x < this._gameModel.size.x; x++) {
+                    let fogOfWarSprite = new FogOfWarSprite(this._resourceHolder, x, y);
+                    this._layerFogOfWar.addChild(fogOfWarSprite);
+                }
+            }
         }
+        
+        // Update fog of war sprite visibilities.
+        for (let y = 0; y < this._gameModel.size.y; y++) {
+            for (let x = 0; x < this._gameModel.size.x; x++) {
+                let idx = y * this._gameModel.size.x + x;
+                this._layerFogOfWar.getChildAt(idx).visible = false;
+            }
+        }
+        this._gameModel.myFogOfWar.forEach(pos => {
+            let idx = pos.y * this._gameModel.size.x + pos.x;
+            this._layerFogOfWar.getChildAt(idx).visible = true;
+        });
     }
 
     addIslandClickListener(listener, context = null) {

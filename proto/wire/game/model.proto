@@ -14,6 +14,8 @@ message FloatCoordinate {
 
 message Player {
     string id = 1;
+    // Coordinates where fog of war is present.
+    repeated Coordinate fog_of_war = 7;
 }
 
 message Army {
@@ -44,5 +46,3 @@ message Game {
     repeated Island islands = 5;
     repeated Airplane airplanes = 6;
 }
-
-

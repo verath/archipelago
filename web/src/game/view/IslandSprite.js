@@ -133,7 +133,12 @@ export default class IslandSprite extends BaseSprite {
      * @private
      */
     _updateStrengthText(island) {
-        this._strengthText.text = "" + island.strength;
+        if (island.strength >= 0) {
+            this._strengthText.text = "" + island.strength;
+        } else {
+            // Negative strength => in FoW.
+            this._strengthText.text = "";
+        }
         this._strengthText.style.fill = island.owner.color.textFill;
         this._strengthText.style.stroke = island.owner.color.textStroke;
     }

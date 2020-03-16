@@ -11,7 +11,8 @@ const TEXTURES = [
     images.TEXTURE_ISLAND4,
     images.TEXTURE_ISLAND5,
     images.TEXTURE_ISLAND6,
-    images.TEXTURE_SELECTED
+    images.TEXTURE_SELECTED,
+    images.TEXTURE_FOG,
 ];
 
 export default class ResourceLoader {
