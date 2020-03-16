@@ -5,7 +5,7 @@ import (
 	"time"
 )
 
-const airplaneDefaultSpeed = 1 / float64(2*time.Second)
+const airplaneDefaultSpeed = 1 / float64(3*time.Second)
 
 // Airplane represents an airplane in the game model. An Airplane
 // is sent from one island to another, transporting an army to
