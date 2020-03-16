@@ -70,7 +70,7 @@ func createIslands(players []*model.Player, playerNeutral *model.Player, size mo
 // createBasicGame creates a new instance of a Game model with numPlayers
 // players.
 func createBasicGame(numPlayers int) (*model.Game, error) {
-	size := model.Coordinate{7, 7}
+	size := model.Coordinate{8, 8}
 	if numPlayers > 5 {
 		size.X += 2
 		size.Y += 2
