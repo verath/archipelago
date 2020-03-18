@@ -6,6 +6,8 @@ type Player struct {
 	// alive is set false when the player is no longer alive in the game. Used
 	// to short-circuit logic that only applies to alive players.
 	alive bool
+	// hasLeft is set true if the player leaves the game.
+	hasLeft bool
 	// fogOfWar is a set of coordinates for tiles where the player has Fog of
 	// War (limited) vision.
 	fogOfWar map[Coordinate]struct{}
@@ -35,6 +37,16 @@ func (p *Player) IsAlive() bool {
 // SetAlive sets the alive state of the player.
 func (p *Player) SetAlive(alive bool) {
 	p.alive = alive
+}
+
+// HasLeft returns true if the player has left the game.
+func (p *Player) HasLeft() bool {
+	return p.hasLeft
+}
+
+// SetHasLeft sets the flag for if the player has left the game.
+func (p *Player) SetHasLeft(hasLeft bool) {
+	p.hasLeft = hasLeft
 }
 
 // IsInFogOfWar tests if the given Coordinate is in fog of war for the player.
