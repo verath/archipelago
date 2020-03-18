@@ -25,13 +25,13 @@ type Airplane struct {
 	speed float64
 }
 
-// NewAirplane creates a new Airplane, starting at the origin Island, targeting
-// the destination Island. The Army contained on the Airplane is set to the
+// NewAirplane creates a new Airplane, starting at origin, targeting the
+// destination Island. The Army contained on the Airplane is set to the
 // provided strength, owned by the owner.
-func NewAirplane(origin *Island, destination *Island, owner *Player, strength int64) *Airplane {
+func NewAirplane(origin Coordinate, destination *Island, owner *Player, strength int64) *Airplane {
 	id := AirplaneID(NextModelID())
 	// Calculate the bearing of the airplane
-	originPos := origin.Position().ToFloatCoordinate()
+	originPos := origin.ToFloatCoordinate()
 	destPos := destination.Position().ToFloatCoordinate()
 	direction := math.Atan2(destPos.Y-originPos.Y, destPos.X-originPos.X)
 	return &Airplane{

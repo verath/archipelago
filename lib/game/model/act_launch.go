@@ -53,7 +53,7 @@ func (act *actionLaunch) Apply(game *Game) ([]Event, error) {
 	islandStr := fromIsland.Strength()
 	airplaneStr := islandStr / 2
 	fromIsland.SetStrength(islandStr - airplaneStr)
-	airplane := NewAirplane(fromIsland, toIsland, owningPlayer, airplaneStr)
+	airplane := NewAirplane(fromIsland.Position(), toIsland, owningPlayer, airplaneStr)
 	game.AddAirplane(airplane)
 	return nil, nil
 }

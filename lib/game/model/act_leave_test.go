@@ -10,8 +10,8 @@ func TestActionLeave_Apply(t *testing.T) {
 	p1Island := game.Island("p1")
 	p2Island := game.Island("p2")
 	pnIsland := game.Island("pn")
-	p1Airplane := NewAirplane(p1Island, p2Island, p1, 1)
-	p2Airplane := NewAirplane(p2Island, p1Island, p2, 1)
+	p1Airplane := NewAirplane(p1Island.Position(), p2Island, p1, 1)
+	p2Airplane := NewAirplane(p2Island.Position(), p1Island, p2, 1)
 	game.AddAirplane(p1Airplane)
 	game.AddAirplane(p2Airplane)
 	leaveAct := actionLeave{

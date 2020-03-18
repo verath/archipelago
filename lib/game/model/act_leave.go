@@ -43,5 +43,6 @@ func (a *actionLeave) Apply(game *Game) ([]Event, error) {
 			airplane.SetOwner(neutralPlayer)
 		}
 	}
+	leavingPlayer.SetHasLeft(true)
 	return nil, nil
 }

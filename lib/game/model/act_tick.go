@@ -23,6 +23,7 @@ func (at *ActionTick) Apply(game *Game) ([]Event, error) {
 	at.updateAirplanes(game, at.Delta)
 	at.updateIslands(game, at.Delta)
 	at.updateFogOfWar(game, at.Delta)
+	at.happeningRevival(game, at.Delta)
 	tickEvt := &EventTick{Game: game.Copy()}
 	return []Event{tickEvt}, nil
 }
@@ -170,5 +171,32 @@ func (at *ActionTick) updateFogOfWar(g *Game, delta time.Duration) {
 			playerFogOfWar = at.generateFogOfWar(g, player)
 		}
 		player.SetFogOfWar(playerFogOfWar)
+	}
+}
+
+func (*ActionTick) happeningRevival(g *Game, delta time.Duration) {
+	var neutralIsland *Island
+	for _, island := range g.Islands() {
+		if island.IsOwnedBy(g.PlayerNeutral()) && island.Strength() > 0 {
+			neutralIsland = island
+			break
+		}
+	}
+	if neutralIsland == nil {
+		return
+	}
+	for _, player := range g.Players() {
+		if player.HasLeft() {
+			continue
+		}
+		if player.IsAlive() {
+			continue
+		}
+		player.SetAlive(true)
+		strength := neutralIsland.Strength() * 2
+		origin := Coordinate{X: neutralIsland.Position().X, Y: -1}
+		airplane := NewAirplane(origin, neutralIsland, player, strength)
+		g.AddAirplane(airplane)
+		break
 	}
 }
