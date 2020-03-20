@@ -24,7 +24,7 @@ const (
 	// underlying connection to cleanly shutdown before force closing.
 	clientShutdownWait = 10 * time.Second
 
-	// clientReadLimitRate is the rate limit bucket refil rate in seconds.
+	// clientReadLimitRate is the rate limit bucket refill rate [token/s].
 	clientReadLimitRate = rate.Limit(10)
 
 	// clientReadLimitBurst is the rate limit bucket size.
