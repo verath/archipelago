@@ -66,7 +66,7 @@ func (*ActionTick) updateAirplanes(g *Game, delta time.Duration) {
 			} else if airplaneStr > targetStr {
 				// If the airplane str is greater, then the airplane
 				// owner takes control of the island
-				target.SetStrength(airplaneStr - targetStr + 1)
+				target.SetStrength(airplaneStr - targetStr)
 				target.SetGrowthRemainder(0)
 				target.SetOwner(airplane.Owner())
 			} else {
