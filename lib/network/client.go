@@ -213,6 +213,7 @@ func (c *Client) readPump(ctx context.Context, readQueue chan<- []byte, disconne
 // calls do nothing.
 func (c *Client) disconnect() {
 	c.disconnectOnce.Do(func() {
+		c.logEntry.Debug("disconnect requested")
 		close(c.disconnectCh)
 	})
 }

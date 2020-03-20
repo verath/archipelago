@@ -58,7 +58,7 @@ func NewCoordinator(log *logrus.Logger) (*Coordinator, error) {
 func (c *Coordinator) Run(ctx context.Context) error {
 	c.logEntry.Info("Starting")
 	err := c.run(ctx)
-	c.logEntry.Debug("Waiting for games to stop...")
+	c.logEntry.Info("Waiting for games to stop...")
 	c.gamesWG.Wait()
 	c.logEntry.Info("Stopped")
 	return err
