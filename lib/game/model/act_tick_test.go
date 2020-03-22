@@ -132,3 +132,88 @@ func TestTickAction_Apply_FogOfWar(t *testing.T) {
 		t.Error("i2 was not in FoW")
 	}
 }
+
+func TestTickAction_Apply_Player_Revive(t *testing.T) {
+	// GIVEN a game where p1 has no islands but there are islands controlled by
+	// the neutral player.
+	game := CreateDummyGameSimple()
+	p1, p2 := game.Players()[0], game.Players()[1]
+	game.Island("p1").SetOwner(p2)
+
+	// WHEN applied twice (Alive-[1]->PendingRevival-[2]->Alive)
+	ta := ActionTick{1 * time.Second}
+	if _, err := ta.Apply(game); err != nil {
+		t.Errorf("Expected no error, got: %v", err)
+	}
+	if _, err := ta.Apply(game); err != nil {
+		t.Errorf("Expected no error, got: %v", err)
+	}
+	// THEN p1 state is Alive and p1 has control of an airplane.
+	if p1.State() != Alive {
+		t.Fatalf("Expected state to be Alive, was %d", p1.State())
+	}
+	p1HasAirplane := false
+	for _, airplane := range game.Airplanes() {
+		if airplane.Owner().Equals(p1) {
+			p1HasAirplane = true
+			break
+		}
+	}
+	if !p1HasAirplane {
+		t.Fatal("p1 revived without an airplane.")
+	}
+}
+
+func TestTickAction_Apply_Player_Revive_Unique_Island(t *testing.T) {
+	// GIVEN a game where both p1 and p2 has no islands, but there are islands
+	// controlled by the neutral player.
+	game := CreateDummyGameSimple()
+	p1, p2 := game.Players()[0], game.Players()[1]
+	pn := game.PlayerNeutral()
+	game.Island("p1").SetOwner(pn)
+	game.Island("p2").SetOwner(pn)
+
+	// WHEN applied twice (Alive-[1]->PendingRevival-[2]->Alive)
+	ta := ActionTick{1 * time.Second}
+	if _, err := ta.Apply(game); err != nil {
+		t.Errorf("Expected no error, got: %v", err)
+	}
+	if _, err := ta.Apply(game); err != nil {
+		t.Errorf("Expected no error, got: %v", err)
+	}
+	// THEN both p1 and p2 has control of a new airplane, and both airplanes
+	// targets a different island.
+	var p1AirplaneTarget *Island
+	var p2AirplaneTarget *Island
+	for _, airplane := range game.Airplanes() {
+		if airplane.Owner().Equals(p1) {
+			p1AirplaneTarget = game.Island(airplane.Destination())
+		} else if airplane.Owner().Equals(p2) {
+			p2AirplaneTarget = game.Island(airplane.Destination())
+		}
+	}
+	if p1AirplaneTarget.ID() == p2AirplaneTarget.ID() {
+		t.Fatal("p1 airplane targets same island as p2 airplane")
+	}
+}
+
+func TestTickAction_Apply_Player_Die(t *testing.T) {
+	// GIVEN a game where all islands are controlled by p2.
+	game := CreateDummyGameSimple()
+	p1, p2 := game.Players()[0], game.Players()[1]
+	for _, island := range game.Islands() {
+		island.SetOwner(p2)
+	}
+	// WHEN tick applied twice (Alive-[1]->PendingRevival-[2]->Dead).
+	ta := ActionTick{1 * time.Second}
+	if _, err := ta.Apply(game); err != nil {
+		t.Errorf("Expected no error, got: %v", err)
+	}
+	if _, err := ta.Apply(game); err != nil {
+		t.Errorf("Expected no error, got: %v", err)
+	}
+	// THEN p1 state is Dead.
+	if p1.State() != Dead {
+		t.Fatalf("Expected state to be Dead, was %d", p1.State())
+	}
+}

@@ -1,13 +1,29 @@
 package model
 
+// A PlayerState represents the current exclusive state of a Player.
+// During a game a Player transitions between PlayerStates:
+//
+//   Alive <-> PendingRevival -> Dead
+//   |             v             |
+//   ---------> LeftGame <--------
+//
+type PlayerState int
+
+const (
+	// Alive is when still alive in the game.
+	Alive PlayerState = iota
+	// PendingRevival is when dead, but may be revived.
+	PendingRevival
+	// Dead is when dead and will remain dead.
+	Dead
+	// LeftGame is when the Player has left the game.
+	LeftGame
+)
+
 // Player represents a player in the game model.
 type Player struct {
-	id PlayerID
-	// alive is set false when the player is no longer alive in the game. Used
-	// to short-circuit logic that only applies to alive players.
-	alive bool
-	// hasLeft is set true if the player leaves the game.
-	hasLeft bool
+	id    PlayerID
+	state PlayerState
 	// fogOfWar is a set of coordinates for tiles where the player has Fog of
 	// War (limited) vision.
 	fogOfWar map[Coordinate]struct{}
@@ -18,7 +34,7 @@ func NewPlayer() (*Player, error) {
 	id := PlayerID(NextModelID())
 	return &Player{
 		id:       id,
-		alive:    true,
+		state:    Alive,
 		fogOfWar: nil,
 	}, nil
 }
@@ -28,25 +44,14 @@ func (p *Player) ID() PlayerID {
 	return p.id
 }
 
-// IsAlive returns the alive state of the player, i.e. if the player is still
-// alive in the game.
-func (p *Player) IsAlive() bool {
-	return p.alive
+// State returns the current state of the player.
+func (p *Player) State() PlayerState {
+	return p.state
 }
 
-// SetAlive sets the alive state of the player.
-func (p *Player) SetAlive(alive bool) {
-	p.alive = alive
-}
-
-// HasLeft returns true if the player has left the game.
-func (p *Player) HasLeft() bool {
-	return p.hasLeft
-}
-
-// SetHasLeft sets the flag for if the player has left the game.
-func (p *Player) SetHasLeft(hasLeft bool) {
-	p.hasLeft = hasLeft
+// SetState sets the current state of the player.
+func (p *Player) SetState(state PlayerState) {
+	p.state = state
 }
 
 // IsInFogOfWar tests if the given Coordinate is in fog of war for the player.
@@ -80,7 +85,7 @@ func (p *Player) Copy() *Player {
 	}
 	return &Player{
 		id:       p.id,
-		alive:    p.alive,
+		state:    p.state,
 		fogOfWar: fogOfWar,
 	}
 }
