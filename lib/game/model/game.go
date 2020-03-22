@@ -9,6 +9,9 @@ import (
 type Game struct {
 	id   GameID
 	size Coordinate
+
+	reviveCount int
+
 	// playerNeutral is a special Player that owns everything not
 	// owned by any other Player.
 	playerNeutral *Player
@@ -25,6 +28,16 @@ func (g *Game) ID() GameID {
 // Size is a getter for the size of the game.
 func (g *Game) Size() Coordinate {
 	return g.size
+}
+
+// ReviveCount returns how many times players have been revived this game.
+func (g *Game) ReviveCount() int {
+	return g.reviveCount
+}
+
+// SetReviveCount sets how many times players have been revivied this game.
+func (g *Game) SetReviveCount(reviveCount int) {
+	g.reviveCount = reviveCount
 }
 
 // PlayerNeutral is a getter for the Player model representing the neutral

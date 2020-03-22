@@ -22,8 +22,7 @@ func (at *ActionTick) Apply(game *Game) ([]Event, error) {
 	}
 	at.updateAirplanes(game, at.Delta)
 	at.updateIslands(game, at.Delta)
-	at.updateFogOfWar(game, at.Delta)
-	at.happeningRevival(game, at.Delta)
+	at.updatePlayers(game, at.Delta)
 	tickEvt := &EventTick{Game: game.Copy()}
 	return []Event{tickEvt}, nil
 }
@@ -115,6 +114,55 @@ func (*ActionTick) updateIslands(g *Game, delta time.Duration) {
 	}
 }
 
+// isPlayerAlive returns true if player p is still alive in game g. An alive
+// player has control of at least one island or airplane.
+func (*ActionTick) isPlayerAlive(g *Game, p *Player) bool {
+	for _, island := range g.Islands() {
+		if island.Owner().Equals(p) {
+			return true
+		}
+	}
+	for _, airplane := range g.Airplanes() {
+		if airplane.Owner().Equals(p) {
+			return true
+		}
+	}
+	return false
+}
+
+// revivePlayer tries to revive a player.
+// A player is revived by being given an airplane targeted at a neutral island.
+// If no neutral islands are left, the player cannot be revived.
+// Returns true if player was revived, false otherwise.
+func (*ActionTick) revivePlayer(g *Game, player *Player) bool {
+	neutralIslands := make([]*Island, 0)
+	for _, island := range g.Islands() {
+		if island.Owner().Equals(g.PlayerNeutral()) {
+			neutralIslands = append(neutralIslands, island)
+		}
+	}
+	if len(neutralIslands) == 0 {
+		return false
+	}
+	// Revive player by giving the player an airplane targeted at a neutral
+	// island. The island is picked by an increasing counter to prevent two
+	// players revived the same tick to target the same island.
+	reviveCount := g.ReviveCount()
+	idx := reviveCount % len(neutralIslands)
+	island := neutralIslands[idx]
+	strength := island.Strength()*2 + 1
+	origin := Coordinate{X: island.Position().X, Y: -1}
+	if island.Position().Y > g.Size().Y/2 {
+		origin = Coordinate{X: island.Position().X, Y: g.Size().Y}
+	}
+	airplane := NewAirplane(origin, island, player, strength)
+	g.AddAirplane(airplane)
+	g.SetReviveCount(reviveCount + 1)
+	return true
+}
+
+// generateFogOfWar generates a set of Coordinates where player has fog of war
+// vision in the given game g.
 func (*ActionTick) generateFogOfWar(g *Game, player *Player) map[Coordinate]struct{} {
 	fogOfWarTiles := make(map[Coordinate]bool, g.Size().X*g.Size().Y)
 	// clearArea clears FoW for tiles in a radius centered center.
@@ -155,7 +203,7 @@ func (*ActionTick) generateFogOfWar(g *Game, player *Player) map[Coordinate]stru
 		}
 	}
 	// Translate tile map to set of unique coordinates.
-	fogOfWar := make(map[Coordinate]struct{}, 0)
+	fogOfWar := make(map[Coordinate]struct{})
 	for coordinate, isFog := range fogOfWarTiles {
 		if isFog {
 			fogOfWar[coordinate] = struct{}{}
@@ -164,39 +212,49 @@ func (*ActionTick) generateFogOfWar(g *Game, player *Player) map[Coordinate]stru
 	return fogOfWar
 }
 
-func (at *ActionTick) updateFogOfWar(g *Game, delta time.Duration) {
+func (at *ActionTick) updatePlayers(g *Game, delta time.Duration) {
+	// Find players in a state that may transition to another state. Note that
+	// a player does at most one state transition per tick to allow for other
+	// actions (such as checking game over) to be processed in-between.
+	pendingRevival := make([]*Player, 0)
+	alive := make([]*Player, 0)
+	for _, player := range g.Players() {
+		switch player.State() {
+		case Alive:
+			alive = append(alive, player)
+		case PendingRevival:
+			pendingRevival = append(pendingRevival, player)
+		}
+	}
+	// Alive -> PendingRevival.
+	for _, player := range alive {
+		if !at.isPlayerAlive(g, player) {
+			player.SetState(PendingRevival)
+		}
+	}
+	// PendingRevival -> Alive | Dead.
+	for _, player := range pendingRevival {
+		if at.revivePlayer(g, player) {
+			player.SetState(Alive)
+		} else {
+			player.SetState(Dead)
+		}
+	}
+	// Last we re-calculate fog of war depending on the player state.
 	for _, player := range g.Players() {
 		var playerFogOfWar map[Coordinate]struct{}
-		if player.IsAlive() {
+		switch player.State() {
+		case Alive:
 			playerFogOfWar = at.generateFogOfWar(g, player)
+		case PendingRevival:
+			// A player pending revival has FoW covering the entire map.
+			playerFogOfWar = make(map[Coordinate]struct{})
+			for x := 0; x < g.Size().X; x++ {
+				for y := 0; y < g.Size().Y; y++ {
+					playerFogOfWar[Coordinate{X: x, Y: y}] = struct{}{}
+				}
+			}
 		}
 		player.SetFogOfWar(playerFogOfWar)
-	}
-}
-
-func (*ActionTick) happeningRevival(g *Game, delta time.Duration) {
-	var neutralIsland *Island
-	for _, island := range g.Islands() {
-		if island.IsOwnedBy(g.PlayerNeutral()) && island.Strength() > 0 {
-			neutralIsland = island
-			break
-		}
-	}
-	if neutralIsland == nil {
-		return
-	}
-	for _, player := range g.Players() {
-		if player.HasLeft() {
-			continue
-		}
-		if player.IsAlive() {
-			continue
-		}
-		player.SetAlive(true)
-		strength := neutralIsland.Strength() * 2
-		origin := Coordinate{X: neutralIsland.Position().X, Y: -1}
-		airplane := NewAirplane(origin, neutralIsland, player, strength)
-		g.AddAirplane(airplane)
-		break
 	}
 }
