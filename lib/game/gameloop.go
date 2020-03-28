@@ -128,6 +128,11 @@ func (gl *gameLoop) isGameOver() bool {
 // tickLoop performs a "tick" each tickInterval. This method blocks until the
 // game is over, the context is canceled, or an error occurs.
 func (gl *gameLoop) tickLoop(ctx context.Context) error {
+	// Perform an initial tick as soon as we can.
+	if err := gl.tick(0); err != nil {
+		return errors.Wrap(err, "initial tick error")
+	}
+	// Perform a new tick each tickInterval.
 	ticker := time.NewTicker(gl.tickInterval)
 	defer ticker.Stop()
 	lastTick := time.Now()
