@@ -16,7 +16,7 @@ export default class OwnableModel extends BaseModel {
 
         /**
          * @member {GameModel}
-         * @private
+         * @protected
          */
         this._gameModel = gameModel;
 
@@ -73,7 +73,7 @@ export default class OwnableModel extends BaseModel {
     }
 
     /**
-     * @param {{army: wire.game.Army, id: string}} data
+     * @param {{army: wire.game.IArmy, id: string}} data
      * @override
      */
     _update(data) {

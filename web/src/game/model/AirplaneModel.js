@@ -17,12 +17,6 @@ export default class AirplaneModel extends OwnableModel {
         super(gameModel);
 
         /**
-         * @member {GameModel}
-         * @private
-         */
-        this._gameModel = gameModel;
-
-        /**
          * @member {Coordinate}
          * @protected
          */
@@ -63,11 +57,11 @@ export default class AirplaneModel extends OwnableModel {
     }
 
     /**
-     * @param {wire.game.Airplane} airplaneData
+     * @param {wire.game.IAirplane} airplaneData
      * @override
      */
     _update(airplaneData) {
-        super._update(airplaneData);
+        super._update({ id: airplaneData.id, army: airplaneData.army });
         let newX = airplaneData.position.x;
         let newY = airplaneData.position.y;
         // Force set our position to the current server position if
@@ -94,6 +88,9 @@ export default class AirplaneModel extends OwnableModel {
         return true;
     }
 
+    /**
+     * @param {number} delta [ms]
+     */
     interpolate(delta) {
         let deltaNS = delta * MILLISECONDS_PER_NANOSECOND;
         this._position.x += deltaNS * this._speed * Math.cos(this._direction);

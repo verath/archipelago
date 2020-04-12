@@ -61,7 +61,7 @@ export default class GameView {
          * @private
          */
         this._stage = new PIXI.Container();
-        
+
         /**
          * The "layer" holding island sprites.
          * @type {PIXI.Container}
@@ -201,7 +201,7 @@ export default class GameView {
                 }
             }
         }
-        
+
         // Update fog of war sprite visibilities.
         for (let y = 0; y < this._gameModel.size.y; y++) {
             for (let x = 0; x < this._gameModel.size.x; x++) {

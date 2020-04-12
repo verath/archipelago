@@ -1,4 +1,5 @@
 import * as PIXI from "pixi.js";
+
 import { TEXTURE_AIRPLANE } from "../../images";
 import ResourceHolder from "../../resource/ResourceHolder.js";
 import AirplaneModel from "../model/AirplaneModel.js";

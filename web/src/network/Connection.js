@@ -1,5 +1,5 @@
 import EventEmitter from "eventemitter3";
-import {wire} from "../wire/proto_bundle.js";
+import { wire } from "../wire/proto_bundle.js";
 
 const EVENT_SERVER_EVENT = Symbol("EVENT_SERVER_EVENT");
 const EVENT_DISCONNECT = Symbol("EVENT_DISCONNECT");
@@ -23,7 +23,7 @@ export default class Connection {
         this._conn = null;
 
         /**
-         * @member EventEmitter
+         * @member {EventEmitter}
          * @private
          */
         this._eventEmitter = new EventEmitter();
