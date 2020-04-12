@@ -1,5 +1,6 @@
 import EventEmitter from "eventemitter3";
 import * as PIXI from "pixi.js";
+
 import Connection from "../../network/Connection.js";
 import { wire } from "../../wire/proto_bundle.js";
 import GameModel from "../model/GameModel.js";

@@ -1,4 +1,5 @@
 import * as PIXI from "pixi.js";
+
 import * as images from "../../images";
 import ResourceHolder from "../../resource/ResourceHolder.js";
 import IslandModel from "../model/IslandModel.js";
@@ -80,7 +81,7 @@ export default class IslandSprite extends BaseSprite {
      * @private
      */
     static _createSelectedIndicator(resourceHolder) {
-        let selectedIndicator =  new PIXI.Sprite(resourceHolder.getTexture(SELECTED_TEXTURE));
+        let selectedIndicator = new PIXI.Sprite(resourceHolder.getTexture(SELECTED_TEXTURE));
         selectedIndicator.anchor.set(0.5, 0.5);
         selectedIndicator.x = (TILE_WIDTH / 2);
         selectedIndicator.y = (TILE_HEIGHT / 2);
@@ -97,7 +98,7 @@ export default class IslandSprite extends BaseSprite {
         this.scale.set(scale, scale);
         // Undo scale for selected indicator, implicitly use it as a larger
         // touch target.
-        this._selectedIndicator.scale.set(1/scale, 1/scale);
+        this._selectedIndicator.scale.set(1 / scale, 1 / scale);
 
         // Update our position, account for anchor being in the center
         let x = island.position.x * TILE_WIDTH + TILE_WIDTH / 2;

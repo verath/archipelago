@@ -1,5 +1,6 @@
 import * as PIXI from "pixi.js";
-import ResourceHolder from "../../resource/ResourceHolder";
+
+import ResourceHolder from "../../resource/ResourceHolder.js";
 import BaseModel from "../model/BaseModel";
 
 export default class BaseSprite extends PIXI.Sprite {

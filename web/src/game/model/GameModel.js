@@ -82,7 +82,7 @@ export default class GameModel extends BaseModel {
                 changed = true;
             }
             let color = PLAYER_COLORS[index % PLAYER_COLORS.length];
-            let playerDataWithColor = {color, ...playerData};
+            let playerDataWithColor = { color, ...playerData };
             player.update(playerDataWithColor);
             return player;
         });
@@ -176,7 +176,7 @@ export default class GameModel extends BaseModel {
             changed = true;
         }
         const playerNeutralData = gameData.playerNeutral;
-        const playerNeutralDataWithColor = {color: PLAYER_COLOR_NEUTRAL, ...playerNeutralData};
+        const playerNeutralDataWithColor = { color: PLAYER_COLOR_NEUTRAL, ...playerNeutralData };
         this._playerNeutral.update(playerNeutralDataWithColor);
         if (this._updatePlayers(gameData.players)) {
             changed = true;
@@ -249,7 +249,7 @@ export default class GameModel extends BaseModel {
     }
 
     /**
-     * @param {number} tickInterval
+     * @param {number} tickInterval [ns]
      */
     set serverTickInterval(tickInterval) {
         if (this._serverTickInterval !== tickInterval) {
@@ -259,7 +259,7 @@ export default class GameModel extends BaseModel {
     }
 
     /**
-     * @returns {number}
+     * @returns {number} [ns]
      */
     get serverTickInterval() {
         return this._serverTickInterval;
@@ -307,6 +307,9 @@ export default class GameModel extends BaseModel {
         this._emitChanged();
     }
 
+    /**
+     * @param {number} delta [ms]
+     */
     interpolate(delta) {
         this._airplanes.forEach(airplane => airplane.interpolate(delta));
         this._islands.forEach(island => island.interpolate(delta));
