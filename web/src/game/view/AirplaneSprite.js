@@ -48,14 +48,6 @@ export default class AirplaneSprite extends BaseSprite {
         return strengthText;
     }
 
-    _onAdded() {
-        super._onAdded();
-        let airplane = /** @type {AirplaneModel} */ (this._model);
-
-        this._updateStrengthText(airplane);
-        this._updateScale(airplane);
-    }
-
     _onModelChanged() {
         let airplane = /** @type {AirplaneModel} */ (this._model);
         // Update fill color.

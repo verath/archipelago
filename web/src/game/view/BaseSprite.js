@@ -25,8 +25,12 @@ export default class BaseSprite extends PIXI.Sprite {
      * @protected
      */
     _onAdded() {
+        if (this._model == null) {
+            throw new Error("this._model == null");
+        }
         this._model.addChangeListener(this._onModelChanged, this);
         this.once("removed", this._onRemoved.bind(this));
+        this._onModelChanged();
     }
 
     /**
