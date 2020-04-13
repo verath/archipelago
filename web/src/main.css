@@ -23,23 +23,67 @@ canvas {
     font-size: 10vmin;
 }
 
+.game-over-wrap {
+    box-sizing: border-box;
+    position: absolute;
+    padding-top: 10vmin;
+    width: 100%;
+    height: 100%;
+    text-align: center;
+    font-family: 'Droid Sans Mono', 'Courier New', monospace;
+    font-size: 10vmin;
+    font-weight: bold;
+    color: #fff;
+    text-shadow: #000 0px 0px 2px, #000 0px 0px 6px;
+
+    animation: game-over-wrap-reveal ease-in-out 0.8s forwards;
+}
+
+@keyframes game-over-wrap-reveal {
+    0% {
+        background: rgba(0, 0, 0, 0);
+    }
+    100% {
+        background: rgba(0, 0, 0, 0.5);
+    }
+}
+
+.game-over-wrap > p, .game-over-wrap > h1 {
+    opacity: 0;
+    animation: game-over-wrap-elem-reveal ease-in-out 0.5s forwards 0.7s;
+}
+
+@keyframes game-over-wrap-elem-reveal {
+    100% {
+        opacity: 1;
+    }
+}
+
+.game-over-wrap.game-over-winner > p {
+    color: #00f000;
+}
+
+.game-over-wrap.game-over-loser > p {
+    color: #f00000;
+}
+
 .progress-text-dot {
     opacity: 0;
 }
 
 .progress-text-dot.progress-text-dot1 {
-    animation: blink 3s infinite 0s;
+    animation: progress-blink 3s infinite 0s;
 }
 
 .progress-text-dot.progress-text-dot2 {
-    animation: blink 3s infinite 0.5s;
+    animation: progress-blink 3s infinite 0.5s;
 }
 
 .progress-text-dot.progress-text-dot3 {
-    animation: blink 3s infinite 1s;
+    animation: progress-blink 3s infinite 1s;
 }
 
-@keyframes blink {
+@keyframes progress-blink {
     1%, 54% {
         opacity: 1;
     }
