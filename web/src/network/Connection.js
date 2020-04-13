@@ -2,6 +2,7 @@ import EventEmitter from "eventemitter3";
 import { wire } from "../wire/proto_bundle.js";
 
 const EVENT_SERVER_EVENT = Symbol("EVENT_SERVER_EVENT");
+const EVENT_CONNECTED = Symbol("EVENT_CONNECTED");
 const EVENT_DISCONNECT = Symbol("EVENT_DISCONNECT");
 
 export default class Connection {
@@ -27,6 +28,12 @@ export default class Connection {
          * @private
          */
         this._eventEmitter = new EventEmitter();
+
+        /**
+         * @member {wire.EventEnvelope[]}
+         * @private
+         */
+        this._serverEvents = [];
     }
 
     /**
@@ -43,15 +50,21 @@ export default class Connection {
             console.warn("Failed decoding server EventEnvelope:", err);
             return;
         }
-        this._eventEmitter.emit(EVENT_SERVER_EVENT, eventEnvelope);
+        this._serverEvents.push(eventEnvelope);
+        this._eventEmitter.emit(EVENT_SERVER_EVENT);
     }
 
     _onWSError() {
+        this._conn.close();
         this._eventEmitter.emit(EVENT_DISCONNECT);
     }
 
     _onWSClose() {
         this._eventEmitter.emit(EVENT_DISCONNECT);
+    }
+
+    _onWSOpen() {
+        this._eventEmitter.emit(EVENT_CONNECTED);
     }
 
     addServerEventListener(listener, context = null) {
@@ -70,6 +83,14 @@ export default class Connection {
         this._eventEmitter.off(EVENT_DISCONNECT, listener, context);
     }
 
+    addConnectedListener(listener, context = null) {
+        this._eventEmitter.on(EVENT_CONNECTED, listener, context);
+    }
+
+    removeConnectedListener(listener, context = null) {
+        this._eventEmitter.off(EVENT_CONNECTED, listener, context);
+    }
+
     connect() {
         if (this._conn !== null) {
             console.warn("connect called when Connection already connected");
@@ -80,6 +101,7 @@ export default class Connection {
         this._conn.onmessage = this._onWSMessage.bind(this);
         this._conn.onclose = this._onWSClose.bind(this);
         this._conn.onerror = this._onWSError.bind(this);
+        this._conn.onopen = this._onWSOpen.bind(this);
     }
 
     disconnect() {
@@ -91,7 +113,55 @@ export default class Connection {
         this._conn.onmessage = null;
         this._conn.onclose = null;
         this._conn.onerror = null;
+        this._conn.onopen = null;
         this._conn = null;
+    }
+
+    /**
+     * @return {boolean}
+     */
+    hasNext() {
+        return this._serverEvents.length > 0;
+    }
+
+    /**
+     * @return {wire.EventEnvelope}
+     */
+    getNext() {
+        if (!this.hasNext()) {
+            throw new Error("!hasNextServerEvent");
+        }
+        return this._serverEvents.shift();
+    }
+
+    /**
+     * @return {wire.EventEnvelope}
+     */
+    peekNext() {
+        if (!this.hasNext()) {
+            throw new Error("!hasNextServerEvent");
+        }
+        return this._serverEvents[0];
+    }
+
+    async waitNext() {
+        let serverEventListener, disconnectListener;
+        let nextPromise = new Promise((resolve, reject) => {
+            serverEventListener = () => { resolve(); };
+            disconnectListener = () => { reject(new Error("disconnected")); };
+            this._eventEmitter.on(EVENT_SERVER_EVENT, serverEventListener);
+            this._eventEmitter.on(EVENT_DISCONNECT, disconnectListener);
+        });
+        try {
+            await nextPromise;
+            return true;
+        } catch (err) {
+            console.log("error while awaiting next server event:", err);
+            return false;
+        } finally {
+            this._eventEmitter.off(EVENT_SERVER_EVENT, serverEventListener);
+            this._eventEmitter.off(EVENT_DISCONNECT, disconnectListener);
+        }
     }
 
     /**

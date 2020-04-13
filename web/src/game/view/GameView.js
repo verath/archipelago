@@ -113,9 +113,6 @@ export default class GameView {
         this._stage.addChild(this._layerIslands);
         this._stage.addChild(this._layerAirplanes);
         this._stage.addChild(this._layerFogOfWar);
-
-        // Start listening for model changes
-        this._gameModel.addChangeListener(this._onModelChange, this);
     }
 
     /**
@@ -159,7 +156,7 @@ export default class GameView {
         this._islands.set(islandModel.id, island);
     }
 
-    _onModelChange() {
+    onModelChanged() {
         // Create island and airplane sprites for any islands or airplanes
         // that has not been added already.
         this._gameModel.islands

@@ -1,22 +1,31 @@
-import EventEmitter from "eventemitter3";
 import * as PIXI from "pixi.js";
 
 import Connection from "../../network/Connection.js";
 import { wire } from "../../wire/proto_bundle.js";
 import GameModel from "../model/GameModel.js";
 import IslandModel from "../model/IslandModel.js";
-import GameView from "../view/GameView.js";
 
-const EVENT_GAME_START = Symbol("EVENT_GAME_START");
+/**
+ * @typedef {(GameResultGameOver | GameResultError)} GameResult
+ *
+ * @typedef GameResultGameOver
+ * @property {"GAME_OVER"} reason
+ * @property {?string} winnerId
+ *
+ * @typedef GameResultError
+ * @property {"ERROR"} reason
+ */
 
+/**
+ * GameController
+ */
 export default class GameController {
 
     /**
      * @param {Connection} connection
      * @param {GameModel} gameModel
-     * @param {GameView} gameView
      */
-    constructor(connection, gameModel, gameView) {
+    constructor(connection, gameModel) {
         /**
          * @member {Connection}
          * @private
@@ -30,33 +39,22 @@ export default class GameController {
         this._gameModel = gameModel;
 
         /**
-         * @member {GameView}
-         * @private
-         */
-        this._gameView = gameView;
-
-        /**
-         * @type {PIXI.ticker.Ticker}
-         * @private
-         */
-        this._ticker = new PIXI.ticker.Ticker();
-
-        /**
          * @member {number}
+         * @private
          */
         this._lastUpdateMS = 0;
 
         /**
-         * @member EventEmitter
+         * @member {boolean}
          * @private
          */
-        this._eventEmitter = new EventEmitter();
+        this._isGameOver = false;
 
-        // Setup event listeners
-        this._connection.addServerEventListener(this._onServerEvent, this);
-        this._connection.addDisconnectListener(this._onDisconnect, this);
-        this._gameView.addIslandClickListener(this._onIslandClicked, this);
-        this._ticker.add(this._onTick, this);
+        /**
+         * @member {?string}
+         * @private
+         */
+        this._winnerId = null;
     }
 
 
@@ -87,39 +85,47 @@ export default class GameController {
         this._connection.sendAction(actEnvelope);
     }
 
-    /**
-     * @param {wire.EventGameStart} evtStart
-     * @private
-     */
-    _onGameStartEvent(evtStart) {
-        if (this._started) {
-            throw new Error("Start event when already started");
-        }
-        this._started = true;
-        this._gameModel.myPlayerId = evtStart.playerId;
-        this._gameModel.serverTickInterval = evtStart.tickInterval;
-        // Starts the ticker, calling this._onTick
-        this._ticker.start();
-
-        // Notify our listeners that the game is now actually started
-        this._eventEmitter.emit(EVENT_GAME_START);
+    _interpolate() {
+        let now = performance.now();
+        let delta = now - (this._lastUpdateMS || now);
+        this._lastUpdateMS = now;
+        this._gameModel.interpolate(delta);
     }
 
     /**
-     * @param {wire.EventGameTick} evtTick
+     * @param {?string} winnerId
+     * @private
+     */
+    _onGameOver(winnerId) {
+        this._winnerId = winnerId;
+        this._isGameOver = true;
+    }
+
+    /**
+     * @param {wire.IEventGameStart} evtStart
+     * @private
+     */
+    _onGameStartEvent(evtStart) {
+        this._gameModel.myPlayerId = evtStart.playerId;
+        this._gameModel.serverTickInterval = evtStart.tickInterval;
+    }
+
+    /**
+     * @param {wire.IEventGameTick} evtTick
      * @private
      */
     _onTickEvent(evtTick) {
+        // TODO: Network latency compensation?
         this._lastUpdateMS = performance.now();
         this._gameModel.update(evtTick.game);
     }
 
     /**
-     * @param {wire.EventGameOver} evtGameOver
+     * @param {wire.IEventGameOver} evtGameOver
      * @private
      */
     _onGameOverEvent(evtGameOver) {
-        this._onGameOver(evtGameOver.winnerId === this._gameModel.myPlayerId);
+        this._onGameOver(evtGameOver.winnerId);
     }
 
     /**
@@ -128,51 +134,28 @@ export default class GameController {
      */
     _onServerEvent(envelope) {
         switch (envelope.event) {
-        case "eventGameStart":
-            this._onGameStartEvent(envelope.eventGameStart);
-            break;
-        case "eventGameTick":
-            this._onTickEvent(envelope.eventGameTick);
-            break;
-        case "eventGameOver":
-            this._onGameOverEvent(envelope.eventGameOver);
-            break;
-        default:
-            console.log("Unknown event type:", envelope.event, envelope);
-        }
-    }
-
-    _onDisconnect() {
-        this._onGameOver(false);
-    }
-
-    /**
-     * @param {boolean} isWinner
-     * @private
-     */
-    _onGameOver(isWinner) {
-        // Remove listeners
-        this._connection.removeServerEventListener(this._onServerEvent, this);
-        this._connection.removeDisconnectListener(this._onDisconnect, this);
-        this._gameView.removeIslandClickListener(this._onIslandClicked, this);
-        // Close the connection, and stop view animation
-        this._connection.disconnect();
-        this._ticker.stop();
-
-        this._gameView.render();
-        // TODO: show game over screen...
-        if (isWinner) {
-            alert("Game Over\nYou Won!");
-        } else {
-            alert("Game Over\nYou Lost!");
+            case "eventGameStart":
+                this._onGameStartEvent(envelope.eventGameStart);
+                break;
+            case "eventGameTick":
+                this._onTickEvent(envelope.eventGameTick);
+                break;
+            case "eventGameOver":
+                this._onGameOverEvent(envelope.eventGameOver);
+                break;
+            default:
+                console.log("Unknown event type:", envelope.event, envelope);
         }
     }
 
     /**
      * @param {string} islandId
-     * @private
      */
-    _onIslandClicked(islandId) {
+    onIslandClicked(islandId) {
+        if (this._isGameOver) {
+            return;
+        }
+
         let clickedIsland = this._gameModel.islandById(islandId);
         if (!clickedIsland) {
             console.warn("_onIslandClicked: clickedIsland does not exist");
@@ -192,45 +175,33 @@ export default class GameController {
         }
     }
 
-    _onTick() {
-        let now = performance.now();
-        let delta = now - (this._lastUpdateMS || now);
-        this._lastUpdateMS = now;
-
-        this._gameModel.interpolate(delta);
-        this._gameView.render();
-    }
-
-    run() {
-        this._connection.connect();
-    }
-
     /**
-     * @returns {Connection}
+     * @returns {Promise<GameResult>}
      */
-    get connection() {
-        return this._connection;
-    }
+    async run() {
+        let ticker = new PIXI.ticker.Ticker();
+        ticker.add(this._interpolate, this);
 
-    /**
-     * @returns {GameModel}
-     */
-    get gameModel() {
-        return this._gameModel;
-    }
+        /**@type {GameResult} */
+        let gameResult = null;
+        ticker.start();
+        for (; ;) {
+            if (this._isGameOver) {
+                gameResult = { reason: "GAME_OVER", winnerId: this._winnerId };
+                break;
+            }
+            while (!this._connection.hasNext() && await this._connection.waitNext()) {
+                //
+            }
+            if (!this._connection.hasNext()) {
+                // TODO: reason: "ERROR".
+                gameResult = { reason: "GAME_OVER", winnerId: "" };
+                break;
+            }
+            this._onServerEvent(this._connection.getNext());
+        }
+        ticker.stop();
 
-    /**
-     * @returns {GameView}
-     */
-    get gameView() {
-        return this._gameView;
-    }
-
-    addGameStartListener(listener, context = null) {
-        this._eventEmitter.on(EVENT_GAME_START, listener, context);
-    }
-
-    removeGameStartListener(listener, context = null) {
-        this._eventEmitter.off(EVENT_GAME_START, listener, context);
+        return gameResult;
     }
 }
