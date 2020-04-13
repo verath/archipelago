@@ -1,17 +1,28 @@
 {
     "env": {
         "browser": true,
-        "es6": true
+        "es2020": true
     },
-    "extends": "eslint:recommended",
+    "extends": [
+        "eslint:recommended",
+        "plugin:react/recommended",
+        "plugin:react-hooks/recommended"
+    ],
     "parserOptions": {
         "ecmaVersion": "2020",
-        "sourceType": "module"
+        "sourceType": "module",
+        "ecmaFeatures": {
+            "jsx": true,
+            "impliedStrict": true
+        }
     },
     "rules": {
         "indent": [
             "error",
-            4
+            4,
+            {
+                "SwitchCase": 1
+            }
         ],
         "quotes": [
             "error",
@@ -22,6 +33,7 @@
             "always"
         ],
         "no-console": "off",
-        "no-unused-vars": "off"
+        "no-unused-vars": "off",
+        "react/prop-types": "off"
     }
 }

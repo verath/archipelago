@@ -9,6 +9,11 @@ import ResourceHolder from "./resource/ResourceHolder";
 import ResourceLoader from "./resource/ResourceLoader.js";
 import { WebGLRenderer, CanvasRenderer } from "pixi.js/lib/core";
 
+// Babel "runtime"/polyfill imports, modified by Babel during compilation
+// depending on target browsers.
+// See https://babeljs.io/docs/en/babel-preset-env#usebuiltins
+import "core-js/stable";
+import "regenerator-runtime/runtime";
 
 /**
  * The version of the websocket protocol we expect.

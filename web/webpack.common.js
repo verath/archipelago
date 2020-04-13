@@ -17,17 +17,9 @@ module.exports = {
     module: {
         rules: [
             {
-                test: /\.js$/,
+                test: /\.(js|jsx)$/,
                 exclude: /node_modules/,
-                loader: "babel-loader",
-                options: {
-                    presets: [
-                        ["@babel/preset-env", {
-                            "modules": false,
-                            "targets": { "browsers": ["last 2 versions"] }
-                        }]
-                    ]
-                }
+                loader: "babel-loader"
             },
             {
                 test: /\.css$/i,
