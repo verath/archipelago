@@ -49,11 +49,10 @@ module.exports = {
             filename: "[name].[chunkhash].css",
         }),
         new CopyWebpackPlugin([
-            { from: "src/static", to: "static" }
-        ]),
-        new CopyWebpackPlugin([
-            { from: "src/sw.js", to: "." }
-        ]),
+            { from: "src/static/manifest.json", to: "static/manifest.json" },
+            { from: "src/static/icon192.png", to: "static/icon192.png" },
+            { from: "src/sw.js", to: "." },
+        ], { copyUnmodified: true })
     ],
     optimization: {
         runtimeChunk: "single",
