@@ -95,9 +95,9 @@ export const wire = $root.wire = (() => {
         ActionEnvelope.encode = function encode(message, writer) {
             if (!writer)
                 writer = $Writer.create();
-            if (message.actionGameLeave != null && message.hasOwnProperty("actionGameLeave"))
+            if (message.actionGameLeave != null && Object.hasOwnProperty.call(message, "actionGameLeave"))
                 $root.wire.ActionGameLeave.encode(message.actionGameLeave, writer.uint32(/* id 1, wireType 2 =*/10).fork()).ldelim();
-            if (message.actionGameLaunch != null && message.hasOwnProperty("actionGameLaunch"))
+            if (message.actionGameLaunch != null && Object.hasOwnProperty.call(message, "actionGameLaunch"))
                 $root.wire.ActionGameLaunch.encode(message.actionGameLaunch, writer.uint32(/* id 2, wireType 2 =*/18).fork()).ldelim();
             return writer;
         };
@@ -486,9 +486,9 @@ export const wire = $root.wire = (() => {
         ActionGameLaunch.encode = function encode(message, writer) {
             if (!writer)
                 writer = $Writer.create();
-            if (message.fromId != null && message.hasOwnProperty("fromId"))
+            if (message.fromId != null && Object.hasOwnProperty.call(message, "fromId"))
                 writer.uint32(/* id 1, wireType 2 =*/10).string(message.fromId);
-            if (message.toId != null && message.hasOwnProperty("toId"))
+            if (message.toId != null && Object.hasOwnProperty.call(message, "toId"))
                 writer.uint32(/* id 2, wireType 2 =*/18).string(message.toId);
             return writer;
         };
@@ -719,11 +719,11 @@ export const wire = $root.wire = (() => {
         EventEnvelope.encode = function encode(message, writer) {
             if (!writer)
                 writer = $Writer.create();
-            if (message.eventGameStart != null && message.hasOwnProperty("eventGameStart"))
+            if (message.eventGameStart != null && Object.hasOwnProperty.call(message, "eventGameStart"))
                 $root.wire.EventGameStart.encode(message.eventGameStart, writer.uint32(/* id 1, wireType 2 =*/10).fork()).ldelim();
-            if (message.eventGameOver != null && message.hasOwnProperty("eventGameOver"))
+            if (message.eventGameOver != null && Object.hasOwnProperty.call(message, "eventGameOver"))
                 $root.wire.EventGameOver.encode(message.eventGameOver, writer.uint32(/* id 2, wireType 2 =*/18).fork()).ldelim();
-            if (message.eventGameTick != null && message.hasOwnProperty("eventGameTick"))
+            if (message.eventGameTick != null && Object.hasOwnProperty.call(message, "eventGameTick"))
                 $root.wire.EventGameTick.encode(message.eventGameTick, writer.uint32(/* id 3, wireType 2 =*/26).fork()).ldelim();
             return writer;
         };
@@ -975,9 +975,9 @@ export const wire = $root.wire = (() => {
         EventGameStart.encode = function encode(message, writer) {
             if (!writer)
                 writer = $Writer.create();
-            if (message.playerId != null && message.hasOwnProperty("playerId"))
+            if (message.playerId != null && Object.hasOwnProperty.call(message, "playerId"))
                 writer.uint32(/* id 1, wireType 2 =*/10).string(message.playerId);
-            if (message.tickInterval != null && message.hasOwnProperty("tickInterval"))
+            if (message.tickInterval != null && Object.hasOwnProperty.call(message, "tickInterval"))
                 writer.uint32(/* id 2, wireType 0 =*/16).int64(message.tickInterval);
             return writer;
         };
@@ -1190,7 +1190,7 @@ export const wire = $root.wire = (() => {
         EventGameOver.encode = function encode(message, writer) {
             if (!writer)
                 writer = $Writer.create();
-            if (message.winnerId != null && message.hasOwnProperty("winnerId"))
+            if (message.winnerId != null && Object.hasOwnProperty.call(message, "winnerId"))
                 writer.uint32(/* id 1, wireType 2 =*/10).string(message.winnerId);
             return writer;
         };
@@ -1377,7 +1377,7 @@ export const wire = $root.wire = (() => {
         EventGameTick.encode = function encode(message, writer) {
             if (!writer)
                 writer = $Writer.create();
-            if (message.game != null && message.hasOwnProperty("game"))
+            if (message.game != null && Object.hasOwnProperty.call(message, "game"))
                 $root.wire.game.Game.encode(message.game, writer.uint32(/* id 1, wireType 2 =*/10).fork()).ldelim();
             return writer;
         };
@@ -1587,9 +1587,9 @@ export const wire = $root.wire = (() => {
             Coordinate.encode = function encode(message, writer) {
                 if (!writer)
                     writer = $Writer.create();
-                if (message.x != null && message.hasOwnProperty("x"))
+                if (message.x != null && Object.hasOwnProperty.call(message, "x"))
                     writer.uint32(/* id 1, wireType 0 =*/8).int64(message.x);
-                if (message.y != null && message.hasOwnProperty("y"))
+                if (message.y != null && Object.hasOwnProperty.call(message, "y"))
                     writer.uint32(/* id 2, wireType 0 =*/16).int64(message.y);
                 return writer;
             };
@@ -1825,9 +1825,9 @@ export const wire = $root.wire = (() => {
             FloatCoordinate.encode = function encode(message, writer) {
                 if (!writer)
                     writer = $Writer.create();
-                if (message.x != null && message.hasOwnProperty("x"))
+                if (message.x != null && Object.hasOwnProperty.call(message, "x"))
                     writer.uint32(/* id 1, wireType 1 =*/9).double(message.x);
-                if (message.y != null && message.hasOwnProperty("y"))
+                if (message.y != null && Object.hasOwnProperty.call(message, "y"))
                     writer.uint32(/* id 2, wireType 1 =*/17).double(message.y);
                 return writer;
             };
@@ -2036,7 +2036,7 @@ export const wire = $root.wire = (() => {
             Player.encode = function encode(message, writer) {
                 if (!writer)
                     writer = $Writer.create();
-                if (message.id != null && message.hasOwnProperty("id"))
+                if (message.id != null && Object.hasOwnProperty.call(message, "id"))
                     writer.uint32(/* id 1, wireType 2 =*/10).string(message.id);
                 if (message.fogOfWar != null && message.fogOfWar.length)
                     for (let i = 0; i < message.fogOfWar.length; ++i)
@@ -2266,9 +2266,9 @@ export const wire = $root.wire = (() => {
             Army.encode = function encode(message, writer) {
                 if (!writer)
                     writer = $Writer.create();
-                if (message.ownerId != null && message.hasOwnProperty("ownerId"))
+                if (message.ownerId != null && Object.hasOwnProperty.call(message, "ownerId"))
                     writer.uint32(/* id 1, wireType 2 =*/10).string(message.ownerId);
-                if (message.strength != null && message.hasOwnProperty("strength"))
+                if (message.strength != null && Object.hasOwnProperty.call(message, "strength"))
                     writer.uint32(/* id 2, wireType 0 =*/16).int64(message.strength);
                 return writer;
             };
@@ -2517,15 +2517,15 @@ export const wire = $root.wire = (() => {
             Airplane.encode = function encode(message, writer) {
                 if (!writer)
                     writer = $Writer.create();
-                if (message.id != null && message.hasOwnProperty("id"))
+                if (message.id != null && Object.hasOwnProperty.call(message, "id"))
                     writer.uint32(/* id 1, wireType 2 =*/10).string(message.id);
-                if (message.army != null && message.hasOwnProperty("army"))
+                if (message.army != null && Object.hasOwnProperty.call(message, "army"))
                     $root.wire.game.Army.encode(message.army, writer.uint32(/* id 2, wireType 2 =*/18).fork()).ldelim();
-                if (message.position != null && message.hasOwnProperty("position"))
+                if (message.position != null && Object.hasOwnProperty.call(message, "position"))
                     $root.wire.game.FloatCoordinate.encode(message.position, writer.uint32(/* id 3, wireType 2 =*/26).fork()).ldelim();
-                if (message.direction != null && message.hasOwnProperty("direction"))
+                if (message.direction != null && Object.hasOwnProperty.call(message, "direction"))
                     writer.uint32(/* id 4, wireType 1 =*/33).double(message.direction);
-                if (message.speed != null && message.hasOwnProperty("speed"))
+                if (message.speed != null && Object.hasOwnProperty.call(message, "speed"))
                     writer.uint32(/* id 5, wireType 1 =*/41).double(message.speed);
                 return writer;
             };
@@ -2794,13 +2794,13 @@ export const wire = $root.wire = (() => {
             Island.encode = function encode(message, writer) {
                 if (!writer)
                     writer = $Writer.create();
-                if (message.id != null && message.hasOwnProperty("id"))
+                if (message.id != null && Object.hasOwnProperty.call(message, "id"))
                     writer.uint32(/* id 1, wireType 2 =*/10).string(message.id);
-                if (message.army != null && message.hasOwnProperty("army"))
+                if (message.army != null && Object.hasOwnProperty.call(message, "army"))
                     $root.wire.game.Army.encode(message.army, writer.uint32(/* id 2, wireType 2 =*/18).fork()).ldelim();
-                if (message.position != null && message.hasOwnProperty("position"))
+                if (message.position != null && Object.hasOwnProperty.call(message, "position"))
                     $root.wire.game.Coordinate.encode(message.position, writer.uint32(/* id 3, wireType 2 =*/26).fork()).ldelim();
-                if (message.size != null && message.hasOwnProperty("size"))
+                if (message.size != null && Object.hasOwnProperty.call(message, "size"))
                     writer.uint32(/* id 4, wireType 1 =*/33).double(message.size);
                 return writer;
             };
@@ -3079,11 +3079,11 @@ export const wire = $root.wire = (() => {
             Game.encode = function encode(message, writer) {
                 if (!writer)
                     writer = $Writer.create();
-                if (message.id != null && message.hasOwnProperty("id"))
+                if (message.id != null && Object.hasOwnProperty.call(message, "id"))
                     writer.uint32(/* id 1, wireType 2 =*/10).string(message.id);
-                if (message.size != null && message.hasOwnProperty("size"))
+                if (message.size != null && Object.hasOwnProperty.call(message, "size"))
                     $root.wire.game.Coordinate.encode(message.size, writer.uint32(/* id 2, wireType 2 =*/18).fork()).ldelim();
-                if (message.playerNeutral != null && message.hasOwnProperty("playerNeutral"))
+                if (message.playerNeutral != null && Object.hasOwnProperty.call(message, "playerNeutral"))
                     $root.wire.game.Player.encode(message.playerNeutral, writer.uint32(/* id 3, wireType 2 =*/26).fork()).ldelim();
                 if (message.players != null && message.players.length)
                     for (let i = 0; i < message.players.length; ++i)

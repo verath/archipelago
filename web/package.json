@@ -39,7 +39,7 @@
   "dependencies": {
     "eventemitter3": "^4.0.0",
     "pixi.js": "^4.5.4",
-    "protobufjs": "~6.8.0",
+    "protobufjs": "~6.9.0",
     "react": "^16.13.1",
     "react-dom": "^16.13.1"
   }
