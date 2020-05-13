@@ -83,11 +83,14 @@ export default class AirplaneSprite extends BaseSprite {
      * @param {AirplaneModel} airplane 
      */
     _updateScale(airplane) {
-        // Set our scale depending on the strength we are carrying.
-        // The scaling is capped to strength 60, and a scale factor
-        // between 0.25 to 0.8.
-        let size = Math.min(airplane.strength, 60) / 60;
-        let scale = size * (0.8 - 0.25) + 0.25;
+        let strength = Math.max(airplane.strength, 1);
+        // Ratio by strength capped at strengthMax.
+        const strengthMax = 100;
+        let ratio = Math.min(airplane.strength, strengthMax) / strengthMax;
+        // ratio -> reasonable scale for displaying.
+        const scaleMax = 1;
+        const scaleMin = 0.3;
+        let scale = ratio * (scaleMax - scaleMin) + scaleMin;
         this.scale.set(scale, scale);
     }
 }
