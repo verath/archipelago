@@ -3,12 +3,14 @@ package game
 import (
 	"context"
 	"math"
+	"math/rand"
 	"sync"
 	"time"
 
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"github.com/verath/archipelago/lib/common"
+	"github.com/verath/archipelago/lib/game/ai"
 )
 
 const (
@@ -91,11 +93,11 @@ func (c *Coordinator) nextClientWithTimeout(ctx context.Context, timeout time.Du
 	}
 }
 
-// awaitClients returns a slice of at least minNumClients and at most
-// maxNumClients newly connected Clients. awaitClients does not return any
-// Clients on error.
+// awaitRemoteClients returns a slice of at least minNumClients and at most
+// maxNumClients newly connected (remote) Clients. awaitRemoteClients does not
+// return any Clients on error.
 // It is responsibility of the caller to disconnect any Clients returned.
-func (c *Coordinator) awaitClients(ctx context.Context, minNumClients, maxNumClients int) (clients []Client, err error) {
+func (c *Coordinator) awaitRemoteClients(ctx context.Context, minNumClients, maxNumClients int) (clients []Client, err error) {
 	clients = make([]Client, 0, maxNumClients)
 	defer func() {
 		if err != nil {
@@ -132,17 +134,36 @@ func (c *Coordinator) awaitClients(ctx context.Context, minNumClients, maxNumCli
 	return clients, nil
 }
 
-// run runs the main "loop" of the game coordinator. The loop waits for
-// two players, creates a new games for these players, and wait for another
-// pair of players. This method blocks until the context is cancelled or
-// an error occurs. Always returns a non-nil error.
+// run runs the main "loop" of the game coordinator. The loop waits for a group
+// of remote players, creates a new games for these players, and wait for
+// another group of players. This method blocks until the context is cancelled
+// or an error occurs. Always returns a non-nil error.
 func (c *Coordinator) run(ctx context.Context) error {
-	minClientsPerGame := 2
-	maxClientsPerGame := 10
+	minRemoteClientsPerGame := 1
+	maxRemoteClientsPerGame := 10
 	for {
-		clients, err := c.awaitClients(ctx, minClientsPerGame, maxClientsPerGame)
+		clients, err := c.awaitRemoteClients(ctx, minRemoteClientsPerGame, maxRemoteClientsPerGame)
 		if err != nil {
-			return errors.Wrap(err, "Error when awaiting clients")
+			return errors.Wrap(err, "error awaiting remote clients")
+		}
+
+		// Add a couple of AI clients.
+		numAIClients := 4 - len(clients)
+		if numAIClients <= 0 {
+			numAIClients = 1
+		}
+		for i := 0; i < numAIClients; i++ {
+			var aiClient *ai.Client
+			var err error
+			if i%2 == 0 {
+				aiClient, err = ai.NewClient(c.logEntry.Logger, ai.OpportunisticStrategy())
+			} else {
+				aiClient, err = ai.NewClient(c.logEntry.Logger, ai.RandomStrategy(rand.Int63n(30)+2))
+			}
+			if err != nil {
+				return errors.Wrap(err, "error creating ai client")
+			}
+			clients = append(clients, aiClient)
 		}
 
 		c.logEntry.Debug("Starting a new game")
