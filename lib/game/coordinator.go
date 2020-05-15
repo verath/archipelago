@@ -155,10 +155,10 @@ func (c *Coordinator) run(ctx context.Context) error {
 		for i := 0; i < numAIClients; i++ {
 			var aiClient *ai.Client
 			var err error
-			if i%2 == 0 {
-				aiClient, err = ai.NewClient(c.logEntry.Logger, ai.OpportunisticStrategy())
-			} else {
+			if i%3 == 2 {
 				aiClient, err = ai.NewClient(c.logEntry.Logger, ai.RandomStrategy(rand.Int63n(30)+2))
+			} else {
+				aiClient, err = ai.NewClient(c.logEntry.Logger, ai.OpportunisticStrategy())
 			}
 			if err != nil {
 				return errors.Wrap(err, "error creating ai client")
