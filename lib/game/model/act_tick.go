@@ -137,7 +137,7 @@ func (*ActionTick) isPlayerAlive(g *Game, p *Player) bool {
 func (*ActionTick) revivePlayer(g *Game, player *Player) bool {
 	neutralIslands := make([]*Island, 0)
 	for _, island := range g.Islands() {
-		if island.Owner().Equals(g.PlayerNeutral()) {
+		if island.Owner().Equals(g.PlayerNeutral()) && island.Strength() > 0 {
 			neutralIslands = append(neutralIslands, island)
 		}
 	}
