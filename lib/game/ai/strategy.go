@@ -132,7 +132,7 @@ func (s *opportunisticStrategy) NextAction(state clientState, game *model.Game) 
 		islandStrength += int64(math.Hypot(float64(distX), float64(distY)))
 		// Make the action increasingly more attractive for each time we don't
 		// make a move, especially if we control a lot of islands.
-		islandStrength -= int64(float64(s.failed) * ownedRatio)
+		islandStrength -= int64(float64(s.failed) * ownedRatio * 10)
 		return islandStrength < originIsland.Strength()
 	})
 	if len(weakerIslands) == 0 {
