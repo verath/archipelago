@@ -42,7 +42,7 @@ type Coordinator struct {
 	logEntry *logrus.Entry
 	// A queue of clients that has connected and should be added to a game
 	clientsCh chan Client
-	// WaitGroup for games created by the Coordinator
+	// WaitGroup for games related goroutines created by the Coordinator.
 	gamesWG sync.WaitGroup
 }
 
@@ -202,6 +202,20 @@ func (c *Coordinator) startGame(ctx context.Context, clients []Client) error {
 		return errors.Wrap(err, "Error creating game controller")
 	}
 
+	// Run a "monitoring" goroutine that disconnects all clients if all non-AI
+	// clients has disconnected, to prevent AI playing against only itself.
+	c.gamesWG.Add(1)
+	go func() {
+		defer c.gamesWG.Done()
+		for _, client := range clients {
+			if _, ok := client.(*ai.Client); !ok {
+				<-client.DisconnectCh()
+			}
+		}
+		disconnectAll(clients)
+	}()
+
+	// Run the game controller.
 	c.gamesWG.Add(1)
 	go func() {
 		defer c.gamesWG.Done()
