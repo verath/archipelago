@@ -3,7 +3,7 @@
 A web-based multiplayer clone of the [android game](https://play.google.com/store/apps/details?id=com.sgg.archipelago_kr) 
 with the same name.
 
-![Screenshot Archipelago](assets/screenshot2.png)
+![Screenshot Archipelago](assets/screenshot3.png)
 
 [![CircleCI](https://circleci.com/gh/verath/archipelago.svg?style=svg)](https://circleci.com/gh/verath/archipelago)
 [![Codeclimate Maintainability](https://api.codeclimate.com/v1/badges/4ae6b5cd15e1050fd3d3/maintainability)](https://codeclimate.com/github/verath/archipelago/maintainability)
