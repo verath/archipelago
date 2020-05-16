@@ -56,7 +56,7 @@ func (s *randomStrategy) NextAction(state clientState, game *model.Game) (model.
 		return nil, errors.New("myPlayer not found in game")
 	}
 	// Select random owned island with at least minOriginStrength.
-	myIslands := islandsBy(game, func(island *model.Island) bool {
+	myIslands := filterIslands(game.Islands(), func(island *model.Island) bool {
 		return island.IsOwnedBy(myPlayer) && island.Strength() >= s.minOriginStrength
 	})
 	if len(myIslands) == 0 {
@@ -103,7 +103,7 @@ func (s *opportunisticStrategy) NextAction(state clientState, game *model.Game) 
 	}
 
 	// Select one of our islands.
-	myIslands := islandsBy(game, func(island *model.Island) bool {
+	myIslands := filterIslands(game.Islands(), func(island *model.Island) bool {
 		return island.IsOwnedBy(myPlayer) && island.Strength() >= 2
 	})
 	ownedRatio := float64(len(myIslands)) / float64(len(game.Islands()))
@@ -113,7 +113,7 @@ func (s *opportunisticStrategy) NextAction(state clientState, game *model.Game) 
 	originIsland := myIslands[rand.Intn(len(myIslands))]
 
 	// Target any other island "weaker" than this island.
-	weakerIslands := islandsBy(game, func(island *model.Island) bool {
+	weakerIslands := filterIslands(game.Islands(), func(island *model.Island) bool {
 		if island.ID() == originIsland.ID() {
 			return false
 		}
@@ -157,18 +157,18 @@ func (s *opportunisticStrategy) NextAction(state clientState, game *model.Game) 
 	return act, nil
 }
 
-func islandsBy(game *model.Game, pred func(*model.Island) bool) []*model.Island {
-	islands := make([]*model.Island, 0)
-	for _, island := range game.Islands() {
+func filterIslands(islands []*model.Island, pred func(*model.Island) bool) []*model.Island {
+	filteredIslands := make([]*model.Island, 0)
+	for _, island := range islands {
 		if pred(island) {
-			islands = append(islands, island)
+			filteredIslands = append(filteredIslands, island)
 		}
 	}
-	return islands
+	return filteredIslands
 }
 
 func islandsNotOwnedBy(game *model.Game, player *model.Player) []*model.Island {
-	return islandsBy(game, func(island *model.Island) bool {
+	return filterIslands(game.Islands(), func(island *model.Island) bool {
 		return !island.IsOwnedBy(player)
 	})
 }
