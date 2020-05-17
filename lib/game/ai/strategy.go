@@ -127,10 +127,6 @@ func (s *opportunisticStrategy) NextAction(state clientState, game *model.Game) 
 		if islandStrength > model.IslandGrowthCap {
 			islandStrength = model.IslandGrowthCap
 		}
-		// Punish distance.
-		distX := originIsland.Position().X - island.Position().X
-		distY := originIsland.Position().Y - island.Position().Y
-		islandStrength += int64(math.Hypot(float64(distX), float64(distY))) * 2
 		// Punish by owner.
 		if island.IsOwnedBy(game.PlayerNeutral()) {
 			// Punish attacking neutral islands.
@@ -139,6 +135,10 @@ func (s *opportunisticStrategy) NextAction(state clientState, game *model.Game) 
 			// Punish reinforcing own islands.
 			islandStrength *= 4
 		}
+		// Punish distance.
+		distX := originIsland.Position().X - island.Position().X
+		distY := originIsland.Position().Y - island.Position().Y
+		islandStrength += int64(math.Hypot(float64(distX), float64(distY))+0.5) * 2
 		// Reward any action if we are being passive, especially if controlling
 		// many islands.
 		islandStrength -= int64(float64(s.failed) * ownedRatio * 2)
