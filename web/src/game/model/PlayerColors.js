@@ -67,8 +67,6 @@ export const PLAYER_COLORS = [
     // deepskyblue
     new PlayerColor(0x00bfff, 0x00bfff, 0x000000),
     // [blue => PLAYER_COLOR_SELF]
-    // fuchsia
-    new PlayerColor(0xff00ff, 0xff00ff, 0x000000),
     // laserlemon
     new PlayerColor(0xffff54, 0xffff54, 0x000000),
     // plum
