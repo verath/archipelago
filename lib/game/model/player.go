@@ -56,8 +56,16 @@ func (p *Player) SetState(state PlayerState) {
 
 // IsInFogOfWar tests if the given Coordinate is in fog of war for the player.
 func (p *Player) IsInFogOfWar(c Coordinate) bool {
-	_, inFoW := p.fogOfWar[c]
-	return inFoW
+	switch p.state {
+	case Alive:
+		_, inFoW := p.fogOfWar[c]
+		return inFoW
+	case PendingRevival:
+		return true
+	case Dead, LeftGame:
+		return false
+	}
+	panic("unknown player state")
 }
 
 // FogOfWar returns the set of coordinates where the player has fog of war
