@@ -88,15 +88,6 @@ func newOpportunisticStrategy() (*opportunisticStrategy, error) {
 }
 
 func (s *opportunisticStrategy) NextAction(state clientState, game *model.Game) (act model.PlayerAction, err error) {
-	// Keep count of how many times we fail to perform an action.
-	defer func() {
-		if act == nil {
-			s.failed++
-		} else {
-			s.failed = 0
-		}
-	}()
-
 	myPlayer := game.Player(state.myPlayerID)
 	if myPlayer == nil {
 		return nil, errors.New("myPlayer not found in game")
@@ -108,6 +99,7 @@ func (s *opportunisticStrategy) NextAction(state clientState, game *model.Game) 
 	})
 	ownedRatio := float64(len(myIslands)) / float64(len(game.Islands()))
 	if len(myIslands) == 0 {
+		s.failed = 0
 		return nil, nil
 	}
 	originIsland := myIslands[rand.Intn(len(myIslands))]
@@ -145,8 +137,11 @@ func (s *opportunisticStrategy) NextAction(state clientState, game *model.Game) 
 		return islandStrength < originIsland.Strength()
 	})
 	if len(weakerIslands) == 0 {
+		// Keep count of how many times we fail to perform an action.
+		s.failed++
 		return nil, nil
 	}
+	s.failed = 0
 	targetIsland := weakerIslands[rand.Intn(len(weakerIslands))]
 
 	// Create the action.
