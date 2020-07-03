@@ -1,6 +1,9 @@
 package model
 
-import "fmt"
+import (
+	"fmt"
+	"math"
+)
 
 // Coordinate is an (x, y) coordinate, representing a position on
 // the game "board".
@@ -19,7 +22,7 @@ type FloatCoordinate struct {
 // IsWithin determines if the coordinate is within a boundary, seen as a rectangle
 // from (0,0) to the boundary x and y coordinates.
 func (c Coordinate) IsWithin(boundary Coordinate) bool {
-	return c.X < boundary.X && c.Y < boundary.Y
+	return c.X >= 0 && c.X < boundary.X && c.Y >= 0 && c.Y < boundary.Y
 }
 
 // ToFloatCoordinate returns a FloatCoordinate representation of the Coordinate.
@@ -36,11 +39,11 @@ func (c Coordinate) String() string {
 }
 
 // ToCoordinate returns a Coordinate representation of the FloatCoordinate. The
-// Coordinate values are rounded to the nearest int.
+// Coordinate values are rounded to the nearest int away from zero.
 func (fc FloatCoordinate) ToCoordinate() Coordinate {
 	return Coordinate{
-		X: int(fc.X + 0.5),
-		Y: int(fc.Y + 0.5),
+		X: int(math.Round(fc.X)),
+		Y: int(math.Round(fc.Y)),
 	}
 }
 
