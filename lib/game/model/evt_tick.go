@@ -27,7 +27,8 @@ func (*EventTick) applyFogOfWar(g *Game, player *Player) {
 		}
 	}
 	for _, airplane := range g.Airplanes() {
-		if player.IsInFogOfWar(airplane.Position().ToCoordinate()) {
+		airplaneCoord := airplane.position.ToCoordinate()
+		if !airplaneCoord.IsWithin(g.Size()) || player.IsInFogOfWar(airplaneCoord) {
 			airplane.SetStrength(-1)
 		}
 	}
