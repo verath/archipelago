@@ -249,7 +249,7 @@ type Airplane struct {
 	Army      *Army            `protobuf:"bytes,2,opt,name=army,proto3" json:"army,omitempty"`
 	Position  *FloatCoordinate `protobuf:"bytes,3,opt,name=position,proto3" json:"position,omitempty"`
 	Direction float32          `protobuf:"fixed32,4,opt,name=direction,proto3" json:"direction,omitempty"`
-	// [tiles/ms]
+	// Speed of the Airplane [tiles/ms]. Not set if default speed.
 	Speed                float32  `protobuf:"fixed32,5,opt,name=speed,proto3" json:"speed,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`

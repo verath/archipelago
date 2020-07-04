@@ -39,7 +39,7 @@ message Airplane {
     Army army = 2;
     FloatCoordinate position = 3;
     float direction = 4;
-    // [tiles/ms]
+    // Speed of the Airplane [tiles/ms]. Not set if default speed.
     float speed = 5;
 }
 
