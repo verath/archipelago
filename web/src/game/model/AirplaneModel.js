@@ -4,6 +4,10 @@ import GameModel from "./GameModel.js";
 import OwnableModel from "./OwnableModel.js";
 
 
+const NANOSECONDS_PER_SECOND = 1e9;
+const MILLISECONDS_PER_NANOSECOND = 1e6;
+export const DEFAULT_AIRPLANE_SPEED = (1 / (3 * NANOSECONDS_PER_SECOND)) * MILLISECONDS_PER_NANOSECOND;
+
 /**
  * @extends OwnableModel
  */
@@ -76,7 +80,7 @@ export default class AirplaneModel extends OwnableModel {
         // smooth out the change of position over the entire tickInterval,
         // making for less janky movement.
         let tickInterval = this._gameModel.serverTickInterval;
-        let speed = airplaneData.speed;
+        let speed = airplaneData.speed || DEFAULT_AIRPLANE_SPEED;
         let direction = airplaneData.direction;
         let nextX = newX + speed * Math.cos(direction) * tickInterval;
         let nextY = newY + speed * Math.sin(direction) * tickInterval;

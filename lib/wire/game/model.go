@@ -74,13 +74,17 @@ func EncodeArmy(army *model.Army) *Army {
 
 // EncodeAirplane transforms a game model Airplane to its wire representation
 func EncodeAirplane(airplane *model.Airplane) *Airplane {
-	return &Airplane{
+	wireAirplane := &Airplane{
 		Id:        string(airplane.ID()),
 		Army:      EncodeArmy(airplane.Army),
 		Position:  EncodeFloatCoordinate(airplane.Position()),
 		Direction: float32(airplane.Direction()),
-		Speed:     float32(airplane.Speed() * float64(time.Millisecond)),
 	}
+	// If speed is default we leave it out of the wire encoding.
+	if airplane.Speed() != model.AirplaneDefaultSpeed {
+		wireAirplane.Speed = float32(airplane.Speed() * float64(time.Millisecond))
+	}
+	return wireAirplane
 }
 
 // EncodeIsland transforms a game model Island to its wire representation

@@ -156,7 +156,7 @@ func (*ActionTick) revivePlayer(g *Game, player *Player) bool {
 		origin = Coordinate{X: island.Position().X, Y: g.Size().Y}
 	}
 	airplane := NewAirplane(origin, island, player, strength)
-	airplane.SetSpeed(airplaneDefaultSpeed * 2)
+	airplane.SetSpeed(AirplaneDefaultSpeed * 2)
 	g.AddAirplane(airplane)
 	g.SetReviveCount(reviveCount + 1)
 	return true
