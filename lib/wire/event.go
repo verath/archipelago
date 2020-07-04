@@ -8,7 +8,7 @@ import (
 // EncodeEventGameStart transforms a game model PlayerEventGameStart to its wire representation
 func EncodeEventGameStart(evt *model.PlayerEventGameStart) *EventGameStart {
 	return &EventGameStart{
-		TickInterval: int64(evt.TickInterval),
+		TickInterval: uint32(evt.TickInterval.Milliseconds()),
 		PlayerId:     string(evt.PlayerID),
 	}
 }

@@ -39,6 +39,7 @@ message Airplane {
     Army army = 2;
     FloatCoordinate position = 3;
     double direction = 4;
+    // [tiles/ns]
     double speed = 5;
 }
 
