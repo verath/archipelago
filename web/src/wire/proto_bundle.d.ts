@@ -393,7 +393,7 @@ export namespace wire {
         playerId?: (string|null);
 
         /** EventGameStart tickInterval */
-        tickInterval?: (number|Long|null);
+        tickInterval?: (number|null);
     }
 
     /** Represents an EventGameStart. */
@@ -409,7 +409,7 @@ export namespace wire {
         public playerId: string;
 
         /** EventGameStart tickInterval. */
-        public tickInterval: (number|Long);
+        public tickInterval: number;
 
         /**
          * Creates a new EventGameStart instance using the specified properties.

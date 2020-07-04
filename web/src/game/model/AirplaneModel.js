@@ -29,6 +29,7 @@ export default class AirplaneModel extends OwnableModel {
         this._direction = 0;
 
         /**
+         * [tiles/ns]
          * @member {Number}
          * @protected
          */
@@ -75,15 +76,15 @@ export default class AirplaneModel extends OwnableModel {
         // then. By doing this instead of setting position directly, we can
         // smooth out the change of position over the entire tickInterval,
         // making for less janky movement.
-        let tickInterval = this._gameModel.serverTickInterval;
+        let tickIntervalNS = this._gameModel.serverTickInterval * MILLISECONDS_PER_NANOSECOND;
         let speed = airplaneData.speed;
         let direction = airplaneData.direction;
-        let nextX = newX + speed * Math.cos(direction) * tickInterval;
-        let nextY = newY + speed * Math.sin(direction) * tickInterval;
+        let nextX = newX + speed * Math.cos(direction) * tickIntervalNS;
+        let nextY = newY + speed * Math.sin(direction) * tickIntervalNS;
         let diffX = nextX - this._position.x;
         let diffY = nextY - this._position.y;
         let distance = Math.hypot(diffY, diffX);
-        this._speed = distance / tickInterval;
+        this._speed = distance / tickIntervalNS;
         this._direction = Math.atan2(diffY, diffX);
         return true;
     }

@@ -60,7 +60,7 @@ export default class GameModel extends BaseModel {
 
         /**
          * The approximate tick interval (i.e. time between ticks)
-         * of the server, in nanoseconds.
+         * of the server, in milliseconds.
          * @type {number}
          * @private
          */
@@ -281,7 +281,7 @@ export default class GameModel extends BaseModel {
     }
 
     /**
-     * @param {number} tickInterval [ns]
+     * @param {number} tickInterval [ms]
      */
     set serverTickInterval(tickInterval) {
         if (this._serverTickInterval !== tickInterval) {
@@ -291,7 +291,7 @@ export default class GameModel extends BaseModel {
     }
 
     /**
-     * @returns {number} [ns]
+     * @returns {number} [ms]
      */
     get serverTickInterval() {
         return this._serverTickInterval;

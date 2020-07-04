@@ -5,6 +5,7 @@ import (
 	"time"
 )
 
+// airplaneDefaultSpeed is the default speed of an airplane [tiles/ns].
 const airplaneDefaultSpeed = 1 / float64(3*time.Second)
 
 // Airplane represents an airplane in the game model. An Airplane
@@ -21,7 +22,7 @@ type Airplane struct {
 	// direction is the heading of the airplane, i.e. in what direction
 	// the speed should be applied to move the airplane forward.
 	direction float64
-	// speed is the speed of the airplane, measured in tiles/nanosecond
+	// speed is the speed of the airplane [tiles/ns].
 	speed float64
 }
 

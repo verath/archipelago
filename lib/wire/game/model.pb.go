@@ -28,9 +28,9 @@ const (
 	PlayerState_ALIVE PlayerState = 0
 	// PENDING_REVIVAL is when dead, but may be revived.
 	PlayerState_PENDING_REVIVAL PlayerState = 1
-	// Dead is when dead and will remain dead.
+	// DEAD is when dead and will remain dead.
 	PlayerState_DEAD PlayerState = 2
-	// LeftGame is when the Player has left the game.
+	// LEFT_GAME is when the Player has left the game.
 	PlayerState_LEFT_GAME PlayerState = 3
 )
 
@@ -245,14 +245,15 @@ func (m *Army) GetStrength() int64 {
 }
 
 type Airplane struct {
-	Id                   string           `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
-	Army                 *Army            `protobuf:"bytes,2,opt,name=army,proto3" json:"army,omitempty"`
-	Position             *FloatCoordinate `protobuf:"bytes,3,opt,name=position,proto3" json:"position,omitempty"`
-	Direction            float64          `protobuf:"fixed64,4,opt,name=direction,proto3" json:"direction,omitempty"`
-	Speed                float64          `protobuf:"fixed64,5,opt,name=speed,proto3" json:"speed,omitempty"`
-	XXX_NoUnkeyedLiteral struct{}         `json:"-"`
-	XXX_unrecognized     []byte           `json:"-"`
-	XXX_sizecache        int32            `json:"-"`
+	Id        string           `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	Army      *Army            `protobuf:"bytes,2,opt,name=army,proto3" json:"army,omitempty"`
+	Position  *FloatCoordinate `protobuf:"bytes,3,opt,name=position,proto3" json:"position,omitempty"`
+	Direction float64          `protobuf:"fixed64,4,opt,name=direction,proto3" json:"direction,omitempty"`
+	// [tiles/ns]
+	Speed                float64  `protobuf:"fixed64,5,opt,name=speed,proto3" json:"speed,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
 }
 
 func (m *Airplane) Reset()         { *m = Airplane{} }

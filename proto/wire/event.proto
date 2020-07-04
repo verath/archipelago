@@ -14,7 +14,8 @@ message EventEnvelope {
 
 message EventGameStart {
     string player_id = 1;
-    int64 tick_interval = 2;
+    // Aprox. time between ticks [ms].
+    uint32 tick_interval = 2;
 }
 
 message EventGameOver {

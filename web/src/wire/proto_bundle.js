@@ -917,7 +917,7 @@ export const wire = $root.wire = (() => {
          * @memberof wire
          * @interface IEventGameStart
          * @property {string|null} [playerId] EventGameStart playerId
-         * @property {number|Long|null} [tickInterval] EventGameStart tickInterval
+         * @property {number|null} [tickInterval] EventGameStart tickInterval
          */
 
         /**
@@ -945,11 +945,11 @@ export const wire = $root.wire = (() => {
 
         /**
          * EventGameStart tickInterval.
-         * @member {number|Long} tickInterval
+         * @member {number} tickInterval
          * @memberof wire.EventGameStart
          * @instance
          */
-        EventGameStart.prototype.tickInterval = $util.Long ? $util.Long.fromBits(0,0,false) : 0;
+        EventGameStart.prototype.tickInterval = 0;
 
         /**
          * Creates a new EventGameStart instance using the specified properties.
@@ -978,7 +978,7 @@ export const wire = $root.wire = (() => {
             if (message.playerId != null && Object.hasOwnProperty.call(message, "playerId"))
                 writer.uint32(/* id 1, wireType 2 =*/10).string(message.playerId);
             if (message.tickInterval != null && Object.hasOwnProperty.call(message, "tickInterval"))
-                writer.uint32(/* id 2, wireType 0 =*/16).int64(message.tickInterval);
+                writer.uint32(/* id 2, wireType 0 =*/16).uint32(message.tickInterval);
             return writer;
         };
 
@@ -1017,7 +1017,7 @@ export const wire = $root.wire = (() => {
                     message.playerId = reader.string();
                     break;
                 case 2:
-                    message.tickInterval = reader.int64();
+                    message.tickInterval = reader.uint32();
                     break;
                 default:
                     reader.skipType(tag & 7);
@@ -1058,8 +1058,8 @@ export const wire = $root.wire = (() => {
                 if (!$util.isString(message.playerId))
                     return "playerId: string expected";
             if (message.tickInterval != null && message.hasOwnProperty("tickInterval"))
-                if (!$util.isInteger(message.tickInterval) && !(message.tickInterval && $util.isInteger(message.tickInterval.low) && $util.isInteger(message.tickInterval.high)))
-                    return "tickInterval: integer|Long expected";
+                if (!$util.isInteger(message.tickInterval))
+                    return "tickInterval: integer expected";
             return null;
         };
 
@@ -1078,14 +1078,7 @@ export const wire = $root.wire = (() => {
             if (object.playerId != null)
                 message.playerId = String(object.playerId);
             if (object.tickInterval != null)
-                if ($util.Long)
-                    (message.tickInterval = $util.Long.fromValue(object.tickInterval)).unsigned = false;
-                else if (typeof object.tickInterval === "string")
-                    message.tickInterval = parseInt(object.tickInterval, 10);
-                else if (typeof object.tickInterval === "number")
-                    message.tickInterval = object.tickInterval;
-                else if (typeof object.tickInterval === "object")
-                    message.tickInterval = new $util.LongBits(object.tickInterval.low >>> 0, object.tickInterval.high >>> 0).toNumber();
+                message.tickInterval = object.tickInterval >>> 0;
             return message;
         };
 
@@ -1104,19 +1097,12 @@ export const wire = $root.wire = (() => {
             let object = {};
             if (options.defaults) {
                 object.playerId = "";
-                if ($util.Long) {
-                    let long = new $util.Long(0, 0, false);
-                    object.tickInterval = options.longs === String ? long.toString() : options.longs === Number ? long.toNumber() : long;
-                } else
-                    object.tickInterval = options.longs === String ? "0" : 0;
+                object.tickInterval = 0;
             }
             if (message.playerId != null && message.hasOwnProperty("playerId"))
                 object.playerId = message.playerId;
             if (message.tickInterval != null && message.hasOwnProperty("tickInterval"))
-                if (typeof message.tickInterval === "number")
-                    object.tickInterval = options.longs === String ? String(message.tickInterval) : message.tickInterval;
-                else
-                    object.tickInterval = options.longs === String ? $util.Long.prototype.toString.call(message.tickInterval) : options.longs === Number ? new $util.LongBits(message.tickInterval.low >>> 0, message.tickInterval.high >>> 0).toNumber() : message.tickInterval;
+                object.tickInterval = message.tickInterval;
             return object;
         };
 
