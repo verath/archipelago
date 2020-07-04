@@ -1514,8 +1514,8 @@ export const wire = $root.wire = (() => {
              * Properties of a Coordinate.
              * @memberof wire.game
              * @interface ICoordinate
-             * @property {number|Long|null} [x] Coordinate x
-             * @property {number|Long|null} [y] Coordinate y
+             * @property {number|null} [x] Coordinate x
+             * @property {number|null} [y] Coordinate y
              */
 
             /**
@@ -1535,19 +1535,19 @@ export const wire = $root.wire = (() => {
 
             /**
              * Coordinate x.
-             * @member {number|Long} x
+             * @member {number} x
              * @memberof wire.game.Coordinate
              * @instance
              */
-            Coordinate.prototype.x = $util.Long ? $util.Long.fromBits(0,0,false) : 0;
+            Coordinate.prototype.x = 0;
 
             /**
              * Coordinate y.
-             * @member {number|Long} y
+             * @member {number} y
              * @memberof wire.game.Coordinate
              * @instance
              */
-            Coordinate.prototype.y = $util.Long ? $util.Long.fromBits(0,0,false) : 0;
+            Coordinate.prototype.y = 0;
 
             /**
              * Creates a new Coordinate instance using the specified properties.
@@ -1574,9 +1574,9 @@ export const wire = $root.wire = (() => {
                 if (!writer)
                     writer = $Writer.create();
                 if (message.x != null && Object.hasOwnProperty.call(message, "x"))
-                    writer.uint32(/* id 1, wireType 0 =*/8).int64(message.x);
+                    writer.uint32(/* id 1, wireType 0 =*/8).int32(message.x);
                 if (message.y != null && Object.hasOwnProperty.call(message, "y"))
-                    writer.uint32(/* id 2, wireType 0 =*/16).int64(message.y);
+                    writer.uint32(/* id 2, wireType 0 =*/16).int32(message.y);
                 return writer;
             };
 
@@ -1612,10 +1612,10 @@ export const wire = $root.wire = (() => {
                     let tag = reader.uint32();
                     switch (tag >>> 3) {
                     case 1:
-                        message.x = reader.int64();
+                        message.x = reader.int32();
                         break;
                     case 2:
-                        message.y = reader.int64();
+                        message.y = reader.int32();
                         break;
                     default:
                         reader.skipType(tag & 7);
@@ -1653,11 +1653,11 @@ export const wire = $root.wire = (() => {
                 if (typeof message !== "object" || message === null)
                     return "object expected";
                 if (message.x != null && message.hasOwnProperty("x"))
-                    if (!$util.isInteger(message.x) && !(message.x && $util.isInteger(message.x.low) && $util.isInteger(message.x.high)))
-                        return "x: integer|Long expected";
+                    if (!$util.isInteger(message.x))
+                        return "x: integer expected";
                 if (message.y != null && message.hasOwnProperty("y"))
-                    if (!$util.isInteger(message.y) && !(message.y && $util.isInteger(message.y.low) && $util.isInteger(message.y.high)))
-                        return "y: integer|Long expected";
+                    if (!$util.isInteger(message.y))
+                        return "y: integer expected";
                 return null;
             };
 
@@ -1674,23 +1674,9 @@ export const wire = $root.wire = (() => {
                     return object;
                 let message = new $root.wire.game.Coordinate();
                 if (object.x != null)
-                    if ($util.Long)
-                        (message.x = $util.Long.fromValue(object.x)).unsigned = false;
-                    else if (typeof object.x === "string")
-                        message.x = parseInt(object.x, 10);
-                    else if (typeof object.x === "number")
-                        message.x = object.x;
-                    else if (typeof object.x === "object")
-                        message.x = new $util.LongBits(object.x.low >>> 0, object.x.high >>> 0).toNumber();
+                    message.x = object.x | 0;
                 if (object.y != null)
-                    if ($util.Long)
-                        (message.y = $util.Long.fromValue(object.y)).unsigned = false;
-                    else if (typeof object.y === "string")
-                        message.y = parseInt(object.y, 10);
-                    else if (typeof object.y === "number")
-                        message.y = object.y;
-                    else if (typeof object.y === "object")
-                        message.y = new $util.LongBits(object.y.low >>> 0, object.y.high >>> 0).toNumber();
+                    message.y = object.y | 0;
                 return message;
             };
 
@@ -1708,27 +1694,13 @@ export const wire = $root.wire = (() => {
                     options = {};
                 let object = {};
                 if (options.defaults) {
-                    if ($util.Long) {
-                        let long = new $util.Long(0, 0, false);
-                        object.x = options.longs === String ? long.toString() : options.longs === Number ? long.toNumber() : long;
-                    } else
-                        object.x = options.longs === String ? "0" : 0;
-                    if ($util.Long) {
-                        let long = new $util.Long(0, 0, false);
-                        object.y = options.longs === String ? long.toString() : options.longs === Number ? long.toNumber() : long;
-                    } else
-                        object.y = options.longs === String ? "0" : 0;
+                    object.x = 0;
+                    object.y = 0;
                 }
                 if (message.x != null && message.hasOwnProperty("x"))
-                    if (typeof message.x === "number")
-                        object.x = options.longs === String ? String(message.x) : message.x;
-                    else
-                        object.x = options.longs === String ? $util.Long.prototype.toString.call(message.x) : options.longs === Number ? new $util.LongBits(message.x.low >>> 0, message.x.high >>> 0).toNumber() : message.x;
+                    object.x = message.x;
                 if (message.y != null && message.hasOwnProperty("y"))
-                    if (typeof message.y === "number")
-                        object.y = options.longs === String ? String(message.y) : message.y;
-                    else
-                        object.y = options.longs === String ? $util.Long.prototype.toString.call(message.y) : options.longs === Number ? new $util.LongBits(message.y.low >>> 0, message.y.high >>> 0).toNumber() : message.y;
+                    object.y = message.y;
                 return object;
             };
 
@@ -1812,9 +1784,9 @@ export const wire = $root.wire = (() => {
                 if (!writer)
                     writer = $Writer.create();
                 if (message.x != null && Object.hasOwnProperty.call(message, "x"))
-                    writer.uint32(/* id 1, wireType 1 =*/9).double(message.x);
+                    writer.uint32(/* id 1, wireType 5 =*/13).float(message.x);
                 if (message.y != null && Object.hasOwnProperty.call(message, "y"))
-                    writer.uint32(/* id 2, wireType 1 =*/17).double(message.y);
+                    writer.uint32(/* id 2, wireType 5 =*/21).float(message.y);
                 return writer;
             };
 
@@ -1850,10 +1822,10 @@ export const wire = $root.wire = (() => {
                     let tag = reader.uint32();
                     switch (tag >>> 3) {
                     case 1:
-                        message.x = reader.double();
+                        message.x = reader.float();
                         break;
                     case 2:
-                        message.y = reader.double();
+                        message.y = reader.float();
                         break;
                     default:
                         reader.skipType(tag & 7);
@@ -2214,7 +2186,7 @@ export const wire = $root.wire = (() => {
              * @memberof wire.game
              * @interface IArmy
              * @property {string|null} [ownerId] Army ownerId
-             * @property {number|Long|null} [strength] Army strength
+             * @property {number|null} [strength] Army strength
              */
 
             /**
@@ -2242,11 +2214,11 @@ export const wire = $root.wire = (() => {
 
             /**
              * Army strength.
-             * @member {number|Long} strength
+             * @member {number} strength
              * @memberof wire.game.Army
              * @instance
              */
-            Army.prototype.strength = $util.Long ? $util.Long.fromBits(0,0,false) : 0;
+            Army.prototype.strength = 0;
 
             /**
              * Creates a new Army instance using the specified properties.
@@ -2275,7 +2247,7 @@ export const wire = $root.wire = (() => {
                 if (message.ownerId != null && Object.hasOwnProperty.call(message, "ownerId"))
                     writer.uint32(/* id 1, wireType 2 =*/10).string(message.ownerId);
                 if (message.strength != null && Object.hasOwnProperty.call(message, "strength"))
-                    writer.uint32(/* id 2, wireType 0 =*/16).int64(message.strength);
+                    writer.uint32(/* id 2, wireType 0 =*/16).int32(message.strength);
                 return writer;
             };
 
@@ -2314,7 +2286,7 @@ export const wire = $root.wire = (() => {
                         message.ownerId = reader.string();
                         break;
                     case 2:
-                        message.strength = reader.int64();
+                        message.strength = reader.int32();
                         break;
                     default:
                         reader.skipType(tag & 7);
@@ -2355,8 +2327,8 @@ export const wire = $root.wire = (() => {
                     if (!$util.isString(message.ownerId))
                         return "ownerId: string expected";
                 if (message.strength != null && message.hasOwnProperty("strength"))
-                    if (!$util.isInteger(message.strength) && !(message.strength && $util.isInteger(message.strength.low) && $util.isInteger(message.strength.high)))
-                        return "strength: integer|Long expected";
+                    if (!$util.isInteger(message.strength))
+                        return "strength: integer expected";
                 return null;
             };
 
@@ -2375,14 +2347,7 @@ export const wire = $root.wire = (() => {
                 if (object.ownerId != null)
                     message.ownerId = String(object.ownerId);
                 if (object.strength != null)
-                    if ($util.Long)
-                        (message.strength = $util.Long.fromValue(object.strength)).unsigned = false;
-                    else if (typeof object.strength === "string")
-                        message.strength = parseInt(object.strength, 10);
-                    else if (typeof object.strength === "number")
-                        message.strength = object.strength;
-                    else if (typeof object.strength === "object")
-                        message.strength = new $util.LongBits(object.strength.low >>> 0, object.strength.high >>> 0).toNumber();
+                    message.strength = object.strength | 0;
                 return message;
             };
 
@@ -2401,19 +2366,12 @@ export const wire = $root.wire = (() => {
                 let object = {};
                 if (options.defaults) {
                     object.ownerId = "";
-                    if ($util.Long) {
-                        let long = new $util.Long(0, 0, false);
-                        object.strength = options.longs === String ? long.toString() : options.longs === Number ? long.toNumber() : long;
-                    } else
-                        object.strength = options.longs === String ? "0" : 0;
+                    object.strength = 0;
                 }
                 if (message.ownerId != null && message.hasOwnProperty("ownerId"))
                     object.ownerId = message.ownerId;
                 if (message.strength != null && message.hasOwnProperty("strength"))
-                    if (typeof message.strength === "number")
-                        object.strength = options.longs === String ? String(message.strength) : message.strength;
-                    else
-                        object.strength = options.longs === String ? $util.Long.prototype.toString.call(message.strength) : options.longs === Number ? new $util.LongBits(message.strength.low >>> 0, message.strength.high >>> 0).toNumber() : message.strength;
+                    object.strength = message.strength;
                 return object;
             };
 
@@ -2530,9 +2488,9 @@ export const wire = $root.wire = (() => {
                 if (message.position != null && Object.hasOwnProperty.call(message, "position"))
                     $root.wire.game.FloatCoordinate.encode(message.position, writer.uint32(/* id 3, wireType 2 =*/26).fork()).ldelim();
                 if (message.direction != null && Object.hasOwnProperty.call(message, "direction"))
-                    writer.uint32(/* id 4, wireType 1 =*/33).double(message.direction);
+                    writer.uint32(/* id 4, wireType 5 =*/37).float(message.direction);
                 if (message.speed != null && Object.hasOwnProperty.call(message, "speed"))
-                    writer.uint32(/* id 5, wireType 1 =*/41).double(message.speed);
+                    writer.uint32(/* id 5, wireType 5 =*/45).float(message.speed);
                 return writer;
             };
 
@@ -2577,10 +2535,10 @@ export const wire = $root.wire = (() => {
                         message.position = $root.wire.game.FloatCoordinate.decode(reader, reader.uint32());
                         break;
                     case 4:
-                        message.direction = reader.double();
+                        message.direction = reader.float();
                         break;
                     case 5:
-                        message.speed = reader.double();
+                        message.speed = reader.float();
                         break;
                     default:
                         reader.skipType(tag & 7);
@@ -2807,7 +2765,7 @@ export const wire = $root.wire = (() => {
                 if (message.position != null && Object.hasOwnProperty.call(message, "position"))
                     $root.wire.game.Coordinate.encode(message.position, writer.uint32(/* id 3, wireType 2 =*/26).fork()).ldelim();
                 if (message.size != null && Object.hasOwnProperty.call(message, "size"))
-                    writer.uint32(/* id 4, wireType 1 =*/33).double(message.size);
+                    writer.uint32(/* id 4, wireType 5 =*/37).float(message.size);
                 return writer;
             };
 
@@ -2852,7 +2810,7 @@ export const wire = $root.wire = (() => {
                         message.position = $root.wire.game.Coordinate.decode(reader, reader.uint32());
                         break;
                     case 4:
-                        message.size = reader.double();
+                        message.size = reader.float();
                         break;
                     default:
                         reader.skipType(tag & 7);

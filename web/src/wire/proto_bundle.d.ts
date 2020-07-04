@@ -669,10 +669,10 @@ export namespace wire {
         interface ICoordinate {
 
             /** Coordinate x */
-            x?: (number|Long|null);
+            x?: (number|null);
 
             /** Coordinate y */
-            y?: (number|Long|null);
+            y?: (number|null);
         }
 
         /** Represents a Coordinate. */
@@ -685,10 +685,10 @@ export namespace wire {
             constructor(properties?: wire.game.ICoordinate);
 
             /** Coordinate x. */
-            public x: (number|Long);
+            public x: number;
 
             /** Coordinate y. */
-            public y: (number|Long);
+            public y: number;
 
             /**
              * Creates a new Coordinate instance using the specified properties.
@@ -968,7 +968,7 @@ export namespace wire {
             ownerId?: (string|null);
 
             /** Army strength */
-            strength?: (number|Long|null);
+            strength?: (number|null);
         }
 
         /** Represents an Army. */
@@ -984,7 +984,7 @@ export namespace wire {
             public ownerId: string;
 
             /** Army strength. */
-            public strength: (number|Long);
+            public strength: number;
 
             /**
              * Creates a new Army instance using the specified properties.
