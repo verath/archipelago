@@ -83,8 +83,9 @@ export default class OwnableModel extends BaseModel {
             this._ownerId = armyData.ownerId;
             changed = true;
         }
-        if (this._strength !== armyData.strength) {
-            this._strength = armyData.strength;
+        const strength = armyData.strength || 0;
+        if (this._strength !== strength) {
+            this._strength = strength;
             changed = true;
         }
         return changed;

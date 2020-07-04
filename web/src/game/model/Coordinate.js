@@ -10,66 +10,67 @@ export default class Coordinate {
      * screen, so we don't accidentally draw something
      * that has not been positioned yet
      *
-     * @param {Number} [x=-1000] The initial x value
-     * @param {Number} [y=-1000] The initial y value
+     * @param {number} [x=-1000] The initial x value
+     * @param {number} [y=-1000] The initial y value
      */
     constructor(x = -1000, y = -1000) {
         /**
-         * @member {Number}
+         * @member {number}
          * @private
          */
-        this._x = x;
+        this._x = x || 0;
         /**
-         * @member {Number}
+         * @member {number}
          * @private
          */
-        this._y = y;
+        this._y = y || 0;
     }
 
     /**
-     * @returns {Number}
+     * @returns {number}
      */
     get x() {
         return this._x;
     }
 
     /**
-     * @returns {Number}
+     * @returns {number}
      */
     get y() {
         return this._y;
     }
 
     /**
-     * @param {Number} newX
+     * @param {number} newX
      */
     set x(newX) {
-        this._x = newX;
+        this._x = newX || 0;
     }
 
     /**
-     * @param {Number} newY
+     * @param {number} newY
      */
     set y(newY) {
-        this._y = newY;
+        this._y = newY || 0;
     }
 
     /**
-     * @param {{x: Number, y: Number}} newPos
+     * @param {{x: number?, y: number?}} newPos
      */
     set({ x: newX, y: newY }) {
-        this.x = newX;
-        this.y = newY;
+        this.x = newX || 0;
+        this.y = newY || 0;
     }
 
     /**
-     * @param {{x: Number, y:Number}} other
+     * @param {{x: number?, y:number?}} other
      */
     equals(other) {
-        return (
-            other !== null &&
-            this._x === other.x &&
-            this._y === other.y
-        );
+        if (!other) {
+            return false;
+        }
+        const otherX = other.x || 0;
+        const otherY = other.y || 0;
+        return (this._x === otherX && this._y === otherY);
     }
 }
