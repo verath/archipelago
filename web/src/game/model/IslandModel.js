@@ -71,8 +71,9 @@ export default class IslandModel extends OwnableModel {
             this._position.set(islandData.position);
             changed = true;
         }
-        if (this._size !== islandData.size) {
-            this._size = islandData.size;
+        const size = islandData.size || 0;
+        if (this._size !== size) {
+            this._size = size;
             changed = true;
         }
         return changed;
