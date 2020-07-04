@@ -38,13 +38,25 @@ func EncodeFloatCoordinate(coordinate model.FloatCoordinate) *FloatCoordinate {
 
 // EncodePlayer transforms a game model Player to its wire representation
 func EncodePlayer(player *model.Player) *Player {
-	fogOfWar := make([]*Coordinate, 0)
-	for coordinate := range player.FogOfWar() {
-		fogOfWar = append(fogOfWar, EncodeCoordinate(coordinate))
-	}
 	return &Player{
-		Id:       string(player.ID()),
-		FogOfWar: fogOfWar,
+		Id:    string(player.ID()),
+		State: EncodePlayerState(player.State()),
+	}
+}
+
+// EncodePlayerState transforms a game model PlayerState to its wire representation.
+func EncodePlayerState(playerState model.PlayerState) PlayerState {
+	switch playerState {
+	case model.Alive:
+		return PlayerState_ALIVE
+	case model.PendingRevival:
+		return PlayerState_PENDING_REVIVAL
+	case model.Dead:
+		return PlayerState_DEAD
+	case model.LeftGame:
+		return PlayerState_LEFT_GAME
+	default:
+		panic("unknown player state")
 	}
 }
 

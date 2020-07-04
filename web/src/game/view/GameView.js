@@ -200,16 +200,13 @@ export default class GameView {
         }
 
         // Update fog of war sprite visibilities.
+        const myFogOfWar = this._gameModel.myFogOfWar;
         for (let y = 0; y < this._gameModel.size.y; y++) {
             for (let x = 0; x < this._gameModel.size.x; x++) {
                 let idx = y * this._gameModel.size.x + x;
-                this._layerFogOfWar.getChildAt(idx).visible = false;
+                this._layerFogOfWar.getChildAt(idx).visible = !!myFogOfWar[idx];
             }
         }
-        this._gameModel.myFogOfWar.forEach(pos => {
-            let idx = pos.y * this._gameModel.size.x + pos.x;
-            this._layerFogOfWar.getChildAt(idx).visible = true;
-        });
     }
 
     addIslandClickListener(listener, context = null) {

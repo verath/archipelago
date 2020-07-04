@@ -1,6 +1,11 @@
 import BaseModel from "./BaseModel.js";
 import GameModel from "./GameModel.js";
 import { PlayerColor, PLAYER_COLOR_NOT_SET, PLAYER_COLOR_SELF, PLAYER_COLOR_NEUTRAL } from "./PlayerColors.js";
+import { wire } from "../../wire/proto_bundle.js";
+
+/**
+ * @typedef {"ALIVE" | "PENDING_REVIVAL" | "DEAD" | "LEFT_GAME"} PlayerState
+ */
 
 /**
  * @extends BaseModel
@@ -25,6 +30,11 @@ export default class PlayerModel extends BaseModel {
          * @private
          */
         this._color = PLAYER_COLOR_NOT_SET;
+
+        /**
+         * @type {PlayerState} 
+         */
+        this._state = "ALIVE";
     }
 
     /**
@@ -66,7 +76,15 @@ export default class PlayerModel extends BaseModel {
     }
 
     /**
-     * @param {{id: string, color: PlayerColor}} playerData
+     * Returns the current PlayerState of the player.
+     * @returns {PlayerState}
+     */
+    get state() {
+        return this._state;
+    }
+
+    /**
+     * @param {{id: string, state: wire.game.PlayerState, color: PlayerColor}} playerData
      * @override
      */
     _update(playerData) {
@@ -75,6 +93,30 @@ export default class PlayerModel extends BaseModel {
             this._color = playerData.color;
             changed = true;
         }
+        const playerState = decodePlayerState(playerData.state);
+        if (this._state !== playerState) {
+            this._state = playerState;
+            changed = true;
+        }
         return changed;
+    }
+}
+
+/**
+ * Decodes from wire representation of PlayerState to model PlayerState.
+ * @param {wire.game.PlayerState} playerState 
+ * @return {PlayerState}
+ */
+function decodePlayerState(playerState) {
+    switch (playerState) {
+        default: // Fallthrough, protobuf uses first entry as default.
+        case wire.game.PlayerState.ALIVE:
+            return "ALIVE";
+        case wire.game.PlayerState.PENDING_REVIVAL:
+            return "PENDING_REVIVAL";
+        case wire.game.PlayerState.DEAD:
+            return "DEAD";
+        case wire.game.PlayerState.LEFT_GAME:
+            return "LEFT_GAME";
     }
 }

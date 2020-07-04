@@ -1970,6 +1970,24 @@ export const wire = $root.wire = (() => {
             return FloatCoordinate;
         })();
 
+        /**
+         * PlayerState enum.
+         * @name wire.game.PlayerState
+         * @enum {number}
+         * @property {number} ALIVE=0 ALIVE value
+         * @property {number} PENDING_REVIVAL=1 PENDING_REVIVAL value
+         * @property {number} DEAD=2 DEAD value
+         * @property {number} LEFT_GAME=3 LEFT_GAME value
+         */
+        game.PlayerState = (function() {
+            const valuesById = {}, values = Object.create(valuesById);
+            values[valuesById[0] = "ALIVE"] = 0;
+            values[valuesById[1] = "PENDING_REVIVAL"] = 1;
+            values[valuesById[2] = "DEAD"] = 2;
+            values[valuesById[3] = "LEFT_GAME"] = 3;
+            return values;
+        })();
+
         game.Player = (function() {
 
             /**
@@ -1977,7 +1995,7 @@ export const wire = $root.wire = (() => {
              * @memberof wire.game
              * @interface IPlayer
              * @property {string|null} [id] Player id
-             * @property {Array.<wire.game.ICoordinate>|null} [fogOfWar] Player fogOfWar
+             * @property {wire.game.PlayerState|null} [state] Player state
              */
 
             /**
@@ -1989,7 +2007,6 @@ export const wire = $root.wire = (() => {
              * @param {wire.game.IPlayer=} [properties] Properties to set
              */
             function Player(properties) {
-                this.fogOfWar = [];
                 if (properties)
                     for (let keys = Object.keys(properties), i = 0; i < keys.length; ++i)
                         if (properties[keys[i]] != null)
@@ -2005,12 +2022,12 @@ export const wire = $root.wire = (() => {
             Player.prototype.id = "";
 
             /**
-             * Player fogOfWar.
-             * @member {Array.<wire.game.ICoordinate>} fogOfWar
+             * Player state.
+             * @member {wire.game.PlayerState} state
              * @memberof wire.game.Player
              * @instance
              */
-            Player.prototype.fogOfWar = $util.emptyArray;
+            Player.prototype.state = 0;
 
             /**
              * Creates a new Player instance using the specified properties.
@@ -2038,9 +2055,8 @@ export const wire = $root.wire = (() => {
                     writer = $Writer.create();
                 if (message.id != null && Object.hasOwnProperty.call(message, "id"))
                     writer.uint32(/* id 1, wireType 2 =*/10).string(message.id);
-                if (message.fogOfWar != null && message.fogOfWar.length)
-                    for (let i = 0; i < message.fogOfWar.length; ++i)
-                        $root.wire.game.Coordinate.encode(message.fogOfWar[i], writer.uint32(/* id 7, wireType 2 =*/58).fork()).ldelim();
+                if (message.state != null && Object.hasOwnProperty.call(message, "state"))
+                    writer.uint32(/* id 2, wireType 0 =*/16).int32(message.state);
                 return writer;
             };
 
@@ -2078,10 +2094,8 @@ export const wire = $root.wire = (() => {
                     case 1:
                         message.id = reader.string();
                         break;
-                    case 7:
-                        if (!(message.fogOfWar && message.fogOfWar.length))
-                            message.fogOfWar = [];
-                        message.fogOfWar.push($root.wire.game.Coordinate.decode(reader, reader.uint32()));
+                    case 2:
+                        message.state = reader.int32();
                         break;
                     default:
                         reader.skipType(tag & 7);
@@ -2121,15 +2135,16 @@ export const wire = $root.wire = (() => {
                 if (message.id != null && message.hasOwnProperty("id"))
                     if (!$util.isString(message.id))
                         return "id: string expected";
-                if (message.fogOfWar != null && message.hasOwnProperty("fogOfWar")) {
-                    if (!Array.isArray(message.fogOfWar))
-                        return "fogOfWar: array expected";
-                    for (let i = 0; i < message.fogOfWar.length; ++i) {
-                        let error = $root.wire.game.Coordinate.verify(message.fogOfWar[i]);
-                        if (error)
-                            return "fogOfWar." + error;
+                if (message.state != null && message.hasOwnProperty("state"))
+                    switch (message.state) {
+                    default:
+                        return "state: enum value expected";
+                    case 0:
+                    case 1:
+                    case 2:
+                    case 3:
+                        break;
                     }
-                }
                 return null;
             };
 
@@ -2147,15 +2162,23 @@ export const wire = $root.wire = (() => {
                 let message = new $root.wire.game.Player();
                 if (object.id != null)
                     message.id = String(object.id);
-                if (object.fogOfWar) {
-                    if (!Array.isArray(object.fogOfWar))
-                        throw TypeError(".wire.game.Player.fogOfWar: array expected");
-                    message.fogOfWar = [];
-                    for (let i = 0; i < object.fogOfWar.length; ++i) {
-                        if (typeof object.fogOfWar[i] !== "object")
-                            throw TypeError(".wire.game.Player.fogOfWar: object expected");
-                        message.fogOfWar[i] = $root.wire.game.Coordinate.fromObject(object.fogOfWar[i]);
-                    }
+                switch (object.state) {
+                case "ALIVE":
+                case 0:
+                    message.state = 0;
+                    break;
+                case "PENDING_REVIVAL":
+                case 1:
+                    message.state = 1;
+                    break;
+                case "DEAD":
+                case 2:
+                    message.state = 2;
+                    break;
+                case "LEFT_GAME":
+                case 3:
+                    message.state = 3;
+                    break;
                 }
                 return message;
             };
@@ -2173,17 +2196,14 @@ export const wire = $root.wire = (() => {
                 if (!options)
                     options = {};
                 let object = {};
-                if (options.arrays || options.defaults)
-                    object.fogOfWar = [];
-                if (options.defaults)
+                if (options.defaults) {
                     object.id = "";
+                    object.state = options.enums === String ? "ALIVE" : 0;
+                }
                 if (message.id != null && message.hasOwnProperty("id"))
                     object.id = message.id;
-                if (message.fogOfWar && message.fogOfWar.length) {
-                    object.fogOfWar = [];
-                    for (let j = 0; j < message.fogOfWar.length; ++j)
-                        object.fogOfWar[j] = $root.wire.game.Coordinate.toObject(message.fogOfWar[j], options);
-                }
+                if (message.state != null && message.hasOwnProperty("state"))
+                    object.state = options.enums === String ? $root.wire.game.PlayerState[message.state] : message.state;
                 return object;
             };
 
