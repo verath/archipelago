@@ -3,7 +3,6 @@ import Coordinate from "./Coordinate.js";
 import GameModel from "./GameModel.js";
 import OwnableModel from "./OwnableModel.js";
 
-const MILLISECONDS_PER_NANOSECOND = 1e6;
 
 /**
  * @extends OwnableModel
@@ -29,7 +28,7 @@ export default class AirplaneModel extends OwnableModel {
         this._direction = 0;
 
         /**
-         * [tiles/ns]
+         * [tiles/ms]
          * @member {Number}
          * @protected
          */
@@ -76,15 +75,15 @@ export default class AirplaneModel extends OwnableModel {
         // then. By doing this instead of setting position directly, we can
         // smooth out the change of position over the entire tickInterval,
         // making for less janky movement.
-        let tickIntervalNS = this._gameModel.serverTickInterval * MILLISECONDS_PER_NANOSECOND;
+        let tickInterval = this._gameModel.serverTickInterval;
         let speed = airplaneData.speed;
         let direction = airplaneData.direction;
-        let nextX = newX + speed * Math.cos(direction) * tickIntervalNS;
-        let nextY = newY + speed * Math.sin(direction) * tickIntervalNS;
+        let nextX = newX + speed * Math.cos(direction) * tickInterval;
+        let nextY = newY + speed * Math.sin(direction) * tickInterval;
         let diffX = nextX - this._position.x;
         let diffY = nextY - this._position.y;
         let distance = Math.hypot(diffY, diffX);
-        this._speed = distance / tickIntervalNS;
+        this._speed = distance / tickInterval;
         this._direction = Math.atan2(diffY, diffX);
         return true;
     }
@@ -93,9 +92,8 @@ export default class AirplaneModel extends OwnableModel {
      * @param {number} delta [ms]
      */
     interpolate(delta) {
-        let deltaNS = delta * MILLISECONDS_PER_NANOSECOND;
-        this._position.x += deltaNS * this._speed * Math.cos(this._direction);
-        this._position.y += deltaNS * this._speed * Math.sin(this._direction);
+        this._position.x += delta * this._speed * Math.cos(this._direction);
+        this._position.y += delta * this._speed * Math.sin(this._direction);
         this._emitChanged();
     }
 }

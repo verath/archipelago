@@ -1,6 +1,10 @@
 package game
 
-import "github.com/verath/archipelago/lib/game/model"
+import (
+	"time"
+
+	"github.com/verath/archipelago/lib/game/model"
+)
 
 // EncodeGame transforms a game model Game to its wire representation
 func EncodeGame(game *model.Game) *Game {
@@ -28,12 +32,12 @@ func EncodeGame(game *model.Game) *Game {
 
 // EncodeCoordinate transforms a game model Coordinate to its wire representation
 func EncodeCoordinate(coordinate model.Coordinate) *Coordinate {
-	return &Coordinate{X: int64(coordinate.X), Y: int64(coordinate.Y)}
+	return &Coordinate{X: int32(coordinate.X), Y: int32(coordinate.Y)}
 }
 
 // EncodeFloatCoordinate transforms a game model FloatCoordinate to its wire representation
 func EncodeFloatCoordinate(coordinate model.FloatCoordinate) *FloatCoordinate {
-	return &FloatCoordinate{X: coordinate.X, Y: coordinate.Y}
+	return &FloatCoordinate{X: float32(coordinate.X), Y: float32(coordinate.Y)}
 }
 
 // EncodePlayer transforms a game model Player to its wire representation
@@ -63,7 +67,7 @@ func EncodePlayerState(playerState model.PlayerState) PlayerState {
 // EncodeArmy transforms a game model Army to its wire representation
 func EncodeArmy(army *model.Army) *Army {
 	return &Army{
-		Strength: army.Strength(),
+		Strength: int32(army.Strength()),
 		OwnerId:  string(army.Owner().ID()),
 	}
 }
@@ -74,8 +78,8 @@ func EncodeAirplane(airplane *model.Airplane) *Airplane {
 		Id:        string(airplane.ID()),
 		Army:      EncodeArmy(airplane.Army),
 		Position:  EncodeFloatCoordinate(airplane.Position()),
-		Direction: airplane.Direction(),
-		Speed:     airplane.Speed(),
+		Direction: float32(airplane.Direction()),
+		Speed:     float32(airplane.Speed() * float64(time.Millisecond)),
 	}
 }
 
@@ -85,6 +89,6 @@ func EncodeIsland(island *model.Island) *Island {
 		Id:       string(island.ID()),
 		Army:     EncodeArmy(island.Army),
 		Position: EncodeCoordinate(island.Position()),
-		Size:     float64(island.Size()),
+		Size:     float32(island.Size()),
 	}
 }

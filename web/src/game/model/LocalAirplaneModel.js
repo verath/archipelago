@@ -3,7 +3,8 @@ import GameModel from "./GameModel.js";
 import IslandModel from "./IslandModel.js";
 
 const NANOSECONDS_PER_SECOND = 1e9;
-export const DEFAULT_AIRPLANE_SPEED = 1 / (3 * NANOSECONDS_PER_SECOND);
+const MILLISECONDS_PER_NANOSECOND = 1e6;
+export const DEFAULT_AIRPLANE_SPEED = (1 / (3 * NANOSECONDS_PER_SECOND)) * MILLISECONDS_PER_NANOSECOND;
 
 let airplane_id_count = 0;
 

@@ -3,13 +3,13 @@ package wire.game;
 option go_package = "github.com/verath/archipelago/lib/wire/game";
 
 message Coordinate {
-    int64 x = 1;
-    int64 y = 2;
+    int32 x = 1;
+    int32 y = 2;
 }
 
 message FloatCoordinate {
-    double x = 1;
-    double y = 2;
+    float x = 1;
+    float y = 2;
 }
 
 // PlayerState represents the current exclusive state of a Player.
@@ -31,23 +31,23 @@ message Player {
 
 message Army {
     string owner_id = 1;
-    int64 strength = 2;
+    int32 strength = 2;
 }
 
 message Airplane {
     string id = 1;
     Army army = 2;
     FloatCoordinate position = 3;
-    double direction = 4;
-    // [tiles/ns]
-    double speed = 5;
+    float direction = 4;
+    // [tiles/ms]
+    float speed = 5;
 }
 
 message Island {
     string id = 1;
     Army army = 2;
     Coordinate position = 3;
-    double size = 4;
+    float size = 4;
 }
 
 message Game {
