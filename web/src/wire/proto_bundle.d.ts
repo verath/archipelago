@@ -857,14 +857,22 @@ export namespace wire {
             public toJSON(): { [k: string]: any };
         }
 
+        /** PlayerState enum. */
+        enum PlayerState {
+            ALIVE = 0,
+            PENDING_REVIVAL = 1,
+            DEAD = 2,
+            LEFT_GAME = 3
+        }
+
         /** Properties of a Player. */
         interface IPlayer {
 
             /** Player id */
             id?: (string|null);
 
-            /** Player fogOfWar */
-            fogOfWar?: (wire.game.ICoordinate[]|null);
+            /** Player state */
+            state?: (wire.game.PlayerState|null);
         }
 
         /** Represents a Player. */
@@ -879,8 +887,8 @@ export namespace wire {
             /** Player id. */
             public id: string;
 
-            /** Player fogOfWar. */
-            public fogOfWar: wire.game.ICoordinate[];
+            /** Player state. */
+            public state: wire.game.PlayerState;
 
             /**
              * Creates a new Player instance using the specified properties.

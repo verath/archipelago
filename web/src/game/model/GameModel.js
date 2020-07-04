@@ -25,7 +25,7 @@ export default class GameModel extends BaseModel {
         this._playerNeutral = new PlayerModel(this);
 
         /**
-         * @member [PlayerModel]
+         * @type {PlayerModel[]}
          * @private
          */
         this._players = [];
@@ -43,7 +43,10 @@ export default class GameModel extends BaseModel {
         this._airplanes = [];
 
         /**
-         * @type {Coordinate[]}
+         * Array of FoW status for each tile in the game for the player we
+         * represent. `true` if tile in FoW, otherwise `false`. Positions are
+         * top-left to bottom-right.
+         * @type {boolean[]}
          * @private
          */
         this._myFogOfWar = [];
@@ -148,18 +151,49 @@ export default class GameModel extends BaseModel {
     }
 
     /**
-     * 
-     * @param {(wire.game.ICoordinate[]|null)} fogOfWar
      * @returns {boolean}
      * @private
      */
-    _updateMyFogOfWar(fogOfWar) {
-        fogOfWar = fogOfWar || [];
-        // TODO: Check if fogOfWar actually changed.
-        let changed = true;
-        if (changed) {
-            // TODO: Could probably reuse Coordinate objects instead.
-            this._myFogOfWar = fogOfWar.map(c => new Coordinate(c.x, c.y));
+    _updateMyFogOfWar() {
+        let changed = false;
+        if (this._myFogOfWar.length !== (this._size.x * this._size.y)) {
+            this._myFogOfWar = Array(this._size.x * this._size.y).fill(false);
+            changed = true;
+        }
+        const myPlayer = this._players.find(p => p.id === this._myPlayerId);
+        switch (myPlayer.state) {
+            case "ALIVE": {
+                const myIslands = this._islands.filter(island => island.owner.id === this._myPlayerId);
+                const myAirplanes = this._airplanes.filter(airplane => airplane.owner.id === this._myPlayerId);
+                const fogOfWar = generateFogOfWar(this._size, myIslands, myAirplanes);
+                for (let i = 0; i < fogOfWar.length; i++) {
+                    if (this._myFogOfWar[i] !== fogOfWar[i]) {
+                        this._myFogOfWar[i] = fogOfWar[i];
+                        changed = true;
+                    }
+                }
+                break;
+            }
+            case "PENDING_REVIVAL": {
+                // Pending revival has no vision.
+                const anyFalse = (this._myFogOfWar.find(v => !v) !== undefined);
+                if (anyFalse) {
+                    this._myFogOfWar.fill(true);
+                    changed = true;
+                }
+                break;
+            }
+            case "DEAD": // Fallthrough.
+            case "LEFT_GAME": // Fallthrough.
+            default: {
+                // Dead has full vision.
+                const anyTrue = (this._myFogOfWar.find(v => v) !== undefined);
+                if (anyTrue) {
+                    this._myFogOfWar.fill(false);
+                    changed = true;
+                }
+                break;
+            }
         }
         return changed;
     }
@@ -187,9 +221,7 @@ export default class GameModel extends BaseModel {
         if (this._updateIslands(gameData.islands)) {
             changed = true;
         }
-        let myPlayer = gameData.players.find(p => p.id === this.myPlayerId);
-        let myFogOfWar = (myPlayer) ? myPlayer.fogOfWar : null;
-        if (this._updateMyFogOfWar(myFogOfWar)) {
+        if (this._updateMyFogOfWar()) {
             changed = true;
         }
         return changed;
@@ -224,7 +256,7 @@ export default class GameModel extends BaseModel {
     }
 
     /**
-     * @returns {Coordinate[]}
+     * @returns {boolean[]}
      */
     get myFogOfWar() {
         return this._myFogOfWar;
@@ -314,4 +346,43 @@ export default class GameModel extends BaseModel {
         this._airplanes.forEach(airplane => airplane.interpolate(delta));
         this._islands.forEach(island => island.interpolate(delta));
     }
+}
+
+/**
+ * @param {Coordinate} [gameSize]
+ * @param {IslandModel[]} [playerIslands]
+ * @param {AirplaneModel[]} [playerAirplanes]
+ * @returns {boolean[]}
+ */
+function generateFogOfWar(gameSize, playerIslands, playerAirplanes) {
+    /**@type {boolean[]} */
+    let fogOfWar = Array(gameSize.x * gameSize.y).fill(true);
+    /**
+     * @param {number} n
+     * @returns {number}
+     */
+    let roundAwayZero = (n) => Math.sign(n) * Math.round(Math.abs(n));
+    /**
+     * @param {Coordinate} center 
+     * @param {number} radius 
+     */
+    let clearArea = (center, radius) => {
+        const [cx, cy] = [roundAwayZero(center.x), roundAwayZero(center.y)];
+        const [xStart, xEnd] = [Math.max(cx - radius, 0), Math.min(cx + radius, gameSize.x - 1)];
+        const [yStart, yEnd] = [Math.max(cy - radius, 0), Math.min(cy + radius, gameSize.y - 1)];
+        for (let x = xStart; x <= xEnd; x++) {
+            for (let y = yStart; y <= yEnd; y++) {
+                let idx = y * gameSize.x + x;
+                fogOfWar[idx] = false;
+            }
+        }
+    };
+    playerIslands.forEach(island => {
+        const isLargeIsland = (island.size === 1);
+        clearArea(island.position, (isLargeIsland ? 2 : 1));
+    });
+    playerAirplanes.forEach(airplane => {
+        clearArea(airplane.position, 1);
+    });
+    return fogOfWar;
 }

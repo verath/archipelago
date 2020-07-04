@@ -12,10 +12,21 @@ message FloatCoordinate {
     double y = 2;
 }
 
+// PlayerState represents the current exclusive state of a Player.
+enum PlayerState {
+    // ALIVE is when still alive in the game.
+	ALIVE = 0;
+	// PENDING_REVIVAL is when dead, but may be revived.
+	PENDING_REVIVAL = 1;
+	// DEAD is when dead and will remain dead.
+	DEAD = 2;
+	// LEFT_GAME is when the Player has left the game.
+	LEFT_GAME = 3;
+}
+
 message Player {
     string id = 1;
-    // Coordinates where fog of war is present.
-    repeated Coordinate fog_of_war = 7;
+    PlayerState state = 2;
 }
 
 message Army {
