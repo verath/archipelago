@@ -149,6 +149,7 @@ func runHTTPServer(ctx context.Context, server *http.Server) error {
 		return err
 	case <-ctx.Done():
 		server.Close()
+		<-errCh
 		return ctx.Err()
 	}
 }
