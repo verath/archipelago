@@ -12,7 +12,7 @@ import { Archipelago } from "./Archipelago";
  * The version of the websocket protocol we expect.
  * @type {string}
  */
-const WS_VERSION = "3";
+const WS_VERSION = "4";
 
 /**
  * The host for the websocket endpoint in production.
@@ -45,7 +45,7 @@ const PRODUCTION_HOSTNAME = "playarchipelago.com";
         if (window.location.hostname !== PRODUCTION_HOSTNAME) {
             host = window.location.hostname + ":" + window.location.port;
         }
-        return `${protocol}${host}/ws?v=${WS_VERSION}`;
+        return `${protocol}${host}/app/ws?v=${WS_VERSION}`;
     })();
     const archipelago = new Archipelago(document.getElementById("root"), wsURL);
     archipelago.init();

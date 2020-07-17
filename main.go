@@ -56,8 +56,8 @@ func main() {
 	if err != nil {
 		logger.Fatalf("Error creating archipelago: %+v", err)
 	}
-
-	http.Handle("/ws", archipelagoServer.WebsocketHandler())
+	// Register archipelago HTTP rooted at "app/".
+	http.Handle("/app/", http.StripPrefix("/app", archipelagoServer))
 	// HTTP util routes.
 	http.HandleFunc("/healthcheck", func(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("OK"))
