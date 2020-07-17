@@ -25,18 +25,18 @@ func main() {
 		debug             bool
 		serveStatic       bool
 		skipWSOriginCheck bool
-		serverAddr        string
+		httpAddr          string
 		profileMode       string
 	)
 	flag.BoolVar(&debug, "debug", false, "Set to true to log debug messages.")
 	flag.BoolVar(&serveStatic, "serveStatic", false, "Enable serving of static assets.")
 	flag.BoolVar(&skipWSOriginCheck, "skipWSOriginCheck", false, "")
-	flag.StringVar(&serverAddr, "addr", ":8080", "TCP address for the http server to listen on.")
+	flag.StringVar(&httpAddr, "addr", ":8080", "TCP address for the http server to listen on.")
 	flag.StringVar(&profileMode, "profile", "", "Enable profiling mode, one of [cpu, mem, mutex, block]")
 	flag.Parse()
-
 	logger := logrus.New()
 	logger.Formatter = &logrus.TextFormatter{}
+	// Flags.
 	if debug {
 		logger.Level = logrus.DebugLevel
 		logger.Info("Debug logging enabled")
@@ -47,16 +47,18 @@ func main() {
 	if skipWSOriginCheck {
 		logger.Info("Skipping WebSocket origin check.")
 	}
+	logger.Infof("HTTP server will listen on '%v'.", httpAddr)
 	if profileMode != "" {
 		defer startProfiling(profileMode)()
 	}
-
+	// Setup archipelago server instance.
 	archipelagoServer, err := archipelago.New(logger, skipWSOriginCheck)
 	if err != nil {
-		logger.Fatalf("Error creating game: %+v", err)
+		logger.Fatalf("Error creating archipelago: %+v", err)
 	}
 
 	http.Handle("/ws", archipelagoServer.WebsocketHandler())
+	// HTTP util routes.
 	http.HandleFunc("/healthcheck", func(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("OK"))
 	})
@@ -64,26 +66,14 @@ func main() {
 		staticPath := "./web/dist"
 		http.Handle("/", http.FileServer(http.Dir(staticPath)))
 	}
+	// Setup toplevel HTTP server.
 	httpServer := &http.Server{
-		Addr:         serverAddr,
+		Addr:         httpAddr,
 		ReadTimeout:  httpReadTimeout,
 		WriteTimeout: httpWriteTimeout,
 	}
-
-	ctx, cancel := context.WithCancel(lifetimeContext(logger))
-	errCh := make(chan error)
-	go func() {
-		err := archipelagoServer.Run(ctx)
-		errCh <- errors.Wrap(err, "archipelagoServer error")
-	}()
-	go func() {
-		err := runHTTPServer(ctx, httpServer)
-		errCh <- errors.Wrap(err, "httpServer error")
-	}()
-	logger.Infof("Archipelago backend started: '%s'", serverAddr)
-	err = <-errCh
-	cancel()
-	<-errCh
+	// Run archipelago server, HTTP Server.
+	err = runBackend(logger, archipelagoServer, httpServer)
 	if errors.Cause(err) == context.Canceled {
 		logger.Debugf("Error caught in main: %v", err)
 	} else {
@@ -126,6 +116,24 @@ func lifetimeContext(logger *logrus.Logger) context.Context {
 		logger.Fatal("Caught second interrupt, force closing")
 	}()
 	return ctx
+}
+
+func runBackend(logger *logrus.Logger, archipelagoServer *archipelago.Server, httpServer *http.Server) error {
+	ctx, cancel := context.WithCancel(lifetimeContext(logger))
+	errCh := make(chan error)
+	go func() {
+		err := archipelagoServer.Run(ctx)
+		errCh <- errors.Wrap(err, "archipelagoServer error")
+	}()
+	go func() {
+		err := runHTTPServer(ctx, httpServer)
+		errCh <- errors.Wrap(err, "httpServer error")
+	}()
+	logger.Info("Archipelago backend started.")
+	err := <-errCh
+	cancel()
+	<-errCh
+	return err
 }
 
 // runHTTPServer starts and runs the given HTTP server until either an error
