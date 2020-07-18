@@ -68,7 +68,7 @@ export default class GameModel extends BaseModel {
     }
 
     /**
-     * @param {wire.game.IPlayer[]} players 
+     * @param {wire.msg.IPlayer[]} players 
      * @returns {Boolean}
      * @private
      */
@@ -97,7 +97,7 @@ export default class GameModel extends BaseModel {
     }
 
     /**
-     * @param {wire.game.IAirplane[]} airplanes
+     * @param {wire.msg.IAirplane[]} airplanes
      * @returns {Boolean}
      * @private
      */
@@ -124,7 +124,7 @@ export default class GameModel extends BaseModel {
     }
 
     /**
-     * @param {wire.game.IIsland[]} islands
+     * @param {wire.msg.IIsland[]} islands
      * @returns {Boolean}
      * @private
      */
@@ -199,7 +199,7 @@ export default class GameModel extends BaseModel {
     }
 
     /**
-     * @param gameData {wire.game.Game}
+     * @param {wire.msg.Game} gameData
      * @override
      * @inheritDoc
      */

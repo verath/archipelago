@@ -11,6 +11,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/verath/archipelago/lib/game/model"
 	"github.com/verath/archipelago/lib/wire"
+	"github.com/verath/archipelago/lib/wire/msg"
 )
 
 func protoMarshalOrPanic(pb proto.Message) []byte {
@@ -60,9 +61,9 @@ func TestPBClientAdapter_DisconnectCh(t *testing.T) {
 
 var (
 	actionLeaveExpected = &model.PlayerActionLeave{}
-	actionLeave         = &wire.ActionEnvelope{
-		Action: &wire.ActionEnvelope_ActionGameLeave{
-			ActionGameLeave: &wire.ActionGameLeave{},
+	actionLeave         = &msg.ActionEnvelope{
+		Action: &msg.ActionEnvelope_ActionGameLeave{
+			ActionGameLeave: &msg.ActionGameLeave{},
 		},
 	}
 
@@ -70,9 +71,9 @@ var (
 		To:   "1",
 		From: "2",
 	}
-	actionLaunch = &wire.ActionEnvelope{
-		Action: &wire.ActionEnvelope_ActionGameLaunch{
-			ActionGameLaunch: &wire.ActionGameLaunch{
+	actionLaunch = &msg.ActionEnvelope{
+		Action: &msg.ActionEnvelope_ActionGameLaunch{
+			ActionGameLaunch: &msg.ActionGameLaunch{
 				ToId:   string(actionLaunchExpected.To),
 				FromId: string(actionLaunchExpected.From),
 			},
@@ -106,7 +107,7 @@ var readTests = []struct {
 	},
 	{
 		// Valid envelope with unknown (empty) Action
-		readMsg:   protoMarshalOrPanic(&wire.ActionEnvelope{}),
+		readMsg:   protoMarshalOrPanic(&msg.ActionEnvelope{}),
 		expectErr: true,
 	},
 	{
@@ -154,9 +155,9 @@ var (
 	eventGameStart = (&model.EventGameStart{
 		TickInterval: time.Second,
 	}).ToPlayerEvent("playerIDTest").(*model.PlayerEventGameStart)
-	eventGameStartExpected = &wire.EventEnvelope{
-		Event: &wire.EventEnvelope_EventGameStart{
-			EventGameStart: wire.EncodeEventGameStart(eventGameStart),
+	eventGameStartExpected = &msg.EventEnvelope{
+		Event: &msg.EventEnvelope_EventGameStart{
+			EventGameStart: msg.EncodeEventGameStart(eventGameStart),
 		},
 	}
 
@@ -172,18 +173,18 @@ var (
 	eventGameTick = (&model.EventTick{
 		Game: emptyGame,
 	}).ToPlayerEvent("PlayerIdTest").(*model.PlayerEventTick)
-	eventGameTickExpected = &wire.EventEnvelope{
-		Event: &wire.EventEnvelope_EventGameTick{
-			EventGameTick: wire.EncodeEventGameTick(eventGameTick),
+	eventGameTickExpected = &msg.EventEnvelope{
+		Event: &msg.EventEnvelope_EventGameTick{
+			EventGameTick: msg.EncodeEventGameTick(eventGameTick),
 		},
 	}
 
 	eventGameOver = (&model.EventGameOver{
 		WinnerID: "winnerIDTest",
 	}).ToPlayerEvent("playerIDTest").(*model.PlayerEventGameOver)
-	eventGameOverExpected = &wire.EventEnvelope{
-		Event: &wire.EventEnvelope_EventGameOver{
-			EventGameOver: wire.EncodeEventGameOver(eventGameOver),
+	eventGameOverExpected = &msg.EventEnvelope{
+		Event: &msg.EventEnvelope_EventGameOver{
+			EventGameOver: msg.EncodeEventGameOver(eventGameOver),
 		},
 	}
 )

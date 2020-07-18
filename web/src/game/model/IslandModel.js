@@ -62,7 +62,7 @@ export default class IslandModel extends OwnableModel {
     }
 
     /**
-     * @param {wire.game.IIsland} islandData
+     * @param {wire.msg.IIsland} islandData
      * @override
      */
     _update(islandData) {

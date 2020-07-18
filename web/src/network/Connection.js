@@ -24,13 +24,13 @@ export default class Connection {
         this._conn = null;
 
         /**
-         * @member {EventEmitter}
+         * @type {EventEmitter}
          * @private
          */
         this._eventEmitter = new EventEmitter();
 
         /**
-         * @member {wire.EventEnvelope[]}
+         * @type {wire.msg.EventEnvelope[]}
          * @private
          */
         this._serverEvents = [];
@@ -42,10 +42,10 @@ export default class Connection {
      */
     _onWSMessage(msgEvent) {
         let data = new Uint8Array(msgEvent.data);
-        /** @type wire.EventEnvelope */
+        /** @type wire.msg.EventEnvelope */
         let eventEnvelope;
         try {
-            eventEnvelope = wire.EventEnvelope.decode(data);
+            eventEnvelope = wire.msg.EventEnvelope.decode(data);
         } catch (err) {
             console.warn("Failed decoding server EventEnvelope:", err);
             return;
@@ -125,7 +125,7 @@ export default class Connection {
     }
 
     /**
-     * @return {wire.EventEnvelope}
+     * @return {wire.msg.EventEnvelope}
      */
     getNext() {
         if (!this.hasNext()) {
@@ -135,7 +135,7 @@ export default class Connection {
     }
 
     /**
-     * @return {wire.EventEnvelope}
+     * @return {wire.msg.EventEnvelope}
      */
     peekNext() {
         if (!this.hasNext()) {
@@ -165,14 +165,14 @@ export default class Connection {
     }
 
     /**
-     * @param {wire.ActionEnvelope} actionEnvelope
+     * @param {wire.msg.ActionEnvelope} actionEnvelope
      */
     sendAction(actionEnvelope) {
         if (this._conn === null) {
             console.warn("sendAction called when Connection was not connected");
             return;
         }
-        let buffer = wire.ActionEnvelope.encode(actionEnvelope).finish();
+        let buffer = wire.msg.ActionEnvelope.encode(actionEnvelope).finish();
         this._conn.send(buffer);
     }
 }

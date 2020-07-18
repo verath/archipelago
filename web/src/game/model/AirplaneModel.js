@@ -61,7 +61,7 @@ export default class AirplaneModel extends OwnableModel {
     }
 
     /**
-     * @param {wire.game.IAirplane} airplaneData
+     * @param {wire.msg.IAirplane} airplaneData
      * @override
      */
     _update(airplaneData) {

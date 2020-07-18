@@ -2,9 +2,11 @@ package wire
 
 import (
 	"context"
+
 	"github.com/golang/protobuf/proto"
 	"github.com/pkg/errors"
 	"github.com/verath/archipelago/lib/game/model"
+	"github.com/verath/archipelago/lib/wire/msg"
 )
 
 // PBClientAdapter is an adapter for a client that reads and writes byte slices,
@@ -36,17 +38,17 @@ func (ca *PBClientAdapter) DisconnectCh() <-chan struct{} {
 // This method blocks until the PlayerEvent has been written, or the context
 // is cancelled.
 func (ca *PBClientAdapter) WritePlayerEvent(ctx context.Context, playerEvent model.PlayerEvent) error {
-	pbMsg := &EventEnvelope{}
+	pbMsg := &msg.EventEnvelope{}
 	switch evt := playerEvent.(type) {
 	case *model.PlayerEventGameStart:
-		evtStart := EncodeEventGameStart(evt)
-		pbMsg.Event = &EventEnvelope_EventGameStart{EventGameStart: evtStart}
+		evtStart := msg.EncodeEventGameStart(evt)
+		pbMsg.Event = &msg.EventEnvelope_EventGameStart{EventGameStart: evtStart}
 	case *model.PlayerEventTick:
-		evtTick := EncodeEventGameTick(evt)
-		pbMsg.Event = &EventEnvelope_EventGameTick{EventGameTick: evtTick}
+		evtTick := msg.EncodeEventGameTick(evt)
+		pbMsg.Event = &msg.EventEnvelope_EventGameTick{EventGameTick: evtTick}
 	case *model.PlayerEventGameOver:
-		evtOver := EncodeEventGameOver(evt)
-		pbMsg.Event = &EventEnvelope_EventGameOver{EventGameOver: evtOver}
+		evtOver := msg.EncodeEventGameOver(evt)
+		pbMsg.Event = &msg.EventEnvelope_EventGameOver{EventGameOver: evtOver}
 	default:
 		return errors.Errorf("Unknown PlayerEvent type: %T", playerEvent)
 	}
@@ -59,15 +61,15 @@ func (ca *PBClientAdapter) WritePlayerEvent(ctx context.Context, playerEvent mod
 // ReadPlayerAction reads and decodes a PlayerAction from the underlying client.
 // This method blocks until a PlayerAction is read, or the context is cancelled.
 func (ca *PBClientAdapter) ReadPlayerAction(ctx context.Context) (model.PlayerAction, error) {
-	actEnv := &ActionEnvelope{}
+	actEnv := &msg.ActionEnvelope{}
 	if err := ca.readProtobufMessage(ctx, actEnv); err != nil {
 		return nil, errors.Wrap(err, "Error reading protobuf message from client")
 	}
 	switch act := actEnv.Action.(type) {
-	case *ActionEnvelope_ActionGameLeave:
-		return DecodeActionGameLeave(act.ActionGameLeave), nil
-	case *ActionEnvelope_ActionGameLaunch:
-		return DecodeActionGameLaunch(act.ActionGameLaunch), nil
+	case *msg.ActionEnvelope_ActionGameLeave:
+		return msg.DecodeActionGameLeave(act.ActionGameLeave), nil
+	case *msg.ActionEnvelope_ActionGameLaunch:
+		return msg.DecodeActionGameLaunch(act.ActionGameLaunch), nil
 	default:
 		return nil, errors.Errorf("Unknown ActionEnvelope.Action type: %T", actEnv.Action)
 	}

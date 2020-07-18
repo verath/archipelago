@@ -1,4 +1,4 @@
-package game
+package msg
 
 import (
 	"time"
@@ -94,5 +94,40 @@ func EncodeIsland(island *model.Island) *Island {
 		Army:     EncodeArmy(island.Army),
 		Position: EncodeCoordinate(island.Position()),
 		Size:     float32(island.Size()),
+	}
+}
+
+// DecodeActionGameLeave transforms an ActionGameLeave to its representation in the game model.
+func DecodeActionGameLeave(act *ActionGameLeave) *model.PlayerActionLeave {
+	return &model.PlayerActionLeave{}
+}
+
+// DecodeActionGameLaunch transforms an ActionGameLaunch to its representation in the game model.
+func DecodeActionGameLaunch(act *ActionGameLaunch) *model.PlayerActionLaunch {
+	return &model.PlayerActionLaunch{
+		From: model.IslandID(act.FromId),
+		To:   model.IslandID(act.ToId),
+	}
+}
+
+// EncodeEventGameStart transforms a game model PlayerEventGameStart to its wire representation
+func EncodeEventGameStart(evt *model.PlayerEventGameStart) *EventGameStart {
+	return &EventGameStart{
+		TickInterval: uint32(evt.TickInterval.Milliseconds()),
+		PlayerId:     string(evt.PlayerID),
+	}
+}
+
+// EncodeEventGameTick transforms a game model PlayerEventTick to its wire representation
+func EncodeEventGameTick(evt *model.PlayerEventTick) *EventGameTick {
+	return &EventGameTick{
+		Game: EncodeGame(evt.Game),
+	}
+}
+
+// EncodeEventGameOver transforms a game model PlayerEventGameOver to its wire representation
+func EncodeEventGameOver(evt *model.PlayerEventGameOver) *EventGameOver {
+	return &EventGameOver{
+		WinnerId: string(evt.WinnerID),
 	}
 }
