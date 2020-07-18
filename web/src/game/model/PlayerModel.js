@@ -84,7 +84,7 @@ export default class PlayerModel extends BaseModel {
     }
 
     /**
-     * @param {{id: string, state: wire.game.PlayerState, color: PlayerColor}} playerData
+     * @param {{id: string, state: wire.msg.PlayerState, color: PlayerColor}} playerData
      * @override
      */
     _update(playerData) {
@@ -104,19 +104,19 @@ export default class PlayerModel extends BaseModel {
 
 /**
  * Decodes from wire representation of PlayerState to model PlayerState.
- * @param {wire.game.PlayerState} playerState 
+ * @param {wire.msg.PlayerState} playerState 
  * @return {PlayerState}
  */
 function decodePlayerState(playerState) {
     switch (playerState) {
         default: // Fallthrough, protobuf uses first entry as default.
-        case wire.game.PlayerState.ALIVE:
+        case wire.msg.PlayerState.ALIVE:
             return "ALIVE";
-        case wire.game.PlayerState.PENDING_REVIVAL:
+        case wire.msg.PlayerState.PENDING_REVIVAL:
             return "PENDING_REVIVAL";
-        case wire.game.PlayerState.DEAD:
+        case wire.msg.PlayerState.DEAD:
             return "DEAD";
-        case wire.game.PlayerState.LEFT_GAME:
+        case wire.msg.PlayerState.LEFT_GAME:
             return "LEFT_GAME";
     }
 }

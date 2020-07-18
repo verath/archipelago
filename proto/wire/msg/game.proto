@@ -1,6 +1,8 @@
 syntax = "proto3";
-package wire.game;
-option go_package = "github.com/verath/archipelago/lib/wire/game";
+package wire.msg;
+option go_package = "github.com/verath/archipelago/lib/wire/msg";
+
+/* Model */
 
 message Coordinate {
     int32 x = 1;
@@ -57,4 +59,45 @@ message Game {
     repeated Player players = 4;
     repeated Island islands = 5;
     repeated Airplane airplanes = 6;
+}
+
+/* Event */
+
+message EventEnvelope {
+    oneof event {
+        EventGameStart event_game_start = 1;
+        EventGameOver event_game_over = 2;
+        EventGameTick event_game_tick = 3;
+    }
+}
+
+message EventGameStart {
+    string player_id = 1;
+    // Aprox. time between ticks [ms].
+    uint32 tick_interval = 2;
+}
+
+message EventGameOver {
+    string winner_id = 1;
+}
+
+message EventGameTick {
+    Game game = 1;
+}
+
+/* Action */
+
+message ActionEnvelope {
+    oneof action {
+        ActionGameLeave action_game_leave = 1;
+        ActionGameLaunch action_game_launch = 2;
+    }
+}
+
+message ActionGameLeave {
+}
+
+message ActionGameLaunch {
+    string from_id = 1;
+    string to_id = 2;
 }

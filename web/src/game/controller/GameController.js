@@ -77,8 +77,8 @@ export default class GameController {
         this._gameModel.launchAirplane(originIsland, targetIsland);
 
         // Create and send the action as an ActionEnvelope
-        let actEnvelope = new wire.ActionEnvelope();
-        actEnvelope.actionGameLaunch = new wire.ActionGameLaunch({
+        let actEnvelope = new wire.msg.ActionEnvelope();
+        actEnvelope.actionGameLaunch = new wire.msg.ActionGameLaunch({
             fromId: originIsland.id,
             toId: targetIsland.id
         });
@@ -102,7 +102,7 @@ export default class GameController {
     }
 
     /**
-     * @param {wire.IEventGameStart} evtStart
+     * @param {wire.msg.IEventGameStart} evtStart
      * @private
      */
     _onGameStartEvent(evtStart) {
@@ -111,7 +111,7 @@ export default class GameController {
     }
 
     /**
-     * @param {wire.IEventGameTick} evtTick
+     * @param {wire.msg.IEventGameTick} evtTick
      * @private
      */
     _onTickEvent(evtTick) {
@@ -121,7 +121,7 @@ export default class GameController {
     }
 
     /**
-     * @param {wire.IEventGameOver} evtGameOver
+     * @param {wire.msg.IEventGameOver} evtGameOver
      * @private
      */
     _onGameOverEvent(evtGameOver) {
@@ -129,7 +129,7 @@ export default class GameController {
     }
 
     /**
-     * @param {wire.EventEnvelope} envelope
+     * @param {wire.msg.EventEnvelope} envelope
      * @private
      */
     _onServerEvent(envelope) {

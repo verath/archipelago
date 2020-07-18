@@ -43,6 +43,10 @@ Write-Host ""
 Write-Host "Generating go files:"
 foreach($package in $proto_packages) {
     $package_files = Get-ChildItem $package\*.proto | Resolve-Path -Relative
+    if ($null -eq $package_files) {
+        # No files.
+        continue
+    }
     $protoc_opts = @("--proto_path=proto", "--go_out=paths=source_relative:lib")
     $protoc_opts += $package_files
     &protoc $protoc_opts

@@ -73,7 +73,7 @@ export default class OwnableModel extends BaseModel {
     }
 
     /**
-     * @param {{army: wire.game.IArmy, id: string}} data
+     * @param {{army: wire.msg.IArmy, id: string}} data
      * @override
      */
     _update(data) {
