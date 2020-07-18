@@ -33,7 +33,8 @@ type WSConnection struct {
 	writeMu sync.Mutex
 }
 
-// newWSConnection creates a new WSConnection, wrapping the provided wsConn.
+// newWSConnection creates a new WSConnection, wrapping the provided gorilla
+// wsConn.
 func newWSConnection(wsConn *websocket.Conn) (*WSConnection, error) {
 	if wsConn == nil {
 		return nil, errors.New("wsConn cannot be nil")
@@ -101,13 +102,19 @@ func (c *WSConnection) pingLoop(ctx context.Context, quitCh <-chan struct{}) err
 // readMessage reads a message from the underlying websocket connection.
 // If readMessage returns an error, it must not be called again. The
 // method blocks until a message is read.
-func (c *WSConnection) readMessage(ctx context.Context) (messageType int, msg []byte, err error) {
-	readDeadline := time.Now().Add(connReadTimeout)
-	if err = c.wsConn.SetReadDeadline(readDeadline); err != nil {
-		return
+func (c *WSConnection) readMessage(ctx context.Context) (int, []byte, error) {
+	ctxDeadline, hasCtxDeadline := ctx.Deadline()
+	extendReadDeadline := func() error {
+		readDeadline := time.Now().Add(connReadTimeout)
+		if hasCtxDeadline && ctxDeadline.Before(readDeadline) {
+			readDeadline = ctxDeadline
+		}
+		return c.wsConn.SetReadDeadline(readDeadline)
+	}
+	if err := extendReadDeadline(); err != nil {
+		return 0, nil, errors.Wrap(err, "failed extending read deadline")
 	}
 	c.wsConn.SetReadLimit(connMaxMessageSize)
-
 	// Send pings and listen for pongs during read. We extend the the timeout
 	// when a pong is received as it proves the peer is still connected.
 	pingQuitCh := make(chan struct{})
@@ -119,23 +126,34 @@ func (c *WSConnection) readMessage(ctx context.Context) (messageType int, msg []
 		if err := ctx.Err(); err != nil {
 			return err
 		}
-		return c.wsConn.SetReadDeadline(time.Now().Add(connReadTimeout))
+		if err := extendReadDeadline(); err != nil {
+			return errors.Wrap(err, "failed extending read deadline")
+		}
+		return nil
 	})
-
-	messageType, msg, err = c.wsConn.ReadMessage()
-
+	// Read message.
+	messageType, msg, err := c.wsConn.ReadMessage()
 	// Wait for pingLoop to quit.
 	close(pingQuitCh)
 	if pingErr := <-pingErrCh; err == nil {
 		err = pingErr
 	}
-	return
+	return messageType, msg, err
 }
 
 // writeMessage writes a message to the underlying websocket connection.
 // The method must be called holding c.writeMu.
 func (c *WSConnection) writeMessage(ctx context.Context, messageType int, msg []byte) error {
-	// Handle context cancellation by force closing wsConn.
+	writeDeadline := time.Now().Add(connWriteTimeout)
+	ctxDeadline, hasCtxDeadline := ctx.Deadline()
+	if hasCtxDeadline && ctxDeadline.Before(writeDeadline) {
+		writeDeadline = ctxDeadline
+	}
+	if err := c.wsConn.SetWriteDeadline(writeDeadline); err != nil {
+		return errors.Wrap(err, "failed setting write deadline")
+	}
+	// Spawn a goroutine that handles context cancellation by force closing
+	// wsConn.
 	doneCh := make(chan struct{})
 	errCh := make(chan error)
 	go func() {
@@ -147,9 +165,10 @@ func (c *WSConnection) writeMessage(ctx context.Context, messageType int, msg []
 			errCh <- ctx.Err()
 		}
 	}()
-
-	c.wsConn.SetWriteDeadline(time.Now().Add(connWriteTimeout))
-	err := c.wsConn.WriteMessage(messageType, msg)
+	// Write message.
+	err := errors.Wrap(c.wsConn.WriteMessage(messageType, msg),
+		"failed writing message to wsConn")
+	// Cleanup context cancellation goroutine.
 	close(doneCh)
 	ctxErr := <-errCh
 	if err == nil {
