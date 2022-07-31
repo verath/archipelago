@@ -3,7 +3,7 @@
 # docker build -t verath/archipelago-backend .
 
 # BUILD stage
-FROM golang:1.17 as builder
+FROM golang:1.18 as builder
 WORKDIR /app
 ENV GO111MODULE=on
 ENV GOOS=linux
