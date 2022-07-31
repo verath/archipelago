@@ -3,10 +3,10 @@ package wire
 import (
 	"context"
 
-	"github.com/golang/protobuf/proto"
 	"github.com/pkg/errors"
 	"github.com/verath/archipelago/lib/game/model"
 	"github.com/verath/archipelago/lib/wire/msg"
+	"google.golang.org/protobuf/proto"
 )
 
 // PBClientAdapter is an adapter for a client that reads and writes byte slices,

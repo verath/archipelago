@@ -7,11 +7,11 @@ import (
 	"testing"
 	"time"
 
-	"github.com/golang/protobuf/proto"
 	"github.com/pkg/errors"
 	"github.com/verath/archipelago/lib/game/model"
 	"github.com/verath/archipelago/lib/wire"
 	"github.com/verath/archipelago/lib/wire/msg"
+	"google.golang.org/protobuf/proto"
 )
 
 func protoMarshalOrPanic(pb proto.Message) []byte {
