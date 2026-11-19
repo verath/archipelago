@@ -1,4 +1,4 @@
-import * as PIXI from "pixi.js";
+import { Ticker } from "pixi.js";
 
 import Connection from "../../network/Connection.js";
 import { wire } from "../../wire/proto_bundle.js";
@@ -179,7 +179,7 @@ export default class GameController {
      * @returns {Promise<GameResult>}
      */
     async run() {
-        let ticker = new PIXI.ticker.Ticker();
+        let ticker = new Ticker();
         ticker.add(this._interpolate, this);
 
         /**@type {GameResult} */

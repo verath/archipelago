@@ -1,4 +1,4 @@
-import * as PIXI from "pixi.js";
+import { Text } from "pixi.js";
 
 import { TEXTURE_AIRPLANE } from "../../images";
 import ResourceHolder from "../../resource/ResourceHolder.js";
@@ -22,7 +22,7 @@ export default class AirplaneSprite extends BaseSprite {
         this.pivot.set(TILE_WIDTH / 2, TILE_HEIGHT / 2);
 
         /**
-         * @type {PIXI.Text}
+         * @type {Text}
          * @private
          */
         this._strengthText = AirplaneSprite._createStrengthText();
@@ -30,17 +30,19 @@ export default class AirplaneSprite extends BaseSprite {
     }
 
     /**
-     * @returns {PIXI.Text}
+     * @returns {Text}
      * @private
      */
     static _createStrengthText() {
-        let strengthText = new PIXI.Text("", {
-            fontFamily: FONT_FAMILY_DEFAULT,
-            fontSize: 50,
-            align: "center",
-            fill: 0xeeeeee,
-            stroke: 0x111111,
-            strokeThickness: 3
+        let strengthText = new Text({
+            text: "",
+            style: {
+                fontFamily: FONT_FAMILY_DEFAULT,
+                fontSize: 50,
+                align: "center",
+                fill: 0xeeeeee,
+                stroke: { color: 0x111111, width: 3 },
+            },
         });
         strengthText.anchor.set(0.5, 0.5);
         strengthText.x = (TILE_WIDTH / 2);
@@ -51,7 +53,7 @@ export default class AirplaneSprite extends BaseSprite {
     _onModelChanged() {
         let airplane = /** @type {AirplaneModel} */ (this._model);
         // Update fill color.
-        this.tint = airplane.owner.color.fill;
+        this._sprite.tint = airplane.owner.color.fill;
         // Update our position, account for anchor being in the center
         let x = airplane.position.x * TILE_WIDTH + TILE_WIDTH / 2;
         let y = airplane.position.y * TILE_HEIGHT + TILE_HEIGHT / 2;

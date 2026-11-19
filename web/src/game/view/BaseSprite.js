@@ -1,16 +1,30 @@
-import * as PIXI from "pixi.js";
+import { Container, Sprite } from "pixi.js";
 
 import ResourceHolder from "../../resource/ResourceHolder.js";
 import BaseModel from "../model/BaseModel";
 
-export default class BaseSprite extends PIXI.Sprite {
+/**
+ * BaseSprite is a Container holding an image Sprite (at the bottom), to
+ * which subclasses can add more children (e.g. text). Sprites cannot have
+ * children in Pixi v8, hence the wrapping Container.
+ */
+export default class BaseSprite extends Container {
 
     /**
      * @param {ResourceHolder} resourceHolder
      * @param {string} textureId
      */
     constructor(resourceHolder, textureId) {
-        super(resourceHolder.getTexture(textureId));
+        super();
+
+        /**
+         * The image sprite. Tint is applied to this sprite only, so that
+         * other children (e.g. text) keep their own colors.
+         * @member {Sprite}
+         * @protected
+         */
+        this._sprite = new Sprite(resourceHolder.getTexture(textureId));
+        this.addChild(this._sprite);
 
         /**
          * @member {?BaseModel}

@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback, useSyncExternalStore } from "react";
 import { createRoot } from "react-dom/client";
 import EventEmitter from "eventemitter3";
-import * as PIXI from "pixi.js";
+import { autoDetectRenderer } from "pixi.js";
 
 import Connection from "./network/Connection";
 import ResourceHolder from "./resource/ResourceHolder";
@@ -305,58 +305,87 @@ const GameScreen = ({ gameModel, gameResult, resourceHolder, dispatch }) => (
  * @param {function(UIAction):void} props.dispatch
  */
 const GameViewWrapper = ({ gameModel, resourceHolder, dispatch }) => {
-    /**@type {React.MutableRefObject<HTMLDivElement>} */
+    /**@type {React.RefObject<HTMLDivElement>} */
     let containerElement = useRef(null);
 
     useEffect(() => {
         /**@type {(() => void)[]} */
         let cleanup = [];
+        let aborted = false;
 
-        // Create a PIXI.js renderer and append to DOM.
-        let renderer = PIXI.autoDetectRenderer(1, 1, { transparent: true });
-        containerElement.current.appendChild(renderer.view);
-        cleanup.unshift(() => {
-            containerElement.current.removeChild(renderer.view);
-        });
+        /**
+         * @param {import("pixi.js").Renderer} renderer
+         */
+        const setupGameView = (renderer) => {
+            // Append the renderer's canvas to DOM.
+            const parentElement = containerElement.current;
+            parentElement.appendChild(renderer.canvas);
+            cleanup.unshift(() => {
+                parentElement.removeChild(renderer.canvas);
+                renderer.destroy();
+            });
 
-        // Create the GameView and connect it to the GameModel.
-        let gameView = new GameView(resourceHolder, renderer, gameModel);
-        let modelChangeListener = gameView.onModelChanged.bind(gameView);
-        gameModel.addChangeListener(modelChangeListener);
-        cleanup.unshift(() => {
-            gameModel.removeChangeListener(modelChangeListener);
-        });
+            // Create the GameView and connect it to the GameModel.
+            let gameView = new GameView(resourceHolder, renderer, gameModel);
+            let modelChangeListener = gameView.onModelChanged.bind(gameView);
+            gameModel.addChangeListener(modelChangeListener);
+            cleanup.unshift(() => {
+                gameModel.removeChangeListener(modelChangeListener);
+            });
+            // The renderer is created asynchronously, so the model may already
+            // have changed. Sync the view with the current model.
+            gameView.onModelChanged();
 
-        // Listen and dispatch island click events from GameView.
-        let islandClickListener = (islandId) => {
-            dispatch({ type: "game/click-island", islandId });
-        };
-        gameView.addIslandClickListener(islandClickListener);
-        cleanup.unshift(() => {
-            gameView.removeIslandClickListener(islandClickListener);
-        });
+            // Listen and dispatch island click events from GameView.
+            let islandClickListener = (islandId) => {
+                dispatch({ type: "game/click-island", islandId });
+            };
+            gameView.addIslandClickListener(islandClickListener);
+            cleanup.unshift(() => {
+                gameView.removeIslandClickListener(islandClickListener);
+            });
 
-        // Forward window resize events to GameView.
-        let resizeListener = gameView.resize.bind(gameView);
-        window.addEventListener("resize", resizeListener);
-        window.addEventListener("deviceOrientation", resizeListener);
-        cleanup.unshift(() => {
-            window.removeEventListener("resize", resizeListener);
-            window.removeEventListener("deviceOrientation", resizeListener);
-        });
+            // Forward window resize events to GameView.
+            let resizeListener = gameView.resize.bind(gameView);
+            window.addEventListener("resize", resizeListener);
+            window.addEventListener("deviceOrientation", resizeListener);
+            cleanup.unshift(() => {
+                window.removeEventListener("resize", resizeListener);
+                window.removeEventListener("deviceOrientation", resizeListener);
+            });
 
-        // Start the GameView rendering loop.
-        let renderRequestId;
-        let render = (_timestamp) => {
-            gameView.render();
+            // Start the GameView rendering loop.
+            let renderRequestId;
+            let render = (_timestamp) => {
+                gameView.render();
+                renderRequestId = window.requestAnimationFrame(render);
+            };
             renderRequestId = window.requestAnimationFrame(render);
+            cleanup.unshift(() => {
+                window.cancelAnimationFrame(renderRequestId);
+            });
         };
-        renderRequestId = window.requestAnimationFrame(render);
-        cleanup.unshift(() => {
-            window.cancelAnimationFrame(renderRequestId);
-        });
 
-        return () => { cleanup.forEach(f => f()); };
+        // Creating a renderer is asynchronous in Pixi v8.
+        (async () => {
+            let renderer = await autoDetectRenderer({
+                width: 1,
+                height: 1,
+                backgroundAlpha: 0,
+                // GameView.resize handles devicePixelRatio itself.
+                resolution: 1,
+            });
+            if (aborted) {
+                renderer.destroy();
+                return;
+            }
+            setupGameView(renderer);
+        })().catch(err => console.error(err));
+
+        return () => {
+            aborted = true;
+            cleanup.forEach(f => f());
+        };
     }, [gameModel, resourceHolder, containerElement, dispatch]);
 
     return (<div ref={containerElement} />);

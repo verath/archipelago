@@ -1,4 +1,4 @@
-import * as PIXI from "pixi.js";
+import { Sprite, Text } from "pixi.js";
 
 import * as images from "../../images";
 import ResourceHolder from "../../resource/ResourceHolder.js";
@@ -19,6 +19,7 @@ const ISLAND_TEXTURES = [
     images.TEXTURE_ISLAND6
 ];
 const SELECTED_TEXTURE = images.TEXTURE_SELECTED;
+const STRENGTH_TEXT_STROKE_WIDTH = 1;
 
 /**
  * @extends BaseSprite
@@ -37,37 +38,47 @@ export default class IslandSprite extends BaseSprite {
         this.pivot.set(TILE_WIDTH / 2, TILE_HEIGHT / 2);
 
         /**
-         * @type {PIXI.Text}
+         * @type {Text}
          * @private
          */
         this._strengthText = IslandSprite._createStrengthText();
         this.addChild(this._strengthText);
 
         /**
-         * @type {PIXI.Sprite}
+         * The player color currently applied to the strength text.
+         * @type {?import("../model/PlayerColors.js").PlayerColor}
+         * @private
+         */
+        this._strengthTextColor = null;
+
+        /**
+         * @type {Sprite}
          * @private
          */
         this._selectedIndicator = IslandSprite._createSelectedIndicator(resourceHolder);
         this._selectedIndicator.alpha = 0;
         this.addChild(this._selectedIndicator);
 
-        // Listen for clicks
-        this.interactive = true;
-        this.on("mousedown", this._onClicked);
-        this.on("touchstart", this._onClicked);
+        // Listen for clicks (pointer events cover both mouse and touch)
+        this.eventMode = "static";
+        this.on("pointerdown", this._onClicked);
     }
 
 
     /**
-     * @returns {PIXI.Text}
+     * @returns {Text}
      * @private
      */
     static _createStrengthText() {
-        let strengthText = new PIXI.Text("", {
-            fontFamily: FONT_FAMILY_DEFAULT,
-            fontSize: 50,
-            align: "center",
-            strokeThickness: 1,
+        let strengthText = new Text({
+            text: "",
+            style: {
+                fontFamily: FONT_FAMILY_DEFAULT,
+                fontSize: 50,
+                align: "center",
+                fill: 0x000000,
+                stroke: { color: 0x000000, width: STRENGTH_TEXT_STROKE_WIDTH },
+            },
         });
         strengthText.anchor.set(0.5, 0.5);
         strengthText.x = (TILE_WIDTH / 2);
@@ -77,11 +88,11 @@ export default class IslandSprite extends BaseSprite {
 
     /**
      * @param {ResourceHolder} resourceHolder
-     * @returns {PIXI.Sprite}
+     * @returns {Sprite}
      * @private
      */
     static _createSelectedIndicator(resourceHolder) {
-        let selectedIndicator = new PIXI.Sprite(resourceHolder.getTexture(SELECTED_TEXTURE));
+        let selectedIndicator = new Sprite(resourceHolder.getTexture(SELECTED_TEXTURE));
         selectedIndicator.anchor.set(0.5, 0.5);
         selectedIndicator.x = (TILE_WIDTH / 2);
         selectedIndicator.y = (TILE_HEIGHT / 2);
@@ -105,7 +116,7 @@ export default class IslandSprite extends BaseSprite {
         let y = island.position.y * TILE_HEIGHT + TILE_HEIGHT / 2;
         this.position.set(x, y);
 
-        this.tint = island.owner.color.fill;
+        this._sprite.tint = island.owner.color.fill;
         this._updateStrengthText(island);
 
         // Apply a random 90deg step rotation to sprite, to simulate variety.
@@ -117,7 +128,7 @@ export default class IslandSprite extends BaseSprite {
     _onModelChanged() {
         let island = /** @type {IslandModel} */ (this._model);
 
-        this.tint = island.owner.color.fill;
+        this._sprite.tint = island.owner.color.fill;
         this._updateStrengthText(island);
         // Show island selected indicator
         if (island.selected) {
@@ -140,8 +151,14 @@ export default class IslandSprite extends BaseSprite {
             // Negative strength => in FoW.
             this._strengthText.text = "";
         }
-        this._strengthText.style.fill = island.owner.color.textFill;
-        this._strengthText.style.stroke = island.owner.color.textStroke;
+        // Only touch the style when the color changes, as any style change
+        // makes Pixi re-render the text.
+        const color = island.owner.color;
+        if (this._strengthTextColor !== color) {
+            this._strengthTextColor = color;
+            this._strengthText.style.fill = color.textFill;
+            this._strengthText.style.stroke = { color: color.textStroke, width: STRENGTH_TEXT_STROKE_WIDTH };
+        }
     }
 
     _onClicked() {

@@ -1,3 +1,7 @@
+// Despite its name, this makes Pixi work *without* 'unsafe-eval': it
+// replaces Pixi's generated (new Function) shader/uniform sync code with
+// static implementations, so our CSP can omit 'unsafe-eval'.
+import "pixi.js/unsafe-eval";
 import { Archipelago } from "./Archipelago.jsx";
 
 /**
