@@ -1,4 +1,0 @@
-# Ignore built files
-dist/*
-proto_bundle.d.ts
-proto_bundle.js
