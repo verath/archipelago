@@ -185,22 +185,26 @@ export default class GameController {
         /**@type {GameResult} */
         let gameResult = null;
         ticker.start();
-        for (; ;) {
-            if (this._isGameOver) {
-                gameResult = { reason: "GAME_OVER", winnerId: this._winnerId };
-                break;
+        try {
+            for (; ;) {
+                if (this._isGameOver) {
+                    gameResult = { reason: "GAME_OVER", winnerId: this._winnerId };
+                    break;
+                }
+                while (!this._connection.hasNext() && await this._connection.waitNext()) {
+                    //
+                }
+                if (!this._connection.hasNext()) {
+                    // TODO: reason: "ERROR".
+                    gameResult = { reason: "GAME_OVER", winnerId: "" };
+                    break;
+                }
+                this._onServerEvent(this._connection.getNext());
             }
-            while (!this._connection.hasNext() && await this._connection.waitNext()) {
-                //
-            }
-            if (!this._connection.hasNext()) {
-                // TODO: reason: "ERROR".
-                gameResult = { reason: "GAME_OVER", winnerId: "" };
-                break;
-            }
-            this._onServerEvent(this._connection.getNext());
+        } finally {
+            // Also stop interpolating if handling a server event throws.
+            ticker.destroy();
         }
-        ticker.stop();
 
         return gameResult;
     }
