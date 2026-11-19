@@ -198,7 +198,7 @@ export class Archipelago {
  * @param {any} props.removeModelChangeListener
  * @param {function(UIAction):void} props.dispatch
  */
-const ArchipelagoView = ({ getModel, addModelChangeListener, removeModelChangeListener, dispatch }) => {
+export const ArchipelagoView = ({ getModel, addModelChangeListener, removeModelChangeListener, dispatch }) => {
     // Subscribe to "model changed" events. useSyncExternalStore re-reads the
     // model after subscribing, so a change made before the (deferred) first
     // render and subscription, e.g. the WebSocket connecting, is not lost.
@@ -269,7 +269,7 @@ const LoadingText = ({ children }) => (
  * @param {Object} props Props
  * @param {ConnectionState} props.connectionState
  */
-const LobbyScreen = ({ connectionState }) => {
+export const LobbyScreen = ({ connectionState }) => {
     if (connectionState === "CONNECTING") {
         return <LoadingText>Connecting</LoadingText>;
     } else if (connectionState === "CONNECTED") {
@@ -396,7 +396,7 @@ const GameViewWrapper = ({ gameModel, resourceHolder, dispatch }) => {
  * @param {GameModel} props.gameModel
  * @param {?GameResult} props.gameResult
  */
-const GameResultView = ({ gameModel, gameResult }) => {
+export const GameResultView = ({ gameModel, gameResult }) => {
     if (gameResult == null) {
         return null;
     }
