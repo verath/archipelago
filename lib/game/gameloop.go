@@ -7,9 +7,9 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/sirupsen/logrus"
 	"github.com/verath/archipelago/lib/common"
 	"github.com/verath/archipelago/lib/game/model"
+	"log/slog"
 )
 
 const defaultTickInterval time.Duration = time.Second / 3
@@ -35,7 +35,7 @@ func defaultPerTickActionsFunc(elapsed time.Duration) []model.Action {
 // Notice that any reads or writes (outside of actions) on the model
 // once the gameLoop is started is not safe.
 type gameLoop struct {
-	logEntry *logrus.Entry
+	logger *slog.Logger
 	// Duration between each tick
 	tickInterval time.Duration
 	// The game instance on which actions are to be applied
@@ -73,10 +73,10 @@ func (f eventHandlerFunc) handleEvent(event model.Event) error {
 	return f(event)
 }
 
-func newGameLoop(log *logrus.Logger, game *model.Game) (*gameLoop, error) {
-	logEntry := common.ModuleLogEntryWithID(log, "gameLoop")
+func newGameLoop(logger *slog.Logger, game *model.Game) (*gameLoop, error) {
+	logger = common.ModuleLogEntryWithID(logger, "gameLoop")
 	return &gameLoop{
-		logEntry:           logEntry,
+		logger:             logger,
 		tickInterval:       defaultTickInterval,
 		game:               game,
 		actions:            make([]model.Action, 0),
@@ -108,8 +108,8 @@ func (gl *gameLoop) AddAction(action model.Action) {
 // Run runs the game loop. Run blocks until the context is cancelled, an
 // error occurs, or the game is over.
 func (gl *gameLoop) Run(ctx context.Context) error {
-	gl.logEntry.Debug("Starting")
-	defer gl.logEntry.Debug("Stopped")
+	gl.logger.Debug("Starting")
+	defer gl.logger.Debug("Stopped")
 	if err := gl.tickLoop(ctx); err != nil {
 		return fmt.Errorf("error while running tickLoop: %w", err)
 	}
@@ -118,7 +118,7 @@ func (gl *gameLoop) Run(ctx context.Context) error {
 
 // setGameOver sets the game over flag to true.
 func (gl *gameLoop) setGameOver() {
-	gl.logEntry.Debug("gameOver set")
+	gl.logger.Debug("gameOver set")
 	atomic.StoreInt32(&gl.gameOver, 1)
 }
 
@@ -205,7 +205,7 @@ func (gl *gameLoop) applyAction(action model.Action) error {
 	events, err := action.Apply(gl.game)
 	if err != nil {
 		if _, ok := err.(*model.IllegalActionError); ok {
-			gl.logEntry.Debugf("Ignoring illegal action error: %v", err)
+			gl.logger.Debug("Ignoring illegal action error", "err", err)
 			return nil
 		}
 		return fmt.Errorf("Error applying action: %+v (%T): %w", action, action, err)

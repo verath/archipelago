@@ -9,9 +9,9 @@ import (
 	"sync"
 	"time"
 
-	"github.com/sirupsen/logrus"
 	"github.com/verath/archipelago/lib/common"
 	"github.com/verath/archipelago/lib/game/ai"
+	"log/slog"
 )
 
 const (
@@ -40,7 +40,7 @@ var errNextClientTimeout = errors.New("next client timeout")
 // The lifetime of the game coordinator is not tied to a single game but rather
 // the entire lifetime of the game server.
 type Coordinator struct {
-	logEntry *logrus.Entry
+	logger *slog.Logger
 	// A queue of clients that has connected and should be added to a game
 	clientsCh chan Client
 	// WaitGroup for games related goroutines created by the Coordinator.
@@ -48,10 +48,10 @@ type Coordinator struct {
 }
 
 // NewCoordinator creates a new Coordinator, using the given logger.
-func NewCoordinator(log *logrus.Logger) (*Coordinator, error) {
-	logEntry := common.ModuleLogEntry(log, "game/coordinator")
+func NewCoordinator(logger *slog.Logger) (*Coordinator, error) {
+	logger = common.ModuleLogEntry(logger, "game/coordinator")
 	return &Coordinator{
-		logEntry:  logEntry,
+		logger:    logger,
 		clientsCh: make(chan Client, clientQueueSize),
 	}, nil
 }
@@ -59,11 +59,11 @@ func NewCoordinator(log *logrus.Logger) (*Coordinator, error) {
 // Run starts and runs the Coordinator. This method blocks until the context is cancelled or
 // an error occurs, and always returns a non-nil error.
 func (c *Coordinator) Run(ctx context.Context) error {
-	c.logEntry.Info("Starting")
+	c.logger.Info("Starting")
 	err := c.run(ctx)
-	c.logEntry.Info("Waiting for games to stop...")
+	c.logger.Info("Waiting for games to stop...")
 	c.gamesWG.Wait()
-	c.logEntry.Info("Stopped")
+	c.logger.Info("Stopped")
 	return err
 }
 
@@ -118,10 +118,10 @@ func (c *Coordinator) awaitRemoteClients(ctx context.Context, minNumClients, max
 		if err == nil {
 			clients = clients[:len(clients)+1]
 			clients[len(clients)-1] = nextClient
-			c.logEntry.Debug("awaitClients: new client")
+			c.logger.Debug("awaitClients: new client")
 		} else if errors.Is(err, errNextClientTimeout) {
 			timeoutExpired = true
-			c.logEntry.Debug("awaitClients: timeout")
+			c.logger.Debug("awaitClients: timeout")
 		} else {
 			return nil, fmt.Errorf("error waiting for next client: %w", err)
 		}
@@ -131,7 +131,7 @@ func (c *Coordinator) awaitRemoteClients(ctx context.Context, minNumClients, max
 			break
 		}
 	}
-	c.logEntry.WithField("numClients", len(clients)).Debug("awaitClients: done")
+	c.logger.Debug("awaitClients: done", "numClients", len(clients))
 	return clients, nil
 }
 
@@ -157,9 +157,9 @@ func (c *Coordinator) run(ctx context.Context) error {
 			var aiClient *ai.Client
 			var err error
 			if i%3 == 2 {
-				aiClient, err = ai.NewClient(c.logEntry.Logger, ai.RandomStrategy(rand.Int63n(30)+2))
+				aiClient, err = ai.NewClient(c.logger, ai.RandomStrategy(rand.Int63n(30)+2))
 			} else {
-				aiClient, err = ai.NewClient(c.logEntry.Logger, ai.OpportunisticStrategy())
+				aiClient, err = ai.NewClient(c.logger, ai.OpportunisticStrategy())
 			}
 			if err != nil {
 				return fmt.Errorf("error creating ai client: %w", err)
@@ -167,7 +167,7 @@ func (c *Coordinator) run(ctx context.Context) error {
 			clients = append(clients, aiClient)
 		}
 
-		c.logEntry.Debug("Starting a new game")
+		c.logger.Debug("Starting a new game")
 		err = c.startGame(ctx, clients)
 		if err != nil {
 			// As we still own the clients here, make sure we stop them
@@ -187,7 +187,7 @@ func (c *Coordinator) startGame(ctx context.Context, clients []Client) error {
 	if err != nil {
 		return fmt.Errorf("Error creating game: %w", err)
 	}
-	gameLoop, err := newGameLoop(c.logEntry.Logger, game)
+	gameLoop, err := newGameLoop(c.logger, game)
 	if err != nil {
 		return fmt.Errorf("Error creating gameLoop: %w", err)
 	}
@@ -198,7 +198,7 @@ func (c *Coordinator) startGame(ctx context.Context, clients []Client) error {
 			return fmt.Errorf("error creating player proxy: %w", err)
 		}
 	}
-	ctrl, err := newController(c.logEntry.Logger, gameLoop, playerProxies)
+	ctrl, err := newController(c.logger, gameLoop, playerProxies)
 	if err != nil {
 		return fmt.Errorf("Error creating game controller: %w", err)
 	}
@@ -227,9 +227,9 @@ func (c *Coordinator) startGame(ctx context.Context, clients []Client) error {
 		err := ctrl.run(gameCtx)
 		if err != nil {
 			if errors.Is(err, context.Canceled) {
-				c.logEntry.Debugf("game stopped with ctx error: %v", err)
+				c.logger.Debug("game stopped with ctx error", "err", err)
 			} else {
-				c.logEntry.Errorf("game stopped with error: %+v", err)
+				c.logger.Error("game stopped with error", "err", err)
 			}
 		}
 		// Disconnect the clients after the game is over.

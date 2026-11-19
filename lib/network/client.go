@@ -7,9 +7,9 @@ import (
 	"sync"
 	"time"
 
-	"github.com/sirupsen/logrus"
 	"github.com/verath/archipelago/lib/common"
 	"golang.org/x/time/rate"
+	"log/slog"
 )
 
 const (
@@ -54,7 +54,7 @@ type writeRequest struct {
 // and receive messages, represented as byte arrays. Encoding and decoding
 // messages is left to the caller.
 type Client struct {
-	logEntry *logrus.Entry
+	logger *slog.Logger
 	// The underlying connection used for the client.
 	conn Connection
 	// Buffered queue of messages that has been read from the connection.
@@ -70,9 +70,9 @@ type Client struct {
 }
 
 // NewClient creates a new Client, communicating on the provided connection.
-func NewClient(log *logrus.Logger, conn Connection) (*Client, error) {
+func NewClient(logger *slog.Logger, conn Connection) (*Client, error) {
 	return &Client{
-		logEntry:     common.ModuleLogEntryWithID(log, "network/client"),
+		logger:       common.ModuleLogEntryWithID(logger, "network/client"),
 		conn:         conn,
 		readQueue:    make(chan []byte, clientReadBufferSize),
 		writeQueue:   make(chan *writeRequest, clientWriteBufferSize),
@@ -136,8 +136,8 @@ func (c *Client) ReadMessage(ctx context.Context) ([]byte, error) {
 // client is disconnected, or an error occurs. The Client and the underlying
 // connection is guaranteed to be in a disconnected state when Run returns.
 func (c *Client) Run(ctx context.Context) error {
-	c.logEntry.Debug("Starting")
-	defer c.logEntry.Debug("Stopped")
+	c.logger.Debug("Starting")
+	defer c.logger.Debug("Stopped")
 
 	errCh := make(chan error)
 	defer close(errCh)
@@ -223,7 +223,7 @@ func (c *Client) readPump(ctx context.Context, readQueue chan<- []byte, disconne
 // calls do nothing.
 func (c *Client) disconnect() {
 	c.disconnectOnce.Do(func() {
-		c.logEntry.Debug("disconnect requested")
+		c.logger.Debug("disconnect requested")
 		close(c.disconnectCh)
 	})
 }
