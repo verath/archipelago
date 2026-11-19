@@ -39,7 +39,7 @@ func createIslands(players []*model.Player, playerNeutral *model.Player, size mo
 			if gameRand.Intn(100) >= 45 {
 				continue
 			}
-			pos := model.Coordinate{x, y}
+			pos := model.Coordinate{X: x, Y: y}
 			size := neutralSizes[gameRand.Intn(len(neutralSizes))]
 			strength := gameRand.Int63n(int64(size*model.IslandGrowthCap)) + 10
 			growthRemainder := time.Millisecond * time.Duration(gameRand.Int63n(1000))
@@ -51,7 +51,7 @@ func createIslands(players []*model.Player, playerNeutral *model.Player, size mo
 	boardPerm := gameRand.Perm(size.X * size.Y)
 	for i := range players {
 		x, y := boardPerm[i]%size.X, boardPerm[i]/size.X
-		pos := model.Coordinate{x, y}
+		pos := model.Coordinate{X: x, Y: y}
 		islandMap[pos] = islandData{model.IslandSizeLarge, 20, players[i], 0}
 	}
 	// Transform the map to a slice of islands.
@@ -70,7 +70,7 @@ func createIslands(players []*model.Player, playerNeutral *model.Player, size mo
 // createBasicGame creates a new instance of a Game model with numPlayers
 // players.
 func createBasicGame(numPlayers int) (*model.Game, error) {
-	size := model.Coordinate{8, 8}
+	size := model.Coordinate{X: 8, Y: 8}
 	if numPlayers > 5 {
 		size.X += 2
 		size.Y += 2
