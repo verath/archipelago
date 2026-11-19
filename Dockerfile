@@ -20,7 +20,7 @@ COPY lib ./lib
 RUN go build -trimpath -ldflags="-s -w" -o archipelago .
 
 # APP stage
-FROM alpine:3.22
+FROM alpine:3.24
 EXPOSE 8080
 RUN apk add --no-cache ca-certificates \
     && adduser -D -H -u 10001 archipelago
