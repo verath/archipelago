@@ -24,10 +24,75 @@ const (
 	// TODO(2017-01-13): What is an appropriate number here?
 	clientQueueSize = 2
 
-	// additionalClientsTimeout is the time that we wait for new clients when
-	// we have the minimum required clients connected to start a new game.
-	additionalClientsTimeout = 8 * time.Second
+	// DefaultLobbyWait is the default CoordinatorOptions.LobbyWait.
+	DefaultLobbyWait = 8 * time.Second
+
+	// AIPlayersAuto is the CoordinatorOptions.AIPlayers value for adding AI
+	// players to fill each game up to 4 players, always adding at least one.
+	AIPlayersAuto = -1
+
+	// minPlayersPerGame is the minimum number of players (remote and AI) in
+	// a game. A game with a single player would be over immediately.
+	minPlayersPerGame = 2
+
+	// maxRemoteClientsPerGame is the maximum number of remote clients in a game.
+	maxRemoteClientsPerGame = 10
+
+	// MaxAIPlayers is the maximum CoordinatorOptions.AIPlayers value. The game
+	// board has a limited number of island positions, so the total number of
+	// players per game must stay small.
+	MaxAIPlayers = 10
 )
+
+// CoordinatorOptions configures how the Coordinator creates games.
+type CoordinatorOptions struct {
+	// LobbyWait is the time that we wait for additional clients once the
+	// minimum required clients are connected, before starting a new game.
+	LobbyWait time.Duration
+
+	// AIPlayers is the number of AI players added to each game. AIPlayersAuto
+	// (-1) fills each game up to 4 players, adding at least one AI player.
+	// With 0, no AI players are added and a game needs at least 2 remote
+	// clients to start. With n > 0, exactly n AI players are added.
+	AIPlayers int
+}
+
+// DefaultCoordinatorOptions returns the CoordinatorOptions used in production.
+func DefaultCoordinatorOptions() CoordinatorOptions {
+	return CoordinatorOptions{
+		LobbyWait: DefaultLobbyWait,
+		AIPlayers: AIPlayersAuto,
+	}
+}
+
+// validate returns an error if the options are invalid.
+func (opts CoordinatorOptions) validate() error {
+	if opts.LobbyWait < 0 {
+		return fmt.Errorf("LobbyWait must not be negative, got %v", opts.LobbyWait)
+	}
+	if opts.AIPlayers < AIPlayersAuto || opts.AIPlayers > MaxAIPlayers {
+		return fmt.Errorf("AIPlayers must be between %d and %d, got %d", AIPlayersAuto, MaxAIPlayers, opts.AIPlayers)
+	}
+	return nil
+}
+
+// minRemoteClients returns the minimum number of remote clients required to
+// start a game, so that the game has at least minPlayersPerGame players.
+func (opts CoordinatorOptions) minRemoteClients() int {
+	if opts.AIPlayers == AIPlayersAuto {
+		return 1
+	}
+	return max(1, minPlayersPerGame-opts.AIPlayers)
+}
+
+// numAIClients returns the number of AI clients to add to a game with
+// numRemoteClients remote clients.
+func (opts CoordinatorOptions) numAIClients(numRemoteClients int) int {
+	if opts.AIPlayers != AIPlayersAuto {
+		return opts.AIPlayers
+	}
+	return max(1, 4-numRemoteClients)
+}
 
 // errNextClientTimeout is returned when no new client connection was made
 // before timeout.
@@ -41,17 +106,22 @@ var errNextClientTimeout = errors.New("next client timeout")
 // the entire lifetime of the game server.
 type Coordinator struct {
 	logger *slog.Logger
+	opts   CoordinatorOptions
 	// A queue of clients that has connected and should be added to a game
 	clientsCh chan Client
 	// WaitGroup for games related goroutines created by the Coordinator.
 	gamesWG sync.WaitGroup
 }
 
-// NewCoordinator creates a new Coordinator, using the given logger.
-func NewCoordinator(logger *slog.Logger) (*Coordinator, error) {
+// NewCoordinator creates a new Coordinator, using the given logger and options.
+func NewCoordinator(logger *slog.Logger, opts CoordinatorOptions) (*Coordinator, error) {
+	if err := opts.validate(); err != nil {
+		return nil, fmt.Errorf("invalid coordinator options: %w", err)
+	}
 	logger = common.ModuleLogEntry(logger, "game/coordinator")
 	return &Coordinator{
 		logger:    logger,
+		opts:      opts,
 		clientsCh: make(chan Client, clientQueueSize),
 	}, nil
 }
@@ -108,11 +178,11 @@ func (c *Coordinator) awaitRemoteClients(ctx context.Context, minNumClients, max
 	}()
 	for {
 		// Wait for the next client to connect. With >= minNumClients we wait
-		// for at most additionalClientsTimeout.
+		// for at most opts.LobbyWait.
 		timeout := time.Duration(math.MaxInt64)
 		timeoutExpired := false
 		if len(clients) >= minNumClients {
-			timeout = additionalClientsTimeout
+			timeout = c.opts.LobbyWait
 		}
 		nextClient, err := c.nextClientWithTimeout(ctx, timeout)
 		if err == nil {
@@ -140,19 +210,14 @@ func (c *Coordinator) awaitRemoteClients(ctx context.Context, minNumClients, max
 // another group of players. This method blocks until the context is cancelled
 // or an error occurs. Always returns a non-nil error.
 func (c *Coordinator) run(ctx context.Context) error {
-	minRemoteClientsPerGame := 1
-	maxRemoteClientsPerGame := 10
 	for {
-		clients, err := c.awaitRemoteClients(ctx, minRemoteClientsPerGame, maxRemoteClientsPerGame)
+		clients, err := c.awaitRemoteClients(ctx, c.opts.minRemoteClients(), maxRemoteClientsPerGame)
 		if err != nil {
 			return fmt.Errorf("error awaiting remote clients: %w", err)
 		}
 
 		// Add a couple of AI clients.
-		numAIClients := 4 - len(clients)
-		if numAIClients <= 0 {
-			numAIClients = 1
-		}
+		numAIClients := c.opts.numAIClients(len(clients))
 		for i := 0; i < numAIClients; i++ {
 			var aiClient *ai.Client
 			var err error

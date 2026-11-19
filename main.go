@@ -13,6 +13,7 @@ import (
 
 	"github.com/pkg/profile"
 	archipelago "github.com/verath/archipelago/lib"
+	"github.com/verath/archipelago/lib/game"
 	"log/slog"
 )
 
@@ -27,11 +28,18 @@ func main() {
 		skipWSOriginCheck bool
 		httpAddr          string
 		profileMode       string
+		lobbyWait         time.Duration
+		aiPlayers         int
 	)
 	flag.BoolVar(&debug, "debug", false, "Set to true to log debug messages.")
 	flag.BoolVar(&skipWSOriginCheck, "skipWSOriginCheck", false, "")
 	flag.StringVar(&httpAddr, "addr", ":8080", "TCP address for the http server to listen on.")
 	flag.StringVar(&profileMode, "profile", "", "Enable profiling mode, one of [cpu, mem, mutex, block]")
+	flag.DurationVar(&lobbyWait, "lobbyWait", game.DefaultLobbyWait,
+		"Time to wait for more players once enough players to start a game have joined.")
+	flag.IntVar(&aiPlayers, "aiPlayers", game.AIPlayersAuto,
+		"AI players per game: -1 fills each game up to 4 players with at least 1 AI; "+
+			"0 adds none, so a game needs at least 2 human players; n > 0 adds exactly n (at most 10).")
 	flag.Parse()
 	logLevel := slog.LevelInfo
 	if debug {
@@ -49,7 +57,8 @@ func main() {
 		defer startProfiling(profileMode)()
 	}
 	// Setup archipelago server instance.
-	archipelagoServer, err := archipelago.New(logger, skipWSOriginCheck)
+	coordinatorOpts := game.CoordinatorOptions{LobbyWait: lobbyWait, AIPlayers: aiPlayers}
+	archipelagoServer, err := archipelago.New(logger, skipWSOriginCheck, coordinatorOpts)
 	if err != nil {
 		logger.Error("Error creating archipelago", "err", err)
 		os.Exit(1)
