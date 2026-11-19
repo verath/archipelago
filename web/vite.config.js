@@ -6,6 +6,11 @@ export default defineConfig({
         emptyOutDir: true,
         sourcemap: true,
     },
+    test: {
+        include: ["src/**/*.test.{js,jsx}"],
+        // Tests needing a DOM opt in with a "@vitest-environment jsdom" comment.
+        environment: "node",
+    },
     server: {
         proxy: {
             // Forward the game websocket to the locally running Go backend
