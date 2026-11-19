@@ -5,9 +5,9 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/sirupsen/logrus"
 	"github.com/verath/archipelago/lib/common"
 	"github.com/verath/archipelago/lib/game/model"
+	"log/slog"
 )
 
 const eventQueueSize = 16
@@ -22,7 +22,7 @@ type playerError struct {
 // The game controller represents a single game. It starts and handles
 // communication between the game loop and the player proxies.
 type controller struct {
-	logEntry *logrus.Entry
+	logger *slog.Logger
 
 	gameLoop *gameLoop
 
@@ -32,13 +32,13 @@ type controller struct {
 }
 
 // newController creates a new game controller.
-func newController(log *logrus.Logger, gameLoop *gameLoop, players []*playerProxy) (*controller, error) {
-	logEntry := common.ModuleLogEntryWithID(log, "game/controller")
+func newController(logger *slog.Logger, gameLoop *gameLoop, players []*playerProxy) (*controller, error) {
+	logger = common.ModuleLogEntryWithID(logger, "game/controller")
 	if len(players) == 0 {
 		return nil, errors.New("there must be at least one player")
 	}
 	return &controller{
-		logEntry: logEntry,
+		logger:   logger,
 		gameLoop: gameLoop,
 		players:  players,
 	}, nil
@@ -48,8 +48,8 @@ func newController(log *logrus.Logger, gameLoop *gameLoop, players []*playerProx
 // the game controller start listening for player actions. Blocks until an
 // error occurs, the context is canceled, or the game is successfully over.
 func (ctrl *controller) run(ctx context.Context) error {
-	ctrl.logEntry.Debug("Starting")
-	defer ctrl.logEntry.Debug("Stopped")
+	ctrl.logger.Debug("Starting")
+	defer ctrl.logger.Debug("Stopped")
 
 	// Setup forwarding of events produced by the game loop to eventCh.
 	eventCh := make(chan model.Event, eventQueueSize)
@@ -150,7 +150,7 @@ func (ctrl *controller) eventLoop(ctx context.Context, eventCh <-chan model.Even
 		case playerErr := <-playerErrCh:
 			playerErr.player.Disconnect()
 			delete(playerEventChs, playerErr.player)
-			ctrl.playerErrorLogEntry(playerErr).Debug("player event loop error")
+			ctrl.playerErrorLogger(playerErr).Debug("player event loop error")
 			if len(playerEventChs) == 0 {
 				err = errors.New("no players remaining")
 				break
@@ -166,7 +166,7 @@ func (ctrl *controller) eventLoop(ctx context.Context, eventCh <-chan model.Even
 				default:
 					// Player event ch full (player too slow), force disconnect.
 					player.Disconnect()
-					ctrl.logEntry.WithField("playerID", player.playerID).Debug("player eventCh full")
+					ctrl.logger.Debug("player eventCh full", "playerID", player.playerID)
 				}
 			}
 		case <-ctx.Done():
@@ -230,7 +230,7 @@ func (ctrl *controller) actionLoop(ctx context.Context, quitCh <-chan struct{}) 
 			leavePlayerAct := &model.PlayerActionLeave{}
 			leaveAct := leavePlayerAct.ToAction(playerErr.player.playerID)
 			ctrl.gameLoop.AddAction(leaveAct)
-			ctrl.playerErrorLogEntry(playerErr).Debug("player action loop error")
+			ctrl.playerErrorLogger(playerErr).Debug("player action loop error")
 			remainingPlayers--
 			if remainingPlayers == 0 {
 				err = errors.New("no players remaining")
@@ -253,9 +253,9 @@ func (ctrl *controller) actionLoop(ctx context.Context, quitCh <-chan struct{}) 
 	return err
 }
 
-func (ctrl *controller) playerErrorLogEntry(playerErr playerError) *logrus.Entry {
-	return ctrl.logEntry.WithFields(logrus.Fields{
-		logrus.ErrorKey: playerErr.error,
-		"PlayerID":      playerErr.player.playerID,
-	})
+func (ctrl *controller) playerErrorLogger(playerErr playerError) *slog.Logger {
+	return ctrl.logger.With(
+		"err", playerErr.error,
+		"PlayerID", playerErr.player.playerID,
+	)
 }

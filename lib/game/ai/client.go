@@ -7,10 +7,10 @@ import (
 	"math/rand"
 	"sync"
 
-	"github.com/sirupsen/logrus"
 	"github.com/verath/archipelago/lib/common"
 	"github.com/verath/archipelago/lib/game/model"
 	"golang.org/x/time/rate"
+	"log/slog"
 )
 
 const (
@@ -32,7 +32,7 @@ type clientState struct {
 // produces actions in response. The actions are chosen by the selected
 // strategy.
 type Client struct {
-	logEntry *logrus.Entry
+	logger *slog.Logger
 
 	strategy strategy
 
@@ -48,17 +48,17 @@ type Client struct {
 }
 
 // NewClient creates a new AI Client using the provided strategy.
-func NewClient(log *logrus.Logger, strategyCreator StrategyCreatorFunc) (*Client, error) {
+func NewClient(logger *slog.Logger, strategyCreator StrategyCreatorFunc) (*Client, error) {
 	if strategyCreator == nil {
 		panic("strategyCreator == nil")
 	}
-	logEntry := common.ModuleLogEntryWithID(log, "ai/client")
+	logger = common.ModuleLogEntryWithID(logger, "ai/client")
 	strategy, err := strategyCreator()
 	if err != nil {
 		return nil, fmt.Errorf("failed creating strategy: %w", err)
 	}
 	return &Client{
-		logEntry:     logEntry,
+		logger:       logger,
 		strategy:     strategy,
 		limiter:      rate.NewLimiter(clientActionLimitRate, clientActionLimitBurst),
 		actionCh:     make(chan model.PlayerAction, 1),
@@ -70,7 +70,7 @@ func NewClient(log *logrus.Logger, strategyCreator StrategyCreatorFunc) (*Client
 // and Read calls.
 func (c *Client) Disconnect() {
 	c.disconnectOnce.Do(func() {
-		c.logEntry.Debug("Disconnect")
+		c.logger.Debug("Disconnect")
 		close(c.disconnectCh)
 	})
 }
@@ -114,7 +114,7 @@ func (c *Client) onGameStart(ctx context.Context, evt *model.PlayerEventGameStar
 	c.stateMu.Lock()
 	defer c.stateMu.Unlock()
 	c.state.myPlayerID = evt.PlayerID
-	c.logEntry.WithField("myPlayerId", c.state.myPlayerID).Debug("onGameStart")
+	c.logger.Debug("onGameStart", "myPlayerId", c.state.myPlayerID)
 	return nil
 }
 
@@ -122,7 +122,7 @@ func (c *Client) onGameOver(ctx context.Context, evt *model.PlayerEventGameOver)
 	c.stateMu.Lock()
 	defer c.stateMu.Unlock()
 	c.state.myPlayerID = model.PlayerID(model.InvalidID)
-	c.logEntry.WithField("myPlayerId", c.state.myPlayerID).Debug("onGameOver")
+	c.logger.Debug("onGameOver", "myPlayerId", c.state.myPlayerID)
 	return nil
 }
 
@@ -141,7 +141,7 @@ func (c *Client) onTick(ctx context.Context, evt *model.PlayerEventTick) error {
 	if err != nil {
 		// Not fatal for the client; log it and carry on. Debug level, as
 		// this runs on every tick.
-		c.logEntry.WithError(err).Debug("failed getting next action from strategy")
+		c.logger.Debug("failed getting next action from strategy", "err", err)
 	}
 	if act != nil {
 		select {

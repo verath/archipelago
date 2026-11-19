@@ -7,12 +7,12 @@ import (
 	"net/http"
 	"sync"
 
-	"github.com/sirupsen/logrus"
 	"github.com/verath/archipelago/lib/common"
 	"github.com/verath/archipelago/lib/game"
 	"github.com/verath/archipelago/lib/network"
 	"github.com/verath/archipelago/lib/network/websocket"
 	"github.com/verath/archipelago/lib/wire"
+	"log/slog"
 )
 
 // canceledClientContext is a canceled context used by default for new clients
@@ -25,7 +25,7 @@ var canceledClientContext context.Context = func() context.Context {
 
 // Server is the main entry point to the game server.
 type Server struct {
-	logEntry        *logrus.Entry
+	logger          *slog.Logger
 	gameCoordinator *game.Coordinator
 	wsUpgrader      *websocket.Upgrader
 	router          *http.ServeMux
@@ -37,9 +37,8 @@ type Server struct {
 
 // New returns a new Server using the provided logger.
 // skipWSOriginCheck controls if websocket origin checking is disabled.
-func New(log *logrus.Logger, skipWSOriginCheck bool) (*Server, error) {
-	logEntry := common.ModuleLogEntry(log, "server")
-	gameCoordinator, err := game.NewCoordinator(log)
+func New(logger *slog.Logger, skipWSOriginCheck bool) (*Server, error) {
+	gameCoordinator, err := game.NewCoordinator(logger)
 	if err != nil {
 		return nil, fmt.Errorf("error creating game coordinator: %w", err)
 	}
@@ -48,7 +47,7 @@ func New(log *logrus.Logger, skipWSOriginCheck bool) (*Server, error) {
 		return nil, fmt.Errorf("error creating websocket upgrader: %w", err)
 	}
 	srv := &Server{
-		logEntry:        logEntry,
+		logger:          common.ModuleLogEntry(logger, "server"),
 		gameCoordinator: gameCoordinator,
 		router:          http.NewServeMux(),
 		wsUpgrader:      wsUpgrader,
@@ -62,15 +61,15 @@ func New(log *logrus.Logger, skipWSOriginCheck bool) (*Server, error) {
 // Run starts the game server and blocks until an error occurs, or
 // the context is canceled. Run always returns a non-nil error.
 func (srv *Server) Run(ctx context.Context) error {
-	srv.logEntry.Info("Starting")
-	defer srv.logEntry.Info("Stopped")
+	srv.logger.Info("Starting")
+	defer srv.logger.Info("Stopped")
 
 	ctx, cancel := context.WithCancel(ctx)
 	srv.setClientContext(ctx)
 	defer srv.setClientContext(canceledClientContext)
 	err := srv.gameCoordinator.Run(ctx)
 	cancel()
-	srv.logEntry.Info("Waiting for clients to stop...")
+	srv.logger.Info("Waiting for clients to stop...")
 	srv.clientsWG.Wait()
 	if err != nil {
 		return fmt.Errorf("GameCoordinator error: %w", err)
@@ -80,7 +79,7 @@ func (srv *Server) Run(ctx context.Context) error {
 
 // ServeHTTP dispatches HTTP requests.
 func (srv *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	srv.logEntry.Debugf("%s - %s", r.Method, r.URL.Path)
+	srv.logger.Debug("request", "method", r.Method, "path", r.URL.Path)
 	srv.router.ServeHTTP(w, r)
 }
 
@@ -101,11 +100,11 @@ func (srv *Server) handleWSConnect() http.HandlerFunc {
 		wsConn, err := srv.wsUpgrader.Upgrade(w, r)
 		if err != nil {
 			// Note upgrader has already written error response.
-			srv.logEntry.Debugf("Failed upgrading to ws: %v", err)
+			srv.logger.Debug("Failed upgrading to ws", "err", err)
 			return
 		}
 		if err := srv.newWSClient(ctx, wsConn); err != nil {
-			srv.logEntry.Debugf("Error handling new ws connection: %v", err)
+			srv.logger.Debug("Error handling new ws connection", "err", err)
 			wsConn.Close()
 		}
 	}
@@ -113,7 +112,7 @@ func (srv *Server) handleWSConnect() http.HandlerFunc {
 
 // newWSClient starts a new websocket client for the provided ws connection.
 func (srv *Server) newWSClient(ctx context.Context, wsConn *websocket.WSConnection) error {
-	client, err := network.NewClient(srv.logEntry.Logger, wsConn)
+	client, err := network.NewClient(srv.logger, wsConn)
 	if err != nil {
 		return fmt.Errorf("error creating new Client from ws connection: %w", err)
 	}
@@ -132,9 +131,9 @@ func (srv *Server) newWSClient(ctx context.Context, wsConn *websocket.WSConnecti
 		err := client.Run(clientCtx)
 		if err != nil {
 			if errors.Is(err, context.Canceled) {
-				srv.logEntry.Debugf("client stopped with ctx error: %v", err)
+				srv.logger.Debug("client stopped with ctx error", "err", err)
 			} else {
-				srv.logEntry.Infof("client stopped with error: %v", err)
+				srv.logger.Info("client stopped with error", "err", err)
 			}
 		}
 	}()

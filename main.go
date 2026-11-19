@@ -12,8 +12,8 @@ import (
 	"time"
 
 	"github.com/pkg/profile"
-	"github.com/sirupsen/logrus"
 	archipelago "github.com/verath/archipelago/lib"
+	"log/slog"
 )
 
 const (
@@ -35,11 +35,12 @@ func main() {
 	flag.StringVar(&httpAddr, "addr", ":8080", "TCP address for the http server to listen on.")
 	flag.StringVar(&profileMode, "profile", "", "Enable profiling mode, one of [cpu, mem, mutex, block]")
 	flag.Parse()
-	logger := logrus.New()
-	logger.Formatter = &logrus.TextFormatter{}
-	// Flags.
+	logLevel := slog.LevelInfo
 	if debug {
-		logger.Level = logrus.DebugLevel
+		logLevel = slog.LevelDebug
+	}
+	logger := slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{Level: logLevel}))
+	if debug {
 		logger.Info("Debug logging enabled")
 	}
 	if serveStatic {
@@ -48,14 +49,15 @@ func main() {
 	if skipWSOriginCheck {
 		logger.Info("Skipping WebSocket origin check.")
 	}
-	logger.Infof("HTTP server will listen on '%v'.", httpAddr)
+	logger.Info("HTTP server will listen", "addr", httpAddr)
 	if profileMode != "" {
 		defer startProfiling(profileMode)()
 	}
 	// Setup archipelago server instance.
 	archipelagoServer, err := archipelago.New(logger, skipWSOriginCheck)
 	if err != nil {
-		logger.Fatalf("Error creating archipelago: %+v", err)
+		logger.Error("Error creating archipelago", "err", err)
+		os.Exit(1)
 	}
 	// Register archipelago HTTP rooted at "app/".
 	http.Handle("/app/", http.StripPrefix("/app", archipelagoServer))
@@ -76,9 +78,10 @@ func main() {
 	// Run archipelago server, HTTP Server.
 	err = runBackend(logger, archipelagoServer, httpServer)
 	if errors.Is(err, context.Canceled) {
-		logger.Debugf("Error caught in main: %v", err)
+		logger.Debug("Error caught in main", "err", err)
 	} else {
-		logger.Fatalf("Error caught in main: %+v", err)
+		logger.Error("Error caught in main", "err", err)
+		os.Exit(1)
 	}
 	logger.Info("Archipelago backend stopped.")
 }
@@ -104,7 +107,7 @@ func startProfiling(profileMode string) func() {
 // lifetimeContext returns a context that is cancelled on the first SIGINT or
 // SIGTERM signal received. The application is force closed if more than one
 // signal is received.
-func lifetimeContext(logger *logrus.Logger) context.Context {
+func lifetimeContext(logger *slog.Logger) context.Context {
 	ctx, cancel := context.WithCancel(context.Background())
 	stopSigs := []os.Signal{os.Interrupt, syscall.SIGTERM}
 	stopCh := make(chan os.Signal, len(stopSigs))
@@ -114,12 +117,13 @@ func lifetimeContext(logger *logrus.Logger) context.Context {
 		logger.Info("Caught interrupt, shutting down")
 		cancel()
 		<-stopCh
-		logger.Fatal("Caught second interrupt, force closing")
+		logger.Error("Caught second interrupt, force closing")
+		os.Exit(1)
 	}()
 	return ctx
 }
 
-func runBackend(logger *logrus.Logger, archipelagoServer *archipelago.Server, httpServer *http.Server) error {
+func runBackend(logger *slog.Logger, archipelagoServer *archipelago.Server, httpServer *http.Server) error {
 	ctx, cancel := context.WithCancel(lifetimeContext(logger))
 	errCh := make(chan error)
 	go func() {

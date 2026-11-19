@@ -1,12 +1,6 @@
 package testutil
 
-import (
-	"io/ioutil"
+import "log/slog"
 
-	"github.com/sirupsen/logrus"
-)
-
-// DiscardLogger is a logrus.Logger configured to discard all output
-var DiscardLogger = &logrus.Logger{
-	Out: ioutil.Discard,
-}
+// DiscardLogger is a slog.Logger configured to discard all output
+var DiscardLogger = slog.New(slog.DiscardHandler)
