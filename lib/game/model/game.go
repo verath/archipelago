@@ -1,7 +1,8 @@
 package model
 
 import (
-	"github.com/pkg/errors"
+	"errors"
+	"fmt"
 )
 
 // Game represents a game instance, and acts as a container
@@ -220,11 +221,11 @@ func (gb *GameBuilder) Build() (*Game, error) {
 	//  - Owning player exists.
 	for i, island := range gb.islands {
 		if !island.position.IsWithin(gb.size) {
-			return nil, errors.Errorf("Island out of bounds (coord: %v; size: %v)", island.position, gb.size)
+			return nil, fmt.Errorf("Island out of bounds (coord: %v; size: %v)", island.position, gb.size)
 		}
 		for j, other := range gb.islands {
 			if i != j && island.position == other.position {
-				return nil, errors.Errorf("Islands has same position (coord: %v)", island.position)
+				return nil, fmt.Errorf("Islands has same position (coord: %v)", island.position)
 			}
 		}
 		if _, ok := playerIDs[island.Owner().ID()]; !ok {

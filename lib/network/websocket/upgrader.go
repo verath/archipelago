@@ -1,13 +1,14 @@
 package websocket
 
 import (
+	"errors"
+	"fmt"
 	"net/http"
 	"net/url"
 	"strings"
 	"time"
 
 	"github.com/gorilla/websocket"
-	"github.com/pkg/errors"
 )
 
 // wsVersion is the version of the websocket protocol that the server
@@ -75,13 +76,13 @@ func (h *Upgrader) Upgrade(w http.ResponseWriter, r *http.Request) (*WSConnectio
 	gorillaWSConn, err := h.wsUpgrader.Upgrade(w, r, nil)
 	if err != nil {
 		// Note upgrader has already written error response.
-		return nil, errors.Wrap(err, "upgrading to gorilla ws failed")
+		return nil, fmt.Errorf("upgrading to gorilla ws failed: %w", err)
 	}
 	// Wrap in our WSConnection.
 	wsConn, err := newWSConnection(gorillaWSConn)
 	if err != nil {
 		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
-		return nil, errors.Wrap(err, "failed creating WSConnection")
+		return nil, fmt.Errorf("failed creating WSConnection: %w", err)
 	}
 	return wsConn, nil
 }

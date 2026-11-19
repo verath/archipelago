@@ -2,8 +2,9 @@ package game
 
 import (
 	"context"
+	"errors"
+	"fmt"
 
-	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"github.com/verath/archipelago/lib/common"
 	"github.com/verath/archipelago/lib/game/model"
@@ -63,19 +64,28 @@ func (ctrl *controller) run(ctx context.Context) error {
 	errCh := make(chan error)
 	go func() {
 		err := ctrl.actionLoop(ctx, actionLoopQuitCh)
-		errCh <- errors.Wrap(err, "error in actionLoop")
+		if err != nil {
+			err = fmt.Errorf("error in actionLoop: %w", err)
+		}
+		errCh <- err
 		// Queue a force game over action to make gameLoop eventually quit.
 		ctrl.gameLoop.AddAction(&model.ActionForceGameOver{})
 	}()
 	go func() {
 		err := ctrl.gameLoop.Run(ctx)
-		errCh <- errors.Wrap(err, "error in gameLoop")
+		if err != nil {
+			err = fmt.Errorf("error in gameLoop: %w", err)
+		}
+		errCh <- err
 		// Closing eventCh signals eventLoop to eventually quit.
 		close(eventCh)
 	}()
 	go func() {
 		err := ctrl.eventLoop(ctx, eventCh)
-		errCh <- errors.Wrap(err, "error in eventBroadcastLoop")
+		if err != nil {
+			err = fmt.Errorf("error in eventBroadcastLoop: %w", err)
+		}
+		errCh <- err
 	}()
 	err := <-errCh
 	// Closing actionLoopQuitCh signals actionLoop to quit, which
@@ -179,7 +189,7 @@ func (ctrl *controller) playerActionLoop(ctx context.Context, player *playerProx
 	for {
 		act, err := player.ReadAction(ctx)
 		if err != nil {
-			return errors.Wrap(err, "could not read action from player")
+			return fmt.Errorf("could not read action from player: %w", err)
 		}
 		select {
 		case actionCh <- act:

@@ -1,6 +1,6 @@
 package model
 
-import "github.com/pkg/errors"
+import "errors"
 
 // actionLeave wraps a PlayerActionLeave, also providing
 // the PlayerID of the player that created the action.

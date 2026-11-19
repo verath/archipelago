@@ -1,23 +1,23 @@
 package game
 
 import (
+	"fmt"
 	"math/rand"
 	"time"
 
-	"github.com/pkg/errors"
 	"github.com/verath/archipelago/lib/game/model"
 )
 
 func createPlayers(numPlayers int) ([]*model.Player, *model.Player, error) {
 	playerNeutral, err := model.NewPlayer()
 	if err != nil {
-		return nil, nil, errors.Wrap(err, "error creating playerNeutral")
+		return nil, nil, fmt.Errorf("error creating playerNeutral: %w", err)
 	}
 	players := make([]*model.Player, numPlayers)
 	for i := 0; i < numPlayers; i++ {
 		players[i], err = model.NewPlayer()
 		if err != nil {
-			return nil, nil, errors.Wrap(err, "error creating player")
+			return nil, nil, fmt.Errorf("error creating player: %w", err)
 		}
 	}
 	return players, playerNeutral, nil
@@ -59,7 +59,7 @@ func createIslands(players []*model.Player, playerNeutral *model.Player, size mo
 	for pos, data := range islandMap {
 		island, err := model.NewIsland(pos, data.Size, data.Strength, data.Player)
 		if err != nil {
-			return nil, errors.Wrapf(err, "Error creating island (data: %v)", data)
+			return nil, fmt.Errorf("Error creating island (data: %v): %w", data, err)
 		}
 		island.SetGrowthRemainder(data.GrowthRemainder)
 		islands = append(islands, island)
@@ -77,13 +77,13 @@ func createBasicGame(numPlayers int) (*model.Game, error) {
 	}
 	players, playerNeutral, err := createPlayers(numPlayers)
 	if err != nil {
-		return nil, errors.Wrap(err, "error creating players")
+		return nil, fmt.Errorf("error creating players: %w", err)
 	}
 	seed := time.Now().UnixNano()
 	gameRand := rand.New(rand.NewSource(seed))
 	islands, err := createIslands(players, playerNeutral, size, gameRand)
 	if err != nil {
-		return nil, errors.Wrap(err, "Error creating islands")
+		return nil, fmt.Errorf("Error creating islands: %w", err)
 	}
 	gameBuilder := model.NewGameBuilder(size, playerNeutral)
 	for _, player := range players {

@@ -2,10 +2,11 @@ package archipelago
 
 import (
 	"context"
+	"errors"
+	"fmt"
 	"net/http"
 	"sync"
 
-	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"github.com/verath/archipelago/lib/common"
 	"github.com/verath/archipelago/lib/game"
@@ -40,11 +41,11 @@ func New(log *logrus.Logger, skipWSOriginCheck bool) (*Server, error) {
 	logEntry := common.ModuleLogEntry(log, "server")
 	gameCoordinator, err := game.NewCoordinator(log)
 	if err != nil {
-		return nil, errors.Wrap(err, "error creating game coordinator")
+		return nil, fmt.Errorf("error creating game coordinator: %w", err)
 	}
 	wsUpgrader, err := websocket.NewUpgrader(skipWSOriginCheck)
 	if err != nil {
-		return nil, errors.Wrap(err, "error creating websocket upgrader")
+		return nil, fmt.Errorf("error creating websocket upgrader: %w", err)
 	}
 	srv := &Server{
 		logEntry:        logEntry,
@@ -71,7 +72,10 @@ func (srv *Server) Run(ctx context.Context) error {
 	cancel()
 	srv.logEntry.Info("Waiting for clients to stop...")
 	srv.clientsWG.Wait()
-	return errors.Wrap(err, "GameCoordinator error")
+	if err != nil {
+		return fmt.Errorf("GameCoordinator error: %w", err)
+	}
+	return nil
 }
 
 // ServeHTTP dispatches HTTP requests.
@@ -111,11 +115,11 @@ func (srv *Server) handleWSConnect() http.HandlerFunc {
 func (srv *Server) newWSClient(ctx context.Context, wsConn *websocket.WSConnection) error {
 	client, err := network.NewClient(srv.logEntry.Logger, wsConn)
 	if err != nil {
-		return errors.Wrap(err, "error creating new Client from ws connection")
+		return fmt.Errorf("error creating new Client from ws connection: %w", err)
 	}
 	wireClient, err := wire.NewPBClientAdapter(client)
 	if err != nil {
-		return errors.Wrap(err, "error creating client wire adapter")
+		return fmt.Errorf("error creating client wire adapter: %w", err)
 	}
 	// Get client context. Note that it is not tied to the request context.
 	srv.clientContextMu.RLock()
@@ -127,7 +131,7 @@ func (srv *Server) newWSClient(ctx context.Context, wsConn *websocket.WSConnecti
 		defer srv.clientsWG.Done()
 		err := client.Run(clientCtx)
 		if err != nil {
-			if errors.Cause(err) == context.Canceled {
+			if errors.Is(err, context.Canceled) {
 				srv.logEntry.Debugf("client stopped with ctx error: %v", err)
 			} else {
 				srv.logEntry.Infof("client stopped with error: %v", err)
@@ -136,7 +140,7 @@ func (srv *Server) newWSClient(ctx context.Context, wsConn *websocket.WSConnecti
 	}()
 	if err := srv.gameCoordinator.AddClient(ctx, wireClient); err != nil {
 		client.Disconnect()
-		return errors.Wrap(err, "error adding client to game coordinator")
+		return fmt.Errorf("error adding client to game coordinator: %w", err)
 	}
 	return nil
 }

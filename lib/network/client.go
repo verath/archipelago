@@ -2,10 +2,11 @@ package network
 
 import (
 	"context"
+	"errors"
+	"fmt"
 	"sync"
 	"time"
 
-	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"github.com/verath/archipelago/lib/common"
 	"golang.org/x/time/rate"
@@ -142,21 +143,30 @@ func (c *Client) Run(ctx context.Context) error {
 	defer close(errCh)
 	go func() {
 		err := c.writePump(ctx, c.writeQueue, c.disconnectCh)
-		errCh <- errors.Wrap(err, "writePump quit")
+		if err != nil {
+			err = fmt.Errorf("writePump quit: %w", err)
+		}
+		errCh <- err
 	}()
 	go func() {
 		err := c.readPump(ctx, c.readQueue, c.disconnectCh)
-		errCh <- errors.Wrap(err, "readPump quit")
+		if err != nil {
+			err = fmt.Errorf("readPump quit: %w", err)
+		}
+		errCh <- err
 	}()
 
 	err := <-errCh
 	c.disconnect()
-	if errors.Cause(err) == errWritePumpShutdownRequested {
+	if errors.Is(err, errWritePumpShutdownRequested) {
 		ctxShutdown, cancelShutdown := context.WithTimeout(ctx, clientShutdownWait)
 		defer cancelShutdown()
 		errShutdown := c.shutdown(ctxShutdown)
 		// Always overwrite err, errWritePumpShutdownRequested is impl detail.
-		err = errors.Wrap(errShutdown, "error performing requested shutdown")
+		err = nil
+		if errShutdown != nil {
+			err = fmt.Errorf("error performing requested shutdown: %w", errShutdown)
+		}
 	} else {
 		c.conn.Close()
 	}
@@ -171,7 +181,7 @@ func (c *Client) writePump(ctx context.Context, writeQueue <-chan *writeRequest,
 		select {
 		case req := <-writeQueue:
 			if err := c.conn.WriteMessage(ctx, req.msg); err != nil {
-				return errors.Wrap(err, "writing message to conn failed")
+				return fmt.Errorf("writing message to conn failed: %w", err)
 			}
 			close(req.doneCh)
 		case <-disconnectCh:
@@ -195,7 +205,7 @@ func (c *Client) readPump(ctx context.Context, readQueue chan<- []byte, disconne
 		}
 		msg, err := c.conn.ReadMessage(ctx)
 		if err != nil {
-			return errors.Wrap(err, "error reading from connection")
+			return fmt.Errorf("error reading from connection: %w", err)
 		}
 		select {
 		case readQueue <- msg:
@@ -223,7 +233,7 @@ func (c *Client) disconnect() {
 func (c *Client) shutdown(ctx context.Context) error {
 	if err := c.conn.Shutdown(ctx); err != nil {
 		c.conn.Close()
-		return errors.Wrap(err, "connection shutdown failed")
+		return fmt.Errorf("connection shutdown failed: %w", err)
 	}
 	return nil
 }

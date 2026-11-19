@@ -2,11 +2,12 @@ package websocket
 
 import (
 	"context"
+	"errors"
+	"fmt"
 	"sync"
 	"time"
 
 	"github.com/gorilla/websocket"
-	"github.com/pkg/errors"
 )
 
 const (
@@ -51,10 +52,10 @@ func newWSConnection(wsConn *websocket.Conn) (*WSConnection, error) {
 func (c *WSConnection) ReadMessage(ctx context.Context) (msg []byte, err error) {
 	msgType, msg, err := c.readMessage(ctx)
 	if err != nil {
-		return nil, errors.Wrap(err, "Failed reading message")
+		return nil, fmt.Errorf("Failed reading message: %w", err)
 	}
 	if msgType != websocket.BinaryMessage {
-		return nil, errors.Errorf("Unexpected message type '%d'", msgType)
+		return nil, fmt.Errorf("Unexpected message type '%d'", msgType)
 	}
 	return msg, nil
 }
@@ -89,7 +90,7 @@ func (c *WSConnection) pingLoop(ctx context.Context, quitCh <-chan struct{}) err
 		select {
 		case <-ticker.C:
 			if err := c.writePing(ctx); err != nil {
-				return errors.Wrap(err, "failed writing ping")
+				return fmt.Errorf("failed writing ping: %w", err)
 			}
 		case <-quitCh:
 			return nil
@@ -112,7 +113,7 @@ func (c *WSConnection) readMessage(ctx context.Context) (int, []byte, error) {
 		return c.wsConn.SetReadDeadline(readDeadline)
 	}
 	if err := extendReadDeadline(); err != nil {
-		return 0, nil, errors.Wrap(err, "failed extending read deadline")
+		return 0, nil, fmt.Errorf("failed extending read deadline: %w", err)
 	}
 	c.wsConn.SetReadLimit(connMaxMessageSize)
 	// Send pings and listen for pongs during read. We extend the the timeout
@@ -127,7 +128,7 @@ func (c *WSConnection) readMessage(ctx context.Context) (int, []byte, error) {
 			return err
 		}
 		if err := extendReadDeadline(); err != nil {
-			return errors.Wrap(err, "failed extending read deadline")
+			return fmt.Errorf("failed extending read deadline: %w", err)
 		}
 		return nil
 	})
@@ -150,7 +151,7 @@ func (c *WSConnection) writeMessage(ctx context.Context, messageType int, msg []
 		writeDeadline = ctxDeadline
 	}
 	if err := c.wsConn.SetWriteDeadline(writeDeadline); err != nil {
-		return errors.Wrap(err, "failed setting write deadline")
+		return fmt.Errorf("failed setting write deadline: %w", err)
 	}
 	// Spawn a goroutine that handles context cancellation by force closing
 	// wsConn.
@@ -166,8 +167,10 @@ func (c *WSConnection) writeMessage(ctx context.Context, messageType int, msg []
 		}
 	}()
 	// Write message.
-	err := errors.Wrap(c.wsConn.WriteMessage(messageType, msg),
-		"failed writing message to wsConn")
+	err := c.wsConn.WriteMessage(messageType, msg)
+	if err != nil {
+		err = fmt.Errorf("failed writing message to wsConn: %w", err)
+	}
 	// Cleanup context cancellation goroutine.
 	close(doneCh)
 	ctxErr := <-errCh
@@ -192,7 +195,7 @@ func (c *WSConnection) shutdown(ctx context.Context) error {
 	defer c.writeMu.Unlock()
 	err := c.writeMessage(ctx, websocket.CloseMessage, []byte{})
 	if err != nil {
-		return errors.Wrap(err, "failed writing CloseMessage")
+		return fmt.Errorf("failed writing CloseMessage: %w", err)
 	}
 	return c.wsConn.Close()
 }
