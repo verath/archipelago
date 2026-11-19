@@ -1,12 +1,4 @@
-import "./main.css";
-
-// Babel "runtime"/polyfill imports, modified by Babel during compilation
-// depending on target browsers.
-// See https://babeljs.io/docs/en/babel-preset-env#usebuiltins
-import "core-js/stable";
-import "regenerator-runtime/runtime";
-
-import { Archipelago } from "./Archipelago";
+import { Archipelago } from "./Archipelago.jsx";
 
 /**
  * The version of the websocket protocol we expect.
