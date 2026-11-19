@@ -183,7 +183,7 @@ export default class GameController {
         ticker.add(this._interpolate, this);
 
         /**@type {GameResult} */
-        let gameResult = null;
+        let gameResult;
         ticker.start();
         try {
             for (; ;) {

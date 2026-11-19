@@ -401,7 +401,7 @@ const GameResultView = ({ gameModel, gameResult }) => {
         return null;
     }
 
-    let reasonMsg = "";
+    let reasonMsg;
     let wrapClassName = "game-over-wrap";
     switch (gameResult.reason) {
         case "GAME_OVER":

@@ -21,7 +21,10 @@ export default [
             },
         },
         settings: {
-            react: { version: "detect" },
+            // Not "detect": eslint-plugin-react 7.37's version detection calls
+            // context.getFilename(), which ESLint 10 removed. The plugin has no
+            // ESLint 10 release yet, hence also the "overrides" in package.json.
+            react: { version: "19.3" },
         },
         rules: {
             "indent": ["error", 4, { "SwitchCase": 1 }],
