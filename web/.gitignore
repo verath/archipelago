@@ -3,4 +3,8 @@ dist
 # Test build, with the e2e test hook (npm run build:e2e)
 dist-e2e
 
+# Playwright e2e test output (npm run test:e2e)
+playwright-report
+test-results
+
 node_modules

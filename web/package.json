@@ -22,7 +22,8 @@
     "proto": "node ../proto/build.mjs",
     "deploy": "npx firebase-tools deploy --non-interactive",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "test:e2e": "playwright test"
   },
   "dependencies": {
     "eventemitter3": "^5.0.4",
@@ -33,6 +34,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
+    "@playwright/test": "^1.65.1",
     "@testing-library/dom": "^10.4.2",
     "@testing-library/react": "^16.3.3",
     "eslint": "^10.15.0",
