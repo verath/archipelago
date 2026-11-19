@@ -1,42 +1,44 @@
 import * as $protobuf from "protobufjs";
 import Long = require("long");
+
 /** Namespace wire. */
 export namespace wire {
 
     /** Namespace msg. */
     namespace msg {
 
-        /** Properties of a Coordinate. */
-        interface ICoordinate {
-
-            /** Coordinate x */
-            x?: (number|null);
-
-            /** Coordinate y */
-            y?: (number|null);
+        /**
+         * Properties of a Coordinate.
+         * @deprecated Use wire.msg.Coordinate.$Properties instead.
+         */
+        interface ICoordinate extends wire.msg.Coordinate.$Properties {
         }
 
         /** Represents a Coordinate. */
-        class Coordinate implements ICoordinate {
+        class Coordinate {
 
             /**
              * Constructs a new Coordinate.
              * @param [properties] Properties to set
              */
-            constructor(properties?: wire.msg.ICoordinate);
+            constructor(properties?: wire.msg.Coordinate.$Properties);
+
+            /** Unknown fields preserved while decoding when enabled */
+            $unknowns?: Uint8Array[];
 
             /** Coordinate x. */
-            public x: number;
+            x: number;
 
             /** Coordinate y. */
-            public y: number;
+            y: number;
 
             /**
              * Creates a new Coordinate instance using the specified properties.
              * @param [properties] Properties to set
              * @returns Coordinate instance
              */
-            public static create(properties?: wire.msg.ICoordinate): wire.msg.Coordinate;
+            static create(properties: wire.msg.Coordinate.$Shape): wire.msg.Coordinate & wire.msg.Coordinate.$Shape;
+            static create(properties?: wire.msg.Coordinate.$Properties): wire.msg.Coordinate;
 
             /**
              * Encodes the specified Coordinate message. Does not implicitly {@link wire.msg.Coordinate.verify|verify} messages.
@@ -44,7 +46,7 @@ export namespace wire {
              * @param [writer] Writer to encode to
              * @returns Writer
              */
-            public static encode(message: wire.msg.ICoordinate, writer?: $protobuf.Writer): $protobuf.Writer;
+            static encode(message: wire.msg.Coordinate.$Properties, writer?: $protobuf.Writer): $protobuf.Writer;
 
             /**
              * Encodes the specified Coordinate message, length delimited. Does not implicitly {@link wire.msg.Coordinate.verify|verify} messages.
@@ -52,40 +54,40 @@ export namespace wire {
              * @param [writer] Writer to encode to
              * @returns Writer
              */
-            public static encodeDelimited(message: wire.msg.ICoordinate, writer?: $protobuf.Writer): $protobuf.Writer;
+            static encodeDelimited(message: wire.msg.Coordinate.$Properties, writer?: $protobuf.Writer): $protobuf.Writer;
 
             /**
              * Decodes a Coordinate message from the specified reader or buffer.
              * @param reader Reader or buffer to decode from
              * @param [length] Message length if known beforehand
-             * @returns Coordinate
+             * @returns {wire.msg.Coordinate & wire.msg.Coordinate.$Shape} Coordinate
              * @throws {Error} If the payload is not a reader or valid buffer
              * @throws {$protobuf.util.ProtocolError} If required fields are missing
              */
-            public static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): wire.msg.Coordinate;
+            static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): wire.msg.Coordinate & wire.msg.Coordinate.$Shape;
 
             /**
              * Decodes a Coordinate message from the specified reader or buffer, length delimited.
              * @param reader Reader or buffer to decode from
-             * @returns Coordinate
+             * @returns {wire.msg.Coordinate & wire.msg.Coordinate.$Shape} Coordinate
              * @throws {Error} If the payload is not a reader or valid buffer
              * @throws {$protobuf.util.ProtocolError} If required fields are missing
              */
-            public static decodeDelimited(reader: ($protobuf.Reader|Uint8Array)): wire.msg.Coordinate;
+            static decodeDelimited(reader: ($protobuf.Reader|Uint8Array)): wire.msg.Coordinate & wire.msg.Coordinate.$Shape;
 
             /**
              * Verifies a Coordinate message.
              * @param message Plain object to verify
              * @returns `null` if valid, otherwise the reason why it is not
              */
-            public static verify(message: { [k: string]: any }): (string|null);
+            static verify(message: { [k: string]: any }): (string|null);
 
             /**
              * Creates a Coordinate message from a plain object. Also converts values to their respective internal types.
              * @param object Plain object
              * @returns Coordinate
              */
-            public static fromObject(object: { [k: string]: any }): wire.msg.Coordinate;
+            static fromObject(object: { [k: string]: any }): wire.msg.Coordinate;
 
             /**
              * Creates a plain object from a Coordinate message. Also converts values to other types if specified.
@@ -93,53 +95,73 @@ export namespace wire {
              * @param [options] Conversion options
              * @returns Plain object
              */
-            public static toObject(message: wire.msg.Coordinate, options?: $protobuf.IConversionOptions): { [k: string]: any };
+            static toObject(message: wire.msg.Coordinate, options?: $protobuf.IConversionOptions): { [k: string]: any };
 
             /**
              * Converts this Coordinate to JSON.
              * @returns JSON object
              */
-            public toJSON(): { [k: string]: any };
+            toJSON(): { [k: string]: any };
 
             /**
-             * Gets the default type url for Coordinate
-             * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
-             * @returns The default type url
+             * Gets the type url for Coordinate
+             * @param [prefix] Custom type url prefix, defaults to `"type.googleapis.com"`
+             * @returns The type url
              */
-            public static getTypeUrl(typeUrlPrefix?: string): string;
+            static getTypeUrl(prefix?: string): string;
         }
 
-        /** Properties of a FloatCoordinate. */
-        interface IFloatCoordinate {
+        namespace Coordinate {
 
-            /** FloatCoordinate x */
-            x?: (number|null);
+            /** Properties of a Coordinate. */
+            interface $Properties {
 
-            /** FloatCoordinate y */
-            y?: (number|null);
+                /** Coordinate x */
+                x?: (number|null);
+
+                /** Coordinate y */
+                y?: (number|null);
+
+                /** Unknown fields preserved while decoding when enabled */
+                $unknowns?: Uint8Array[];
+            }
+
+            /** Shape of a Coordinate. */
+            type $Shape = wire.msg.Coordinate.$Properties;
+        }
+
+        /**
+         * Properties of a FloatCoordinate.
+         * @deprecated Use wire.msg.FloatCoordinate.$Properties instead.
+         */
+        interface IFloatCoordinate extends wire.msg.FloatCoordinate.$Properties {
         }
 
         /** Represents a FloatCoordinate. */
-        class FloatCoordinate implements IFloatCoordinate {
+        class FloatCoordinate {
 
             /**
              * Constructs a new FloatCoordinate.
              * @param [properties] Properties to set
              */
-            constructor(properties?: wire.msg.IFloatCoordinate);
+            constructor(properties?: wire.msg.FloatCoordinate.$Properties);
+
+            /** Unknown fields preserved while decoding when enabled */
+            $unknowns?: Uint8Array[];
 
             /** FloatCoordinate x. */
-            public x: number;
+            x: number;
 
             /** FloatCoordinate y. */
-            public y: number;
+            y: number;
 
             /**
              * Creates a new FloatCoordinate instance using the specified properties.
              * @param [properties] Properties to set
              * @returns FloatCoordinate instance
              */
-            public static create(properties?: wire.msg.IFloatCoordinate): wire.msg.FloatCoordinate;
+            static create(properties: wire.msg.FloatCoordinate.$Shape): wire.msg.FloatCoordinate & wire.msg.FloatCoordinate.$Shape;
+            static create(properties?: wire.msg.FloatCoordinate.$Properties): wire.msg.FloatCoordinate;
 
             /**
              * Encodes the specified FloatCoordinate message. Does not implicitly {@link wire.msg.FloatCoordinate.verify|verify} messages.
@@ -147,7 +169,7 @@ export namespace wire {
              * @param [writer] Writer to encode to
              * @returns Writer
              */
-            public static encode(message: wire.msg.IFloatCoordinate, writer?: $protobuf.Writer): $protobuf.Writer;
+            static encode(message: wire.msg.FloatCoordinate.$Properties, writer?: $protobuf.Writer): $protobuf.Writer;
 
             /**
              * Encodes the specified FloatCoordinate message, length delimited. Does not implicitly {@link wire.msg.FloatCoordinate.verify|verify} messages.
@@ -155,40 +177,40 @@ export namespace wire {
              * @param [writer] Writer to encode to
              * @returns Writer
              */
-            public static encodeDelimited(message: wire.msg.IFloatCoordinate, writer?: $protobuf.Writer): $protobuf.Writer;
+            static encodeDelimited(message: wire.msg.FloatCoordinate.$Properties, writer?: $protobuf.Writer): $protobuf.Writer;
 
             /**
              * Decodes a FloatCoordinate message from the specified reader or buffer.
              * @param reader Reader or buffer to decode from
              * @param [length] Message length if known beforehand
-             * @returns FloatCoordinate
+             * @returns {wire.msg.FloatCoordinate & wire.msg.FloatCoordinate.$Shape} FloatCoordinate
              * @throws {Error} If the payload is not a reader or valid buffer
              * @throws {$protobuf.util.ProtocolError} If required fields are missing
              */
-            public static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): wire.msg.FloatCoordinate;
+            static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): wire.msg.FloatCoordinate & wire.msg.FloatCoordinate.$Shape;
 
             /**
              * Decodes a FloatCoordinate message from the specified reader or buffer, length delimited.
              * @param reader Reader or buffer to decode from
-             * @returns FloatCoordinate
+             * @returns {wire.msg.FloatCoordinate & wire.msg.FloatCoordinate.$Shape} FloatCoordinate
              * @throws {Error} If the payload is not a reader or valid buffer
              * @throws {$protobuf.util.ProtocolError} If required fields are missing
              */
-            public static decodeDelimited(reader: ($protobuf.Reader|Uint8Array)): wire.msg.FloatCoordinate;
+            static decodeDelimited(reader: ($protobuf.Reader|Uint8Array)): wire.msg.FloatCoordinate & wire.msg.FloatCoordinate.$Shape;
 
             /**
              * Verifies a FloatCoordinate message.
              * @param message Plain object to verify
              * @returns `null` if valid, otherwise the reason why it is not
              */
-            public static verify(message: { [k: string]: any }): (string|null);
+            static verify(message: { [k: string]: any }): (string|null);
 
             /**
              * Creates a FloatCoordinate message from a plain object. Also converts values to their respective internal types.
              * @param object Plain object
              * @returns FloatCoordinate
              */
-            public static fromObject(object: { [k: string]: any }): wire.msg.FloatCoordinate;
+            static fromObject(object: { [k: string]: any }): wire.msg.FloatCoordinate;
 
             /**
              * Creates a plain object from a FloatCoordinate message. Also converts values to other types if specified.
@@ -196,61 +218,89 @@ export namespace wire {
              * @param [options] Conversion options
              * @returns Plain object
              */
-            public static toObject(message: wire.msg.FloatCoordinate, options?: $protobuf.IConversionOptions): { [k: string]: any };
+            static toObject(message: wire.msg.FloatCoordinate, options?: $protobuf.IConversionOptions): { [k: string]: any };
 
             /**
              * Converts this FloatCoordinate to JSON.
              * @returns JSON object
              */
-            public toJSON(): { [k: string]: any };
+            toJSON(): { [k: string]: any };
 
             /**
-             * Gets the default type url for FloatCoordinate
-             * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
-             * @returns The default type url
+             * Gets the type url for FloatCoordinate
+             * @param [prefix] Custom type url prefix, defaults to `"type.googleapis.com"`
+             * @returns The type url
              */
-            public static getTypeUrl(typeUrlPrefix?: string): string;
+            static getTypeUrl(prefix?: string): string;
+        }
+
+        namespace FloatCoordinate {
+
+            /** Properties of a FloatCoordinate. */
+            interface $Properties {
+
+                /** FloatCoordinate x */
+                x?: (number|null);
+
+                /** FloatCoordinate y */
+                y?: (number|null);
+
+                /** Unknown fields preserved while decoding when enabled */
+                $unknowns?: Uint8Array[];
+            }
+
+            /** Shape of a FloatCoordinate. */
+            type $Shape = wire.msg.FloatCoordinate.$Properties;
         }
 
         /** PlayerState enum. */
         enum PlayerState {
+
+            /** ALIVE value */
             ALIVE = 0,
+
+            /** PENDING_REVIVAL value */
             PENDING_REVIVAL = 1,
+
+            /** DEAD value */
             DEAD = 2,
+
+            /** LEFT_GAME value */
             LEFT_GAME = 3
         }
 
-        /** Properties of a Player. */
-        interface IPlayer {
-
-            /** Player id */
-            id?: (string|null);
-
-            /** Player state */
-            state?: (wire.msg.PlayerState|null);
+        /**
+         * Properties of a Player.
+         * @deprecated Use wire.msg.Player.$Properties instead.
+         */
+        interface IPlayer extends wire.msg.Player.$Properties {
         }
 
         /** Represents a Player. */
-        class Player implements IPlayer {
+        class Player {
 
             /**
              * Constructs a new Player.
              * @param [properties] Properties to set
              */
-            constructor(properties?: wire.msg.IPlayer);
+            constructor(properties?: wire.msg.Player.$Properties);
+
+            /** Unknown fields preserved while decoding when enabled */
+            $unknowns?: Uint8Array[];
 
             /** Player id. */
-            public id: string;
+            id: string;
 
             /** Player state. */
-            public state: wire.msg.PlayerState;
+            state: wire.msg.PlayerState;
 
             /**
              * Creates a new Player instance using the specified properties.
              * @param [properties] Properties to set
              * @returns Player instance
              */
-            public static create(properties?: wire.msg.IPlayer): wire.msg.Player;
+            static create(properties: wire.msg.Player.$Shape): wire.msg.Player & wire.msg.Player.$Shape;
+            static create(properties?: wire.msg.Player.$Properties): wire.msg.Player;
 
             /**
              * Encodes the specified Player message. Does not implicitly {@link wire.msg.Player.verify|verify} messages.
@@ -258,7 +308,7 @@ export namespace wire {
              * @param [writer] Writer to encode to
              * @returns Writer
              */
-            public static encode(message: wire.msg.IPlayer, writer?: $protobuf.Writer): $protobuf.Writer;
+            static encode(message: wire.msg.Player.$Properties, writer?: $protobuf.Writer): $protobuf.Writer;
 
             /**
              * Encodes the specified Player message, length delimited. Does not implicitly {@link wire.msg.Player.verify|verify} messages.
@@ -266,40 +316,40 @@ export namespace wire {
              * @param [writer] Writer to encode to
              * @returns Writer
              */
-            public static encodeDelimited(message: wire.msg.IPlayer, writer?: $protobuf.Writer): $protobuf.Writer;
+            static encodeDelimited(message: wire.msg.Player.$Properties, writer?: $protobuf.Writer): $protobuf.Writer;
 
             /**
              * Decodes a Player message from the specified reader or buffer.
              * @param reader Reader or buffer to decode from
              * @param [length] Message length if known beforehand
-             * @returns Player
+             * @returns {wire.msg.Player & wire.msg.Player.$Shape} Player
              * @throws {Error} If the payload is not a reader or valid buffer
              * @throws {$protobuf.util.ProtocolError} If required fields are missing
              */
-            public static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): wire.msg.Player;
+            static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): wire.msg.Player & wire.msg.Player.$Shape;
 
             /**
              * Decodes a Player message from the specified reader or buffer, length delimited.
              * @param reader Reader or buffer to decode from
-             * @returns Player
+             * @returns {wire.msg.Player & wire.msg.Player.$Shape} Player
              * @throws {Error} If the payload is not a reader or valid buffer
              * @throws {$protobuf.util.ProtocolError} If required fields are missing
              */
-            public static decodeDelimited(reader: ($protobuf.Reader|Uint8Array)): wire.msg.Player;
+            static decodeDelimited(reader: ($protobuf.Reader|Uint8Array)): wire.msg.Player & wire.msg.Player.$Shape;
 
             /**
              * Verifies a Player message.
              * @param message Plain object to verify
              * @returns `null` if valid, otherwise the reason why it is not
              */
-            public static verify(message: { [k: string]: any }): (string|null);
+            static verify(message: { [k: string]: any }): (string|null);
 
             /**
              * Creates a Player message from a plain object. Also converts values to their respective internal types.
              * @param object Plain object
              * @returns Player
              */
-            public static fromObject(object: { [k: string]: any }): wire.msg.Player;
+            static fromObject(object: { [k: string]: any }): wire.msg.Player;
 
             /**
              * Creates a plain object from a Player message. Also converts values to other types if specified.
@@ -307,53 +357,73 @@ export namespace wire {
              * @param [options] Conversion options
              * @returns Plain object
              */
-            public static toObject(message: wire.msg.Player, options?: $protobuf.IConversionOptions): { [k: string]: any };
+            static toObject(message: wire.msg.Player, options?: $protobuf.IConversionOptions): { [k: string]: any };
 
             /**
              * Converts this Player to JSON.
              * @returns JSON object
              */
-            public toJSON(): { [k: string]: any };
+            toJSON(): { [k: string]: any };
 
             /**
-             * Gets the default type url for Player
-             * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
-             * @returns The default type url
+             * Gets the type url for Player
+             * @param [prefix] Custom type url prefix, defaults to `"type.googleapis.com"`
+             * @returns The type url
              */
-            public static getTypeUrl(typeUrlPrefix?: string): string;
+            static getTypeUrl(prefix?: string): string;
         }
 
-        /** Properties of an Army. */
-        interface IArmy {
+        namespace Player {
 
-            /** Army ownerId */
-            ownerId?: (string|null);
+            /** Properties of a Player. */
+            interface $Properties {
 
-            /** Army strength */
-            strength?: (number|null);
+                /** Player id */
+                id?: (string|null);
+
+                /** Player state */
+                state?: (wire.msg.PlayerState|null);
+
+                /** Unknown fields preserved while decoding when enabled */
+                $unknowns?: Uint8Array[];
+            }
+
+            /** Shape of a Player. */
+            type $Shape = wire.msg.Player.$Properties;
+        }
+
+        /**
+         * Properties of an Army.
+         * @deprecated Use wire.msg.Army.$Properties instead.
+         */
+        interface IArmy extends wire.msg.Army.$Properties {
         }
 
         /** Represents an Army. */
-        class Army implements IArmy {
+        class Army {
 
             /**
              * Constructs a new Army.
              * @param [properties] Properties to set
              */
-            constructor(properties?: wire.msg.IArmy);
+            constructor(properties?: wire.msg.Army.$Properties);
+
+            /** Unknown fields preserved while decoding when enabled */
+            $unknowns?: Uint8Array[];
 
             /** Army ownerId. */
-            public ownerId: string;
+            ownerId: string;
 
             /** Army strength. */
-            public strength: number;
+            strength: number;
 
             /**
              * Creates a new Army instance using the specified properties.
              * @param [properties] Properties to set
              * @returns Army instance
              */
-            public static create(properties?: wire.msg.IArmy): wire.msg.Army;
+            static create(properties: wire.msg.Army.$Shape): wire.msg.Army & wire.msg.Army.$Shape;
+            static create(properties?: wire.msg.Army.$Properties): wire.msg.Army;
 
             /**
              * Encodes the specified Army message. Does not implicitly {@link wire.msg.Army.verify|verify} messages.
@@ -361,7 +431,7 @@ export namespace wire {
              * @param [writer] Writer to encode to
              * @returns Writer
              */
-            public static encode(message: wire.msg.IArmy, writer?: $protobuf.Writer): $protobuf.Writer;
+            static encode(message: wire.msg.Army.$Properties, writer?: $protobuf.Writer): $protobuf.Writer;
 
             /**
              * Encodes the specified Army message, length delimited. Does not implicitly {@link wire.msg.Army.verify|verify} messages.
@@ -369,40 +439,40 @@ export namespace wire {
              * @param [writer] Writer to encode to
              * @returns Writer
              */
-            public static encodeDelimited(message: wire.msg.IArmy, writer?: $protobuf.Writer): $protobuf.Writer;
+            static encodeDelimited(message: wire.msg.Army.$Properties, writer?: $protobuf.Writer): $protobuf.Writer;
 
             /**
              * Decodes an Army message from the specified reader or buffer.
              * @param reader Reader or buffer to decode from
              * @param [length] Message length if known beforehand
-             * @returns Army
+             * @returns {wire.msg.Army & wire.msg.Army.$Shape} Army
              * @throws {Error} If the payload is not a reader or valid buffer
              * @throws {$protobuf.util.ProtocolError} If required fields are missing
              */
-            public static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): wire.msg.Army;
+            static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): wire.msg.Army & wire.msg.Army.$Shape;
 
             /**
              * Decodes an Army message from the specified reader or buffer, length delimited.
              * @param reader Reader or buffer to decode from
-             * @returns Army
+             * @returns {wire.msg.Army & wire.msg.Army.$Shape} Army
              * @throws {Error} If the payload is not a reader or valid buffer
              * @throws {$protobuf.util.ProtocolError} If required fields are missing
              */
-            public static decodeDelimited(reader: ($protobuf.Reader|Uint8Array)): wire.msg.Army;
+            static decodeDelimited(reader: ($protobuf.Reader|Uint8Array)): wire.msg.Army & wire.msg.Army.$Shape;
 
             /**
              * Verifies an Army message.
              * @param message Plain object to verify
              * @returns `null` if valid, otherwise the reason why it is not
              */
-            public static verify(message: { [k: string]: any }): (string|null);
+            static verify(message: { [k: string]: any }): (string|null);
 
             /**
              * Creates an Army message from a plain object. Also converts values to their respective internal types.
              * @param object Plain object
              * @returns Army
              */
-            public static fromObject(object: { [k: string]: any }): wire.msg.Army;
+            static fromObject(object: { [k: string]: any }): wire.msg.Army;
 
             /**
              * Creates a plain object from an Army message. Also converts values to other types if specified.
@@ -410,71 +480,82 @@ export namespace wire {
              * @param [options] Conversion options
              * @returns Plain object
              */
-            public static toObject(message: wire.msg.Army, options?: $protobuf.IConversionOptions): { [k: string]: any };
+            static toObject(message: wire.msg.Army, options?: $protobuf.IConversionOptions): { [k: string]: any };
 
             /**
              * Converts this Army to JSON.
              * @returns JSON object
              */
-            public toJSON(): { [k: string]: any };
+            toJSON(): { [k: string]: any };
 
             /**
-             * Gets the default type url for Army
-             * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
-             * @returns The default type url
+             * Gets the type url for Army
+             * @param [prefix] Custom type url prefix, defaults to `"type.googleapis.com"`
+             * @returns The type url
              */
-            public static getTypeUrl(typeUrlPrefix?: string): string;
+            static getTypeUrl(prefix?: string): string;
         }
 
-        /** Properties of an Airplane. */
-        interface IAirplane {
+        namespace Army {
 
-            /** Airplane id */
-            id?: (string|null);
+            /** Properties of an Army. */
+            interface $Properties {
 
-            /** Airplane army */
-            army?: (wire.msg.IArmy|null);
+                /** Army ownerId */
+                ownerId?: (string|null);
 
-            /** Airplane position */
-            position?: (wire.msg.IFloatCoordinate|null);
+                /** Army strength */
+                strength?: (number|null);
 
-            /** Airplane direction */
-            direction?: (number|null);
+                /** Unknown fields preserved while decoding when enabled */
+                $unknowns?: Uint8Array[];
+            }
 
-            /** Airplane speed */
-            speed?: (number|null);
+            /** Shape of an Army. */
+            type $Shape = wire.msg.Army.$Properties;
+        }
+
+        /**
+         * Properties of an Airplane.
+         * @deprecated Use wire.msg.Airplane.$Properties instead.
+         */
+        interface IAirplane extends wire.msg.Airplane.$Properties {
         }
 
         /** Represents an Airplane. */
-        class Airplane implements IAirplane {
+        class Airplane {
 
             /**
              * Constructs a new Airplane.
              * @param [properties] Properties to set
              */
-            constructor(properties?: wire.msg.IAirplane);
+            constructor(properties?: wire.msg.Airplane.$Properties);
+
+            /** Unknown fields preserved while decoding when enabled */
+            $unknowns?: Uint8Array[];
 
             /** Airplane id. */
-            public id: string;
+            id: string;
 
             /** Airplane army. */
-            public army?: (wire.msg.IArmy|null);
+            army?: (wire.msg.Army.$Properties|null);
 
             /** Airplane position. */
-            public position?: (wire.msg.IFloatCoordinate|null);
+            position?: (wire.msg.FloatCoordinate.$Properties|null);
 
             /** Airplane direction. */
-            public direction: number;
+            direction: number;
 
             /** Airplane speed. */
-            public speed: number;
+            speed: number;
 
             /**
              * Creates a new Airplane instance using the specified properties.
              * @param [properties] Properties to set
              * @returns Airplane instance
              */
-            public static create(properties?: wire.msg.IAirplane): wire.msg.Airplane;
+            static create(properties: wire.msg.Airplane.$Shape): wire.msg.Airplane & wire.msg.Airplane.$Shape;
+            static create(properties?: wire.msg.Airplane.$Properties): wire.msg.Airplane;
 
             /**
              * Encodes the specified Airplane message. Does not implicitly {@link wire.msg.Airplane.verify|verify} messages.
@@ -482,7 +563,7 @@ export namespace wire {
              * @param [writer] Writer to encode to
              * @returns Writer
              */
-            public static encode(message: wire.msg.IAirplane, writer?: $protobuf.Writer): $protobuf.Writer;
+            static encode(message: wire.msg.Airplane.$Properties, writer?: $protobuf.Writer): $protobuf.Writer;
 
             /**
              * Encodes the specified Airplane message, length delimited. Does not implicitly {@link wire.msg.Airplane.verify|verify} messages.
@@ -490,40 +571,40 @@ export namespace wire {
              * @param [writer] Writer to encode to
              * @returns Writer
              */
-            public static encodeDelimited(message: wire.msg.IAirplane, writer?: $protobuf.Writer): $protobuf.Writer;
+            static encodeDelimited(message: wire.msg.Airplane.$Properties, writer?: $protobuf.Writer): $protobuf.Writer;
 
             /**
              * Decodes an Airplane message from the specified reader or buffer.
              * @param reader Reader or buffer to decode from
              * @param [length] Message length if known beforehand
-             * @returns Airplane
+             * @returns {wire.msg.Airplane & wire.msg.Airplane.$Shape} Airplane
              * @throws {Error} If the payload is not a reader or valid buffer
              * @throws {$protobuf.util.ProtocolError} If required fields are missing
              */
-            public static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): wire.msg.Airplane;
+            static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): wire.msg.Airplane & wire.msg.Airplane.$Shape;
 
             /**
              * Decodes an Airplane message from the specified reader or buffer, length delimited.
              * @param reader Reader or buffer to decode from
-             * @returns Airplane
+             * @returns {wire.msg.Airplane & wire.msg.Airplane.$Shape} Airplane
              * @throws {Error} If the payload is not a reader or valid buffer
              * @throws {$protobuf.util.ProtocolError} If required fields are missing
              */
-            public static decodeDelimited(reader: ($protobuf.Reader|Uint8Array)): wire.msg.Airplane;
+            static decodeDelimited(reader: ($protobuf.Reader|Uint8Array)): wire.msg.Airplane & wire.msg.Airplane.$Shape;
 
             /**
              * Verifies an Airplane message.
              * @param message Plain object to verify
              * @returns `null` if valid, otherwise the reason why it is not
              */
-            public static verify(message: { [k: string]: any }): (string|null);
+            static verify(message: { [k: string]: any }): (string|null);
 
             /**
              * Creates an Airplane message from a plain object. Also converts values to their respective internal types.
              * @param object Plain object
              * @returns Airplane
              */
-            public static fromObject(object: { [k: string]: any }): wire.msg.Airplane;
+            static fromObject(object: { [k: string]: any }): wire.msg.Airplane;
 
             /**
              * Creates a plain object from an Airplane message. Also converts values to other types if specified.
@@ -531,65 +612,88 @@ export namespace wire {
              * @param [options] Conversion options
              * @returns Plain object
              */
-            public static toObject(message: wire.msg.Airplane, options?: $protobuf.IConversionOptions): { [k: string]: any };
+            static toObject(message: wire.msg.Airplane, options?: $protobuf.IConversionOptions): { [k: string]: any };
 
             /**
              * Converts this Airplane to JSON.
              * @returns JSON object
              */
-            public toJSON(): { [k: string]: any };
+            toJSON(): { [k: string]: any };
 
             /**
-             * Gets the default type url for Airplane
-             * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
-             * @returns The default type url
+             * Gets the type url for Airplane
+             * @param [prefix] Custom type url prefix, defaults to `"type.googleapis.com"`
+             * @returns The type url
              */
-            public static getTypeUrl(typeUrlPrefix?: string): string;
+            static getTypeUrl(prefix?: string): string;
         }
 
-        /** Properties of an Island. */
-        interface IIsland {
+        namespace Airplane {
 
-            /** Island id */
-            id?: (string|null);
+            /** Properties of an Airplane. */
+            interface $Properties {
 
-            /** Island army */
-            army?: (wire.msg.IArmy|null);
+                /** Airplane id */
+                id?: (string|null);
 
-            /** Island position */
-            position?: (wire.msg.ICoordinate|null);
+                /** Airplane army */
+                army?: (wire.msg.Army.$Properties|null);
 
-            /** Island size */
-            size?: (number|null);
+                /** Airplane position */
+                position?: (wire.msg.FloatCoordinate.$Properties|null);
+
+                /** Airplane direction */
+                direction?: (number|null);
+
+                /** Airplane speed */
+                speed?: (number|null);
+
+                /** Unknown fields preserved while decoding when enabled */
+                $unknowns?: Uint8Array[];
+            }
+
+            /** Shape of an Airplane. */
+            type $Shape = wire.msg.Airplane.$Properties;
+        }
+
+        /**
+         * Properties of an Island.
+         * @deprecated Use wire.msg.Island.$Properties instead.
+         */
+        interface IIsland extends wire.msg.Island.$Properties {
         }
 
         /** Represents an Island. */
-        class Island implements IIsland {
+        class Island {
 
             /**
              * Constructs a new Island.
              * @param [properties] Properties to set
              */
-            constructor(properties?: wire.msg.IIsland);
+            constructor(properties?: wire.msg.Island.$Properties);
+
+            /** Unknown fields preserved while decoding when enabled */
+            $unknowns?: Uint8Array[];
 
             /** Island id. */
-            public id: string;
+            id: string;
 
             /** Island army. */
-            public army?: (wire.msg.IArmy|null);
+            army?: (wire.msg.Army.$Properties|null);
 
             /** Island position. */
-            public position?: (wire.msg.ICoordinate|null);
+            position?: (wire.msg.Coordinate.$Properties|null);
 
             /** Island size. */
-            public size: number;
+            size: number;
 
             /**
              * Creates a new Island instance using the specified properties.
              * @param [properties] Properties to set
              * @returns Island instance
              */
-            public static create(properties?: wire.msg.IIsland): wire.msg.Island;
+            static create(properties: wire.msg.Island.$Shape): wire.msg.Island & wire.msg.Island.$Shape;
+            static create(properties?: wire.msg.Island.$Properties): wire.msg.Island;
 
             /**
              * Encodes the specified Island message. Does not implicitly {@link wire.msg.Island.verify|verify} messages.
@@ -597,7 +701,7 @@ export namespace wire {
              * @param [writer] Writer to encode to
              * @returns Writer
              */
-            public static encode(message: wire.msg.IIsland, writer?: $protobuf.Writer): $protobuf.Writer;
+            static encode(message: wire.msg.Island.$Properties, writer?: $protobuf.Writer): $protobuf.Writer;
 
             /**
              * Encodes the specified Island message, length delimited. Does not implicitly {@link wire.msg.Island.verify|verify} messages.
@@ -605,40 +709,40 @@ export namespace wire {
              * @param [writer] Writer to encode to
              * @returns Writer
              */
-            public static encodeDelimited(message: wire.msg.IIsland, writer?: $protobuf.Writer): $protobuf.Writer;
+            static encodeDelimited(message: wire.msg.Island.$Properties, writer?: $protobuf.Writer): $protobuf.Writer;
 
             /**
              * Decodes an Island message from the specified reader or buffer.
              * @param reader Reader or buffer to decode from
              * @param [length] Message length if known beforehand
-             * @returns Island
+             * @returns {wire.msg.Island & wire.msg.Island.$Shape} Island
              * @throws {Error} If the payload is not a reader or valid buffer
              * @throws {$protobuf.util.ProtocolError} If required fields are missing
              */
-            public static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): wire.msg.Island;
+            static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): wire.msg.Island & wire.msg.Island.$Shape;
 
             /**
              * Decodes an Island message from the specified reader or buffer, length delimited.
              * @param reader Reader or buffer to decode from
-             * @returns Island
+             * @returns {wire.msg.Island & wire.msg.Island.$Shape} Island
              * @throws {Error} If the payload is not a reader or valid buffer
              * @throws {$protobuf.util.ProtocolError} If required fields are missing
              */
-            public static decodeDelimited(reader: ($protobuf.Reader|Uint8Array)): wire.msg.Island;
+            static decodeDelimited(reader: ($protobuf.Reader|Uint8Array)): wire.msg.Island & wire.msg.Island.$Shape;
 
             /**
              * Verifies an Island message.
              * @param message Plain object to verify
              * @returns `null` if valid, otherwise the reason why it is not
              */
-            public static verify(message: { [k: string]: any }): (string|null);
+            static verify(message: { [k: string]: any }): (string|null);
 
             /**
              * Creates an Island message from a plain object. Also converts values to their respective internal types.
              * @param object Plain object
              * @returns Island
              */
-            public static fromObject(object: { [k: string]: any }): wire.msg.Island;
+            static fromObject(object: { [k: string]: any }): wire.msg.Island;
 
             /**
              * Creates a plain object from an Island message. Also converts values to other types if specified.
@@ -646,77 +750,91 @@ export namespace wire {
              * @param [options] Conversion options
              * @returns Plain object
              */
-            public static toObject(message: wire.msg.Island, options?: $protobuf.IConversionOptions): { [k: string]: any };
+            static toObject(message: wire.msg.Island, options?: $protobuf.IConversionOptions): { [k: string]: any };
 
             /**
              * Converts this Island to JSON.
              * @returns JSON object
              */
-            public toJSON(): { [k: string]: any };
+            toJSON(): { [k: string]: any };
 
             /**
-             * Gets the default type url for Island
-             * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
-             * @returns The default type url
+             * Gets the type url for Island
+             * @param [prefix] Custom type url prefix, defaults to `"type.googleapis.com"`
+             * @returns The type url
              */
-            public static getTypeUrl(typeUrlPrefix?: string): string;
+            static getTypeUrl(prefix?: string): string;
         }
 
-        /** Properties of a Game. */
-        interface IGame {
+        namespace Island {
 
-            /** Game id */
-            id?: (string|null);
+            /** Properties of an Island. */
+            interface $Properties {
 
-            /** Game size */
-            size?: (wire.msg.ICoordinate|null);
+                /** Island id */
+                id?: (string|null);
 
-            /** Game playerNeutral */
-            playerNeutral?: (wire.msg.IPlayer|null);
+                /** Island army */
+                army?: (wire.msg.Army.$Properties|null);
 
-            /** Game players */
-            players?: (wire.msg.IPlayer[]|null);
+                /** Island position */
+                position?: (wire.msg.Coordinate.$Properties|null);
 
-            /** Game islands */
-            islands?: (wire.msg.IIsland[]|null);
+                /** Island size */
+                size?: (number|null);
 
-            /** Game airplanes */
-            airplanes?: (wire.msg.IAirplane[]|null);
+                /** Unknown fields preserved while decoding when enabled */
+                $unknowns?: Uint8Array[];
+            }
+
+            /** Shape of an Island. */
+            type $Shape = wire.msg.Island.$Properties;
+        }
+
+        /**
+         * Properties of a Game.
+         * @deprecated Use wire.msg.Game.$Properties instead.
+         */
+        interface IGame extends wire.msg.Game.$Properties {
         }
 
         /** Represents a Game. */
-        class Game implements IGame {
+        class Game {
 
             /**
              * Constructs a new Game.
              * @param [properties] Properties to set
              */
-            constructor(properties?: wire.msg.IGame);
+            constructor(properties?: wire.msg.Game.$Properties);
+
+            /** Unknown fields preserved while decoding when enabled */
+            $unknowns?: Uint8Array[];
 
             /** Game id. */
-            public id: string;
+            id: string;
 
             /** Game size. */
-            public size?: (wire.msg.ICoordinate|null);
+            size?: (wire.msg.Coordinate.$Properties|null);
 
             /** Game playerNeutral. */
-            public playerNeutral?: (wire.msg.IPlayer|null);
+            playerNeutral?: (wire.msg.Player.$Properties|null);
 
             /** Game players. */
-            public players: wire.msg.IPlayer[];
+            players: wire.msg.Player.$Properties[];
 
             /** Game islands. */
-            public islands: wire.msg.IIsland[];
+            islands: wire.msg.Island.$Properties[];
 
             /** Game airplanes. */
-            public airplanes: wire.msg.IAirplane[];
+            airplanes: wire.msg.Airplane.$Properties[];
 
             /**
              * Creates a new Game instance using the specified properties.
              * @param [properties] Properties to set
              * @returns Game instance
              */
-            public static create(properties?: wire.msg.IGame): wire.msg.Game;
+            static create(properties: wire.msg.Game.$Shape): wire.msg.Game & wire.msg.Game.$Shape;
+            static create(properties?: wire.msg.Game.$Properties): wire.msg.Game;
 
             /**
              * Encodes the specified Game message. Does not implicitly {@link wire.msg.Game.verify|verify} messages.
@@ -724,7 +842,7 @@ export namespace wire {
              * @param [writer] Writer to encode to
              * @returns Writer
              */
-            public static encode(message: wire.msg.IGame, writer?: $protobuf.Writer): $protobuf.Writer;
+            static encode(message: wire.msg.Game.$Properties, writer?: $protobuf.Writer): $protobuf.Writer;
 
             /**
              * Encodes the specified Game message, length delimited. Does not implicitly {@link wire.msg.Game.verify|verify} messages.
@@ -732,40 +850,40 @@ export namespace wire {
              * @param [writer] Writer to encode to
              * @returns Writer
              */
-            public static encodeDelimited(message: wire.msg.IGame, writer?: $protobuf.Writer): $protobuf.Writer;
+            static encodeDelimited(message: wire.msg.Game.$Properties, writer?: $protobuf.Writer): $protobuf.Writer;
 
             /**
              * Decodes a Game message from the specified reader or buffer.
              * @param reader Reader or buffer to decode from
              * @param [length] Message length if known beforehand
-             * @returns Game
+             * @returns {wire.msg.Game & wire.msg.Game.$Shape} Game
              * @throws {Error} If the payload is not a reader or valid buffer
              * @throws {$protobuf.util.ProtocolError} If required fields are missing
              */
-            public static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): wire.msg.Game;
+            static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): wire.msg.Game & wire.msg.Game.$Shape;
 
             /**
              * Decodes a Game message from the specified reader or buffer, length delimited.
              * @param reader Reader or buffer to decode from
-             * @returns Game
+             * @returns {wire.msg.Game & wire.msg.Game.$Shape} Game
              * @throws {Error} If the payload is not a reader or valid buffer
              * @throws {$protobuf.util.ProtocolError} If required fields are missing
              */
-            public static decodeDelimited(reader: ($protobuf.Reader|Uint8Array)): wire.msg.Game;
+            static decodeDelimited(reader: ($protobuf.Reader|Uint8Array)): wire.msg.Game & wire.msg.Game.$Shape;
 
             /**
              * Verifies a Game message.
              * @param message Plain object to verify
              * @returns `null` if valid, otherwise the reason why it is not
              */
-            public static verify(message: { [k: string]: any }): (string|null);
+            static verify(message: { [k: string]: any }): (string|null);
 
             /**
              * Creates a Game message from a plain object. Also converts values to their respective internal types.
              * @param object Plain object
              * @returns Game
              */
-            public static fromObject(object: { [k: string]: any }): wire.msg.Game;
+            static fromObject(object: { [k: string]: any }): wire.msg.Game;
 
             /**
              * Creates a plain object from a Game message. Also converts values to other types if specified.
@@ -773,62 +891,91 @@ export namespace wire {
              * @param [options] Conversion options
              * @returns Plain object
              */
-            public static toObject(message: wire.msg.Game, options?: $protobuf.IConversionOptions): { [k: string]: any };
+            static toObject(message: wire.msg.Game, options?: $protobuf.IConversionOptions): { [k: string]: any };
 
             /**
              * Converts this Game to JSON.
              * @returns JSON object
              */
-            public toJSON(): { [k: string]: any };
+            toJSON(): { [k: string]: any };
 
             /**
-             * Gets the default type url for Game
-             * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
-             * @returns The default type url
+             * Gets the type url for Game
+             * @param [prefix] Custom type url prefix, defaults to `"type.googleapis.com"`
+             * @returns The type url
              */
-            public static getTypeUrl(typeUrlPrefix?: string): string;
+            static getTypeUrl(prefix?: string): string;
         }
 
-        /** Properties of an EventEnvelope. */
-        interface IEventEnvelope {
+        namespace Game {
 
-            /** EventEnvelope eventGameStart */
-            eventGameStart?: (wire.msg.IEventGameStart|null);
+            /** Properties of a Game. */
+            interface $Properties {
 
-            /** EventEnvelope eventGameOver */
-            eventGameOver?: (wire.msg.IEventGameOver|null);
+                /** Game id */
+                id?: (string|null);
 
-            /** EventEnvelope eventGameTick */
-            eventGameTick?: (wire.msg.IEventGameTick|null);
+                /** Game size */
+                size?: (wire.msg.Coordinate.$Properties|null);
+
+                /** Game playerNeutral */
+                playerNeutral?: (wire.msg.Player.$Properties|null);
+
+                /** Game players */
+                players?: (wire.msg.Player.$Properties[]|null);
+
+                /** Game islands */
+                islands?: (wire.msg.Island.$Properties[]|null);
+
+                /** Game airplanes */
+                airplanes?: (wire.msg.Airplane.$Properties[]|null);
+
+                /** Unknown fields preserved while decoding when enabled */
+                $unknowns?: Uint8Array[];
+            }
+
+            /** Shape of a Game. */
+            type $Shape = wire.msg.Game.$Properties;
+        }
+
+        /**
+         * Properties of an EventEnvelope.
+         * @deprecated Use wire.msg.EventEnvelope.$Properties instead.
+         */
+        interface IEventEnvelope extends wire.msg.EventEnvelope.$Properties {
         }
 
         /** Represents an EventEnvelope. */
-        class EventEnvelope implements IEventEnvelope {
+        class EventEnvelope {
 
             /**
              * Constructs a new EventEnvelope.
              * @param [properties] Properties to set
              */
-            constructor(properties?: wire.msg.IEventEnvelope);
+            constructor(properties?: wire.msg.EventEnvelope.$Properties);
+
+            /** Unknown fields preserved while decoding when enabled */
+            $unknowns?: Uint8Array[];
 
             /** EventEnvelope eventGameStart. */
-            public eventGameStart?: (wire.msg.IEventGameStart|null);
+            eventGameStart?: (wire.msg.EventGameStart.$Properties|null);
 
             /** EventEnvelope eventGameOver. */
-            public eventGameOver?: (wire.msg.IEventGameOver|null);
+            eventGameOver?: (wire.msg.EventGameOver.$Properties|null);
 
             /** EventEnvelope eventGameTick. */
-            public eventGameTick?: (wire.msg.IEventGameTick|null);
+            eventGameTick?: (wire.msg.EventGameTick.$Properties|null);
 
             /** EventEnvelope event. */
-            public event?: ("eventGameStart"|"eventGameOver"|"eventGameTick");
+            event?: ("eventGameStart"|"eventGameOver"|"eventGameTick");
 
             /**
              * Creates a new EventEnvelope instance using the specified properties.
              * @param [properties] Properties to set
              * @returns EventEnvelope instance
              */
-            public static create(properties?: wire.msg.IEventEnvelope): wire.msg.EventEnvelope;
+            static create(properties: wire.msg.EventEnvelope.$Shape): wire.msg.EventEnvelope & wire.msg.EventEnvelope.$Shape;
+            static create(properties?: wire.msg.EventEnvelope.$Properties): wire.msg.EventEnvelope;
 
             /**
              * Encodes the specified EventEnvelope message. Does not implicitly {@link wire.msg.EventEnvelope.verify|verify} messages.
@@ -836,7 +983,7 @@ export namespace wire {
              * @param [writer] Writer to encode to
              * @returns Writer
              */
-            public static encode(message: wire.msg.IEventEnvelope, writer?: $protobuf.Writer): $protobuf.Writer;
+            static encode(message: wire.msg.EventEnvelope.$Properties, writer?: $protobuf.Writer): $protobuf.Writer;
 
             /**
              * Encodes the specified EventEnvelope message, length delimited. Does not implicitly {@link wire.msg.EventEnvelope.verify|verify} messages.
@@ -844,40 +991,40 @@ export namespace wire {
              * @param [writer] Writer to encode to
              * @returns Writer
              */
-            public static encodeDelimited(message: wire.msg.IEventEnvelope, writer?: $protobuf.Writer): $protobuf.Writer;
+            static encodeDelimited(message: wire.msg.EventEnvelope.$Properties, writer?: $protobuf.Writer): $protobuf.Writer;
 
             /**
              * Decodes an EventEnvelope message from the specified reader or buffer.
              * @param reader Reader or buffer to decode from
              * @param [length] Message length if known beforehand
-             * @returns EventEnvelope
+             * @returns {wire.msg.EventEnvelope & wire.msg.EventEnvelope.$Shape} EventEnvelope
              * @throws {Error} If the payload is not a reader or valid buffer
              * @throws {$protobuf.util.ProtocolError} If required fields are missing
              */
-            public static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): wire.msg.EventEnvelope;
+            static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): wire.msg.EventEnvelope & wire.msg.EventEnvelope.$Shape;
 
             /**
              * Decodes an EventEnvelope message from the specified reader or buffer, length delimited.
              * @param reader Reader or buffer to decode from
-             * @returns EventEnvelope
+             * @returns {wire.msg.EventEnvelope & wire.msg.EventEnvelope.$Shape} EventEnvelope
              * @throws {Error} If the payload is not a reader or valid buffer
              * @throws {$protobuf.util.ProtocolError} If required fields are missing
              */
-            public static decodeDelimited(reader: ($protobuf.Reader|Uint8Array)): wire.msg.EventEnvelope;
+            static decodeDelimited(reader: ($protobuf.Reader|Uint8Array)): wire.msg.EventEnvelope & wire.msg.EventEnvelope.$Shape;
 
             /**
              * Verifies an EventEnvelope message.
              * @param message Plain object to verify
              * @returns `null` if valid, otherwise the reason why it is not
              */
-            public static verify(message: { [k: string]: any }): (string|null);
+            static verify(message: { [k: string]: any }): (string|null);
 
             /**
              * Creates an EventEnvelope message from a plain object. Also converts values to their respective internal types.
              * @param object Plain object
              * @returns EventEnvelope
              */
-            public static fromObject(object: { [k: string]: any }): wire.msg.EventEnvelope;
+            static fromObject(object: { [k: string]: any }): wire.msg.EventEnvelope;
 
             /**
              * Creates a plain object from an EventEnvelope message. Also converts values to other types if specified.
@@ -885,53 +1032,86 @@ export namespace wire {
              * @param [options] Conversion options
              * @returns Plain object
              */
-            public static toObject(message: wire.msg.EventEnvelope, options?: $protobuf.IConversionOptions): { [k: string]: any };
+            static toObject(message: wire.msg.EventEnvelope, options?: $protobuf.IConversionOptions): { [k: string]: any };
 
             /**
              * Converts this EventEnvelope to JSON.
              * @returns JSON object
              */
-            public toJSON(): { [k: string]: any };
+            toJSON(): { [k: string]: any };
 
             /**
-             * Gets the default type url for EventEnvelope
-             * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
-             * @returns The default type url
+             * Gets the type url for EventEnvelope
+             * @param [prefix] Custom type url prefix, defaults to `"type.googleapis.com"`
+             * @returns The type url
              */
-            public static getTypeUrl(typeUrlPrefix?: string): string;
+            static getTypeUrl(prefix?: string): string;
         }
 
-        /** Properties of an EventGameStart. */
-        interface IEventGameStart {
+        namespace EventEnvelope {
 
-            /** EventGameStart playerId */
-            playerId?: (string|null);
+            /** Properties of an EventEnvelope. */
+            interface $Properties {
 
-            /** EventGameStart tickInterval */
-            tickInterval?: (number|null);
+                /** EventEnvelope eventGameStart */
+                eventGameStart?: (wire.msg.EventGameStart.$Properties|null);
+
+                /** EventEnvelope eventGameOver */
+                eventGameOver?: (wire.msg.EventGameOver.$Properties|null);
+
+                /** EventEnvelope eventGameTick */
+                eventGameTick?: (wire.msg.EventGameTick.$Properties|null);
+
+                /** EventEnvelope event */
+                event?: ("eventGameStart"|"eventGameOver"|"eventGameTick");
+
+                /** Unknown fields preserved while decoding when enabled */
+                $unknowns?: Uint8Array[];
+            }
+
+            /** Narrowed shape of an EventEnvelope. */
+            type $Shape = {
+              eventGameStart?: wire.msg.EventGameStart.$Shape|null;
+              eventGameOver?: wire.msg.EventGameOver.$Shape|null;
+              eventGameTick?: wire.msg.EventGameTick.$Shape|null;
+              $unknowns?: Uint8Array[];
+            } & (
+              ({ event?: undefined; eventGameStart?: null; eventGameOver?: null; eventGameTick?: null }|{ event?: "eventGameStart"; eventGameStart: wire.msg.EventGameStart.$Shape; eventGameOver?: null; eventGameTick?: null }|{ event?: "eventGameOver"; eventGameStart?: null; eventGameOver: wire.msg.EventGameOver.$Shape; eventGameTick?: null }|{ event?: "eventGameTick"; eventGameStart?: null; eventGameOver?: null; eventGameTick: wire.msg.EventGameTick.$Shape })
+            );
+        }
+
+        /**
+         * Properties of an EventGameStart.
+         * @deprecated Use wire.msg.EventGameStart.$Properties instead.
+         */
+        interface IEventGameStart extends wire.msg.EventGameStart.$Properties {
         }
 
         /** Represents an EventGameStart. */
-        class EventGameStart implements IEventGameStart {
+        class EventGameStart {
 
             /**
              * Constructs a new EventGameStart.
              * @param [properties] Properties to set
              */
-            constructor(properties?: wire.msg.IEventGameStart);
+            constructor(properties?: wire.msg.EventGameStart.$Properties);
+
+            /** Unknown fields preserved while decoding when enabled */
+            $unknowns?: Uint8Array[];
 
             /** EventGameStart playerId. */
-            public playerId: string;
+            playerId: string;
 
             /** EventGameStart tickInterval. */
-            public tickInterval: number;
+            tickInterval: number;
 
             /**
              * Creates a new EventGameStart instance using the specified properties.
              * @param [properties] Properties to set
              * @returns EventGameStart instance
              */
-            public static create(properties?: wire.msg.IEventGameStart): wire.msg.EventGameStart;
+            static create(properties: wire.msg.EventGameStart.$Shape): wire.msg.EventGameStart & wire.msg.EventGameStart.$Shape;
+            static create(properties?: wire.msg.EventGameStart.$Properties): wire.msg.EventGameStart;
 
             /**
              * Encodes the specified EventGameStart message. Does not implicitly {@link wire.msg.EventGameStart.verify|verify} messages.
@@ -939,7 +1119,7 @@ export namespace wire {
              * @param [writer] Writer to encode to
              * @returns Writer
              */
-            public static encode(message: wire.msg.IEventGameStart, writer?: $protobuf.Writer): $protobuf.Writer;
+            static encode(message: wire.msg.EventGameStart.$Properties, writer?: $protobuf.Writer): $protobuf.Writer;
 
             /**
              * Encodes the specified EventGameStart message, length delimited. Does not implicitly {@link wire.msg.EventGameStart.verify|verify} messages.
@@ -947,40 +1127,40 @@ export namespace wire {
              * @param [writer] Writer to encode to
              * @returns Writer
              */
-            public static encodeDelimited(message: wire.msg.IEventGameStart, writer?: $protobuf.Writer): $protobuf.Writer;
+            static encodeDelimited(message: wire.msg.EventGameStart.$Properties, writer?: $protobuf.Writer): $protobuf.Writer;
 
             /**
              * Decodes an EventGameStart message from the specified reader or buffer.
              * @param reader Reader or buffer to decode from
              * @param [length] Message length if known beforehand
-             * @returns EventGameStart
+             * @returns {wire.msg.EventGameStart & wire.msg.EventGameStart.$Shape} EventGameStart
              * @throws {Error} If the payload is not a reader or valid buffer
              * @throws {$protobuf.util.ProtocolError} If required fields are missing
              */
-            public static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): wire.msg.EventGameStart;
+            static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): wire.msg.EventGameStart & wire.msg.EventGameStart.$Shape;
 
             /**
              * Decodes an EventGameStart message from the specified reader or buffer, length delimited.
              * @param reader Reader or buffer to decode from
-             * @returns EventGameStart
+             * @returns {wire.msg.EventGameStart & wire.msg.EventGameStart.$Shape} EventGameStart
              * @throws {Error} If the payload is not a reader or valid buffer
              * @throws {$protobuf.util.ProtocolError} If required fields are missing
              */
-            public static decodeDelimited(reader: ($protobuf.Reader|Uint8Array)): wire.msg.EventGameStart;
+            static decodeDelimited(reader: ($protobuf.Reader|Uint8Array)): wire.msg.EventGameStart & wire.msg.EventGameStart.$Shape;
 
             /**
              * Verifies an EventGameStart message.
              * @param message Plain object to verify
              * @returns `null` if valid, otherwise the reason why it is not
              */
-            public static verify(message: { [k: string]: any }): (string|null);
+            static verify(message: { [k: string]: any }): (string|null);
 
             /**
              * Creates an EventGameStart message from a plain object. Also converts values to their respective internal types.
              * @param object Plain object
              * @returns EventGameStart
              */
-            public static fromObject(object: { [k: string]: any }): wire.msg.EventGameStart;
+            static fromObject(object: { [k: string]: any }): wire.msg.EventGameStart;
 
             /**
              * Creates a plain object from an EventGameStart message. Also converts values to other types if specified.
@@ -988,47 +1168,70 @@ export namespace wire {
              * @param [options] Conversion options
              * @returns Plain object
              */
-            public static toObject(message: wire.msg.EventGameStart, options?: $protobuf.IConversionOptions): { [k: string]: any };
+            static toObject(message: wire.msg.EventGameStart, options?: $protobuf.IConversionOptions): { [k: string]: any };
 
             /**
              * Converts this EventGameStart to JSON.
              * @returns JSON object
              */
-            public toJSON(): { [k: string]: any };
+            toJSON(): { [k: string]: any };
 
             /**
-             * Gets the default type url for EventGameStart
-             * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
-             * @returns The default type url
+             * Gets the type url for EventGameStart
+             * @param [prefix] Custom type url prefix, defaults to `"type.googleapis.com"`
+             * @returns The type url
              */
-            public static getTypeUrl(typeUrlPrefix?: string): string;
+            static getTypeUrl(prefix?: string): string;
         }
 
-        /** Properties of an EventGameOver. */
-        interface IEventGameOver {
+        namespace EventGameStart {
 
-            /** EventGameOver winnerId */
-            winnerId?: (string|null);
+            /** Properties of an EventGameStart. */
+            interface $Properties {
+
+                /** EventGameStart playerId */
+                playerId?: (string|null);
+
+                /** EventGameStart tickInterval */
+                tickInterval?: (number|null);
+
+                /** Unknown fields preserved while decoding when enabled */
+                $unknowns?: Uint8Array[];
+            }
+
+            /** Shape of an EventGameStart. */
+            type $Shape = wire.msg.EventGameStart.$Properties;
+        }
+
+        /**
+         * Properties of an EventGameOver.
+         * @deprecated Use wire.msg.EventGameOver.$Properties instead.
+         */
+        interface IEventGameOver extends wire.msg.EventGameOver.$Properties {
         }
 
         /** Represents an EventGameOver. */
-        class EventGameOver implements IEventGameOver {
+        class EventGameOver {
 
             /**
              * Constructs a new EventGameOver.
              * @param [properties] Properties to set
              */
-            constructor(properties?: wire.msg.IEventGameOver);
+            constructor(properties?: wire.msg.EventGameOver.$Properties);
+
+            /** Unknown fields preserved while decoding when enabled */
+            $unknowns?: Uint8Array[];
 
             /** EventGameOver winnerId. */
-            public winnerId: string;
+            winnerId: string;
 
             /**
              * Creates a new EventGameOver instance using the specified properties.
              * @param [properties] Properties to set
              * @returns EventGameOver instance
              */
-            public static create(properties?: wire.msg.IEventGameOver): wire.msg.EventGameOver;
+            static create(properties: wire.msg.EventGameOver.$Shape): wire.msg.EventGameOver & wire.msg.EventGameOver.$Shape;
+            static create(properties?: wire.msg.EventGameOver.$Properties): wire.msg.EventGameOver;
 
             /**
              * Encodes the specified EventGameOver message. Does not implicitly {@link wire.msg.EventGameOver.verify|verify} messages.
@@ -1036,7 +1239,7 @@ export namespace wire {
              * @param [writer] Writer to encode to
              * @returns Writer
              */
-            public static encode(message: wire.msg.IEventGameOver, writer?: $protobuf.Writer): $protobuf.Writer;
+            static encode(message: wire.msg.EventGameOver.$Properties, writer?: $protobuf.Writer): $protobuf.Writer;
 
             /**
              * Encodes the specified EventGameOver message, length delimited. Does not implicitly {@link wire.msg.EventGameOver.verify|verify} messages.
@@ -1044,40 +1247,40 @@ export namespace wire {
              * @param [writer] Writer to encode to
              * @returns Writer
              */
-            public static encodeDelimited(message: wire.msg.IEventGameOver, writer?: $protobuf.Writer): $protobuf.Writer;
+            static encodeDelimited(message: wire.msg.EventGameOver.$Properties, writer?: $protobuf.Writer): $protobuf.Writer;
 
             /**
              * Decodes an EventGameOver message from the specified reader or buffer.
              * @param reader Reader or buffer to decode from
              * @param [length] Message length if known beforehand
-             * @returns EventGameOver
+             * @returns {wire.msg.EventGameOver & wire.msg.EventGameOver.$Shape} EventGameOver
              * @throws {Error} If the payload is not a reader or valid buffer
              * @throws {$protobuf.util.ProtocolError} If required fields are missing
              */
-            public static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): wire.msg.EventGameOver;
+            static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): wire.msg.EventGameOver & wire.msg.EventGameOver.$Shape;
 
             /**
              * Decodes an EventGameOver message from the specified reader or buffer, length delimited.
              * @param reader Reader or buffer to decode from
-             * @returns EventGameOver
+             * @returns {wire.msg.EventGameOver & wire.msg.EventGameOver.$Shape} EventGameOver
              * @throws {Error} If the payload is not a reader or valid buffer
              * @throws {$protobuf.util.ProtocolError} If required fields are missing
              */
-            public static decodeDelimited(reader: ($protobuf.Reader|Uint8Array)): wire.msg.EventGameOver;
+            static decodeDelimited(reader: ($protobuf.Reader|Uint8Array)): wire.msg.EventGameOver & wire.msg.EventGameOver.$Shape;
 
             /**
              * Verifies an EventGameOver message.
              * @param message Plain object to verify
              * @returns `null` if valid, otherwise the reason why it is not
              */
-            public static verify(message: { [k: string]: any }): (string|null);
+            static verify(message: { [k: string]: any }): (string|null);
 
             /**
              * Creates an EventGameOver message from a plain object. Also converts values to their respective internal types.
              * @param object Plain object
              * @returns EventGameOver
              */
-            public static fromObject(object: { [k: string]: any }): wire.msg.EventGameOver;
+            static fromObject(object: { [k: string]: any }): wire.msg.EventGameOver;
 
             /**
              * Creates a plain object from an EventGameOver message. Also converts values to other types if specified.
@@ -1085,47 +1288,67 @@ export namespace wire {
              * @param [options] Conversion options
              * @returns Plain object
              */
-            public static toObject(message: wire.msg.EventGameOver, options?: $protobuf.IConversionOptions): { [k: string]: any };
+            static toObject(message: wire.msg.EventGameOver, options?: $protobuf.IConversionOptions): { [k: string]: any };
 
             /**
              * Converts this EventGameOver to JSON.
              * @returns JSON object
              */
-            public toJSON(): { [k: string]: any };
+            toJSON(): { [k: string]: any };
 
             /**
-             * Gets the default type url for EventGameOver
-             * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
-             * @returns The default type url
+             * Gets the type url for EventGameOver
+             * @param [prefix] Custom type url prefix, defaults to `"type.googleapis.com"`
+             * @returns The type url
              */
-            public static getTypeUrl(typeUrlPrefix?: string): string;
+            static getTypeUrl(prefix?: string): string;
         }
 
-        /** Properties of an EventGameTick. */
-        interface IEventGameTick {
+        namespace EventGameOver {
 
-            /** EventGameTick game */
-            game?: (wire.msg.IGame|null);
+            /** Properties of an EventGameOver. */
+            interface $Properties {
+
+                /** EventGameOver winnerId */
+                winnerId?: (string|null);
+
+                /** Unknown fields preserved while decoding when enabled */
+                $unknowns?: Uint8Array[];
+            }
+
+            /** Shape of an EventGameOver. */
+            type $Shape = wire.msg.EventGameOver.$Properties;
+        }
+
+        /**
+         * Properties of an EventGameTick.
+         * @deprecated Use wire.msg.EventGameTick.$Properties instead.
+         */
+        interface IEventGameTick extends wire.msg.EventGameTick.$Properties {
         }
 
         /** Represents an EventGameTick. */
-        class EventGameTick implements IEventGameTick {
+        class EventGameTick {
 
             /**
              * Constructs a new EventGameTick.
              * @param [properties] Properties to set
              */
-            constructor(properties?: wire.msg.IEventGameTick);
+            constructor(properties?: wire.msg.EventGameTick.$Properties);
+
+            /** Unknown fields preserved while decoding when enabled */
+            $unknowns?: Uint8Array[];
 
             /** EventGameTick game. */
-            public game?: (wire.msg.IGame|null);
+            game?: (wire.msg.Game.$Properties|null);
 
             /**
              * Creates a new EventGameTick instance using the specified properties.
              * @param [properties] Properties to set
              * @returns EventGameTick instance
              */
-            public static create(properties?: wire.msg.IEventGameTick): wire.msg.EventGameTick;
+            static create(properties: wire.msg.EventGameTick.$Shape): wire.msg.EventGameTick & wire.msg.EventGameTick.$Shape;
+            static create(properties?: wire.msg.EventGameTick.$Properties): wire.msg.EventGameTick;
 
             /**
              * Encodes the specified EventGameTick message. Does not implicitly {@link wire.msg.EventGameTick.verify|verify} messages.
@@ -1133,7 +1356,7 @@ export namespace wire {
              * @param [writer] Writer to encode to
              * @returns Writer
              */
-            public static encode(message: wire.msg.IEventGameTick, writer?: $protobuf.Writer): $protobuf.Writer;
+            static encode(message: wire.msg.EventGameTick.$Properties, writer?: $protobuf.Writer): $protobuf.Writer;
 
             /**
              * Encodes the specified EventGameTick message, length delimited. Does not implicitly {@link wire.msg.EventGameTick.verify|verify} messages.
@@ -1141,40 +1364,40 @@ export namespace wire {
              * @param [writer] Writer to encode to
              * @returns Writer
              */
-            public static encodeDelimited(message: wire.msg.IEventGameTick, writer?: $protobuf.Writer): $protobuf.Writer;
+            static encodeDelimited(message: wire.msg.EventGameTick.$Properties, writer?: $protobuf.Writer): $protobuf.Writer;
 
             /**
              * Decodes an EventGameTick message from the specified reader or buffer.
              * @param reader Reader or buffer to decode from
              * @param [length] Message length if known beforehand
-             * @returns EventGameTick
+             * @returns {wire.msg.EventGameTick & wire.msg.EventGameTick.$Shape} EventGameTick
              * @throws {Error} If the payload is not a reader or valid buffer
              * @throws {$protobuf.util.ProtocolError} If required fields are missing
              */
-            public static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): wire.msg.EventGameTick;
+            static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): wire.msg.EventGameTick & wire.msg.EventGameTick.$Shape;
 
             /**
              * Decodes an EventGameTick message from the specified reader or buffer, length delimited.
              * @param reader Reader or buffer to decode from
-             * @returns EventGameTick
+             * @returns {wire.msg.EventGameTick & wire.msg.EventGameTick.$Shape} EventGameTick
              * @throws {Error} If the payload is not a reader or valid buffer
              * @throws {$protobuf.util.ProtocolError} If required fields are missing
              */
-            public static decodeDelimited(reader: ($protobuf.Reader|Uint8Array)): wire.msg.EventGameTick;
+            static decodeDelimited(reader: ($protobuf.Reader|Uint8Array)): wire.msg.EventGameTick & wire.msg.EventGameTick.$Shape;
 
             /**
              * Verifies an EventGameTick message.
              * @param message Plain object to verify
              * @returns `null` if valid, otherwise the reason why it is not
              */
-            public static verify(message: { [k: string]: any }): (string|null);
+            static verify(message: { [k: string]: any }): (string|null);
 
             /**
              * Creates an EventGameTick message from a plain object. Also converts values to their respective internal types.
              * @param object Plain object
              * @returns EventGameTick
              */
-            public static fromObject(object: { [k: string]: any }): wire.msg.EventGameTick;
+            static fromObject(object: { [k: string]: any }): wire.msg.EventGameTick;
 
             /**
              * Creates a plain object from an EventGameTick message. Also converts values to other types if specified.
@@ -1182,56 +1405,73 @@ export namespace wire {
              * @param [options] Conversion options
              * @returns Plain object
              */
-            public static toObject(message: wire.msg.EventGameTick, options?: $protobuf.IConversionOptions): { [k: string]: any };
+            static toObject(message: wire.msg.EventGameTick, options?: $protobuf.IConversionOptions): { [k: string]: any };
 
             /**
              * Converts this EventGameTick to JSON.
              * @returns JSON object
              */
-            public toJSON(): { [k: string]: any };
+            toJSON(): { [k: string]: any };
 
             /**
-             * Gets the default type url for EventGameTick
-             * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
-             * @returns The default type url
+             * Gets the type url for EventGameTick
+             * @param [prefix] Custom type url prefix, defaults to `"type.googleapis.com"`
+             * @returns The type url
              */
-            public static getTypeUrl(typeUrlPrefix?: string): string;
+            static getTypeUrl(prefix?: string): string;
         }
 
-        /** Properties of an ActionEnvelope. */
-        interface IActionEnvelope {
+        namespace EventGameTick {
 
-            /** ActionEnvelope actionGameLeave */
-            actionGameLeave?: (wire.msg.IActionGameLeave|null);
+            /** Properties of an EventGameTick. */
+            interface $Properties {
 
-            /** ActionEnvelope actionGameLaunch */
-            actionGameLaunch?: (wire.msg.IActionGameLaunch|null);
+                /** EventGameTick game */
+                game?: (wire.msg.Game.$Properties|null);
+
+                /** Unknown fields preserved while decoding when enabled */
+                $unknowns?: Uint8Array[];
+            }
+
+            /** Shape of an EventGameTick. */
+            type $Shape = wire.msg.EventGameTick.$Properties;
+        }
+
+        /**
+         * Properties of an ActionEnvelope.
+         * @deprecated Use wire.msg.ActionEnvelope.$Properties instead.
+         */
+        interface IActionEnvelope extends wire.msg.ActionEnvelope.$Properties {
         }
 
         /** Represents an ActionEnvelope. */
-        class ActionEnvelope implements IActionEnvelope {
+        class ActionEnvelope {
 
             /**
              * Constructs a new ActionEnvelope.
              * @param [properties] Properties to set
              */
-            constructor(properties?: wire.msg.IActionEnvelope);
+            constructor(properties?: wire.msg.ActionEnvelope.$Properties);
+
+            /** Unknown fields preserved while decoding when enabled */
+            $unknowns?: Uint8Array[];
 
             /** ActionEnvelope actionGameLeave. */
-            public actionGameLeave?: (wire.msg.IActionGameLeave|null);
+            actionGameLeave?: (wire.msg.ActionGameLeave.$Properties|null);
 
             /** ActionEnvelope actionGameLaunch. */
-            public actionGameLaunch?: (wire.msg.IActionGameLaunch|null);
+            actionGameLaunch?: (wire.msg.ActionGameLaunch.$Properties|null);
 
             /** ActionEnvelope action. */
-            public action?: ("actionGameLeave"|"actionGameLaunch");
+            action?: ("actionGameLeave"|"actionGameLaunch");
 
             /**
              * Creates a new ActionEnvelope instance using the specified properties.
              * @param [properties] Properties to set
              * @returns ActionEnvelope instance
              */
-            public static create(properties?: wire.msg.IActionEnvelope): wire.msg.ActionEnvelope;
+            static create(properties: wire.msg.ActionEnvelope.$Shape): wire.msg.ActionEnvelope & wire.msg.ActionEnvelope.$Shape;
+            static create(properties?: wire.msg.ActionEnvelope.$Properties): wire.msg.ActionEnvelope;
 
             /**
              * Encodes the specified ActionEnvelope message. Does not implicitly {@link wire.msg.ActionEnvelope.verify|verify} messages.
@@ -1239,7 +1479,7 @@ export namespace wire {
              * @param [writer] Writer to encode to
              * @returns Writer
              */
-            public static encode(message: wire.msg.IActionEnvelope, writer?: $protobuf.Writer): $protobuf.Writer;
+            static encode(message: wire.msg.ActionEnvelope.$Properties, writer?: $protobuf.Writer): $protobuf.Writer;
 
             /**
              * Encodes the specified ActionEnvelope message, length delimited. Does not implicitly {@link wire.msg.ActionEnvelope.verify|verify} messages.
@@ -1247,40 +1487,40 @@ export namespace wire {
              * @param [writer] Writer to encode to
              * @returns Writer
              */
-            public static encodeDelimited(message: wire.msg.IActionEnvelope, writer?: $protobuf.Writer): $protobuf.Writer;
+            static encodeDelimited(message: wire.msg.ActionEnvelope.$Properties, writer?: $protobuf.Writer): $protobuf.Writer;
 
             /**
              * Decodes an ActionEnvelope message from the specified reader or buffer.
              * @param reader Reader or buffer to decode from
              * @param [length] Message length if known beforehand
-             * @returns ActionEnvelope
+             * @returns {wire.msg.ActionEnvelope & wire.msg.ActionEnvelope.$Shape} ActionEnvelope
              * @throws {Error} If the payload is not a reader or valid buffer
              * @throws {$protobuf.util.ProtocolError} If required fields are missing
              */
-            public static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): wire.msg.ActionEnvelope;
+            static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): wire.msg.ActionEnvelope & wire.msg.ActionEnvelope.$Shape;
 
             /**
              * Decodes an ActionEnvelope message from the specified reader or buffer, length delimited.
              * @param reader Reader or buffer to decode from
-             * @returns ActionEnvelope
+             * @returns {wire.msg.ActionEnvelope & wire.msg.ActionEnvelope.$Shape} ActionEnvelope
              * @throws {Error} If the payload is not a reader or valid buffer
              * @throws {$protobuf.util.ProtocolError} If required fields are missing
              */
-            public static decodeDelimited(reader: ($protobuf.Reader|Uint8Array)): wire.msg.ActionEnvelope;
+            static decodeDelimited(reader: ($protobuf.Reader|Uint8Array)): wire.msg.ActionEnvelope & wire.msg.ActionEnvelope.$Shape;
 
             /**
              * Verifies an ActionEnvelope message.
              * @param message Plain object to verify
              * @returns `null` if valid, otherwise the reason why it is not
              */
-            public static verify(message: { [k: string]: any }): (string|null);
+            static verify(message: { [k: string]: any }): (string|null);
 
             /**
              * Creates an ActionEnvelope message from a plain object. Also converts values to their respective internal types.
              * @param object Plain object
              * @returns ActionEnvelope
              */
-            public static fromObject(object: { [k: string]: any }): wire.msg.ActionEnvelope;
+            static fromObject(object: { [k: string]: any }): wire.msg.ActionEnvelope;
 
             /**
              * Creates a plain object from an ActionEnvelope message. Also converts values to other types if specified.
@@ -1288,41 +1528,76 @@ export namespace wire {
              * @param [options] Conversion options
              * @returns Plain object
              */
-            public static toObject(message: wire.msg.ActionEnvelope, options?: $protobuf.IConversionOptions): { [k: string]: any };
+            static toObject(message: wire.msg.ActionEnvelope, options?: $protobuf.IConversionOptions): { [k: string]: any };
 
             /**
              * Converts this ActionEnvelope to JSON.
              * @returns JSON object
              */
-            public toJSON(): { [k: string]: any };
+            toJSON(): { [k: string]: any };
 
             /**
-             * Gets the default type url for ActionEnvelope
-             * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
-             * @returns The default type url
+             * Gets the type url for ActionEnvelope
+             * @param [prefix] Custom type url prefix, defaults to `"type.googleapis.com"`
+             * @returns The type url
              */
-            public static getTypeUrl(typeUrlPrefix?: string): string;
+            static getTypeUrl(prefix?: string): string;
         }
 
-        /** Properties of an ActionGameLeave. */
-        interface IActionGameLeave {
+        namespace ActionEnvelope {
+
+            /** Properties of an ActionEnvelope. */
+            interface $Properties {
+
+                /** ActionEnvelope actionGameLeave */
+                actionGameLeave?: (wire.msg.ActionGameLeave.$Properties|null);
+
+                /** ActionEnvelope actionGameLaunch */
+                actionGameLaunch?: (wire.msg.ActionGameLaunch.$Properties|null);
+
+                /** ActionEnvelope action */
+                action?: ("actionGameLeave"|"actionGameLaunch");
+
+                /** Unknown fields preserved while decoding when enabled */
+                $unknowns?: Uint8Array[];
+            }
+
+            /** Narrowed shape of an ActionEnvelope. */
+            type $Shape = {
+              actionGameLeave?: wire.msg.ActionGameLeave.$Shape|null;
+              actionGameLaunch?: wire.msg.ActionGameLaunch.$Shape|null;
+              $unknowns?: Uint8Array[];
+            } & (
+              ({ action?: undefined; actionGameLeave?: null; actionGameLaunch?: null }|{ action?: "actionGameLeave"; actionGameLeave: wire.msg.ActionGameLeave.$Shape; actionGameLaunch?: null }|{ action?: "actionGameLaunch"; actionGameLeave?: null; actionGameLaunch: wire.msg.ActionGameLaunch.$Shape })
+            );
+        }
+
+        /**
+         * Properties of an ActionGameLeave.
+         * @deprecated Use wire.msg.ActionGameLeave.$Properties instead.
+         */
+        interface IActionGameLeave extends wire.msg.ActionGameLeave.$Properties {
         }
 
         /** Represents an ActionGameLeave. */
-        class ActionGameLeave implements IActionGameLeave {
+        class ActionGameLeave {
 
             /**
              * Constructs a new ActionGameLeave.
              * @param [properties] Properties to set
              */
-            constructor(properties?: wire.msg.IActionGameLeave);
+            constructor(properties?: wire.msg.ActionGameLeave.$Properties);
+
+            /** Unknown fields preserved while decoding when enabled */
+            $unknowns?: Uint8Array[];
 
             /**
              * Creates a new ActionGameLeave instance using the specified properties.
              * @param [properties] Properties to set
              * @returns ActionGameLeave instance
              */
-            public static create(properties?: wire.msg.IActionGameLeave): wire.msg.ActionGameLeave;
+            static create(properties: wire.msg.ActionGameLeave.$Shape): wire.msg.ActionGameLeave & wire.msg.ActionGameLeave.$Shape;
+            static create(properties?: wire.msg.ActionGameLeave.$Properties): wire.msg.ActionGameLeave;
 
             /**
              * Encodes the specified ActionGameLeave message. Does not implicitly {@link wire.msg.ActionGameLeave.verify|verify} messages.
@@ -1330,7 +1605,7 @@ export namespace wire {
              * @param [writer] Writer to encode to
              * @returns Writer
              */
-            public static encode(message: wire.msg.IActionGameLeave, writer?: $protobuf.Writer): $protobuf.Writer;
+            static encode(message: wire.msg.ActionGameLeave.$Properties, writer?: $protobuf.Writer): $protobuf.Writer;
 
             /**
              * Encodes the specified ActionGameLeave message, length delimited. Does not implicitly {@link wire.msg.ActionGameLeave.verify|verify} messages.
@@ -1338,40 +1613,40 @@ export namespace wire {
              * @param [writer] Writer to encode to
              * @returns Writer
              */
-            public static encodeDelimited(message: wire.msg.IActionGameLeave, writer?: $protobuf.Writer): $protobuf.Writer;
+            static encodeDelimited(message: wire.msg.ActionGameLeave.$Properties, writer?: $protobuf.Writer): $protobuf.Writer;
 
             /**
              * Decodes an ActionGameLeave message from the specified reader or buffer.
              * @param reader Reader or buffer to decode from
              * @param [length] Message length if known beforehand
-             * @returns ActionGameLeave
+             * @returns {wire.msg.ActionGameLeave & wire.msg.ActionGameLeave.$Shape} ActionGameLeave
              * @throws {Error} If the payload is not a reader or valid buffer
              * @throws {$protobuf.util.ProtocolError} If required fields are missing
              */
-            public static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): wire.msg.ActionGameLeave;
+            static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): wire.msg.ActionGameLeave & wire.msg.ActionGameLeave.$Shape;
 
             /**
              * Decodes an ActionGameLeave message from the specified reader or buffer, length delimited.
              * @param reader Reader or buffer to decode from
-             * @returns ActionGameLeave
+             * @returns {wire.msg.ActionGameLeave & wire.msg.ActionGameLeave.$Shape} ActionGameLeave
              * @throws {Error} If the payload is not a reader or valid buffer
              * @throws {$protobuf.util.ProtocolError} If required fields are missing
              */
-            public static decodeDelimited(reader: ($protobuf.Reader|Uint8Array)): wire.msg.ActionGameLeave;
+            static decodeDelimited(reader: ($protobuf.Reader|Uint8Array)): wire.msg.ActionGameLeave & wire.msg.ActionGameLeave.$Shape;
 
             /**
              * Verifies an ActionGameLeave message.
              * @param message Plain object to verify
              * @returns `null` if valid, otherwise the reason why it is not
              */
-            public static verify(message: { [k: string]: any }): (string|null);
+            static verify(message: { [k: string]: any }): (string|null);
 
             /**
              * Creates an ActionGameLeave message from a plain object. Also converts values to their respective internal types.
              * @param object Plain object
              * @returns ActionGameLeave
              */
-            public static fromObject(object: { [k: string]: any }): wire.msg.ActionGameLeave;
+            static fromObject(object: { [k: string]: any }): wire.msg.ActionGameLeave;
 
             /**
              * Creates a plain object from an ActionGameLeave message. Also converts values to other types if specified.
@@ -1379,53 +1654,67 @@ export namespace wire {
              * @param [options] Conversion options
              * @returns Plain object
              */
-            public static toObject(message: wire.msg.ActionGameLeave, options?: $protobuf.IConversionOptions): { [k: string]: any };
+            static toObject(message: wire.msg.ActionGameLeave, options?: $protobuf.IConversionOptions): { [k: string]: any };
 
             /**
              * Converts this ActionGameLeave to JSON.
              * @returns JSON object
              */
-            public toJSON(): { [k: string]: any };
+            toJSON(): { [k: string]: any };
 
             /**
-             * Gets the default type url for ActionGameLeave
-             * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
-             * @returns The default type url
+             * Gets the type url for ActionGameLeave
+             * @param [prefix] Custom type url prefix, defaults to `"type.googleapis.com"`
+             * @returns The type url
              */
-            public static getTypeUrl(typeUrlPrefix?: string): string;
+            static getTypeUrl(prefix?: string): string;
         }
 
-        /** Properties of an ActionGameLaunch. */
-        interface IActionGameLaunch {
+        namespace ActionGameLeave {
 
-            /** ActionGameLaunch fromId */
-            fromId?: (string|null);
+            /** Properties of an ActionGameLeave. */
+            interface $Properties {
 
-            /** ActionGameLaunch toId */
-            toId?: (string|null);
+                /** Unknown fields preserved while decoding when enabled */
+                $unknowns?: Uint8Array[];
+            }
+
+            /** Shape of an ActionGameLeave. */
+            type $Shape = wire.msg.ActionGameLeave.$Properties;
+        }
+
+        /**
+         * Properties of an ActionGameLaunch.
+         * @deprecated Use wire.msg.ActionGameLaunch.$Properties instead.
+         */
+        interface IActionGameLaunch extends wire.msg.ActionGameLaunch.$Properties {
         }
 
         /** Represents an ActionGameLaunch. */
-        class ActionGameLaunch implements IActionGameLaunch {
+        class ActionGameLaunch {
 
             /**
              * Constructs a new ActionGameLaunch.
              * @param [properties] Properties to set
              */
-            constructor(properties?: wire.msg.IActionGameLaunch);
+            constructor(properties?: wire.msg.ActionGameLaunch.$Properties);
+
+            /** Unknown fields preserved while decoding when enabled */
+            $unknowns?: Uint8Array[];
 
             /** ActionGameLaunch fromId. */
-            public fromId: string;
+            fromId: string;
 
             /** ActionGameLaunch toId. */
-            public toId: string;
+            toId: string;
 
             /**
              * Creates a new ActionGameLaunch instance using the specified properties.
              * @param [properties] Properties to set
              * @returns ActionGameLaunch instance
              */
-            public static create(properties?: wire.msg.IActionGameLaunch): wire.msg.ActionGameLaunch;
+            static create(properties: wire.msg.ActionGameLaunch.$Shape): wire.msg.ActionGameLaunch & wire.msg.ActionGameLaunch.$Shape;
+            static create(properties?: wire.msg.ActionGameLaunch.$Properties): wire.msg.ActionGameLaunch;
 
             /**
              * Encodes the specified ActionGameLaunch message. Does not implicitly {@link wire.msg.ActionGameLaunch.verify|verify} messages.
@@ -1433,7 +1722,7 @@ export namespace wire {
              * @param [writer] Writer to encode to
              * @returns Writer
              */
-            public static encode(message: wire.msg.IActionGameLaunch, writer?: $protobuf.Writer): $protobuf.Writer;
+            static encode(message: wire.msg.ActionGameLaunch.$Properties, writer?: $protobuf.Writer): $protobuf.Writer;
 
             /**
              * Encodes the specified ActionGameLaunch message, length delimited. Does not implicitly {@link wire.msg.ActionGameLaunch.verify|verify} messages.
@@ -1441,40 +1730,40 @@ export namespace wire {
              * @param [writer] Writer to encode to
              * @returns Writer
              */
-            public static encodeDelimited(message: wire.msg.IActionGameLaunch, writer?: $protobuf.Writer): $protobuf.Writer;
+            static encodeDelimited(message: wire.msg.ActionGameLaunch.$Properties, writer?: $protobuf.Writer): $protobuf.Writer;
 
             /**
              * Decodes an ActionGameLaunch message from the specified reader or buffer.
              * @param reader Reader or buffer to decode from
              * @param [length] Message length if known beforehand
-             * @returns ActionGameLaunch
+             * @returns {wire.msg.ActionGameLaunch & wire.msg.ActionGameLaunch.$Shape} ActionGameLaunch
              * @throws {Error} If the payload is not a reader or valid buffer
              * @throws {$protobuf.util.ProtocolError} If required fields are missing
              */
-            public static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): wire.msg.ActionGameLaunch;
+            static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): wire.msg.ActionGameLaunch & wire.msg.ActionGameLaunch.$Shape;
 
             /**
              * Decodes an ActionGameLaunch message from the specified reader or buffer, length delimited.
              * @param reader Reader or buffer to decode from
-             * @returns ActionGameLaunch
+             * @returns {wire.msg.ActionGameLaunch & wire.msg.ActionGameLaunch.$Shape} ActionGameLaunch
              * @throws {Error} If the payload is not a reader or valid buffer
              * @throws {$protobuf.util.ProtocolError} If required fields are missing
              */
-            public static decodeDelimited(reader: ($protobuf.Reader|Uint8Array)): wire.msg.ActionGameLaunch;
+            static decodeDelimited(reader: ($protobuf.Reader|Uint8Array)): wire.msg.ActionGameLaunch & wire.msg.ActionGameLaunch.$Shape;
 
             /**
              * Verifies an ActionGameLaunch message.
              * @param message Plain object to verify
              * @returns `null` if valid, otherwise the reason why it is not
              */
-            public static verify(message: { [k: string]: any }): (string|null);
+            static verify(message: { [k: string]: any }): (string|null);
 
             /**
              * Creates an ActionGameLaunch message from a plain object. Also converts values to their respective internal types.
              * @param object Plain object
              * @returns ActionGameLaunch
              */
-            public static fromObject(object: { [k: string]: any }): wire.msg.ActionGameLaunch;
+            static fromObject(object: { [k: string]: any }): wire.msg.ActionGameLaunch;
 
             /**
              * Creates a plain object from an ActionGameLaunch message. Also converts values to other types if specified.
@@ -1482,20 +1771,39 @@ export namespace wire {
              * @param [options] Conversion options
              * @returns Plain object
              */
-            public static toObject(message: wire.msg.ActionGameLaunch, options?: $protobuf.IConversionOptions): { [k: string]: any };
+            static toObject(message: wire.msg.ActionGameLaunch, options?: $protobuf.IConversionOptions): { [k: string]: any };
 
             /**
              * Converts this ActionGameLaunch to JSON.
              * @returns JSON object
              */
-            public toJSON(): { [k: string]: any };
+            toJSON(): { [k: string]: any };
 
             /**
-             * Gets the default type url for ActionGameLaunch
-             * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
-             * @returns The default type url
+             * Gets the type url for ActionGameLaunch
+             * @param [prefix] Custom type url prefix, defaults to `"type.googleapis.com"`
+             * @returns The type url
              */
-            public static getTypeUrl(typeUrlPrefix?: string): string;
+            static getTypeUrl(prefix?: string): string;
+        }
+
+        namespace ActionGameLaunch {
+
+            /** Properties of an ActionGameLaunch. */
+            interface $Properties {
+
+                /** ActionGameLaunch fromId */
+                fromId?: (string|null);
+
+                /** ActionGameLaunch toId */
+                toId?: (string|null);
+
+                /** Unknown fields preserved while decoding when enabled */
+                $unknowns?: Uint8Array[];
+            }
+
+            /** Shape of an ActionGameLaunch. */
+            type $Shape = wire.msg.ActionGameLaunch.$Properties;
         }
     }
 }

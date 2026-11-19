@@ -1,8 +1,9 @@
-/*eslint-disable block-scoped-var, id-length, no-control-regex, no-magic-numbers, no-prototype-builtins, no-redeclare, no-shadow, no-var, sort-vars*/
-import * as $protobuf from "protobufjs/minimal";
+/*eslint-disable block-scoped-var, id-length, no-control-regex, no-magic-numbers, no-mixed-operators, no-prototype-builtins, no-redeclare, no-shadow, no-var, sort-vars, default-case, jsdoc/require-param*/
+import $protobuf from "protobufjs/minimal.js";
 
 // Common aliases
 const $Reader = $protobuf.Reader, $Writer = $protobuf.Writer, $util = $protobuf.util;
+const $Object = $util.global.Object, $undefined = $util.global.undefined, $Error = $util.global.Error, $RangeError = $util.global.RangeError, $TypeError = $util.global.TypeError, $Number = $util.global.Number, $isFinite = $util.global.isFinite, $String = $util.global.String, $Array = $util.global.Array;
 
 // Exported root namespace
 const $root = $protobuf.roots["default"] || ($protobuf.roots["default"] = {});
@@ -29,26 +30,39 @@ export const wire = $root.wire = (() => {
 
             /**
              * Properties of a Coordinate.
-             * @memberof wire.msg
-             * @interface ICoordinate
+             * @typedef {Object} wire.msg.Coordinate.$Properties
              * @property {number|null} [x] Coordinate x
              * @property {number|null} [y] Coordinate y
+             * @property {Array.<Uint8Array>} [$unknowns] Unknown fields preserved while decoding when enabled
+             */
+
+            /**
+             * Properties of a Coordinate.
+             * @memberof wire.msg
+             * @interface ICoordinate
+             * @augments wire.msg.Coordinate.$Properties
+             * @deprecated Use wire.msg.Coordinate.$Properties instead.
+             */
+
+            /**
+             * Shape of a Coordinate.
+             * @typedef {wire.msg.Coordinate.$Properties} wire.msg.Coordinate.$Shape
              */
 
             /**
              * Constructs a new Coordinate.
              * @memberof wire.msg
              * @classdesc Represents a Coordinate.
-             * @implements ICoordinate
              * @constructor
-             * @param {wire.msg.ICoordinate=} [properties] Properties to set
+             * @param {wire.msg.Coordinate.$Properties=} [properties] Properties to set
+             * @property {Array.<Uint8Array>} [$unknowns] Unknown fields preserved while decoding when enabled
              */
-            function Coordinate(properties) {
+            const Coordinate = function (properties) {
                 if (properties)
-                    for (let keys = Object.keys(properties), i = 0; i < keys.length; ++i)
+                    for (let keys = $Object.keys(properties), i = 0; i < keys.length; ++i)
                         if (properties[keys[i]] != null && keys[i] !== "__proto__")
                             this[keys[i]] = properties[keys[i]];
-            }
+            };
 
             /**
              * Coordinate x.
@@ -71,10 +85,14 @@ export const wire = $root.wire = (() => {
              * @function create
              * @memberof wire.msg.Coordinate
              * @static
-             * @param {wire.msg.ICoordinate=} [properties] Properties to set
+             * @param {wire.msg.Coordinate.$Properties=} [properties] Properties to set
              * @returns {wire.msg.Coordinate} Coordinate instance
+             * @type {{
+             *   (properties: wire.msg.Coordinate.$Shape): wire.msg.Coordinate & wire.msg.Coordinate.$Shape;
+             *   (properties?: wire.msg.Coordinate.$Properties): wire.msg.Coordinate;
+             * }}
              */
-            Coordinate.create = function create(properties) {
+            Coordinate.create = function(properties) {
                 return new Coordinate(properties);
             };
 
@@ -83,21 +101,24 @@ export const wire = $root.wire = (() => {
              * @function encode
              * @memberof wire.msg.Coordinate
              * @static
-             * @param {wire.msg.ICoordinate} message Coordinate message or plain object to encode
+             * @param {wire.msg.Coordinate.$Properties} message Coordinate message or plain object to encode
              * @param {$protobuf.Writer} [writer] Writer to encode to
              * @returns {$protobuf.Writer} Writer
              */
-            Coordinate.encode = function encode(message, writer, q) {
+            Coordinate.encode = function (message, writer, _depth) {
                 if (!writer)
                     writer = $Writer.create();
-                if (q === undefined)
-                    q = 0;
-                if (q > $util.recursionLimit)
-                    throw Error("max depth exceeded");
-                if (message.x != null && Object.hasOwnProperty.call(message, "x"))
+                if (_depth === $undefined)
+                    _depth = 0;
+                if (_depth > $util.recursionLimit)
+                    throw $Error("max depth exceeded");
+                if (message.x != null && $Object.hasOwnProperty.call(message, "x") && message.x !== 0)
                     writer.uint32(/* id 1, wireType 0 =*/8).int32(message.x);
-                if (message.y != null && Object.hasOwnProperty.call(message, "y"))
+                if (message.y != null && $Object.hasOwnProperty.call(message, "y") && message.y !== 0)
                     writer.uint32(/* id 2, wireType 0 =*/16).int32(message.y);
+                if (message.$unknowns != null && $Object.hasOwnProperty.call(message, "$unknowns"))
+                    for (let i = 0; i < message.$unknowns.length; ++i)
+                        writer.raw(message.$unknowns[i]);
                 return writer;
             };
 
@@ -106,12 +127,12 @@ export const wire = $root.wire = (() => {
              * @function encodeDelimited
              * @memberof wire.msg.Coordinate
              * @static
-             * @param {wire.msg.ICoordinate} message Coordinate message or plain object to encode
+             * @param {wire.msg.Coordinate.$Properties} message Coordinate message or plain object to encode
              * @param {$protobuf.Writer} [writer] Writer to encode to
              * @returns {$protobuf.Writer} Writer
              */
-            Coordinate.encodeDelimited = function encodeDelimited(message, writer) {
-                return this.encode(message, writer && writer.len ? writer.fork() : writer).ldelim();
+            Coordinate.encodeDelimited = function(message, writer) {
+                return this.encode(message, (writer || $Writer.create()).fork()).ldelim();
             };
 
             /**
@@ -121,51 +142,69 @@ export const wire = $root.wire = (() => {
              * @static
              * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
              * @param {number} [length] Message length if known beforehand
-             * @returns {wire.msg.Coordinate} Coordinate
+             * @returns {wire.msg.Coordinate & wire.msg.Coordinate.$Shape} Coordinate
              * @throws {Error} If the payload is not a reader or valid buffer
              * @throws {$protobuf.util.ProtocolError} If required fields are missing
              */
-            Coordinate.decode = function decode(reader, length, error, long) {
+            Coordinate.decode = function (reader, length, _end, _depth, _target) {
                 if (!(reader instanceof $Reader))
                     reader = $Reader.create(reader);
-                if (long === undefined)
-                    long = 0;
-                if (long > $Reader.recursionLimit)
-                    throw Error("maximum nesting depth exceeded");
-                let end, message;
-                if (length === undefined)
+                if (_depth === $undefined)
+                    _depth = 0;
+                if (_depth > $Reader.recursionLimit)
+                    throw $Error("max depth exceeded");
+                let end, message, value;
+                if (length === $undefined)
                     end = reader.len;
                 else {
                     end = reader.pos + length;
                     if (end > reader.len)
-                        throw RangeError("index out of range");
+                        throw $RangeError("index out of range");
                     length = reader.len;
                     reader.len = end;
                 }
-                message = new $root.wire.msg.Coordinate();
+                message = _target || new $root.wire.msg.Coordinate();
                 while (reader.pos < end) {
-                    let tag = reader.uint32();
-                    if (tag === error)
-                        break;
-                    switch (tag >>> 3) {
-                    case 1: {
-                            message.x = reader.int32();
-                            break;
-                        }
-                    case 2: {
-                            message.y = reader.int32();
-                            break;
-                        }
-                    default:
-                        reader.skipType(tag & 7, long);
+                    let start = reader.pos;
+                    let tag = reader.tag();
+                    if (tag === _end) {
+                        _end = $undefined;
                         break;
                     }
+                    let wireType = tag & 7;
+                    switch (tag >>>= 3) {
+                    case 1: {
+                            if (wireType !== 0)
+                                break;
+                            if (value = reader.int32())
+                                message.x = value;
+                            else
+                                delete message.x;
+                            continue;
+                        }
+                    case 2: {
+                            if (wireType !== 0)
+                                break;
+                            if (value = reader.int32())
+                                message.y = value;
+                            else
+                                delete message.y;
+                            continue;
+                        }
+                    }
+                    reader.skipType(wireType, _depth, tag);
+                    if (!reader.discardUnknown) {
+                        $util.makeProp(message, "$unknowns", false);
+                        (message.$unknowns || (message.$unknowns = [])).push(reader.raw(start, reader.pos));
+                    }
                 }
-                if (length !== undefined) {
+                if (length !== $undefined) {
                     if (reader.pos !== end)
-                        throw RangeError("index out of range");
+                        throw $RangeError("index out of range");
                     reader.len = length;
                 }
+                if (_end !== $undefined)
+                    throw $Error("missing end group");
                 return message;
             };
 
@@ -175,14 +214,14 @@ export const wire = $root.wire = (() => {
              * @memberof wire.msg.Coordinate
              * @static
              * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
-             * @returns {wire.msg.Coordinate} Coordinate
+             * @returns {wire.msg.Coordinate & wire.msg.Coordinate.$Shape} Coordinate
              * @throws {Error} If the payload is not a reader or valid buffer
              * @throws {$protobuf.util.ProtocolError} If required fields are missing
              */
-            Coordinate.decodeDelimited = function decodeDelimited(reader) {
+            Coordinate.decodeDelimited = function(reader) {
                 if (!(reader instanceof $Reader))
                     reader = new $Reader(reader);
-                return this.decode(reader, reader.uint32());
+                return this.decode(reader, reader.size());
             };
 
             /**
@@ -193,17 +232,17 @@ export const wire = $root.wire = (() => {
              * @param {Object.<string,*>} message Plain object to verify
              * @returns {string|null} `null` if valid, otherwise the reason why it is not
              */
-            Coordinate.verify = function verify(message, long) {
+            Coordinate.verify = function (message, _depth) {
                 if (typeof message !== "object" || message === null)
                     return "object expected";
-                if (long === undefined)
-                    long = 0;
-                if (long > $util.recursionLimit)
-                    return "maximum nesting depth exceeded";
-                if (message.x != null && Object.hasOwnProperty.call(message, "x"))
+                if (_depth === $undefined)
+                    _depth = 0;
+                if (_depth > $util.recursionLimit)
+                    return "max depth exceeded";
+                if (message.x != null && $Object.hasOwnProperty.call(message, "x"))
                     if (!$util.isInteger(message.x))
                         return "x: integer expected";
-                if (message.y != null && Object.hasOwnProperty.call(message, "y"))
+                if (message.y != null && $Object.hasOwnProperty.call(message, "y"))
                     if (!$util.isInteger(message.y))
                         return "y: integer expected";
                 return null;
@@ -217,20 +256,22 @@ export const wire = $root.wire = (() => {
              * @param {Object.<string,*>} object Plain object
              * @returns {wire.msg.Coordinate} Coordinate
              */
-            Coordinate.fromObject = function fromObject(object, long) {
+            Coordinate.fromObject = function (object, _depth) {
                 if (object instanceof $root.wire.msg.Coordinate)
                     return object;
                 if (!$util.isObject(object))
-                    throw TypeError(".wire.msg.Coordinate: object expected");
-                if (long === undefined)
-                    long = 0;
-                if (long > $util.recursionLimit)
-                    throw Error("maximum nesting depth exceeded");
+                    throw $TypeError(".wire.msg.Coordinate: object expected");
+                if (_depth === $undefined)
+                    _depth = 0;
+                if (_depth > $util.recursionLimit)
+                    throw $Error("max depth exceeded");
                 let message = new $root.wire.msg.Coordinate();
                 if (object.x != null)
-                    message.x = object.x | 0;
+                    if ($Number(object.x) !== 0)
+                        message.x = object.x | 0;
                 if (object.y != null)
-                    message.y = object.y | 0;
+                    if ($Number(object.y) !== 0)
+                        message.y = object.y | 0;
                 return message;
             };
 
@@ -243,21 +284,21 @@ export const wire = $root.wire = (() => {
              * @param {$protobuf.IConversionOptions} [options] Conversion options
              * @returns {Object.<string,*>} Plain object
              */
-            Coordinate.toObject = function toObject(message, options, q) {
+            Coordinate.toObject = function (message, options, _depth) {
                 if (!options)
                     options = {};
-                if (q === undefined)
-                    q = 0;
-                if (q > $util.recursionLimit)
-                    throw Error("max depth exceeded");
+                if (_depth === $undefined)
+                    _depth = 0;
+                if (_depth > $util.recursionLimit)
+                    throw $Error("max depth exceeded");
                 let object = {};
                 if (options.defaults) {
                     object.x = 0;
                     object.y = 0;
                 }
-                if (message.x != null && Object.hasOwnProperty.call(message, "x"))
+                if (message.x != null && $Object.hasOwnProperty.call(message, "x"))
                     object.x = message.x;
-                if (message.y != null && Object.hasOwnProperty.call(message, "y"))
+                if (message.y != null && $Object.hasOwnProperty.call(message, "y"))
                     object.y = message.y;
                 return object;
             };
@@ -269,23 +310,22 @@ export const wire = $root.wire = (() => {
              * @instance
              * @returns {Object.<string,*>} JSON object
              */
-            Coordinate.prototype.toJSON = function toJSON() {
-                return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
+            Coordinate.prototype.toJSON = function() {
+                return Coordinate.toObject(this, $protobuf.util.toJSONOptions);
             };
 
             /**
-             * Gets the default type url for Coordinate
+             * Gets the type url for Coordinate
              * @function getTypeUrl
              * @memberof wire.msg.Coordinate
              * @static
-             * @param {string} [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
-             * @returns {string} The default type url
+             * @param {string} [prefix] Custom type url prefix, defaults to `"type.googleapis.com"`
+             * @returns {string} The type url
              */
-            Coordinate.getTypeUrl = function getTypeUrl(typeUrlPrefix) {
-                if (typeUrlPrefix === undefined) {
-                    typeUrlPrefix = "type.googleapis.com";
-                }
-                return typeUrlPrefix + "/wire.msg.Coordinate";
+            Coordinate.getTypeUrl = function(prefix) {
+                if (prefix === $undefined)
+                    prefix = "type.googleapis.com";
+                return prefix + "/wire.msg.Coordinate";
             };
 
             return Coordinate;
@@ -295,26 +335,39 @@ export const wire = $root.wire = (() => {
 
             /**
              * Properties of a FloatCoordinate.
-             * @memberof wire.msg
-             * @interface IFloatCoordinate
+             * @typedef {Object} wire.msg.FloatCoordinate.$Properties
              * @property {number|null} [x] FloatCoordinate x
              * @property {number|null} [y] FloatCoordinate y
+             * @property {Array.<Uint8Array>} [$unknowns] Unknown fields preserved while decoding when enabled
+             */
+
+            /**
+             * Properties of a FloatCoordinate.
+             * @memberof wire.msg
+             * @interface IFloatCoordinate
+             * @augments wire.msg.FloatCoordinate.$Properties
+             * @deprecated Use wire.msg.FloatCoordinate.$Properties instead.
+             */
+
+            /**
+             * Shape of a FloatCoordinate.
+             * @typedef {wire.msg.FloatCoordinate.$Properties} wire.msg.FloatCoordinate.$Shape
              */
 
             /**
              * Constructs a new FloatCoordinate.
              * @memberof wire.msg
              * @classdesc Represents a FloatCoordinate.
-             * @implements IFloatCoordinate
              * @constructor
-             * @param {wire.msg.IFloatCoordinate=} [properties] Properties to set
+             * @param {wire.msg.FloatCoordinate.$Properties=} [properties] Properties to set
+             * @property {Array.<Uint8Array>} [$unknowns] Unknown fields preserved while decoding when enabled
              */
-            function FloatCoordinate(properties) {
+            const FloatCoordinate = function (properties) {
                 if (properties)
-                    for (let keys = Object.keys(properties), i = 0; i < keys.length; ++i)
+                    for (let keys = $Object.keys(properties), i = 0; i < keys.length; ++i)
                         if (properties[keys[i]] != null && keys[i] !== "__proto__")
                             this[keys[i]] = properties[keys[i]];
-            }
+            };
 
             /**
              * FloatCoordinate x.
@@ -337,10 +390,14 @@ export const wire = $root.wire = (() => {
              * @function create
              * @memberof wire.msg.FloatCoordinate
              * @static
-             * @param {wire.msg.IFloatCoordinate=} [properties] Properties to set
+             * @param {wire.msg.FloatCoordinate.$Properties=} [properties] Properties to set
              * @returns {wire.msg.FloatCoordinate} FloatCoordinate instance
+             * @type {{
+             *   (properties: wire.msg.FloatCoordinate.$Shape): wire.msg.FloatCoordinate & wire.msg.FloatCoordinate.$Shape;
+             *   (properties?: wire.msg.FloatCoordinate.$Properties): wire.msg.FloatCoordinate;
+             * }}
              */
-            FloatCoordinate.create = function create(properties) {
+            FloatCoordinate.create = function(properties) {
                 return new FloatCoordinate(properties);
             };
 
@@ -349,21 +406,24 @@ export const wire = $root.wire = (() => {
              * @function encode
              * @memberof wire.msg.FloatCoordinate
              * @static
-             * @param {wire.msg.IFloatCoordinate} message FloatCoordinate message or plain object to encode
+             * @param {wire.msg.FloatCoordinate.$Properties} message FloatCoordinate message or plain object to encode
              * @param {$protobuf.Writer} [writer] Writer to encode to
              * @returns {$protobuf.Writer} Writer
              */
-            FloatCoordinate.encode = function encode(message, writer, q) {
+            FloatCoordinate.encode = function (message, writer, _depth) {
                 if (!writer)
                     writer = $Writer.create();
-                if (q === undefined)
-                    q = 0;
-                if (q > $util.recursionLimit)
-                    throw Error("max depth exceeded");
-                if (message.x != null && Object.hasOwnProperty.call(message, "x"))
+                if (_depth === $undefined)
+                    _depth = 0;
+                if (_depth > $util.recursionLimit)
+                    throw $Error("max depth exceeded");
+                if (message.x != null && $Object.hasOwnProperty.call(message, "x") && !$Object.is(message.x, 0))
                     writer.uint32(/* id 1, wireType 5 =*/13).float(message.x);
-                if (message.y != null && Object.hasOwnProperty.call(message, "y"))
+                if (message.y != null && $Object.hasOwnProperty.call(message, "y") && !$Object.is(message.y, 0))
                     writer.uint32(/* id 2, wireType 5 =*/21).float(message.y);
+                if (message.$unknowns != null && $Object.hasOwnProperty.call(message, "$unknowns"))
+                    for (let i = 0; i < message.$unknowns.length; ++i)
+                        writer.raw(message.$unknowns[i]);
                 return writer;
             };
 
@@ -372,12 +432,12 @@ export const wire = $root.wire = (() => {
              * @function encodeDelimited
              * @memberof wire.msg.FloatCoordinate
              * @static
-             * @param {wire.msg.IFloatCoordinate} message FloatCoordinate message or plain object to encode
+             * @param {wire.msg.FloatCoordinate.$Properties} message FloatCoordinate message or plain object to encode
              * @param {$protobuf.Writer} [writer] Writer to encode to
              * @returns {$protobuf.Writer} Writer
              */
-            FloatCoordinate.encodeDelimited = function encodeDelimited(message, writer) {
-                return this.encode(message, writer && writer.len ? writer.fork() : writer).ldelim();
+            FloatCoordinate.encodeDelimited = function(message, writer) {
+                return this.encode(message, (writer || $Writer.create()).fork()).ldelim();
             };
 
             /**
@@ -387,51 +447,69 @@ export const wire = $root.wire = (() => {
              * @static
              * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
              * @param {number} [length] Message length if known beforehand
-             * @returns {wire.msg.FloatCoordinate} FloatCoordinate
+             * @returns {wire.msg.FloatCoordinate & wire.msg.FloatCoordinate.$Shape} FloatCoordinate
              * @throws {Error} If the payload is not a reader or valid buffer
              * @throws {$protobuf.util.ProtocolError} If required fields are missing
              */
-            FloatCoordinate.decode = function decode(reader, length, error, long) {
+            FloatCoordinate.decode = function (reader, length, _end, _depth, _target) {
                 if (!(reader instanceof $Reader))
                     reader = $Reader.create(reader);
-                if (long === undefined)
-                    long = 0;
-                if (long > $Reader.recursionLimit)
-                    throw Error("maximum nesting depth exceeded");
-                let end, message;
-                if (length === undefined)
+                if (_depth === $undefined)
+                    _depth = 0;
+                if (_depth > $Reader.recursionLimit)
+                    throw $Error("max depth exceeded");
+                let end, message, value;
+                if (length === $undefined)
                     end = reader.len;
                 else {
                     end = reader.pos + length;
                     if (end > reader.len)
-                        throw RangeError("index out of range");
+                        throw $RangeError("index out of range");
                     length = reader.len;
                     reader.len = end;
                 }
-                message = new $root.wire.msg.FloatCoordinate();
+                message = _target || new $root.wire.msg.FloatCoordinate();
                 while (reader.pos < end) {
-                    let tag = reader.uint32();
-                    if (tag === error)
-                        break;
-                    switch (tag >>> 3) {
-                    case 1: {
-                            message.x = reader.float();
-                            break;
-                        }
-                    case 2: {
-                            message.y = reader.float();
-                            break;
-                        }
-                    default:
-                        reader.skipType(tag & 7, long);
+                    let start = reader.pos;
+                    let tag = reader.tag();
+                    if (tag === _end) {
+                        _end = $undefined;
                         break;
                     }
+                    let wireType = tag & 7;
+                    switch (tag >>>= 3) {
+                    case 1: {
+                            if (wireType !== 5)
+                                break;
+                            if (!$Object.is(value = reader.float(), 0))
+                                message.x = value;
+                            else
+                                delete message.x;
+                            continue;
+                        }
+                    case 2: {
+                            if (wireType !== 5)
+                                break;
+                            if (!$Object.is(value = reader.float(), 0))
+                                message.y = value;
+                            else
+                                delete message.y;
+                            continue;
+                        }
+                    }
+                    reader.skipType(wireType, _depth, tag);
+                    if (!reader.discardUnknown) {
+                        $util.makeProp(message, "$unknowns", false);
+                        (message.$unknowns || (message.$unknowns = [])).push(reader.raw(start, reader.pos));
+                    }
                 }
-                if (length !== undefined) {
+                if (length !== $undefined) {
                     if (reader.pos !== end)
-                        throw RangeError("index out of range");
+                        throw $RangeError("index out of range");
                     reader.len = length;
                 }
+                if (_end !== $undefined)
+                    throw $Error("missing end group");
                 return message;
             };
 
@@ -441,14 +519,14 @@ export const wire = $root.wire = (() => {
              * @memberof wire.msg.FloatCoordinate
              * @static
              * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
-             * @returns {wire.msg.FloatCoordinate} FloatCoordinate
+             * @returns {wire.msg.FloatCoordinate & wire.msg.FloatCoordinate.$Shape} FloatCoordinate
              * @throws {Error} If the payload is not a reader or valid buffer
              * @throws {$protobuf.util.ProtocolError} If required fields are missing
              */
-            FloatCoordinate.decodeDelimited = function decodeDelimited(reader) {
+            FloatCoordinate.decodeDelimited = function(reader) {
                 if (!(reader instanceof $Reader))
                     reader = new $Reader(reader);
-                return this.decode(reader, reader.uint32());
+                return this.decode(reader, reader.size());
             };
 
             /**
@@ -459,17 +537,17 @@ export const wire = $root.wire = (() => {
              * @param {Object.<string,*>} message Plain object to verify
              * @returns {string|null} `null` if valid, otherwise the reason why it is not
              */
-            FloatCoordinate.verify = function verify(message, long) {
+            FloatCoordinate.verify = function (message, _depth) {
                 if (typeof message !== "object" || message === null)
                     return "object expected";
-                if (long === undefined)
-                    long = 0;
-                if (long > $util.recursionLimit)
-                    return "maximum nesting depth exceeded";
-                if (message.x != null && Object.hasOwnProperty.call(message, "x"))
+                if (_depth === $undefined)
+                    _depth = 0;
+                if (_depth > $util.recursionLimit)
+                    return "max depth exceeded";
+                if (message.x != null && $Object.hasOwnProperty.call(message, "x"))
                     if (typeof message.x !== "number")
                         return "x: number expected";
-                if (message.y != null && Object.hasOwnProperty.call(message, "y"))
+                if (message.y != null && $Object.hasOwnProperty.call(message, "y"))
                     if (typeof message.y !== "number")
                         return "y: number expected";
                 return null;
@@ -483,20 +561,22 @@ export const wire = $root.wire = (() => {
              * @param {Object.<string,*>} object Plain object
              * @returns {wire.msg.FloatCoordinate} FloatCoordinate
              */
-            FloatCoordinate.fromObject = function fromObject(object, long) {
+            FloatCoordinate.fromObject = function (object, _depth) {
                 if (object instanceof $root.wire.msg.FloatCoordinate)
                     return object;
                 if (!$util.isObject(object))
-                    throw TypeError(".wire.msg.FloatCoordinate: object expected");
-                if (long === undefined)
-                    long = 0;
-                if (long > $util.recursionLimit)
-                    throw Error("maximum nesting depth exceeded");
+                    throw $TypeError(".wire.msg.FloatCoordinate: object expected");
+                if (_depth === $undefined)
+                    _depth = 0;
+                if (_depth > $util.recursionLimit)
+                    throw $Error("max depth exceeded");
                 let message = new $root.wire.msg.FloatCoordinate();
                 if (object.x != null)
-                    message.x = Number(object.x);
+                    if (!$Object.is($Number(object.x), 0))
+                        message.x = $Number(object.x);
                 if (object.y != null)
-                    message.y = Number(object.y);
+                    if (!$Object.is($Number(object.y), 0))
+                        message.y = $Number(object.y);
                 return message;
             };
 
@@ -509,22 +589,22 @@ export const wire = $root.wire = (() => {
              * @param {$protobuf.IConversionOptions} [options] Conversion options
              * @returns {Object.<string,*>} Plain object
              */
-            FloatCoordinate.toObject = function toObject(message, options, q) {
+            FloatCoordinate.toObject = function (message, options, _depth) {
                 if (!options)
                     options = {};
-                if (q === undefined)
-                    q = 0;
-                if (q > $util.recursionLimit)
-                    throw Error("max depth exceeded");
+                if (_depth === $undefined)
+                    _depth = 0;
+                if (_depth > $util.recursionLimit)
+                    throw $Error("max depth exceeded");
                 let object = {};
                 if (options.defaults) {
                     object.x = 0;
                     object.y = 0;
                 }
-                if (message.x != null && Object.hasOwnProperty.call(message, "x"))
-                    object.x = options.json && !isFinite(message.x) ? String(message.x) : message.x;
-                if (message.y != null && Object.hasOwnProperty.call(message, "y"))
-                    object.y = options.json && !isFinite(message.y) ? String(message.y) : message.y;
+                if (message.x != null && $Object.hasOwnProperty.call(message, "x"))
+                    object.x = options.json && !$isFinite(message.x) ? $String(message.x) : message.x;
+                if (message.y != null && $Object.hasOwnProperty.call(message, "y"))
+                    object.y = options.json && !$isFinite(message.y) ? $String(message.y) : message.y;
                 return object;
             };
 
@@ -535,23 +615,22 @@ export const wire = $root.wire = (() => {
              * @instance
              * @returns {Object.<string,*>} JSON object
              */
-            FloatCoordinate.prototype.toJSON = function toJSON() {
-                return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
+            FloatCoordinate.prototype.toJSON = function() {
+                return FloatCoordinate.toObject(this, $protobuf.util.toJSONOptions);
             };
 
             /**
-             * Gets the default type url for FloatCoordinate
+             * Gets the type url for FloatCoordinate
              * @function getTypeUrl
              * @memberof wire.msg.FloatCoordinate
              * @static
-             * @param {string} [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
-             * @returns {string} The default type url
+             * @param {string} [prefix] Custom type url prefix, defaults to `"type.googleapis.com"`
+             * @returns {string} The type url
              */
-            FloatCoordinate.getTypeUrl = function getTypeUrl(typeUrlPrefix) {
-                if (typeUrlPrefix === undefined) {
-                    typeUrlPrefix = "type.googleapis.com";
-                }
-                return typeUrlPrefix + "/wire.msg.FloatCoordinate";
+            FloatCoordinate.getTypeUrl = function(prefix) {
+                if (prefix === $undefined)
+                    prefix = "type.googleapis.com";
+                return prefix + "/wire.msg.FloatCoordinate";
             };
 
             return FloatCoordinate;
@@ -567,7 +646,7 @@ export const wire = $root.wire = (() => {
          * @property {number} LEFT_GAME=3 LEFT_GAME value
          */
         msg.PlayerState = (function() {
-            const valuesById = {}, values = Object.create(valuesById);
+            const valuesById = $Object.create(null), values = $Object.create(valuesById);
             values[valuesById[0] = "ALIVE"] = 0;
             values[valuesById[1] = "PENDING_REVIVAL"] = 1;
             values[valuesById[2] = "DEAD"] = 2;
@@ -579,26 +658,39 @@ export const wire = $root.wire = (() => {
 
             /**
              * Properties of a Player.
-             * @memberof wire.msg
-             * @interface IPlayer
+             * @typedef {Object} wire.msg.Player.$Properties
              * @property {string|null} [id] Player id
              * @property {wire.msg.PlayerState|null} [state] Player state
+             * @property {Array.<Uint8Array>} [$unknowns] Unknown fields preserved while decoding when enabled
+             */
+
+            /**
+             * Properties of a Player.
+             * @memberof wire.msg
+             * @interface IPlayer
+             * @augments wire.msg.Player.$Properties
+             * @deprecated Use wire.msg.Player.$Properties instead.
+             */
+
+            /**
+             * Shape of a Player.
+             * @typedef {wire.msg.Player.$Properties} wire.msg.Player.$Shape
              */
 
             /**
              * Constructs a new Player.
              * @memberof wire.msg
              * @classdesc Represents a Player.
-             * @implements IPlayer
              * @constructor
-             * @param {wire.msg.IPlayer=} [properties] Properties to set
+             * @param {wire.msg.Player.$Properties=} [properties] Properties to set
+             * @property {Array.<Uint8Array>} [$unknowns] Unknown fields preserved while decoding when enabled
              */
-            function Player(properties) {
+            const Player = function (properties) {
                 if (properties)
-                    for (let keys = Object.keys(properties), i = 0; i < keys.length; ++i)
+                    for (let keys = $Object.keys(properties), i = 0; i < keys.length; ++i)
                         if (properties[keys[i]] != null && keys[i] !== "__proto__")
                             this[keys[i]] = properties[keys[i]];
-            }
+            };
 
             /**
              * Player id.
@@ -621,10 +713,14 @@ export const wire = $root.wire = (() => {
              * @function create
              * @memberof wire.msg.Player
              * @static
-             * @param {wire.msg.IPlayer=} [properties] Properties to set
+             * @param {wire.msg.Player.$Properties=} [properties] Properties to set
              * @returns {wire.msg.Player} Player instance
+             * @type {{
+             *   (properties: wire.msg.Player.$Shape): wire.msg.Player & wire.msg.Player.$Shape;
+             *   (properties?: wire.msg.Player.$Properties): wire.msg.Player;
+             * }}
              */
-            Player.create = function create(properties) {
+            Player.create = function(properties) {
                 return new Player(properties);
             };
 
@@ -633,21 +729,24 @@ export const wire = $root.wire = (() => {
              * @function encode
              * @memberof wire.msg.Player
              * @static
-             * @param {wire.msg.IPlayer} message Player message or plain object to encode
+             * @param {wire.msg.Player.$Properties} message Player message or plain object to encode
              * @param {$protobuf.Writer} [writer] Writer to encode to
              * @returns {$protobuf.Writer} Writer
              */
-            Player.encode = function encode(message, writer, q) {
+            Player.encode = function (message, writer, _depth) {
                 if (!writer)
                     writer = $Writer.create();
-                if (q === undefined)
-                    q = 0;
-                if (q > $util.recursionLimit)
-                    throw Error("max depth exceeded");
-                if (message.id != null && Object.hasOwnProperty.call(message, "id"))
+                if (_depth === $undefined)
+                    _depth = 0;
+                if (_depth > $util.recursionLimit)
+                    throw $Error("max depth exceeded");
+                if (message.id != null && $Object.hasOwnProperty.call(message, "id") && message.id !== "")
                     writer.uint32(/* id 1, wireType 2 =*/10).string(message.id);
-                if (message.state != null && Object.hasOwnProperty.call(message, "state"))
+                if (message.state != null && $Object.hasOwnProperty.call(message, "state") && message.state !== 0)
                     writer.uint32(/* id 2, wireType 0 =*/16).int32(message.state);
+                if (message.$unknowns != null && $Object.hasOwnProperty.call(message, "$unknowns"))
+                    for (let i = 0; i < message.$unknowns.length; ++i)
+                        writer.raw(message.$unknowns[i]);
                 return writer;
             };
 
@@ -656,12 +755,12 @@ export const wire = $root.wire = (() => {
              * @function encodeDelimited
              * @memberof wire.msg.Player
              * @static
-             * @param {wire.msg.IPlayer} message Player message or plain object to encode
+             * @param {wire.msg.Player.$Properties} message Player message or plain object to encode
              * @param {$protobuf.Writer} [writer] Writer to encode to
              * @returns {$protobuf.Writer} Writer
              */
-            Player.encodeDelimited = function encodeDelimited(message, writer) {
-                return this.encode(message, writer && writer.len ? writer.fork() : writer).ldelim();
+            Player.encodeDelimited = function(message, writer) {
+                return this.encode(message, (writer || $Writer.create()).fork()).ldelim();
             };
 
             /**
@@ -671,51 +770,69 @@ export const wire = $root.wire = (() => {
              * @static
              * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
              * @param {number} [length] Message length if known beforehand
-             * @returns {wire.msg.Player} Player
+             * @returns {wire.msg.Player & wire.msg.Player.$Shape} Player
              * @throws {Error} If the payload is not a reader or valid buffer
              * @throws {$protobuf.util.ProtocolError} If required fields are missing
              */
-            Player.decode = function decode(reader, length, error, long) {
+            Player.decode = function (reader, length, _end, _depth, _target) {
                 if (!(reader instanceof $Reader))
                     reader = $Reader.create(reader);
-                if (long === undefined)
-                    long = 0;
-                if (long > $Reader.recursionLimit)
-                    throw Error("maximum nesting depth exceeded");
-                let end, message;
-                if (length === undefined)
+                if (_depth === $undefined)
+                    _depth = 0;
+                if (_depth > $Reader.recursionLimit)
+                    throw $Error("max depth exceeded");
+                let end, message, value;
+                if (length === $undefined)
                     end = reader.len;
                 else {
                     end = reader.pos + length;
                     if (end > reader.len)
-                        throw RangeError("index out of range");
+                        throw $RangeError("index out of range");
                     length = reader.len;
                     reader.len = end;
                 }
-                message = new $root.wire.msg.Player();
+                message = _target || new $root.wire.msg.Player();
                 while (reader.pos < end) {
-                    let tag = reader.uint32();
-                    if (tag === error)
-                        break;
-                    switch (tag >>> 3) {
-                    case 1: {
-                            message.id = reader.string();
-                            break;
-                        }
-                    case 2: {
-                            message.state = reader.int32();
-                            break;
-                        }
-                    default:
-                        reader.skipType(tag & 7, long);
+                    let start = reader.pos;
+                    let tag = reader.tag();
+                    if (tag === _end) {
+                        _end = $undefined;
                         break;
                     }
+                    let wireType = tag & 7;
+                    switch (tag >>>= 3) {
+                    case 1: {
+                            if (wireType !== 2)
+                                break;
+                            if ((value = reader.stringVerify()).length)
+                                message.id = value;
+                            else
+                                delete message.id;
+                            continue;
+                        }
+                    case 2: {
+                            if (wireType !== 0)
+                                break;
+                            if (value = reader.int32())
+                                message.state = value;
+                            else
+                                delete message.state;
+                            continue;
+                        }
+                    }
+                    reader.skipType(wireType, _depth, tag);
+                    if (!reader.discardUnknown) {
+                        $util.makeProp(message, "$unknowns", false);
+                        (message.$unknowns || (message.$unknowns = [])).push(reader.raw(start, reader.pos));
+                    }
                 }
-                if (length !== undefined) {
+                if (length !== $undefined) {
                     if (reader.pos !== end)
-                        throw RangeError("index out of range");
+                        throw $RangeError("index out of range");
                     reader.len = length;
                 }
+                if (_end !== $undefined)
+                    throw $Error("missing end group");
                 return message;
             };
 
@@ -725,14 +842,14 @@ export const wire = $root.wire = (() => {
              * @memberof wire.msg.Player
              * @static
              * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
-             * @returns {wire.msg.Player} Player
+             * @returns {wire.msg.Player & wire.msg.Player.$Shape} Player
              * @throws {Error} If the payload is not a reader or valid buffer
              * @throws {$protobuf.util.ProtocolError} If required fields are missing
              */
-            Player.decodeDelimited = function decodeDelimited(reader) {
+            Player.decodeDelimited = function(reader) {
                 if (!(reader instanceof $Reader))
                     reader = new $Reader(reader);
-                return this.decode(reader, reader.uint32());
+                return this.decode(reader, reader.size());
             };
 
             /**
@@ -743,26 +860,19 @@ export const wire = $root.wire = (() => {
              * @param {Object.<string,*>} message Plain object to verify
              * @returns {string|null} `null` if valid, otherwise the reason why it is not
              */
-            Player.verify = function verify(message, long) {
+            Player.verify = function (message, _depth) {
                 if (typeof message !== "object" || message === null)
                     return "object expected";
-                if (long === undefined)
-                    long = 0;
-                if (long > $util.recursionLimit)
-                    return "maximum nesting depth exceeded";
-                if (message.id != null && Object.hasOwnProperty.call(message, "id"))
+                if (_depth === $undefined)
+                    _depth = 0;
+                if (_depth > $util.recursionLimit)
+                    return "max depth exceeded";
+                if (message.id != null && $Object.hasOwnProperty.call(message, "id"))
                     if (!$util.isString(message.id))
                         return "id: string expected";
-                if (message.state != null && Object.hasOwnProperty.call(message, "state"))
-                    switch (message.state) {
-                    default:
+                if (message.state != null && $Object.hasOwnProperty.call(message, "state"))
+                    if (typeof message.state !== "number" || (message.state | 0) !== message.state)
                         return "state: enum value expected";
-                    case 0:
-                    case 1:
-                    case 2:
-                    case 3:
-                        break;
-                    }
                 return null;
             };
 
@@ -774,42 +884,41 @@ export const wire = $root.wire = (() => {
              * @param {Object.<string,*>} object Plain object
              * @returns {wire.msg.Player} Player
              */
-            Player.fromObject = function fromObject(object, long) {
+            Player.fromObject = function (object, _depth) {
                 if (object instanceof $root.wire.msg.Player)
                     return object;
                 if (!$util.isObject(object))
-                    throw TypeError(".wire.msg.Player: object expected");
-                if (long === undefined)
-                    long = 0;
-                if (long > $util.recursionLimit)
-                    throw Error("maximum nesting depth exceeded");
+                    throw $TypeError(".wire.msg.Player: object expected");
+                if (_depth === $undefined)
+                    _depth = 0;
+                if (_depth > $util.recursionLimit)
+                    throw $Error("max depth exceeded");
                 let message = new $root.wire.msg.Player();
                 if (object.id != null)
-                    message.id = String(object.id);
-                switch (object.state) {
-                default:
-                    if (typeof object.state === "number") {
-                        message.state = object.state;
+                    if (typeof object.id !== "string" || object.id.length)
+                        message.id = $String(object.id);
+                if (object.state !== 0 && (typeof object.state !== "string" || $root.wire.msg.PlayerState[object.state] !== 0))
+                    switch (object.state) {
+                    case "ALIVE":
+                    case 0:
+                        message.state = 0;
                         break;
+                    case "PENDING_REVIVAL":
+                    case 1:
+                        message.state = 1;
+                        break;
+                    case "DEAD":
+                    case 2:
+                        message.state = 2;
+                        break;
+                    case "LEFT_GAME":
+                    case 3:
+                        message.state = 3;
+                        break;
+                    default:
+                        if (typeof object.state === "number" && (object.state | 0) === object.state)
+                            message.state = object.state;
                     }
-                    break;
-                case "ALIVE":
-                case 0:
-                    message.state = 0;
-                    break;
-                case "PENDING_REVIVAL":
-                case 1:
-                    message.state = 1;
-                    break;
-                case "DEAD":
-                case 2:
-                    message.state = 2;
-                    break;
-                case "LEFT_GAME":
-                case 3:
-                    message.state = 3;
-                    break;
-                }
                 return message;
             };
 
@@ -822,22 +931,22 @@ export const wire = $root.wire = (() => {
              * @param {$protobuf.IConversionOptions} [options] Conversion options
              * @returns {Object.<string,*>} Plain object
              */
-            Player.toObject = function toObject(message, options, q) {
+            Player.toObject = function (message, options, _depth) {
                 if (!options)
                     options = {};
-                if (q === undefined)
-                    q = 0;
-                if (q > $util.recursionLimit)
-                    throw Error("max depth exceeded");
+                if (_depth === $undefined)
+                    _depth = 0;
+                if (_depth > $util.recursionLimit)
+                    throw $Error("max depth exceeded");
                 let object = {};
                 if (options.defaults) {
                     object.id = "";
-                    object.state = options.enums === String ? "ALIVE" : 0;
+                    object.state = options.enums === $String ? "ALIVE" : 0;
                 }
-                if (message.id != null && Object.hasOwnProperty.call(message, "id"))
+                if (message.id != null && $Object.hasOwnProperty.call(message, "id"))
                     object.id = message.id;
-                if (message.state != null && Object.hasOwnProperty.call(message, "state"))
-                    object.state = options.enums === String ? $root.wire.msg.PlayerState[message.state] === undefined ? message.state : $root.wire.msg.PlayerState[message.state] : message.state;
+                if (message.state != null && $Object.hasOwnProperty.call(message, "state"))
+                    object.state = options.enums === $String ? $root.wire.msg.PlayerState[message.state] === $undefined ? message.state : $root.wire.msg.PlayerState[message.state] : message.state;
                 return object;
             };
 
@@ -848,23 +957,22 @@ export const wire = $root.wire = (() => {
              * @instance
              * @returns {Object.<string,*>} JSON object
              */
-            Player.prototype.toJSON = function toJSON() {
-                return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
+            Player.prototype.toJSON = function() {
+                return Player.toObject(this, $protobuf.util.toJSONOptions);
             };
 
             /**
-             * Gets the default type url for Player
+             * Gets the type url for Player
              * @function getTypeUrl
              * @memberof wire.msg.Player
              * @static
-             * @param {string} [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
-             * @returns {string} The default type url
+             * @param {string} [prefix] Custom type url prefix, defaults to `"type.googleapis.com"`
+             * @returns {string} The type url
              */
-            Player.getTypeUrl = function getTypeUrl(typeUrlPrefix) {
-                if (typeUrlPrefix === undefined) {
-                    typeUrlPrefix = "type.googleapis.com";
-                }
-                return typeUrlPrefix + "/wire.msg.Player";
+            Player.getTypeUrl = function(prefix) {
+                if (prefix === $undefined)
+                    prefix = "type.googleapis.com";
+                return prefix + "/wire.msg.Player";
             };
 
             return Player;
@@ -874,26 +982,39 @@ export const wire = $root.wire = (() => {
 
             /**
              * Properties of an Army.
-             * @memberof wire.msg
-             * @interface IArmy
+             * @typedef {Object} wire.msg.Army.$Properties
              * @property {string|null} [ownerId] Army ownerId
              * @property {number|null} [strength] Army strength
+             * @property {Array.<Uint8Array>} [$unknowns] Unknown fields preserved while decoding when enabled
+             */
+
+            /**
+             * Properties of an Army.
+             * @memberof wire.msg
+             * @interface IArmy
+             * @augments wire.msg.Army.$Properties
+             * @deprecated Use wire.msg.Army.$Properties instead.
+             */
+
+            /**
+             * Shape of an Army.
+             * @typedef {wire.msg.Army.$Properties} wire.msg.Army.$Shape
              */
 
             /**
              * Constructs a new Army.
              * @memberof wire.msg
              * @classdesc Represents an Army.
-             * @implements IArmy
              * @constructor
-             * @param {wire.msg.IArmy=} [properties] Properties to set
+             * @param {wire.msg.Army.$Properties=} [properties] Properties to set
+             * @property {Array.<Uint8Array>} [$unknowns] Unknown fields preserved while decoding when enabled
              */
-            function Army(properties) {
+            const Army = function (properties) {
                 if (properties)
-                    for (let keys = Object.keys(properties), i = 0; i < keys.length; ++i)
+                    for (let keys = $Object.keys(properties), i = 0; i < keys.length; ++i)
                         if (properties[keys[i]] != null && keys[i] !== "__proto__")
                             this[keys[i]] = properties[keys[i]];
-            }
+            };
 
             /**
              * Army ownerId.
@@ -916,10 +1037,14 @@ export const wire = $root.wire = (() => {
              * @function create
              * @memberof wire.msg.Army
              * @static
-             * @param {wire.msg.IArmy=} [properties] Properties to set
+             * @param {wire.msg.Army.$Properties=} [properties] Properties to set
              * @returns {wire.msg.Army} Army instance
+             * @type {{
+             *   (properties: wire.msg.Army.$Shape): wire.msg.Army & wire.msg.Army.$Shape;
+             *   (properties?: wire.msg.Army.$Properties): wire.msg.Army;
+             * }}
              */
-            Army.create = function create(properties) {
+            Army.create = function(properties) {
                 return new Army(properties);
             };
 
@@ -928,21 +1053,24 @@ export const wire = $root.wire = (() => {
              * @function encode
              * @memberof wire.msg.Army
              * @static
-             * @param {wire.msg.IArmy} message Army message or plain object to encode
+             * @param {wire.msg.Army.$Properties} message Army message or plain object to encode
              * @param {$protobuf.Writer} [writer] Writer to encode to
              * @returns {$protobuf.Writer} Writer
              */
-            Army.encode = function encode(message, writer, q) {
+            Army.encode = function (message, writer, _depth) {
                 if (!writer)
                     writer = $Writer.create();
-                if (q === undefined)
-                    q = 0;
-                if (q > $util.recursionLimit)
-                    throw Error("max depth exceeded");
-                if (message.ownerId != null && Object.hasOwnProperty.call(message, "ownerId"))
+                if (_depth === $undefined)
+                    _depth = 0;
+                if (_depth > $util.recursionLimit)
+                    throw $Error("max depth exceeded");
+                if (message.ownerId != null && $Object.hasOwnProperty.call(message, "ownerId") && message.ownerId !== "")
                     writer.uint32(/* id 1, wireType 2 =*/10).string(message.ownerId);
-                if (message.strength != null && Object.hasOwnProperty.call(message, "strength"))
+                if (message.strength != null && $Object.hasOwnProperty.call(message, "strength") && message.strength !== 0)
                     writer.uint32(/* id 2, wireType 0 =*/16).int32(message.strength);
+                if (message.$unknowns != null && $Object.hasOwnProperty.call(message, "$unknowns"))
+                    for (let i = 0; i < message.$unknowns.length; ++i)
+                        writer.raw(message.$unknowns[i]);
                 return writer;
             };
 
@@ -951,12 +1079,12 @@ export const wire = $root.wire = (() => {
              * @function encodeDelimited
              * @memberof wire.msg.Army
              * @static
-             * @param {wire.msg.IArmy} message Army message or plain object to encode
+             * @param {wire.msg.Army.$Properties} message Army message or plain object to encode
              * @param {$protobuf.Writer} [writer] Writer to encode to
              * @returns {$protobuf.Writer} Writer
              */
-            Army.encodeDelimited = function encodeDelimited(message, writer) {
-                return this.encode(message, writer && writer.len ? writer.fork() : writer).ldelim();
+            Army.encodeDelimited = function(message, writer) {
+                return this.encode(message, (writer || $Writer.create()).fork()).ldelim();
             };
 
             /**
@@ -966,51 +1094,69 @@ export const wire = $root.wire = (() => {
              * @static
              * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
              * @param {number} [length] Message length if known beforehand
-             * @returns {wire.msg.Army} Army
+             * @returns {wire.msg.Army & wire.msg.Army.$Shape} Army
              * @throws {Error} If the payload is not a reader or valid buffer
              * @throws {$protobuf.util.ProtocolError} If required fields are missing
              */
-            Army.decode = function decode(reader, length, error, long) {
+            Army.decode = function (reader, length, _end, _depth, _target) {
                 if (!(reader instanceof $Reader))
                     reader = $Reader.create(reader);
-                if (long === undefined)
-                    long = 0;
-                if (long > $Reader.recursionLimit)
-                    throw Error("maximum nesting depth exceeded");
-                let end, message;
-                if (length === undefined)
+                if (_depth === $undefined)
+                    _depth = 0;
+                if (_depth > $Reader.recursionLimit)
+                    throw $Error("max depth exceeded");
+                let end, message, value;
+                if (length === $undefined)
                     end = reader.len;
                 else {
                     end = reader.pos + length;
                     if (end > reader.len)
-                        throw RangeError("index out of range");
+                        throw $RangeError("index out of range");
                     length = reader.len;
                     reader.len = end;
                 }
-                message = new $root.wire.msg.Army();
+                message = _target || new $root.wire.msg.Army();
                 while (reader.pos < end) {
-                    let tag = reader.uint32();
-                    if (tag === error)
-                        break;
-                    switch (tag >>> 3) {
-                    case 1: {
-                            message.ownerId = reader.string();
-                            break;
-                        }
-                    case 2: {
-                            message.strength = reader.int32();
-                            break;
-                        }
-                    default:
-                        reader.skipType(tag & 7, long);
+                    let start = reader.pos;
+                    let tag = reader.tag();
+                    if (tag === _end) {
+                        _end = $undefined;
                         break;
                     }
+                    let wireType = tag & 7;
+                    switch (tag >>>= 3) {
+                    case 1: {
+                            if (wireType !== 2)
+                                break;
+                            if ((value = reader.stringVerify()).length)
+                                message.ownerId = value;
+                            else
+                                delete message.ownerId;
+                            continue;
+                        }
+                    case 2: {
+                            if (wireType !== 0)
+                                break;
+                            if (value = reader.int32())
+                                message.strength = value;
+                            else
+                                delete message.strength;
+                            continue;
+                        }
+                    }
+                    reader.skipType(wireType, _depth, tag);
+                    if (!reader.discardUnknown) {
+                        $util.makeProp(message, "$unknowns", false);
+                        (message.$unknowns || (message.$unknowns = [])).push(reader.raw(start, reader.pos));
+                    }
                 }
-                if (length !== undefined) {
+                if (length !== $undefined) {
                     if (reader.pos !== end)
-                        throw RangeError("index out of range");
+                        throw $RangeError("index out of range");
                     reader.len = length;
                 }
+                if (_end !== $undefined)
+                    throw $Error("missing end group");
                 return message;
             };
 
@@ -1020,14 +1166,14 @@ export const wire = $root.wire = (() => {
              * @memberof wire.msg.Army
              * @static
              * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
-             * @returns {wire.msg.Army} Army
+             * @returns {wire.msg.Army & wire.msg.Army.$Shape} Army
              * @throws {Error} If the payload is not a reader or valid buffer
              * @throws {$protobuf.util.ProtocolError} If required fields are missing
              */
-            Army.decodeDelimited = function decodeDelimited(reader) {
+            Army.decodeDelimited = function(reader) {
                 if (!(reader instanceof $Reader))
                     reader = new $Reader(reader);
-                return this.decode(reader, reader.uint32());
+                return this.decode(reader, reader.size());
             };
 
             /**
@@ -1038,17 +1184,17 @@ export const wire = $root.wire = (() => {
              * @param {Object.<string,*>} message Plain object to verify
              * @returns {string|null} `null` if valid, otherwise the reason why it is not
              */
-            Army.verify = function verify(message, long) {
+            Army.verify = function (message, _depth) {
                 if (typeof message !== "object" || message === null)
                     return "object expected";
-                if (long === undefined)
-                    long = 0;
-                if (long > $util.recursionLimit)
-                    return "maximum nesting depth exceeded";
-                if (message.ownerId != null && Object.hasOwnProperty.call(message, "ownerId"))
+                if (_depth === $undefined)
+                    _depth = 0;
+                if (_depth > $util.recursionLimit)
+                    return "max depth exceeded";
+                if (message.ownerId != null && $Object.hasOwnProperty.call(message, "ownerId"))
                     if (!$util.isString(message.ownerId))
                         return "ownerId: string expected";
-                if (message.strength != null && Object.hasOwnProperty.call(message, "strength"))
+                if (message.strength != null && $Object.hasOwnProperty.call(message, "strength"))
                     if (!$util.isInteger(message.strength))
                         return "strength: integer expected";
                 return null;
@@ -1062,20 +1208,22 @@ export const wire = $root.wire = (() => {
              * @param {Object.<string,*>} object Plain object
              * @returns {wire.msg.Army} Army
              */
-            Army.fromObject = function fromObject(object, long) {
+            Army.fromObject = function (object, _depth) {
                 if (object instanceof $root.wire.msg.Army)
                     return object;
                 if (!$util.isObject(object))
-                    throw TypeError(".wire.msg.Army: object expected");
-                if (long === undefined)
-                    long = 0;
-                if (long > $util.recursionLimit)
-                    throw Error("maximum nesting depth exceeded");
+                    throw $TypeError(".wire.msg.Army: object expected");
+                if (_depth === $undefined)
+                    _depth = 0;
+                if (_depth > $util.recursionLimit)
+                    throw $Error("max depth exceeded");
                 let message = new $root.wire.msg.Army();
                 if (object.ownerId != null)
-                    message.ownerId = String(object.ownerId);
+                    if (typeof object.ownerId !== "string" || object.ownerId.length)
+                        message.ownerId = $String(object.ownerId);
                 if (object.strength != null)
-                    message.strength = object.strength | 0;
+                    if ($Number(object.strength) !== 0)
+                        message.strength = object.strength | 0;
                 return message;
             };
 
@@ -1088,21 +1236,21 @@ export const wire = $root.wire = (() => {
              * @param {$protobuf.IConversionOptions} [options] Conversion options
              * @returns {Object.<string,*>} Plain object
              */
-            Army.toObject = function toObject(message, options, q) {
+            Army.toObject = function (message, options, _depth) {
                 if (!options)
                     options = {};
-                if (q === undefined)
-                    q = 0;
-                if (q > $util.recursionLimit)
-                    throw Error("max depth exceeded");
+                if (_depth === $undefined)
+                    _depth = 0;
+                if (_depth > $util.recursionLimit)
+                    throw $Error("max depth exceeded");
                 let object = {};
                 if (options.defaults) {
                     object.ownerId = "";
                     object.strength = 0;
                 }
-                if (message.ownerId != null && Object.hasOwnProperty.call(message, "ownerId"))
+                if (message.ownerId != null && $Object.hasOwnProperty.call(message, "ownerId"))
                     object.ownerId = message.ownerId;
-                if (message.strength != null && Object.hasOwnProperty.call(message, "strength"))
+                if (message.strength != null && $Object.hasOwnProperty.call(message, "strength"))
                     object.strength = message.strength;
                 return object;
             };
@@ -1114,23 +1262,22 @@ export const wire = $root.wire = (() => {
              * @instance
              * @returns {Object.<string,*>} JSON object
              */
-            Army.prototype.toJSON = function toJSON() {
-                return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
+            Army.prototype.toJSON = function() {
+                return Army.toObject(this, $protobuf.util.toJSONOptions);
             };
 
             /**
-             * Gets the default type url for Army
+             * Gets the type url for Army
              * @function getTypeUrl
              * @memberof wire.msg.Army
              * @static
-             * @param {string} [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
-             * @returns {string} The default type url
+             * @param {string} [prefix] Custom type url prefix, defaults to `"type.googleapis.com"`
+             * @returns {string} The type url
              */
-            Army.getTypeUrl = function getTypeUrl(typeUrlPrefix) {
-                if (typeUrlPrefix === undefined) {
-                    typeUrlPrefix = "type.googleapis.com";
-                }
-                return typeUrlPrefix + "/wire.msg.Army";
+            Army.getTypeUrl = function(prefix) {
+                if (prefix === $undefined)
+                    prefix = "type.googleapis.com";
+                return prefix + "/wire.msg.Army";
             };
 
             return Army;
@@ -1140,29 +1287,42 @@ export const wire = $root.wire = (() => {
 
             /**
              * Properties of an Airplane.
-             * @memberof wire.msg
-             * @interface IAirplane
+             * @typedef {Object} wire.msg.Airplane.$Properties
              * @property {string|null} [id] Airplane id
-             * @property {wire.msg.IArmy|null} [army] Airplane army
-             * @property {wire.msg.IFloatCoordinate|null} [position] Airplane position
+             * @property {wire.msg.Army.$Properties|null} [army] Airplane army
+             * @property {wire.msg.FloatCoordinate.$Properties|null} [position] Airplane position
              * @property {number|null} [direction] Airplane direction
              * @property {number|null} [speed] Airplane speed
+             * @property {Array.<Uint8Array>} [$unknowns] Unknown fields preserved while decoding when enabled
+             */
+
+            /**
+             * Properties of an Airplane.
+             * @memberof wire.msg
+             * @interface IAirplane
+             * @augments wire.msg.Airplane.$Properties
+             * @deprecated Use wire.msg.Airplane.$Properties instead.
+             */
+
+            /**
+             * Shape of an Airplane.
+             * @typedef {wire.msg.Airplane.$Properties} wire.msg.Airplane.$Shape
              */
 
             /**
              * Constructs a new Airplane.
              * @memberof wire.msg
              * @classdesc Represents an Airplane.
-             * @implements IAirplane
              * @constructor
-             * @param {wire.msg.IAirplane=} [properties] Properties to set
+             * @param {wire.msg.Airplane.$Properties=} [properties] Properties to set
+             * @property {Array.<Uint8Array>} [$unknowns] Unknown fields preserved while decoding when enabled
              */
-            function Airplane(properties) {
+            const Airplane = function (properties) {
                 if (properties)
-                    for (let keys = Object.keys(properties), i = 0; i < keys.length; ++i)
+                    for (let keys = $Object.keys(properties), i = 0; i < keys.length; ++i)
                         if (properties[keys[i]] != null && keys[i] !== "__proto__")
                             this[keys[i]] = properties[keys[i]];
-            }
+            };
 
             /**
              * Airplane id.
@@ -1174,7 +1334,7 @@ export const wire = $root.wire = (() => {
 
             /**
              * Airplane army.
-             * @member {wire.msg.IArmy|null|undefined} army
+             * @member {wire.msg.Army.$Properties|null|undefined} army
              * @memberof wire.msg.Airplane
              * @instance
              */
@@ -1182,7 +1342,7 @@ export const wire = $root.wire = (() => {
 
             /**
              * Airplane position.
-             * @member {wire.msg.IFloatCoordinate|null|undefined} position
+             * @member {wire.msg.FloatCoordinate.$Properties|null|undefined} position
              * @memberof wire.msg.Airplane
              * @instance
              */
@@ -1209,10 +1369,14 @@ export const wire = $root.wire = (() => {
              * @function create
              * @memberof wire.msg.Airplane
              * @static
-             * @param {wire.msg.IAirplane=} [properties] Properties to set
+             * @param {wire.msg.Airplane.$Properties=} [properties] Properties to set
              * @returns {wire.msg.Airplane} Airplane instance
+             * @type {{
+             *   (properties: wire.msg.Airplane.$Shape): wire.msg.Airplane & wire.msg.Airplane.$Shape;
+             *   (properties?: wire.msg.Airplane.$Properties): wire.msg.Airplane;
+             * }}
              */
-            Airplane.create = function create(properties) {
+            Airplane.create = function(properties) {
                 return new Airplane(properties);
             };
 
@@ -1221,27 +1385,30 @@ export const wire = $root.wire = (() => {
              * @function encode
              * @memberof wire.msg.Airplane
              * @static
-             * @param {wire.msg.IAirplane} message Airplane message or plain object to encode
+             * @param {wire.msg.Airplane.$Properties} message Airplane message or plain object to encode
              * @param {$protobuf.Writer} [writer] Writer to encode to
              * @returns {$protobuf.Writer} Writer
              */
-            Airplane.encode = function encode(message, writer, q) {
+            Airplane.encode = function (message, writer, _depth) {
                 if (!writer)
                     writer = $Writer.create();
-                if (q === undefined)
-                    q = 0;
-                if (q > $util.recursionLimit)
-                    throw Error("max depth exceeded");
-                if (message.id != null && Object.hasOwnProperty.call(message, "id"))
+                if (_depth === $undefined)
+                    _depth = 0;
+                if (_depth > $util.recursionLimit)
+                    throw $Error("max depth exceeded");
+                if (message.id != null && $Object.hasOwnProperty.call(message, "id") && message.id !== "")
                     writer.uint32(/* id 1, wireType 2 =*/10).string(message.id);
-                if (message.army != null && Object.hasOwnProperty.call(message, "army"))
-                    $root.wire.msg.Army.encode(message.army, writer.uint32(/* id 2, wireType 2 =*/18).fork(), q + 1).ldelim();
-                if (message.position != null && Object.hasOwnProperty.call(message, "position"))
-                    $root.wire.msg.FloatCoordinate.encode(message.position, writer.uint32(/* id 3, wireType 2 =*/26).fork(), q + 1).ldelim();
-                if (message.direction != null && Object.hasOwnProperty.call(message, "direction"))
+                if (message.army != null && $Object.hasOwnProperty.call(message, "army"))
+                    $root.wire.msg.Army.encode(message.army, writer.uint32(/* id 2, wireType 2 =*/18).fork(), _depth + 1).ldelim();
+                if (message.position != null && $Object.hasOwnProperty.call(message, "position"))
+                    $root.wire.msg.FloatCoordinate.encode(message.position, writer.uint32(/* id 3, wireType 2 =*/26).fork(), _depth + 1).ldelim();
+                if (message.direction != null && $Object.hasOwnProperty.call(message, "direction") && !$Object.is(message.direction, 0))
                     writer.uint32(/* id 4, wireType 5 =*/37).float(message.direction);
-                if (message.speed != null && Object.hasOwnProperty.call(message, "speed"))
+                if (message.speed != null && $Object.hasOwnProperty.call(message, "speed") && !$Object.is(message.speed, 0))
                     writer.uint32(/* id 5, wireType 5 =*/45).float(message.speed);
+                if (message.$unknowns != null && $Object.hasOwnProperty.call(message, "$unknowns"))
+                    for (let i = 0; i < message.$unknowns.length; ++i)
+                        writer.raw(message.$unknowns[i]);
                 return writer;
             };
 
@@ -1250,12 +1417,12 @@ export const wire = $root.wire = (() => {
              * @function encodeDelimited
              * @memberof wire.msg.Airplane
              * @static
-             * @param {wire.msg.IAirplane} message Airplane message or plain object to encode
+             * @param {wire.msg.Airplane.$Properties} message Airplane message or plain object to encode
              * @param {$protobuf.Writer} [writer] Writer to encode to
              * @returns {$protobuf.Writer} Writer
              */
-            Airplane.encodeDelimited = function encodeDelimited(message, writer) {
-                return this.encode(message, writer && writer.len ? writer.fork() : writer).ldelim();
+            Airplane.encodeDelimited = function(message, writer) {
+                return this.encode(message, (writer || $Writer.create()).fork()).ldelim();
             };
 
             /**
@@ -1265,63 +1432,90 @@ export const wire = $root.wire = (() => {
              * @static
              * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
              * @param {number} [length] Message length if known beforehand
-             * @returns {wire.msg.Airplane} Airplane
+             * @returns {wire.msg.Airplane & wire.msg.Airplane.$Shape} Airplane
              * @throws {Error} If the payload is not a reader or valid buffer
              * @throws {$protobuf.util.ProtocolError} If required fields are missing
              */
-            Airplane.decode = function decode(reader, length, error, long) {
+            Airplane.decode = function (reader, length, _end, _depth, _target) {
                 if (!(reader instanceof $Reader))
                     reader = $Reader.create(reader);
-                if (long === undefined)
-                    long = 0;
-                if (long > $Reader.recursionLimit)
-                    throw Error("maximum nesting depth exceeded");
-                let end, message;
-                if (length === undefined)
+                if (_depth === $undefined)
+                    _depth = 0;
+                if (_depth > $Reader.recursionLimit)
+                    throw $Error("max depth exceeded");
+                let end, message, value;
+                if (length === $undefined)
                     end = reader.len;
                 else {
                     end = reader.pos + length;
                     if (end > reader.len)
-                        throw RangeError("index out of range");
+                        throw $RangeError("index out of range");
                     length = reader.len;
                     reader.len = end;
                 }
-                message = new $root.wire.msg.Airplane();
+                message = _target || new $root.wire.msg.Airplane();
                 while (reader.pos < end) {
-                    let tag = reader.uint32();
-                    if (tag === error)
-                        break;
-                    switch (tag >>> 3) {
-                    case 1: {
-                            message.id = reader.string();
-                            break;
-                        }
-                    case 2: {
-                            message.army = $root.wire.msg.Army.decode(reader, reader.uint32(), undefined, long + 1);
-                            break;
-                        }
-                    case 3: {
-                            message.position = $root.wire.msg.FloatCoordinate.decode(reader, reader.uint32(), undefined, long + 1);
-                            break;
-                        }
-                    case 4: {
-                            message.direction = reader.float();
-                            break;
-                        }
-                    case 5: {
-                            message.speed = reader.float();
-                            break;
-                        }
-                    default:
-                        reader.skipType(tag & 7, long);
+                    let start = reader.pos;
+                    let tag = reader.tag();
+                    if (tag === _end) {
+                        _end = $undefined;
                         break;
                     }
+                    let wireType = tag & 7;
+                    switch (tag >>>= 3) {
+                    case 1: {
+                            if (wireType !== 2)
+                                break;
+                            if ((value = reader.stringVerify()).length)
+                                message.id = value;
+                            else
+                                delete message.id;
+                            continue;
+                        }
+                    case 2: {
+                            if (wireType !== 2)
+                                break;
+                            message.army = $root.wire.msg.Army.decode(reader, reader.size(), $undefined, _depth + 1, message.army);
+                            continue;
+                        }
+                    case 3: {
+                            if (wireType !== 2)
+                                break;
+                            message.position = $root.wire.msg.FloatCoordinate.decode(reader, reader.size(), $undefined, _depth + 1, message.position);
+                            continue;
+                        }
+                    case 4: {
+                            if (wireType !== 5)
+                                break;
+                            if (!$Object.is(value = reader.float(), 0))
+                                message.direction = value;
+                            else
+                                delete message.direction;
+                            continue;
+                        }
+                    case 5: {
+                            if (wireType !== 5)
+                                break;
+                            if (!$Object.is(value = reader.float(), 0))
+                                message.speed = value;
+                            else
+                                delete message.speed;
+                            continue;
+                        }
+                    }
+                    reader.skipType(wireType, _depth, tag);
+                    if (!reader.discardUnknown) {
+                        $util.makeProp(message, "$unknowns", false);
+                        (message.$unknowns || (message.$unknowns = [])).push(reader.raw(start, reader.pos));
+                    }
                 }
-                if (length !== undefined) {
+                if (length !== $undefined) {
                     if (reader.pos !== end)
-                        throw RangeError("index out of range");
+                        throw $RangeError("index out of range");
                     reader.len = length;
                 }
+                if (_end !== $undefined)
+                    throw $Error("missing end group");
                 return message;
             };
 
@@ -1331,14 +1525,14 @@ export const wire = $root.wire = (() => {
              * @memberof wire.msg.Airplane
              * @static
              * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
-             * @returns {wire.msg.Airplane} Airplane
+             * @returns {wire.msg.Airplane & wire.msg.Airplane.$Shape} Airplane
              * @throws {Error} If the payload is not a reader or valid buffer
              * @throws {$protobuf.util.ProtocolError} If required fields are missing
              */
-            Airplane.decodeDelimited = function decodeDelimited(reader) {
+            Airplane.decodeDelimited = function(reader) {
                 if (!(reader instanceof $Reader))
                     reader = new $Reader(reader);
-                return this.decode(reader, reader.uint32());
+                return this.decode(reader, reader.size());
             };
 
             /**
@@ -1349,30 +1543,30 @@ export const wire = $root.wire = (() => {
              * @param {Object.<string,*>} message Plain object to verify
              * @returns {string|null} `null` if valid, otherwise the reason why it is not
              */
-            Airplane.verify = function verify(message, long) {
+            Airplane.verify = function (message, _depth) {
                 if (typeof message !== "object" || message === null)
                     return "object expected";
-                if (long === undefined)
-                    long = 0;
-                if (long > $util.recursionLimit)
-                    return "maximum nesting depth exceeded";
-                if (message.id != null && Object.hasOwnProperty.call(message, "id"))
+                if (_depth === $undefined)
+                    _depth = 0;
+                if (_depth > $util.recursionLimit)
+                    return "max depth exceeded";
+                if (message.id != null && $Object.hasOwnProperty.call(message, "id"))
                     if (!$util.isString(message.id))
                         return "id: string expected";
-                if (message.army != null && Object.hasOwnProperty.call(message, "army")) {
-                    let error = $root.wire.msg.Army.verify(message.army, long + 1);
+                if (message.army != null && $Object.hasOwnProperty.call(message, "army")) {
+                    let error = $root.wire.msg.Army.verify(message.army, _depth + 1);
                     if (error)
                         return "army." + error;
                 }
-                if (message.position != null && Object.hasOwnProperty.call(message, "position")) {
-                    let error = $root.wire.msg.FloatCoordinate.verify(message.position, long + 1);
+                if (message.position != null && $Object.hasOwnProperty.call(message, "position")) {
+                    let error = $root.wire.msg.FloatCoordinate.verify(message.position, _depth + 1);
                     if (error)
                         return "position." + error;
                 }
-                if (message.direction != null && Object.hasOwnProperty.call(message, "direction"))
+                if (message.direction != null && $Object.hasOwnProperty.call(message, "direction"))
                     if (typeof message.direction !== "number")
                         return "direction: number expected";
-                if (message.speed != null && Object.hasOwnProperty.call(message, "speed"))
+                if (message.speed != null && $Object.hasOwnProperty.call(message, "speed"))
                     if (typeof message.speed !== "number")
                         return "speed: number expected";
                 return null;
@@ -1386,32 +1580,35 @@ export const wire = $root.wire = (() => {
              * @param {Object.<string,*>} object Plain object
              * @returns {wire.msg.Airplane} Airplane
              */
-            Airplane.fromObject = function fromObject(object, long) {
+            Airplane.fromObject = function (object, _depth) {
                 if (object instanceof $root.wire.msg.Airplane)
                     return object;
                 if (!$util.isObject(object))
-                    throw TypeError(".wire.msg.Airplane: object expected");
-                if (long === undefined)
-                    long = 0;
-                if (long > $util.recursionLimit)
-                    throw Error("maximum nesting depth exceeded");
+                    throw $TypeError(".wire.msg.Airplane: object expected");
+                if (_depth === $undefined)
+                    _depth = 0;
+                if (_depth > $util.recursionLimit)
+                    throw $Error("max depth exceeded");
                 let message = new $root.wire.msg.Airplane();
                 if (object.id != null)
-                    message.id = String(object.id);
+                    if (typeof object.id !== "string" || object.id.length)
+                        message.id = $String(object.id);
                 if (object.army != null) {
                     if (!$util.isObject(object.army))
-                        throw TypeError(".wire.msg.Airplane.army: object expected");
-                    message.army = $root.wire.msg.Army.fromObject(object.army, long + 1);
+                        throw $TypeError(".wire.msg.Airplane.army: object expected");
+                    message.army = $root.wire.msg.Army.fromObject(object.army, _depth + 1);
                 }
                 if (object.position != null) {
                     if (!$util.isObject(object.position))
-                        throw TypeError(".wire.msg.Airplane.position: object expected");
-                    message.position = $root.wire.msg.FloatCoordinate.fromObject(object.position, long + 1);
+                        throw $TypeError(".wire.msg.Airplane.position: object expected");
+                    message.position = $root.wire.msg.FloatCoordinate.fromObject(object.position, _depth + 1);
                 }
                 if (object.direction != null)
-                    message.direction = Number(object.direction);
+                    if (!$Object.is($Number(object.direction), 0))
+                        message.direction = $Number(object.direction);
                 if (object.speed != null)
-                    message.speed = Number(object.speed);
+                    if (!$Object.is($Number(object.speed), 0))
+                        message.speed = $Number(object.speed);
                 return message;
             };
 
@@ -1424,13 +1621,13 @@ export const wire = $root.wire = (() => {
              * @param {$protobuf.IConversionOptions} [options] Conversion options
              * @returns {Object.<string,*>} Plain object
              */
-            Airplane.toObject = function toObject(message, options, q) {
+            Airplane.toObject = function (message, options, _depth) {
                 if (!options)
                     options = {};
-                if (q === undefined)
-                    q = 0;
-                if (q > $util.recursionLimit)
-                    throw Error("max depth exceeded");
+                if (_depth === $undefined)
+                    _depth = 0;
+                if (_depth > $util.recursionLimit)
+                    throw $Error("max depth exceeded");
                 let object = {};
                 if (options.defaults) {
                     object.id = "";
@@ -1439,16 +1636,16 @@ export const wire = $root.wire = (() => {
                     object.direction = 0;
                     object.speed = 0;
                 }
-                if (message.id != null && Object.hasOwnProperty.call(message, "id"))
+                if (message.id != null && $Object.hasOwnProperty.call(message, "id"))
                     object.id = message.id;
-                if (message.army != null && Object.hasOwnProperty.call(message, "army"))
-                    object.army = $root.wire.msg.Army.toObject(message.army, options, q + 1);
-                if (message.position != null && Object.hasOwnProperty.call(message, "position"))
-                    object.position = $root.wire.msg.FloatCoordinate.toObject(message.position, options, q + 1);
-                if (message.direction != null && Object.hasOwnProperty.call(message, "direction"))
-                    object.direction = options.json && !isFinite(message.direction) ? String(message.direction) : message.direction;
-                if (message.speed != null && Object.hasOwnProperty.call(message, "speed"))
-                    object.speed = options.json && !isFinite(message.speed) ? String(message.speed) : message.speed;
+                if (message.army != null && $Object.hasOwnProperty.call(message, "army"))
+                    object.army = $root.wire.msg.Army.toObject(message.army, options, _depth + 1);
+                if (message.position != null && $Object.hasOwnProperty.call(message, "position"))
+                    object.position = $root.wire.msg.FloatCoordinate.toObject(message.position, options, _depth + 1);
+                if (message.direction != null && $Object.hasOwnProperty.call(message, "direction"))
+                    object.direction = options.json && !$isFinite(message.direction) ? $String(message.direction) : message.direction;
+                if (message.speed != null && $Object.hasOwnProperty.call(message, "speed"))
+                    object.speed = options.json && !$isFinite(message.speed) ? $String(message.speed) : message.speed;
                 return object;
             };
 
@@ -1459,23 +1656,22 @@ export const wire = $root.wire = (() => {
              * @instance
              * @returns {Object.<string,*>} JSON object
              */
-            Airplane.prototype.toJSON = function toJSON() {
-                return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
+            Airplane.prototype.toJSON = function() {
+                return Airplane.toObject(this, $protobuf.util.toJSONOptions);
             };
 
             /**
-             * Gets the default type url for Airplane
+             * Gets the type url for Airplane
              * @function getTypeUrl
              * @memberof wire.msg.Airplane
              * @static
-             * @param {string} [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
-             * @returns {string} The default type url
+             * @param {string} [prefix] Custom type url prefix, defaults to `"type.googleapis.com"`
+             * @returns {string} The type url
              */
-            Airplane.getTypeUrl = function getTypeUrl(typeUrlPrefix) {
-                if (typeUrlPrefix === undefined) {
-                    typeUrlPrefix = "type.googleapis.com";
-                }
-                return typeUrlPrefix + "/wire.msg.Airplane";
+            Airplane.getTypeUrl = function(prefix) {
+                if (prefix === $undefined)
+                    prefix = "type.googleapis.com";
+                return prefix + "/wire.msg.Airplane";
             };
 
             return Airplane;
@@ -1485,28 +1681,41 @@ export const wire = $root.wire = (() => {
 
             /**
              * Properties of an Island.
+             * @typedef {Object} wire.msg.Island.$Properties
+             * @property {string|null} [id] Island id
+             * @property {wire.msg.Army.$Properties|null} [army] Island army
+             * @property {wire.msg.Coordinate.$Properties|null} [position] Island position
+             * @property {number|null} [size] Island size
+             * @property {Array.<Uint8Array>} [$unknowns] Unknown fields preserved while decoding when enabled
+             */
+
+            /**
+             * Properties of an Island.
              * @memberof wire.msg
              * @interface IIsland
-             * @property {string|null} [id] Island id
-             * @property {wire.msg.IArmy|null} [army] Island army
-             * @property {wire.msg.ICoordinate|null} [position] Island position
-             * @property {number|null} [size] Island size
+             * @augments wire.msg.Island.$Properties
+             * @deprecated Use wire.msg.Island.$Properties instead.
+             */
+
+            /**
+             * Shape of an Island.
+             * @typedef {wire.msg.Island.$Properties} wire.msg.Island.$Shape
              */
 
             /**
              * Constructs a new Island.
              * @memberof wire.msg
              * @classdesc Represents an Island.
-             * @implements IIsland
              * @constructor
-             * @param {wire.msg.IIsland=} [properties] Properties to set
+             * @param {wire.msg.Island.$Properties=} [properties] Properties to set
+             * @property {Array.<Uint8Array>} [$unknowns] Unknown fields preserved while decoding when enabled
              */
-            function Island(properties) {
+            const Island = function (properties) {
                 if (properties)
-                    for (let keys = Object.keys(properties), i = 0; i < keys.length; ++i)
+                    for (let keys = $Object.keys(properties), i = 0; i < keys.length; ++i)
                         if (properties[keys[i]] != null && keys[i] !== "__proto__")
                             this[keys[i]] = properties[keys[i]];
-            }
+            };
 
             /**
              * Island id.
@@ -1518,7 +1727,7 @@ export const wire = $root.wire = (() => {
 
             /**
              * Island army.
-             * @member {wire.msg.IArmy|null|undefined} army
+             * @member {wire.msg.Army.$Properties|null|undefined} army
              * @memberof wire.msg.Island
              * @instance
              */
@@ -1526,7 +1735,7 @@ export const wire = $root.wire = (() => {
 
             /**
              * Island position.
-             * @member {wire.msg.ICoordinate|null|undefined} position
+             * @member {wire.msg.Coordinate.$Properties|null|undefined} position
              * @memberof wire.msg.Island
              * @instance
              */
@@ -1545,10 +1754,14 @@ export const wire = $root.wire = (() => {
              * @function create
              * @memberof wire.msg.Island
              * @static
-             * @param {wire.msg.IIsland=} [properties] Properties to set
+             * @param {wire.msg.Island.$Properties=} [properties] Properties to set
              * @returns {wire.msg.Island} Island instance
+             * @type {{
+             *   (properties: wire.msg.Island.$Shape): wire.msg.Island & wire.msg.Island.$Shape;
+             *   (properties?: wire.msg.Island.$Properties): wire.msg.Island;
+             * }}
              */
-            Island.create = function create(properties) {
+            Island.create = function(properties) {
                 return new Island(properties);
             };
 
@@ -1557,25 +1770,28 @@ export const wire = $root.wire = (() => {
              * @function encode
              * @memberof wire.msg.Island
              * @static
-             * @param {wire.msg.IIsland} message Island message or plain object to encode
+             * @param {wire.msg.Island.$Properties} message Island message or plain object to encode
              * @param {$protobuf.Writer} [writer] Writer to encode to
              * @returns {$protobuf.Writer} Writer
              */
-            Island.encode = function encode(message, writer, q) {
+            Island.encode = function (message, writer, _depth) {
                 if (!writer)
                     writer = $Writer.create();
-                if (q === undefined)
-                    q = 0;
-                if (q > $util.recursionLimit)
-                    throw Error("max depth exceeded");
-                if (message.id != null && Object.hasOwnProperty.call(message, "id"))
+                if (_depth === $undefined)
+                    _depth = 0;
+                if (_depth > $util.recursionLimit)
+                    throw $Error("max depth exceeded");
+                if (message.id != null && $Object.hasOwnProperty.call(message, "id") && message.id !== "")
                     writer.uint32(/* id 1, wireType 2 =*/10).string(message.id);
-                if (message.army != null && Object.hasOwnProperty.call(message, "army"))
-                    $root.wire.msg.Army.encode(message.army, writer.uint32(/* id 2, wireType 2 =*/18).fork(), q + 1).ldelim();
-                if (message.position != null && Object.hasOwnProperty.call(message, "position"))
-                    $root.wire.msg.Coordinate.encode(message.position, writer.uint32(/* id 3, wireType 2 =*/26).fork(), q + 1).ldelim();
-                if (message.size != null && Object.hasOwnProperty.call(message, "size"))
+                if (message.army != null && $Object.hasOwnProperty.call(message, "army"))
+                    $root.wire.msg.Army.encode(message.army, writer.uint32(/* id 2, wireType 2 =*/18).fork(), _depth + 1).ldelim();
+                if (message.position != null && $Object.hasOwnProperty.call(message, "position"))
+                    $root.wire.msg.Coordinate.encode(message.position, writer.uint32(/* id 3, wireType 2 =*/26).fork(), _depth + 1).ldelim();
+                if (message.size != null && $Object.hasOwnProperty.call(message, "size") && !$Object.is(message.size, 0))
                     writer.uint32(/* id 4, wireType 5 =*/37).float(message.size);
+                if (message.$unknowns != null && $Object.hasOwnProperty.call(message, "$unknowns"))
+                    for (let i = 0; i < message.$unknowns.length; ++i)
+                        writer.raw(message.$unknowns[i]);
                 return writer;
             };
 
@@ -1584,12 +1800,12 @@ export const wire = $root.wire = (() => {
              * @function encodeDelimited
              * @memberof wire.msg.Island
              * @static
-             * @param {wire.msg.IIsland} message Island message or plain object to encode
+             * @param {wire.msg.Island.$Properties} message Island message or plain object to encode
              * @param {$protobuf.Writer} [writer] Writer to encode to
              * @returns {$protobuf.Writer} Writer
              */
-            Island.encodeDelimited = function encodeDelimited(message, writer) {
-                return this.encode(message, writer && writer.len ? writer.fork() : writer).ldelim();
+            Island.encodeDelimited = function(message, writer) {
+                return this.encode(message, (writer || $Writer.create()).fork()).ldelim();
             };
 
             /**
@@ -1599,59 +1815,81 @@ export const wire = $root.wire = (() => {
              * @static
              * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
              * @param {number} [length] Message length if known beforehand
-             * @returns {wire.msg.Island} Island
+             * @returns {wire.msg.Island & wire.msg.Island.$Shape} Island
              * @throws {Error} If the payload is not a reader or valid buffer
              * @throws {$protobuf.util.ProtocolError} If required fields are missing
              */
-            Island.decode = function decode(reader, length, error, long) {
+            Island.decode = function (reader, length, _end, _depth, _target) {
                 if (!(reader instanceof $Reader))
                     reader = $Reader.create(reader);
-                if (long === undefined)
-                    long = 0;
-                if (long > $Reader.recursionLimit)
-                    throw Error("maximum nesting depth exceeded");
-                let end, message;
-                if (length === undefined)
+                if (_depth === $undefined)
+                    _depth = 0;
+                if (_depth > $Reader.recursionLimit)
+                    throw $Error("max depth exceeded");
+                let end, message, value;
+                if (length === $undefined)
                     end = reader.len;
                 else {
                     end = reader.pos + length;
                     if (end > reader.len)
-                        throw RangeError("index out of range");
+                        throw $RangeError("index out of range");
                     length = reader.len;
                     reader.len = end;
                 }
-                message = new $root.wire.msg.Island();
+                message = _target || new $root.wire.msg.Island();
                 while (reader.pos < end) {
-                    let tag = reader.uint32();
-                    if (tag === error)
-                        break;
-                    switch (tag >>> 3) {
-                    case 1: {
-                            message.id = reader.string();
-                            break;
-                        }
-                    case 2: {
-                            message.army = $root.wire.msg.Army.decode(reader, reader.uint32(), undefined, long + 1);
-                            break;
-                        }
-                    case 3: {
-                            message.position = $root.wire.msg.Coordinate.decode(reader, reader.uint32(), undefined, long + 1);
-                            break;
-                        }
-                    case 4: {
-                            message.size = reader.float();
-                            break;
-                        }
-                    default:
-                        reader.skipType(tag & 7, long);
+                    let start = reader.pos;
+                    let tag = reader.tag();
+                    if (tag === _end) {
+                        _end = $undefined;
                         break;
                     }
+                    let wireType = tag & 7;
+                    switch (tag >>>= 3) {
+                    case 1: {
+                            if (wireType !== 2)
+                                break;
+                            if ((value = reader.stringVerify()).length)
+                                message.id = value;
+                            else
+                                delete message.id;
+                            continue;
+                        }
+                    case 2: {
+                            if (wireType !== 2)
+                                break;
+                            message.army = $root.wire.msg.Army.decode(reader, reader.size(), $undefined, _depth + 1, message.army);
+                            continue;
+                        }
+                    case 3: {
+                            if (wireType !== 2)
+                                break;
+                            message.position = $root.wire.msg.Coordinate.decode(reader, reader.size(), $undefined, _depth + 1, message.position);
+                            continue;
+                        }
+                    case 4: {
+                            if (wireType !== 5)
+                                break;
+                            if (!$Object.is(value = reader.float(), 0))
+                                message.size = value;
+                            else
+                                delete message.size;
+                            continue;
+                        }
+                    }
+                    reader.skipType(wireType, _depth, tag);
+                    if (!reader.discardUnknown) {
+                        $util.makeProp(message, "$unknowns", false);
+                        (message.$unknowns || (message.$unknowns = [])).push(reader.raw(start, reader.pos));
+                    }
                 }
-                if (length !== undefined) {
+                if (length !== $undefined) {
                     if (reader.pos !== end)
-                        throw RangeError("index out of range");
+                        throw $RangeError("index out of range");
                     reader.len = length;
                 }
+                if (_end !== $undefined)
+                    throw $Error("missing end group");
                 return message;
             };
 
@@ -1661,14 +1899,14 @@ export const wire = $root.wire = (() => {
              * @memberof wire.msg.Island
              * @static
              * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
-             * @returns {wire.msg.Island} Island
+             * @returns {wire.msg.Island & wire.msg.Island.$Shape} Island
              * @throws {Error} If the payload is not a reader or valid buffer
              * @throws {$protobuf.util.ProtocolError} If required fields are missing
              */
-            Island.decodeDelimited = function decodeDelimited(reader) {
+            Island.decodeDelimited = function(reader) {
                 if (!(reader instanceof $Reader))
                     reader = new $Reader(reader);
-                return this.decode(reader, reader.uint32());
+                return this.decode(reader, reader.size());
             };
 
             /**
@@ -1679,27 +1917,27 @@ export const wire = $root.wire = (() => {
              * @param {Object.<string,*>} message Plain object to verify
              * @returns {string|null} `null` if valid, otherwise the reason why it is not
              */
-            Island.verify = function verify(message, long) {
+            Island.verify = function (message, _depth) {
                 if (typeof message !== "object" || message === null)
                     return "object expected";
-                if (long === undefined)
-                    long = 0;
-                if (long > $util.recursionLimit)
-                    return "maximum nesting depth exceeded";
-                if (message.id != null && Object.hasOwnProperty.call(message, "id"))
+                if (_depth === $undefined)
+                    _depth = 0;
+                if (_depth > $util.recursionLimit)
+                    return "max depth exceeded";
+                if (message.id != null && $Object.hasOwnProperty.call(message, "id"))
                     if (!$util.isString(message.id))
                         return "id: string expected";
-                if (message.army != null && Object.hasOwnProperty.call(message, "army")) {
-                    let error = $root.wire.msg.Army.verify(message.army, long + 1);
+                if (message.army != null && $Object.hasOwnProperty.call(message, "army")) {
+                    let error = $root.wire.msg.Army.verify(message.army, _depth + 1);
                     if (error)
                         return "army." + error;
                 }
-                if (message.position != null && Object.hasOwnProperty.call(message, "position")) {
-                    let error = $root.wire.msg.Coordinate.verify(message.position, long + 1);
+                if (message.position != null && $Object.hasOwnProperty.call(message, "position")) {
+                    let error = $root.wire.msg.Coordinate.verify(message.position, _depth + 1);
                     if (error)
                         return "position." + error;
                 }
-                if (message.size != null && Object.hasOwnProperty.call(message, "size"))
+                if (message.size != null && $Object.hasOwnProperty.call(message, "size"))
                     if (typeof message.size !== "number")
                         return "size: number expected";
                 return null;
@@ -1713,30 +1951,32 @@ export const wire = $root.wire = (() => {
              * @param {Object.<string,*>} object Plain object
              * @returns {wire.msg.Island} Island
              */
-            Island.fromObject = function fromObject(object, long) {
+            Island.fromObject = function (object, _depth) {
                 if (object instanceof $root.wire.msg.Island)
                     return object;
                 if (!$util.isObject(object))
-                    throw TypeError(".wire.msg.Island: object expected");
-                if (long === undefined)
-                    long = 0;
-                if (long > $util.recursionLimit)
-                    throw Error("maximum nesting depth exceeded");
+                    throw $TypeError(".wire.msg.Island: object expected");
+                if (_depth === $undefined)
+                    _depth = 0;
+                if (_depth > $util.recursionLimit)
+                    throw $Error("max depth exceeded");
                 let message = new $root.wire.msg.Island();
                 if (object.id != null)
-                    message.id = String(object.id);
+                    if (typeof object.id !== "string" || object.id.length)
+                        message.id = $String(object.id);
                 if (object.army != null) {
                     if (!$util.isObject(object.army))
-                        throw TypeError(".wire.msg.Island.army: object expected");
-                    message.army = $root.wire.msg.Army.fromObject(object.army, long + 1);
+                        throw $TypeError(".wire.msg.Island.army: object expected");
+                    message.army = $root.wire.msg.Army.fromObject(object.army, _depth + 1);
                 }
                 if (object.position != null) {
                     if (!$util.isObject(object.position))
-                        throw TypeError(".wire.msg.Island.position: object expected");
-                    message.position = $root.wire.msg.Coordinate.fromObject(object.position, long + 1);
+                        throw $TypeError(".wire.msg.Island.position: object expected");
+                    message.position = $root.wire.msg.Coordinate.fromObject(object.position, _depth + 1);
                 }
                 if (object.size != null)
-                    message.size = Number(object.size);
+                    if (!$Object.is($Number(object.size), 0))
+                        message.size = $Number(object.size);
                 return message;
             };
 
@@ -1749,13 +1989,13 @@ export const wire = $root.wire = (() => {
              * @param {$protobuf.IConversionOptions} [options] Conversion options
              * @returns {Object.<string,*>} Plain object
              */
-            Island.toObject = function toObject(message, options, q) {
+            Island.toObject = function (message, options, _depth) {
                 if (!options)
                     options = {};
-                if (q === undefined)
-                    q = 0;
-                if (q > $util.recursionLimit)
-                    throw Error("max depth exceeded");
+                if (_depth === $undefined)
+                    _depth = 0;
+                if (_depth > $util.recursionLimit)
+                    throw $Error("max depth exceeded");
                 let object = {};
                 if (options.defaults) {
                     object.id = "";
@@ -1763,14 +2003,14 @@ export const wire = $root.wire = (() => {
                     object.position = null;
                     object.size = 0;
                 }
-                if (message.id != null && Object.hasOwnProperty.call(message, "id"))
+                if (message.id != null && $Object.hasOwnProperty.call(message, "id"))
                     object.id = message.id;
-                if (message.army != null && Object.hasOwnProperty.call(message, "army"))
-                    object.army = $root.wire.msg.Army.toObject(message.army, options, q + 1);
-                if (message.position != null && Object.hasOwnProperty.call(message, "position"))
-                    object.position = $root.wire.msg.Coordinate.toObject(message.position, options, q + 1);
-                if (message.size != null && Object.hasOwnProperty.call(message, "size"))
-                    object.size = options.json && !isFinite(message.size) ? String(message.size) : message.size;
+                if (message.army != null && $Object.hasOwnProperty.call(message, "army"))
+                    object.army = $root.wire.msg.Army.toObject(message.army, options, _depth + 1);
+                if (message.position != null && $Object.hasOwnProperty.call(message, "position"))
+                    object.position = $root.wire.msg.Coordinate.toObject(message.position, options, _depth + 1);
+                if (message.size != null && $Object.hasOwnProperty.call(message, "size"))
+                    object.size = options.json && !$isFinite(message.size) ? $String(message.size) : message.size;
                 return object;
             };
 
@@ -1781,23 +2021,22 @@ export const wire = $root.wire = (() => {
              * @instance
              * @returns {Object.<string,*>} JSON object
              */
-            Island.prototype.toJSON = function toJSON() {
-                return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
+            Island.prototype.toJSON = function() {
+                return Island.toObject(this, $protobuf.util.toJSONOptions);
             };
 
             /**
-             * Gets the default type url for Island
+             * Gets the type url for Island
              * @function getTypeUrl
              * @memberof wire.msg.Island
              * @static
-             * @param {string} [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
-             * @returns {string} The default type url
+             * @param {string} [prefix] Custom type url prefix, defaults to `"type.googleapis.com"`
+             * @returns {string} The type url
              */
-            Island.getTypeUrl = function getTypeUrl(typeUrlPrefix) {
-                if (typeUrlPrefix === undefined) {
-                    typeUrlPrefix = "type.googleapis.com";
-                }
-                return typeUrlPrefix + "/wire.msg.Island";
+            Island.getTypeUrl = function(prefix) {
+                if (prefix === $undefined)
+                    prefix = "type.googleapis.com";
+                return prefix + "/wire.msg.Island";
             };
 
             return Island;
@@ -1807,33 +2046,46 @@ export const wire = $root.wire = (() => {
 
             /**
              * Properties of a Game.
+             * @typedef {Object} wire.msg.Game.$Properties
+             * @property {string|null} [id] Game id
+             * @property {wire.msg.Coordinate.$Properties|null} [size] Game size
+             * @property {wire.msg.Player.$Properties|null} [playerNeutral] Game playerNeutral
+             * @property {Array.<wire.msg.Player.$Properties>|null} [players] Game players
+             * @property {Array.<wire.msg.Island.$Properties>|null} [islands] Game islands
+             * @property {Array.<wire.msg.Airplane.$Properties>|null} [airplanes] Game airplanes
+             * @property {Array.<Uint8Array>} [$unknowns] Unknown fields preserved while decoding when enabled
+             */
+
+            /**
+             * Properties of a Game.
              * @memberof wire.msg
              * @interface IGame
-             * @property {string|null} [id] Game id
-             * @property {wire.msg.ICoordinate|null} [size] Game size
-             * @property {wire.msg.IPlayer|null} [playerNeutral] Game playerNeutral
-             * @property {Array.<wire.msg.IPlayer>|null} [players] Game players
-             * @property {Array.<wire.msg.IIsland>|null} [islands] Game islands
-             * @property {Array.<wire.msg.IAirplane>|null} [airplanes] Game airplanes
+             * @augments wire.msg.Game.$Properties
+             * @deprecated Use wire.msg.Game.$Properties instead.
+             */
+
+            /**
+             * Shape of a Game.
+             * @typedef {wire.msg.Game.$Properties} wire.msg.Game.$Shape
              */
 
             /**
              * Constructs a new Game.
              * @memberof wire.msg
              * @classdesc Represents a Game.
-             * @implements IGame
              * @constructor
-             * @param {wire.msg.IGame=} [properties] Properties to set
+             * @param {wire.msg.Game.$Properties=} [properties] Properties to set
+             * @property {Array.<Uint8Array>} [$unknowns] Unknown fields preserved while decoding when enabled
              */
-            function Game(properties) {
+            const Game = function (properties) {
                 this.players = [];
                 this.islands = [];
                 this.airplanes = [];
                 if (properties)
-                    for (let keys = Object.keys(properties), i = 0; i < keys.length; ++i)
+                    for (let keys = $Object.keys(properties), i = 0; i < keys.length; ++i)
                         if (properties[keys[i]] != null && keys[i] !== "__proto__")
                             this[keys[i]] = properties[keys[i]];
-            }
+            };
 
             /**
              * Game id.
@@ -1845,7 +2097,7 @@ export const wire = $root.wire = (() => {
 
             /**
              * Game size.
-             * @member {wire.msg.ICoordinate|null|undefined} size
+             * @member {wire.msg.Coordinate.$Properties|null|undefined} size
              * @memberof wire.msg.Game
              * @instance
              */
@@ -1853,7 +2105,7 @@ export const wire = $root.wire = (() => {
 
             /**
              * Game playerNeutral.
-             * @member {wire.msg.IPlayer|null|undefined} playerNeutral
+             * @member {wire.msg.Player.$Properties|null|undefined} playerNeutral
              * @memberof wire.msg.Game
              * @instance
              */
@@ -1861,7 +2113,7 @@ export const wire = $root.wire = (() => {
 
             /**
              * Game players.
-             * @member {Array.<wire.msg.IPlayer>} players
+             * @member {Array.<wire.msg.Player.$Properties>} players
              * @memberof wire.msg.Game
              * @instance
              */
@@ -1869,7 +2121,7 @@ export const wire = $root.wire = (() => {
 
             /**
              * Game islands.
-             * @member {Array.<wire.msg.IIsland>} islands
+             * @member {Array.<wire.msg.Island.$Properties>} islands
              * @memberof wire.msg.Game
              * @instance
              */
@@ -1877,7 +2129,7 @@ export const wire = $root.wire = (() => {
 
             /**
              * Game airplanes.
-             * @member {Array.<wire.msg.IAirplane>} airplanes
+             * @member {Array.<wire.msg.Airplane.$Properties>} airplanes
              * @memberof wire.msg.Game
              * @instance
              */
@@ -1888,10 +2140,14 @@ export const wire = $root.wire = (() => {
              * @function create
              * @memberof wire.msg.Game
              * @static
-             * @param {wire.msg.IGame=} [properties] Properties to set
+             * @param {wire.msg.Game.$Properties=} [properties] Properties to set
              * @returns {wire.msg.Game} Game instance
+             * @type {{
+             *   (properties: wire.msg.Game.$Shape): wire.msg.Game & wire.msg.Game.$Shape;
+             *   (properties?: wire.msg.Game.$Properties): wire.msg.Game;
+             * }}
              */
-            Game.create = function create(properties) {
+            Game.create = function(properties) {
                 return new Game(properties);
             };
 
@@ -1900,32 +2156,35 @@ export const wire = $root.wire = (() => {
              * @function encode
              * @memberof wire.msg.Game
              * @static
-             * @param {wire.msg.IGame} message Game message or plain object to encode
+             * @param {wire.msg.Game.$Properties} message Game message or plain object to encode
              * @param {$protobuf.Writer} [writer] Writer to encode to
              * @returns {$protobuf.Writer} Writer
              */
-            Game.encode = function encode(message, writer, q) {
+            Game.encode = function (message, writer, _depth) {
                 if (!writer)
                     writer = $Writer.create();
-                if (q === undefined)
-                    q = 0;
-                if (q > $util.recursionLimit)
-                    throw Error("max depth exceeded");
-                if (message.id != null && Object.hasOwnProperty.call(message, "id"))
+                if (_depth === $undefined)
+                    _depth = 0;
+                if (_depth > $util.recursionLimit)
+                    throw $Error("max depth exceeded");
+                if (message.id != null && $Object.hasOwnProperty.call(message, "id") && message.id !== "")
                     writer.uint32(/* id 1, wireType 2 =*/10).string(message.id);
-                if (message.size != null && Object.hasOwnProperty.call(message, "size"))
-                    $root.wire.msg.Coordinate.encode(message.size, writer.uint32(/* id 2, wireType 2 =*/18).fork(), q + 1).ldelim();
-                if (message.playerNeutral != null && Object.hasOwnProperty.call(message, "playerNeutral"))
-                    $root.wire.msg.Player.encode(message.playerNeutral, writer.uint32(/* id 3, wireType 2 =*/26).fork(), q + 1).ldelim();
+                if (message.size != null && $Object.hasOwnProperty.call(message, "size"))
+                    $root.wire.msg.Coordinate.encode(message.size, writer.uint32(/* id 2, wireType 2 =*/18).fork(), _depth + 1).ldelim();
+                if (message.playerNeutral != null && $Object.hasOwnProperty.call(message, "playerNeutral"))
+                    $root.wire.msg.Player.encode(message.playerNeutral, writer.uint32(/* id 3, wireType 2 =*/26).fork(), _depth + 1).ldelim();
                 if (message.players != null && message.players.length)
                     for (let i = 0; i < message.players.length; ++i)
-                        $root.wire.msg.Player.encode(message.players[i], writer.uint32(/* id 4, wireType 2 =*/34).fork(), q + 1).ldelim();
+                        $root.wire.msg.Player.encode(message.players[i], writer.uint32(/* id 4, wireType 2 =*/34).fork(), _depth + 1).ldelim();
                 if (message.islands != null && message.islands.length)
                     for (let i = 0; i < message.islands.length; ++i)
-                        $root.wire.msg.Island.encode(message.islands[i], writer.uint32(/* id 5, wireType 2 =*/42).fork(), q + 1).ldelim();
+                        $root.wire.msg.Island.encode(message.islands[i], writer.uint32(/* id 5, wireType 2 =*/42).fork(), _depth + 1).ldelim();
                 if (message.airplanes != null && message.airplanes.length)
                     for (let i = 0; i < message.airplanes.length; ++i)
-                        $root.wire.msg.Airplane.encode(message.airplanes[i], writer.uint32(/* id 6, wireType 2 =*/50).fork(), q + 1).ldelim();
+                        $root.wire.msg.Airplane.encode(message.airplanes[i], writer.uint32(/* id 6, wireType 2 =*/50).fork(), _depth + 1).ldelim();
+                if (message.$unknowns != null && $Object.hasOwnProperty.call(message, "$unknowns"))
+                    for (let i = 0; i < message.$unknowns.length; ++i)
+                        writer.raw(message.$unknowns[i]);
                 return writer;
             };
 
@@ -1934,12 +2193,12 @@ export const wire = $root.wire = (() => {
              * @function encodeDelimited
              * @memberof wire.msg.Game
              * @static
-             * @param {wire.msg.IGame} message Game message or plain object to encode
+             * @param {wire.msg.Game.$Properties} message Game message or plain object to encode
              * @param {$protobuf.Writer} [writer] Writer to encode to
              * @returns {$protobuf.Writer} Writer
              */
-            Game.encodeDelimited = function encodeDelimited(message, writer) {
-                return this.encode(message, writer && writer.len ? writer.fork() : writer).ldelim();
+            Game.encodeDelimited = function(message, writer) {
+                return this.encode(message, (writer || $Writer.create()).fork()).ldelim();
             };
 
             /**
@@ -1949,73 +2208,96 @@ export const wire = $root.wire = (() => {
              * @static
              * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
              * @param {number} [length] Message length if known beforehand
-             * @returns {wire.msg.Game} Game
+             * @returns {wire.msg.Game & wire.msg.Game.$Shape} Game
              * @throws {Error} If the payload is not a reader or valid buffer
              * @throws {$protobuf.util.ProtocolError} If required fields are missing
              */
-            Game.decode = function decode(reader, length, error, long) {
+            Game.decode = function (reader, length, _end, _depth, _target) {
                 if (!(reader instanceof $Reader))
                     reader = $Reader.create(reader);
-                if (long === undefined)
-                    long = 0;
-                if (long > $Reader.recursionLimit)
-                    throw Error("maximum nesting depth exceeded");
-                let end, message;
-                if (length === undefined)
+                if (_depth === $undefined)
+                    _depth = 0;
+                if (_depth > $Reader.recursionLimit)
+                    throw $Error("max depth exceeded");
+                let end, message, value;
+                if (length === $undefined)
                     end = reader.len;
                 else {
                     end = reader.pos + length;
                     if (end > reader.len)
-                        throw RangeError("index out of range");
+                        throw $RangeError("index out of range");
                     length = reader.len;
                     reader.len = end;
                 }
-                message = new $root.wire.msg.Game();
+                message = _target || new $root.wire.msg.Game();
                 while (reader.pos < end) {
-                    let tag = reader.uint32();
-                    if (tag === error)
-                        break;
-                    switch (tag >>> 3) {
-                    case 1: {
-                            message.id = reader.string();
-                            break;
-                        }
-                    case 2: {
-                            message.size = $root.wire.msg.Coordinate.decode(reader, reader.uint32(), undefined, long + 1);
-                            break;
-                        }
-                    case 3: {
-                            message.playerNeutral = $root.wire.msg.Player.decode(reader, reader.uint32(), undefined, long + 1);
-                            break;
-                        }
-                    case 4: {
-                            if (!(message.players && message.players.length))
-                                message.players = [];
-                            message.players.push($root.wire.msg.Player.decode(reader, reader.uint32(), undefined, long + 1));
-                            break;
-                        }
-                    case 5: {
-                            if (!(message.islands && message.islands.length))
-                                message.islands = [];
-                            message.islands.push($root.wire.msg.Island.decode(reader, reader.uint32(), undefined, long + 1));
-                            break;
-                        }
-                    case 6: {
-                            if (!(message.airplanes && message.airplanes.length))
-                                message.airplanes = [];
-                            message.airplanes.push($root.wire.msg.Airplane.decode(reader, reader.uint32(), undefined, long + 1));
-                            break;
-                        }
-                    default:
-                        reader.skipType(tag & 7, long);
+                    let start = reader.pos;
+                    let tag = reader.tag();
+                    if (tag === _end) {
+                        _end = $undefined;
                         break;
                     }
+                    let wireType = tag & 7;
+                    switch (tag >>>= 3) {
+                    case 1: {
+                            if (wireType !== 2)
+                                break;
+                            if ((value = reader.stringVerify()).length)
+                                message.id = value;
+                            else
+                                delete message.id;
+                            continue;
+                        }
+                    case 2: {
+                            if (wireType !== 2)
+                                break;
+                            message.size = $root.wire.msg.Coordinate.decode(reader, reader.size(), $undefined, _depth + 1, message.size);
+                            continue;
+                        }
+                    case 3: {
+                            if (wireType !== 2)
+                                break;
+                            message.playerNeutral = $root.wire.msg.Player.decode(reader, reader.size(), $undefined, _depth + 1, message.playerNeutral);
+                            continue;
+                        }
+                    case 4: {
+                            if (wireType !== 2)
+                                break;
+                            if (!(message.players && message.players.length))
+                                message.players = [];
+                            message.players.push($root.wire.msg.Player.decode(reader, reader.size(), $undefined, _depth + 1));
+                            continue;
+                        }
+                    case 5: {
+                            if (wireType !== 2)
+                                break;
+                            if (!(message.islands && message.islands.length))
+                                message.islands = [];
+                            message.islands.push($root.wire.msg.Island.decode(reader, reader.size(), $undefined, _depth + 1));
+                            continue;
+                        }
+                    case 6: {
+                            if (wireType !== 2)
+                                break;
+                            if (!(message.airplanes && message.airplanes.length))
+                                message.airplanes = [];
+                            message.airplanes.push($root.wire.msg.Airplane.decode(reader, reader.size(), $undefined, _depth + 1));
+                            continue;
+                        }
+                    }
+                    reader.skipType(wireType, _depth, tag);
+                    if (!reader.discardUnknown) {
+                        $util.makeProp(message, "$unknowns", false);
+                        (message.$unknowns || (message.$unknowns = [])).push(reader.raw(start, reader.pos));
+                    }
                 }
-                if (length !== undefined) {
+                if (length !== $undefined) {
                     if (reader.pos !== end)
-                        throw RangeError("index out of range");
+                        throw $RangeError("index out of range");
                     reader.len = length;
                 }
+                if (_end !== $undefined)
+                    throw $Error("missing end group");
                 return message;
             };
 
@@ -2025,14 +2307,14 @@ export const wire = $root.wire = (() => {
              * @memberof wire.msg.Game
              * @static
              * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
-             * @returns {wire.msg.Game} Game
+             * @returns {wire.msg.Game & wire.msg.Game.$Shape} Game
              * @throws {Error} If the payload is not a reader or valid buffer
              * @throws {$protobuf.util.ProtocolError} If required fields are missing
              */
-            Game.decodeDelimited = function decodeDelimited(reader) {
+            Game.decodeDelimited = function(reader) {
                 if (!(reader instanceof $Reader))
                     reader = new $Reader(reader);
-                return this.decode(reader, reader.uint32());
+                return this.decode(reader, reader.size());
             };
 
             /**
@@ -2043,49 +2325,49 @@ export const wire = $root.wire = (() => {
              * @param {Object.<string,*>} message Plain object to verify
              * @returns {string|null} `null` if valid, otherwise the reason why it is not
              */
-            Game.verify = function verify(message, long) {
+            Game.verify = function (message, _depth) {
                 if (typeof message !== "object" || message === null)
                     return "object expected";
-                if (long === undefined)
-                    long = 0;
-                if (long > $util.recursionLimit)
-                    return "maximum nesting depth exceeded";
-                if (message.id != null && Object.hasOwnProperty.call(message, "id"))
+                if (_depth === $undefined)
+                    _depth = 0;
+                if (_depth > $util.recursionLimit)
+                    return "max depth exceeded";
+                if (message.id != null && $Object.hasOwnProperty.call(message, "id"))
                     if (!$util.isString(message.id))
                         return "id: string expected";
-                if (message.size != null && Object.hasOwnProperty.call(message, "size")) {
-                    let error = $root.wire.msg.Coordinate.verify(message.size, long + 1);
+                if (message.size != null && $Object.hasOwnProperty.call(message, "size")) {
+                    let error = $root.wire.msg.Coordinate.verify(message.size, _depth + 1);
                     if (error)
                         return "size." + error;
                 }
-                if (message.playerNeutral != null && Object.hasOwnProperty.call(message, "playerNeutral")) {
-                    let error = $root.wire.msg.Player.verify(message.playerNeutral, long + 1);
+                if (message.playerNeutral != null && $Object.hasOwnProperty.call(message, "playerNeutral")) {
+                    let error = $root.wire.msg.Player.verify(message.playerNeutral, _depth + 1);
                     if (error)
                         return "playerNeutral." + error;
                 }
-                if (message.players != null && Object.hasOwnProperty.call(message, "players")) {
-                    if (!Array.isArray(message.players))
+                if (message.players != null && $Object.hasOwnProperty.call(message, "players")) {
+                    if (!$Array.isArray(message.players))
                         return "players: array expected";
                     for (let i = 0; i < message.players.length; ++i) {
-                        let error = $root.wire.msg.Player.verify(message.players[i], long + 1);
+                        let error = $root.wire.msg.Player.verify(message.players[i], _depth + 1);
                         if (error)
                             return "players." + error;
                     }
                 }
-                if (message.islands != null && Object.hasOwnProperty.call(message, "islands")) {
-                    if (!Array.isArray(message.islands))
+                if (message.islands != null && $Object.hasOwnProperty.call(message, "islands")) {
+                    if (!$Array.isArray(message.islands))
                         return "islands: array expected";
                     for (let i = 0; i < message.islands.length; ++i) {
-                        let error = $root.wire.msg.Island.verify(message.islands[i], long + 1);
+                        let error = $root.wire.msg.Island.verify(message.islands[i], _depth + 1);
                         if (error)
                             return "islands." + error;
                     }
                 }
-                if (message.airplanes != null && Object.hasOwnProperty.call(message, "airplanes")) {
-                    if (!Array.isArray(message.airplanes))
+                if (message.airplanes != null && $Object.hasOwnProperty.call(message, "airplanes")) {
+                    if (!$Array.isArray(message.airplanes))
                         return "airplanes: array expected";
                     for (let i = 0; i < message.airplanes.length; ++i) {
-                        let error = $root.wire.msg.Airplane.verify(message.airplanes[i], long + 1);
+                        let error = $root.wire.msg.Airplane.verify(message.airplanes[i], _depth + 1);
                         if (error)
                             return "airplanes." + error;
                     }
@@ -2101,56 +2383,57 @@ export const wire = $root.wire = (() => {
              * @param {Object.<string,*>} object Plain object
              * @returns {wire.msg.Game} Game
              */
-            Game.fromObject = function fromObject(object, long) {
+            Game.fromObject = function (object, _depth) {
                 if (object instanceof $root.wire.msg.Game)
                     return object;
                 if (!$util.isObject(object))
-                    throw TypeError(".wire.msg.Game: object expected");
-                if (long === undefined)
-                    long = 0;
-                if (long > $util.recursionLimit)
-                    throw Error("maximum nesting depth exceeded");
+                    throw $TypeError(".wire.msg.Game: object expected");
+                if (_depth === $undefined)
+                    _depth = 0;
+                if (_depth > $util.recursionLimit)
+                    throw $Error("max depth exceeded");
                 let message = new $root.wire.msg.Game();
                 if (object.id != null)
-                    message.id = String(object.id);
+                    if (typeof object.id !== "string" || object.id.length)
+                        message.id = $String(object.id);
                 if (object.size != null) {
                     if (!$util.isObject(object.size))
-                        throw TypeError(".wire.msg.Game.size: object expected");
-                    message.size = $root.wire.msg.Coordinate.fromObject(object.size, long + 1);
+                        throw $TypeError(".wire.msg.Game.size: object expected");
+                    message.size = $root.wire.msg.Coordinate.fromObject(object.size, _depth + 1);
                 }
                 if (object.playerNeutral != null) {
                     if (!$util.isObject(object.playerNeutral))
-                        throw TypeError(".wire.msg.Game.playerNeutral: object expected");
-                    message.playerNeutral = $root.wire.msg.Player.fromObject(object.playerNeutral, long + 1);
+                        throw $TypeError(".wire.msg.Game.playerNeutral: object expected");
+                    message.playerNeutral = $root.wire.msg.Player.fromObject(object.playerNeutral, _depth + 1);
                 }
                 if (object.players) {
-                    if (!Array.isArray(object.players))
-                        throw TypeError(".wire.msg.Game.players: array expected");
-                    message.players = [];
+                    if (!$Array.isArray(object.players))
+                        throw $TypeError(".wire.msg.Game.players: array expected");
+                    message.players = $Array(object.players.length);
                     for (let i = 0; i < object.players.length; ++i) {
                         if (!$util.isObject(object.players[i]))
-                            throw TypeError(".wire.msg.Game.players: object expected");
-                        message.players[i] = $root.wire.msg.Player.fromObject(object.players[i], long + 1);
+                            throw $TypeError(".wire.msg.Game.players: object expected");
+                        message.players[i] = $root.wire.msg.Player.fromObject(object.players[i], _depth + 1);
                     }
                 }
                 if (object.islands) {
-                    if (!Array.isArray(object.islands))
-                        throw TypeError(".wire.msg.Game.islands: array expected");
-                    message.islands = [];
+                    if (!$Array.isArray(object.islands))
+                        throw $TypeError(".wire.msg.Game.islands: array expected");
+                    message.islands = $Array(object.islands.length);
                     for (let i = 0; i < object.islands.length; ++i) {
                         if (!$util.isObject(object.islands[i]))
-                            throw TypeError(".wire.msg.Game.islands: object expected");
-                        message.islands[i] = $root.wire.msg.Island.fromObject(object.islands[i], long + 1);
+                            throw $TypeError(".wire.msg.Game.islands: object expected");
+                        message.islands[i] = $root.wire.msg.Island.fromObject(object.islands[i], _depth + 1);
                     }
                 }
                 if (object.airplanes) {
-                    if (!Array.isArray(object.airplanes))
-                        throw TypeError(".wire.msg.Game.airplanes: array expected");
-                    message.airplanes = [];
+                    if (!$Array.isArray(object.airplanes))
+                        throw $TypeError(".wire.msg.Game.airplanes: array expected");
+                    message.airplanes = $Array(object.airplanes.length);
                     for (let i = 0; i < object.airplanes.length; ++i) {
                         if (!$util.isObject(object.airplanes[i]))
-                            throw TypeError(".wire.msg.Game.airplanes: object expected");
-                        message.airplanes[i] = $root.wire.msg.Airplane.fromObject(object.airplanes[i], long + 1);
+                            throw $TypeError(".wire.msg.Game.airplanes: object expected");
+                        message.airplanes[i] = $root.wire.msg.Airplane.fromObject(object.airplanes[i], _depth + 1);
                     }
                 }
                 return message;
@@ -2165,13 +2448,13 @@ export const wire = $root.wire = (() => {
              * @param {$protobuf.IConversionOptions} [options] Conversion options
              * @returns {Object.<string,*>} Plain object
              */
-            Game.toObject = function toObject(message, options, q) {
+            Game.toObject = function (message, options, _depth) {
                 if (!options)
                     options = {};
-                if (q === undefined)
-                    q = 0;
-                if (q > $util.recursionLimit)
-                    throw Error("max depth exceeded");
+                if (_depth === $undefined)
+                    _depth = 0;
+                if (_depth > $util.recursionLimit)
+                    throw $Error("max depth exceeded");
                 let object = {};
                 if (options.arrays || options.defaults) {
                     object.players = [];
@@ -2183,26 +2466,26 @@ export const wire = $root.wire = (() => {
                     object.size = null;
                     object.playerNeutral = null;
                 }
-                if (message.id != null && Object.hasOwnProperty.call(message, "id"))
+                if (message.id != null && $Object.hasOwnProperty.call(message, "id"))
                     object.id = message.id;
-                if (message.size != null && Object.hasOwnProperty.call(message, "size"))
-                    object.size = $root.wire.msg.Coordinate.toObject(message.size, options, q + 1);
-                if (message.playerNeutral != null && Object.hasOwnProperty.call(message, "playerNeutral"))
-                    object.playerNeutral = $root.wire.msg.Player.toObject(message.playerNeutral, options, q + 1);
+                if (message.size != null && $Object.hasOwnProperty.call(message, "size"))
+                    object.size = $root.wire.msg.Coordinate.toObject(message.size, options, _depth + 1);
+                if (message.playerNeutral != null && $Object.hasOwnProperty.call(message, "playerNeutral"))
+                    object.playerNeutral = $root.wire.msg.Player.toObject(message.playerNeutral, options, _depth + 1);
                 if (message.players && message.players.length) {
-                    object.players = [];
+                    object.players = $Array(message.players.length);
                     for (let j = 0; j < message.players.length; ++j)
-                        object.players[j] = $root.wire.msg.Player.toObject(message.players[j], options, q + 1);
+                        object.players[j] = $root.wire.msg.Player.toObject(message.players[j], options, _depth + 1);
                 }
                 if (message.islands && message.islands.length) {
-                    object.islands = [];
+                    object.islands = $Array(message.islands.length);
                     for (let j = 0; j < message.islands.length; ++j)
-                        object.islands[j] = $root.wire.msg.Island.toObject(message.islands[j], options, q + 1);
+                        object.islands[j] = $root.wire.msg.Island.toObject(message.islands[j], options, _depth + 1);
                 }
                 if (message.airplanes && message.airplanes.length) {
-                    object.airplanes = [];
+                    object.airplanes = $Array(message.airplanes.length);
                     for (let j = 0; j < message.airplanes.length; ++j)
-                        object.airplanes[j] = $root.wire.msg.Airplane.toObject(message.airplanes[j], options, q + 1);
+                        object.airplanes[j] = $root.wire.msg.Airplane.toObject(message.airplanes[j], options, _depth + 1);
                 }
                 return object;
             };
@@ -2214,23 +2497,22 @@ export const wire = $root.wire = (() => {
              * @instance
              * @returns {Object.<string,*>} JSON object
              */
-            Game.prototype.toJSON = function toJSON() {
-                return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
+            Game.prototype.toJSON = function() {
+                return Game.toObject(this, $protobuf.util.toJSONOptions);
             };
 
             /**
-             * Gets the default type url for Game
+             * Gets the type url for Game
              * @function getTypeUrl
              * @memberof wire.msg.Game
              * @static
-             * @param {string} [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
-             * @returns {string} The default type url
+             * @param {string} [prefix] Custom type url prefix, defaults to `"type.googleapis.com"`
+             * @returns {string} The type url
              */
-            Game.getTypeUrl = function getTypeUrl(typeUrlPrefix) {
-                if (typeUrlPrefix === undefined) {
-                    typeUrlPrefix = "type.googleapis.com";
-                }
-                return typeUrlPrefix + "/wire.msg.Game";
+            Game.getTypeUrl = function(prefix) {
+                if (prefix === $undefined)
+                    prefix = "type.googleapis.com";
+                return prefix + "/wire.msg.Game";
             };
 
             return Game;
@@ -2240,31 +2522,52 @@ export const wire = $root.wire = (() => {
 
             /**
              * Properties of an EventEnvelope.
+             * @typedef {Object} wire.msg.EventEnvelope.$Properties
+             * @property {wire.msg.EventGameStart.$Properties|null} [eventGameStart] EventEnvelope eventGameStart
+             * @property {wire.msg.EventGameOver.$Properties|null} [eventGameOver] EventEnvelope eventGameOver
+             * @property {wire.msg.EventGameTick.$Properties|null} [eventGameTick] EventEnvelope eventGameTick
+             * @property {"eventGameStart"|"eventGameOver"|"eventGameTick"} [event] EventEnvelope event
+             * @property {Array.<Uint8Array>} [$unknowns] Unknown fields preserved while decoding when enabled
+             */
+
+            /**
+             * Properties of an EventEnvelope.
              * @memberof wire.msg
              * @interface IEventEnvelope
-             * @property {wire.msg.IEventGameStart|null} [eventGameStart] EventEnvelope eventGameStart
-             * @property {wire.msg.IEventGameOver|null} [eventGameOver] EventEnvelope eventGameOver
-             * @property {wire.msg.IEventGameTick|null} [eventGameTick] EventEnvelope eventGameTick
+             * @augments wire.msg.EventEnvelope.$Properties
+             * @deprecated Use wire.msg.EventEnvelope.$Properties instead.
+             */
+
+            /**
+             * Narrowed shape of an EventEnvelope.
+             * @typedef {{
+             *   eventGameStart?: wire.msg.EventGameStart.$Shape|null;
+             *   eventGameOver?: wire.msg.EventGameOver.$Shape|null;
+             *   eventGameTick?: wire.msg.EventGameTick.$Shape|null;
+             *   $unknowns?: Array.<Uint8Array>;
+             * } & (
+             *   ({ event?: undefined; eventGameStart?: null; eventGameOver?: null; eventGameTick?: null }|{ event?: "eventGameStart"; eventGameStart: wire.msg.EventGameStart.$Shape; eventGameOver?: null; eventGameTick?: null }|{ event?: "eventGameOver"; eventGameStart?: null; eventGameOver: wire.msg.EventGameOver.$Shape; eventGameTick?: null }|{ event?: "eventGameTick"; eventGameStart?: null; eventGameOver?: null; eventGameTick: wire.msg.EventGameTick.$Shape })
+             * )} wire.msg.EventEnvelope.$Shape
              */
 
             /**
              * Constructs a new EventEnvelope.
              * @memberof wire.msg
              * @classdesc Represents an EventEnvelope.
-             * @implements IEventEnvelope
              * @constructor
-             * @param {wire.msg.IEventEnvelope=} [properties] Properties to set
+             * @param {wire.msg.EventEnvelope.$Properties=} [properties] Properties to set
+             * @property {Array.<Uint8Array>} [$unknowns] Unknown fields preserved while decoding when enabled
              */
-            function EventEnvelope(properties) {
+            const EventEnvelope = function (properties) {
                 if (properties)
-                    for (let keys = Object.keys(properties), i = 0; i < keys.length; ++i)
+                    for (let keys = $Object.keys(properties), i = 0; i < keys.length; ++i)
                         if (properties[keys[i]] != null && keys[i] !== "__proto__")
                             this[keys[i]] = properties[keys[i]];
-            }
+            };
 
             /**
              * EventEnvelope eventGameStart.
-             * @member {wire.msg.IEventGameStart|null|undefined} eventGameStart
+             * @member {wire.msg.EventGameStart.$Properties|null|undefined} eventGameStart
              * @memberof wire.msg.EventEnvelope
              * @instance
              */
@@ -2272,7 +2575,7 @@ export const wire = $root.wire = (() => {
 
             /**
              * EventEnvelope eventGameOver.
-             * @member {wire.msg.IEventGameOver|null|undefined} eventGameOver
+             * @member {wire.msg.EventGameOver.$Properties|null|undefined} eventGameOver
              * @memberof wire.msg.EventEnvelope
              * @instance
              */
@@ -2280,7 +2583,7 @@ export const wire = $root.wire = (() => {
 
             /**
              * EventEnvelope eventGameTick.
-             * @member {wire.msg.IEventGameTick|null|undefined} eventGameTick
+             * @member {wire.msg.EventGameTick.$Properties|null|undefined} eventGameTick
              * @memberof wire.msg.EventEnvelope
              * @instance
              */
@@ -2295,7 +2598,7 @@ export const wire = $root.wire = (() => {
              * @memberof wire.msg.EventEnvelope
              * @instance
              */
-            Object.defineProperty(EventEnvelope.prototype, "event", {
+            $Object.defineProperty(EventEnvelope.prototype, "event", {
                 get: $util.oneOfGetter($oneOfFields = ["eventGameStart", "eventGameOver", "eventGameTick"]),
                 set: $util.oneOfSetter($oneOfFields)
             });
@@ -2305,10 +2608,14 @@ export const wire = $root.wire = (() => {
              * @function create
              * @memberof wire.msg.EventEnvelope
              * @static
-             * @param {wire.msg.IEventEnvelope=} [properties] Properties to set
+             * @param {wire.msg.EventEnvelope.$Properties=} [properties] Properties to set
              * @returns {wire.msg.EventEnvelope} EventEnvelope instance
+             * @type {{
+             *   (properties: wire.msg.EventEnvelope.$Shape): wire.msg.EventEnvelope & wire.msg.EventEnvelope.$Shape;
+             *   (properties?: wire.msg.EventEnvelope.$Properties): wire.msg.EventEnvelope;
+             * }}
              */
-            EventEnvelope.create = function create(properties) {
+            EventEnvelope.create = function(properties) {
                 return new EventEnvelope(properties);
             };
 
@@ -2317,23 +2624,26 @@ export const wire = $root.wire = (() => {
              * @function encode
              * @memberof wire.msg.EventEnvelope
              * @static
-             * @param {wire.msg.IEventEnvelope} message EventEnvelope message or plain object to encode
+             * @param {wire.msg.EventEnvelope.$Properties} message EventEnvelope message or plain object to encode
              * @param {$protobuf.Writer} [writer] Writer to encode to
              * @returns {$protobuf.Writer} Writer
              */
-            EventEnvelope.encode = function encode(message, writer, q) {
+            EventEnvelope.encode = function (message, writer, _depth) {
                 if (!writer)
                     writer = $Writer.create();
-                if (q === undefined)
-                    q = 0;
-                if (q > $util.recursionLimit)
-                    throw Error("max depth exceeded");
-                if (message.eventGameStart != null && Object.hasOwnProperty.call(message, "eventGameStart"))
-                    $root.wire.msg.EventGameStart.encode(message.eventGameStart, writer.uint32(/* id 1, wireType 2 =*/10).fork(), q + 1).ldelim();
-                if (message.eventGameOver != null && Object.hasOwnProperty.call(message, "eventGameOver"))
-                    $root.wire.msg.EventGameOver.encode(message.eventGameOver, writer.uint32(/* id 2, wireType 2 =*/18).fork(), q + 1).ldelim();
-                if (message.eventGameTick != null && Object.hasOwnProperty.call(message, "eventGameTick"))
-                    $root.wire.msg.EventGameTick.encode(message.eventGameTick, writer.uint32(/* id 3, wireType 2 =*/26).fork(), q + 1).ldelim();
+                if (_depth === $undefined)
+                    _depth = 0;
+                if (_depth > $util.recursionLimit)
+                    throw $Error("max depth exceeded");
+                if (message.eventGameStart != null && $Object.hasOwnProperty.call(message, "eventGameStart"))
+                    $root.wire.msg.EventGameStart.encode(message.eventGameStart, writer.uint32(/* id 1, wireType 2 =*/10).fork(), _depth + 1).ldelim();
+                if (message.eventGameOver != null && $Object.hasOwnProperty.call(message, "eventGameOver"))
+                    $root.wire.msg.EventGameOver.encode(message.eventGameOver, writer.uint32(/* id 2, wireType 2 =*/18).fork(), _depth + 1).ldelim();
+                if (message.eventGameTick != null && $Object.hasOwnProperty.call(message, "eventGameTick"))
+                    $root.wire.msg.EventGameTick.encode(message.eventGameTick, writer.uint32(/* id 3, wireType 2 =*/26).fork(), _depth + 1).ldelim();
+                if (message.$unknowns != null && $Object.hasOwnProperty.call(message, "$unknowns"))
+                    for (let i = 0; i < message.$unknowns.length; ++i)
+                        writer.raw(message.$unknowns[i]);
                 return writer;
             };
 
@@ -2342,12 +2652,12 @@ export const wire = $root.wire = (() => {
              * @function encodeDelimited
              * @memberof wire.msg.EventEnvelope
              * @static
-             * @param {wire.msg.IEventEnvelope} message EventEnvelope message or plain object to encode
+             * @param {wire.msg.EventEnvelope.$Properties} message EventEnvelope message or plain object to encode
              * @param {$protobuf.Writer} [writer] Writer to encode to
              * @returns {$protobuf.Writer} Writer
              */
-            EventEnvelope.encodeDelimited = function encodeDelimited(message, writer) {
-                return this.encode(message, writer && writer.len ? writer.fork() : writer).ldelim();
+            EventEnvelope.encodeDelimited = function(message, writer) {
+                return this.encode(message, (writer || $Writer.create()).fork()).ldelim();
             };
 
             /**
@@ -2357,55 +2667,72 @@ export const wire = $root.wire = (() => {
              * @static
              * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
              * @param {number} [length] Message length if known beforehand
-             * @returns {wire.msg.EventEnvelope} EventEnvelope
+             * @returns {wire.msg.EventEnvelope & wire.msg.EventEnvelope.$Shape} EventEnvelope
              * @throws {Error} If the payload is not a reader or valid buffer
              * @throws {$protobuf.util.ProtocolError} If required fields are missing
              */
-            EventEnvelope.decode = function decode(reader, length, error, long) {
+            EventEnvelope.decode = function (reader, length, _end, _depth, _target) {
                 if (!(reader instanceof $Reader))
                     reader = $Reader.create(reader);
-                if (long === undefined)
-                    long = 0;
-                if (long > $Reader.recursionLimit)
-                    throw Error("maximum nesting depth exceeded");
+                if (_depth === $undefined)
+                    _depth = 0;
+                if (_depth > $Reader.recursionLimit)
+                    throw $Error("max depth exceeded");
                 let end, message;
-                if (length === undefined)
+                if (length === $undefined)
                     end = reader.len;
                 else {
                     end = reader.pos + length;
                     if (end > reader.len)
-                        throw RangeError("index out of range");
+                        throw $RangeError("index out of range");
                     length = reader.len;
                     reader.len = end;
                 }
-                message = new $root.wire.msg.EventEnvelope();
+                message = _target || new $root.wire.msg.EventEnvelope();
                 while (reader.pos < end) {
-                    let tag = reader.uint32();
-                    if (tag === error)
-                        break;
-                    switch (tag >>> 3) {
-                    case 1: {
-                            message.eventGameStart = $root.wire.msg.EventGameStart.decode(reader, reader.uint32(), undefined, long + 1);
-                            break;
-                        }
-                    case 2: {
-                            message.eventGameOver = $root.wire.msg.EventGameOver.decode(reader, reader.uint32(), undefined, long + 1);
-                            break;
-                        }
-                    case 3: {
-                            message.eventGameTick = $root.wire.msg.EventGameTick.decode(reader, reader.uint32(), undefined, long + 1);
-                            break;
-                        }
-                    default:
-                        reader.skipType(tag & 7, long);
+                    let start = reader.pos;
+                    let tag = reader.tag();
+                    if (tag === _end) {
+                        _end = $undefined;
                         break;
                     }
+                    let wireType = tag & 7;
+                    switch (tag >>>= 3) {
+                    case 1: {
+                            if (wireType !== 2)
+                                break;
+                            message.eventGameStart = $root.wire.msg.EventGameStart.decode(reader, reader.size(), $undefined, _depth + 1, message.eventGameStart);
+                            message.event = "eventGameStart";
+                            continue;
+                        }
+                    case 2: {
+                            if (wireType !== 2)
+                                break;
+                            message.eventGameOver = $root.wire.msg.EventGameOver.decode(reader, reader.size(), $undefined, _depth + 1, message.eventGameOver);
+                            message.event = "eventGameOver";
+                            continue;
+                        }
+                    case 3: {
+                            if (wireType !== 2)
+                                break;
+                            message.eventGameTick = $root.wire.msg.EventGameTick.decode(reader, reader.size(), $undefined, _depth + 1, message.eventGameTick);
+                            message.event = "eventGameTick";
+                            continue;
+                        }
+                    }
+                    reader.skipType(wireType, _depth, tag);
+                    if (!reader.discardUnknown) {
+                        $util.makeProp(message, "$unknowns", false);
+                        (message.$unknowns || (message.$unknowns = [])).push(reader.raw(start, reader.pos));
+                    }
                 }
-                if (length !== undefined) {
+                if (length !== $undefined) {
                     if (reader.pos !== end)
-                        throw RangeError("index out of range");
+                        throw $RangeError("index out of range");
                     reader.len = length;
                 }
+                if (_end !== $undefined)
+                    throw $Error("missing end group");
                 return message;
             };
 
@@ -2415,14 +2742,14 @@ export const wire = $root.wire = (() => {
              * @memberof wire.msg.EventEnvelope
              * @static
              * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
-             * @returns {wire.msg.EventEnvelope} EventEnvelope
+             * @returns {wire.msg.EventEnvelope & wire.msg.EventEnvelope.$Shape} EventEnvelope
              * @throws {Error} If the payload is not a reader or valid buffer
              * @throws {$protobuf.util.ProtocolError} If required fields are missing
              */
-            EventEnvelope.decodeDelimited = function decodeDelimited(reader) {
+            EventEnvelope.decodeDelimited = function(reader) {
                 if (!(reader instanceof $Reader))
                     reader = new $Reader(reader);
-                return this.decode(reader, reader.uint32());
+                return this.decode(reader, reader.size());
             };
 
             /**
@@ -2433,38 +2760,38 @@ export const wire = $root.wire = (() => {
              * @param {Object.<string,*>} message Plain object to verify
              * @returns {string|null} `null` if valid, otherwise the reason why it is not
              */
-            EventEnvelope.verify = function verify(message, long) {
+            EventEnvelope.verify = function (message, _depth) {
                 if (typeof message !== "object" || message === null)
                     return "object expected";
-                if (long === undefined)
-                    long = 0;
-                if (long > $util.recursionLimit)
-                    return "maximum nesting depth exceeded";
+                if (_depth === $undefined)
+                    _depth = 0;
+                if (_depth > $util.recursionLimit)
+                    return "max depth exceeded";
                 let properties = {};
-                if (message.eventGameStart != null && Object.hasOwnProperty.call(message, "eventGameStart")) {
+                if (message.eventGameStart != null && $Object.hasOwnProperty.call(message, "eventGameStart")) {
                     properties.event = 1;
                     {
-                        let error = $root.wire.msg.EventGameStart.verify(message.eventGameStart, long + 1);
+                        let error = $root.wire.msg.EventGameStart.verify(message.eventGameStart, _depth + 1);
                         if (error)
                             return "eventGameStart." + error;
                     }
                 }
-                if (message.eventGameOver != null && Object.hasOwnProperty.call(message, "eventGameOver")) {
+                if (message.eventGameOver != null && $Object.hasOwnProperty.call(message, "eventGameOver")) {
                     if (properties.event === 1)
                         return "event: multiple values";
                     properties.event = 1;
                     {
-                        let error = $root.wire.msg.EventGameOver.verify(message.eventGameOver, long + 1);
+                        let error = $root.wire.msg.EventGameOver.verify(message.eventGameOver, _depth + 1);
                         if (error)
                             return "eventGameOver." + error;
                     }
                 }
-                if (message.eventGameTick != null && Object.hasOwnProperty.call(message, "eventGameTick")) {
+                if (message.eventGameTick != null && $Object.hasOwnProperty.call(message, "eventGameTick")) {
                     if (properties.event === 1)
                         return "event: multiple values";
                     properties.event = 1;
                     {
-                        let error = $root.wire.msg.EventGameTick.verify(message.eventGameTick, long + 1);
+                        let error = $root.wire.msg.EventGameTick.verify(message.eventGameTick, _depth + 1);
                         if (error)
                             return "eventGameTick." + error;
                     }
@@ -2480,30 +2807,30 @@ export const wire = $root.wire = (() => {
              * @param {Object.<string,*>} object Plain object
              * @returns {wire.msg.EventEnvelope} EventEnvelope
              */
-            EventEnvelope.fromObject = function fromObject(object, long) {
+            EventEnvelope.fromObject = function (object, _depth) {
                 if (object instanceof $root.wire.msg.EventEnvelope)
                     return object;
                 if (!$util.isObject(object))
-                    throw TypeError(".wire.msg.EventEnvelope: object expected");
-                if (long === undefined)
-                    long = 0;
-                if (long > $util.recursionLimit)
-                    throw Error("maximum nesting depth exceeded");
+                    throw $TypeError(".wire.msg.EventEnvelope: object expected");
+                if (_depth === $undefined)
+                    _depth = 0;
+                if (_depth > $util.recursionLimit)
+                    throw $Error("max depth exceeded");
                 let message = new $root.wire.msg.EventEnvelope();
                 if (object.eventGameStart != null) {
                     if (!$util.isObject(object.eventGameStart))
-                        throw TypeError(".wire.msg.EventEnvelope.eventGameStart: object expected");
-                    message.eventGameStart = $root.wire.msg.EventGameStart.fromObject(object.eventGameStart, long + 1);
+                        throw $TypeError(".wire.msg.EventEnvelope.eventGameStart: object expected");
+                    message.eventGameStart = $root.wire.msg.EventGameStart.fromObject(object.eventGameStart, _depth + 1);
                 }
                 if (object.eventGameOver != null) {
                     if (!$util.isObject(object.eventGameOver))
-                        throw TypeError(".wire.msg.EventEnvelope.eventGameOver: object expected");
-                    message.eventGameOver = $root.wire.msg.EventGameOver.fromObject(object.eventGameOver, long + 1);
+                        throw $TypeError(".wire.msg.EventEnvelope.eventGameOver: object expected");
+                    message.eventGameOver = $root.wire.msg.EventGameOver.fromObject(object.eventGameOver, _depth + 1);
                 }
                 if (object.eventGameTick != null) {
                     if (!$util.isObject(object.eventGameTick))
-                        throw TypeError(".wire.msg.EventEnvelope.eventGameTick: object expected");
-                    message.eventGameTick = $root.wire.msg.EventGameTick.fromObject(object.eventGameTick, long + 1);
+                        throw $TypeError(".wire.msg.EventEnvelope.eventGameTick: object expected");
+                    message.eventGameTick = $root.wire.msg.EventGameTick.fromObject(object.eventGameTick, _depth + 1);
                 }
                 return message;
             };
@@ -2517,26 +2844,26 @@ export const wire = $root.wire = (() => {
              * @param {$protobuf.IConversionOptions} [options] Conversion options
              * @returns {Object.<string,*>} Plain object
              */
-            EventEnvelope.toObject = function toObject(message, options, q) {
+            EventEnvelope.toObject = function (message, options, _depth) {
                 if (!options)
                     options = {};
-                if (q === undefined)
-                    q = 0;
-                if (q > $util.recursionLimit)
-                    throw Error("max depth exceeded");
+                if (_depth === $undefined)
+                    _depth = 0;
+                if (_depth > $util.recursionLimit)
+                    throw $Error("max depth exceeded");
                 let object = {};
-                if (message.eventGameStart != null && Object.hasOwnProperty.call(message, "eventGameStart")) {
-                    object.eventGameStart = $root.wire.msg.EventGameStart.toObject(message.eventGameStart, options, q + 1);
+                if (message.eventGameStart != null && $Object.hasOwnProperty.call(message, "eventGameStart")) {
+                    object.eventGameStart = $root.wire.msg.EventGameStart.toObject(message.eventGameStart, options, _depth + 1);
                     if (options.oneofs)
                         object.event = "eventGameStart";
                 }
-                if (message.eventGameOver != null && Object.hasOwnProperty.call(message, "eventGameOver")) {
-                    object.eventGameOver = $root.wire.msg.EventGameOver.toObject(message.eventGameOver, options, q + 1);
+                if (message.eventGameOver != null && $Object.hasOwnProperty.call(message, "eventGameOver")) {
+                    object.eventGameOver = $root.wire.msg.EventGameOver.toObject(message.eventGameOver, options, _depth + 1);
                     if (options.oneofs)
                         object.event = "eventGameOver";
                 }
-                if (message.eventGameTick != null && Object.hasOwnProperty.call(message, "eventGameTick")) {
-                    object.eventGameTick = $root.wire.msg.EventGameTick.toObject(message.eventGameTick, options, q + 1);
+                if (message.eventGameTick != null && $Object.hasOwnProperty.call(message, "eventGameTick")) {
+                    object.eventGameTick = $root.wire.msg.EventGameTick.toObject(message.eventGameTick, options, _depth + 1);
                     if (options.oneofs)
                         object.event = "eventGameTick";
                 }
@@ -2550,23 +2877,22 @@ export const wire = $root.wire = (() => {
              * @instance
              * @returns {Object.<string,*>} JSON object
              */
-            EventEnvelope.prototype.toJSON = function toJSON() {
-                return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
+            EventEnvelope.prototype.toJSON = function() {
+                return EventEnvelope.toObject(this, $protobuf.util.toJSONOptions);
             };
 
             /**
-             * Gets the default type url for EventEnvelope
+             * Gets the type url for EventEnvelope
              * @function getTypeUrl
              * @memberof wire.msg.EventEnvelope
              * @static
-             * @param {string} [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
-             * @returns {string} The default type url
+             * @param {string} [prefix] Custom type url prefix, defaults to `"type.googleapis.com"`
+             * @returns {string} The type url
              */
-            EventEnvelope.getTypeUrl = function getTypeUrl(typeUrlPrefix) {
-                if (typeUrlPrefix === undefined) {
-                    typeUrlPrefix = "type.googleapis.com";
-                }
-                return typeUrlPrefix + "/wire.msg.EventEnvelope";
+            EventEnvelope.getTypeUrl = function(prefix) {
+                if (prefix === $undefined)
+                    prefix = "type.googleapis.com";
+                return prefix + "/wire.msg.EventEnvelope";
             };
 
             return EventEnvelope;
@@ -2576,26 +2902,39 @@ export const wire = $root.wire = (() => {
 
             /**
              * Properties of an EventGameStart.
-             * @memberof wire.msg
-             * @interface IEventGameStart
+             * @typedef {Object} wire.msg.EventGameStart.$Properties
              * @property {string|null} [playerId] EventGameStart playerId
              * @property {number|null} [tickInterval] EventGameStart tickInterval
+             * @property {Array.<Uint8Array>} [$unknowns] Unknown fields preserved while decoding when enabled
+             */
+
+            /**
+             * Properties of an EventGameStart.
+             * @memberof wire.msg
+             * @interface IEventGameStart
+             * @augments wire.msg.EventGameStart.$Properties
+             * @deprecated Use wire.msg.EventGameStart.$Properties instead.
+             */
+
+            /**
+             * Shape of an EventGameStart.
+             * @typedef {wire.msg.EventGameStart.$Properties} wire.msg.EventGameStart.$Shape
              */
 
             /**
              * Constructs a new EventGameStart.
              * @memberof wire.msg
              * @classdesc Represents an EventGameStart.
-             * @implements IEventGameStart
              * @constructor
-             * @param {wire.msg.IEventGameStart=} [properties] Properties to set
+             * @param {wire.msg.EventGameStart.$Properties=} [properties] Properties to set
+             * @property {Array.<Uint8Array>} [$unknowns] Unknown fields preserved while decoding when enabled
              */
-            function EventGameStart(properties) {
+            const EventGameStart = function (properties) {
                 if (properties)
-                    for (let keys = Object.keys(properties), i = 0; i < keys.length; ++i)
+                    for (let keys = $Object.keys(properties), i = 0; i < keys.length; ++i)
                         if (properties[keys[i]] != null && keys[i] !== "__proto__")
                             this[keys[i]] = properties[keys[i]];
-            }
+            };
 
             /**
              * EventGameStart playerId.
@@ -2618,10 +2957,14 @@ export const wire = $root.wire = (() => {
              * @function create
              * @memberof wire.msg.EventGameStart
              * @static
-             * @param {wire.msg.IEventGameStart=} [properties] Properties to set
+             * @param {wire.msg.EventGameStart.$Properties=} [properties] Properties to set
              * @returns {wire.msg.EventGameStart} EventGameStart instance
+             * @type {{
+             *   (properties: wire.msg.EventGameStart.$Shape): wire.msg.EventGameStart & wire.msg.EventGameStart.$Shape;
+             *   (properties?: wire.msg.EventGameStart.$Properties): wire.msg.EventGameStart;
+             * }}
              */
-            EventGameStart.create = function create(properties) {
+            EventGameStart.create = function(properties) {
                 return new EventGameStart(properties);
             };
 
@@ -2630,21 +2973,24 @@ export const wire = $root.wire = (() => {
              * @function encode
              * @memberof wire.msg.EventGameStart
              * @static
-             * @param {wire.msg.IEventGameStart} message EventGameStart message or plain object to encode
+             * @param {wire.msg.EventGameStart.$Properties} message EventGameStart message or plain object to encode
              * @param {$protobuf.Writer} [writer] Writer to encode to
              * @returns {$protobuf.Writer} Writer
              */
-            EventGameStart.encode = function encode(message, writer, q) {
+            EventGameStart.encode = function (message, writer, _depth) {
                 if (!writer)
                     writer = $Writer.create();
-                if (q === undefined)
-                    q = 0;
-                if (q > $util.recursionLimit)
-                    throw Error("max depth exceeded");
-                if (message.playerId != null && Object.hasOwnProperty.call(message, "playerId"))
+                if (_depth === $undefined)
+                    _depth = 0;
+                if (_depth > $util.recursionLimit)
+                    throw $Error("max depth exceeded");
+                if (message.playerId != null && $Object.hasOwnProperty.call(message, "playerId") && message.playerId !== "")
                     writer.uint32(/* id 1, wireType 2 =*/10).string(message.playerId);
-                if (message.tickInterval != null && Object.hasOwnProperty.call(message, "tickInterval"))
+                if (message.tickInterval != null && $Object.hasOwnProperty.call(message, "tickInterval") && message.tickInterval !== 0)
                     writer.uint32(/* id 2, wireType 0 =*/16).uint32(message.tickInterval);
+                if (message.$unknowns != null && $Object.hasOwnProperty.call(message, "$unknowns"))
+                    for (let i = 0; i < message.$unknowns.length; ++i)
+                        writer.raw(message.$unknowns[i]);
                 return writer;
             };
 
@@ -2653,12 +2999,12 @@ export const wire = $root.wire = (() => {
              * @function encodeDelimited
              * @memberof wire.msg.EventGameStart
              * @static
-             * @param {wire.msg.IEventGameStart} message EventGameStart message or plain object to encode
+             * @param {wire.msg.EventGameStart.$Properties} message EventGameStart message or plain object to encode
              * @param {$protobuf.Writer} [writer] Writer to encode to
              * @returns {$protobuf.Writer} Writer
              */
-            EventGameStart.encodeDelimited = function encodeDelimited(message, writer) {
-                return this.encode(message, writer && writer.len ? writer.fork() : writer).ldelim();
+            EventGameStart.encodeDelimited = function(message, writer) {
+                return this.encode(message, (writer || $Writer.create()).fork()).ldelim();
             };
 
             /**
@@ -2668,51 +3014,69 @@ export const wire = $root.wire = (() => {
              * @static
              * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
              * @param {number} [length] Message length if known beforehand
-             * @returns {wire.msg.EventGameStart} EventGameStart
+             * @returns {wire.msg.EventGameStart & wire.msg.EventGameStart.$Shape} EventGameStart
              * @throws {Error} If the payload is not a reader or valid buffer
              * @throws {$protobuf.util.ProtocolError} If required fields are missing
              */
-            EventGameStart.decode = function decode(reader, length, error, long) {
+            EventGameStart.decode = function (reader, length, _end, _depth, _target) {
                 if (!(reader instanceof $Reader))
                     reader = $Reader.create(reader);
-                if (long === undefined)
-                    long = 0;
-                if (long > $Reader.recursionLimit)
-                    throw Error("maximum nesting depth exceeded");
-                let end, message;
-                if (length === undefined)
+                if (_depth === $undefined)
+                    _depth = 0;
+                if (_depth > $Reader.recursionLimit)
+                    throw $Error("max depth exceeded");
+                let end, message, value;
+                if (length === $undefined)
                     end = reader.len;
                 else {
                     end = reader.pos + length;
                     if (end > reader.len)
-                        throw RangeError("index out of range");
+                        throw $RangeError("index out of range");
                     length = reader.len;
                     reader.len = end;
                 }
-                message = new $root.wire.msg.EventGameStart();
+                message = _target || new $root.wire.msg.EventGameStart();
                 while (reader.pos < end) {
-                    let tag = reader.uint32();
-                    if (tag === error)
-                        break;
-                    switch (tag >>> 3) {
-                    case 1: {
-                            message.playerId = reader.string();
-                            break;
-                        }
-                    case 2: {
-                            message.tickInterval = reader.uint32();
-                            break;
-                        }
-                    default:
-                        reader.skipType(tag & 7, long);
+                    let start = reader.pos;
+                    let tag = reader.tag();
+                    if (tag === _end) {
+                        _end = $undefined;
                         break;
                     }
+                    let wireType = tag & 7;
+                    switch (tag >>>= 3) {
+                    case 1: {
+                            if (wireType !== 2)
+                                break;
+                            if ((value = reader.stringVerify()).length)
+                                message.playerId = value;
+                            else
+                                delete message.playerId;
+                            continue;
+                        }
+                    case 2: {
+                            if (wireType !== 0)
+                                break;
+                            if (value = reader.uint32())
+                                message.tickInterval = value;
+                            else
+                                delete message.tickInterval;
+                            continue;
+                        }
+                    }
+                    reader.skipType(wireType, _depth, tag);
+                    if (!reader.discardUnknown) {
+                        $util.makeProp(message, "$unknowns", false);
+                        (message.$unknowns || (message.$unknowns = [])).push(reader.raw(start, reader.pos));
+                    }
                 }
-                if (length !== undefined) {
+                if (length !== $undefined) {
                     if (reader.pos !== end)
-                        throw RangeError("index out of range");
+                        throw $RangeError("index out of range");
                     reader.len = length;
                 }
+                if (_end !== $undefined)
+                    throw $Error("missing end group");
                 return message;
             };
 
@@ -2722,14 +3086,14 @@ export const wire = $root.wire = (() => {
              * @memberof wire.msg.EventGameStart
              * @static
              * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
-             * @returns {wire.msg.EventGameStart} EventGameStart
+             * @returns {wire.msg.EventGameStart & wire.msg.EventGameStart.$Shape} EventGameStart
              * @throws {Error} If the payload is not a reader or valid buffer
              * @throws {$protobuf.util.ProtocolError} If required fields are missing
              */
-            EventGameStart.decodeDelimited = function decodeDelimited(reader) {
+            EventGameStart.decodeDelimited = function(reader) {
                 if (!(reader instanceof $Reader))
                     reader = new $Reader(reader);
-                return this.decode(reader, reader.uint32());
+                return this.decode(reader, reader.size());
             };
 
             /**
@@ -2740,17 +3104,17 @@ export const wire = $root.wire = (() => {
              * @param {Object.<string,*>} message Plain object to verify
              * @returns {string|null} `null` if valid, otherwise the reason why it is not
              */
-            EventGameStart.verify = function verify(message, long) {
+            EventGameStart.verify = function (message, _depth) {
                 if (typeof message !== "object" || message === null)
                     return "object expected";
-                if (long === undefined)
-                    long = 0;
-                if (long > $util.recursionLimit)
-                    return "maximum nesting depth exceeded";
-                if (message.playerId != null && Object.hasOwnProperty.call(message, "playerId"))
+                if (_depth === $undefined)
+                    _depth = 0;
+                if (_depth > $util.recursionLimit)
+                    return "max depth exceeded";
+                if (message.playerId != null && $Object.hasOwnProperty.call(message, "playerId"))
                     if (!$util.isString(message.playerId))
                         return "playerId: string expected";
-                if (message.tickInterval != null && Object.hasOwnProperty.call(message, "tickInterval"))
+                if (message.tickInterval != null && $Object.hasOwnProperty.call(message, "tickInterval"))
                     if (!$util.isInteger(message.tickInterval))
                         return "tickInterval: integer expected";
                 return null;
@@ -2764,20 +3128,22 @@ export const wire = $root.wire = (() => {
              * @param {Object.<string,*>} object Plain object
              * @returns {wire.msg.EventGameStart} EventGameStart
              */
-            EventGameStart.fromObject = function fromObject(object, long) {
+            EventGameStart.fromObject = function (object, _depth) {
                 if (object instanceof $root.wire.msg.EventGameStart)
                     return object;
                 if (!$util.isObject(object))
-                    throw TypeError(".wire.msg.EventGameStart: object expected");
-                if (long === undefined)
-                    long = 0;
-                if (long > $util.recursionLimit)
-                    throw Error("maximum nesting depth exceeded");
+                    throw $TypeError(".wire.msg.EventGameStart: object expected");
+                if (_depth === $undefined)
+                    _depth = 0;
+                if (_depth > $util.recursionLimit)
+                    throw $Error("max depth exceeded");
                 let message = new $root.wire.msg.EventGameStart();
                 if (object.playerId != null)
-                    message.playerId = String(object.playerId);
+                    if (typeof object.playerId !== "string" || object.playerId.length)
+                        message.playerId = $String(object.playerId);
                 if (object.tickInterval != null)
-                    message.tickInterval = object.tickInterval >>> 0;
+                    if ($Number(object.tickInterval) !== 0)
+                        message.tickInterval = object.tickInterval >>> 0;
                 return message;
             };
 
@@ -2790,21 +3156,21 @@ export const wire = $root.wire = (() => {
              * @param {$protobuf.IConversionOptions} [options] Conversion options
              * @returns {Object.<string,*>} Plain object
              */
-            EventGameStart.toObject = function toObject(message, options, q) {
+            EventGameStart.toObject = function (message, options, _depth) {
                 if (!options)
                     options = {};
-                if (q === undefined)
-                    q = 0;
-                if (q > $util.recursionLimit)
-                    throw Error("max depth exceeded");
+                if (_depth === $undefined)
+                    _depth = 0;
+                if (_depth > $util.recursionLimit)
+                    throw $Error("max depth exceeded");
                 let object = {};
                 if (options.defaults) {
                     object.playerId = "";
                     object.tickInterval = 0;
                 }
-                if (message.playerId != null && Object.hasOwnProperty.call(message, "playerId"))
+                if (message.playerId != null && $Object.hasOwnProperty.call(message, "playerId"))
                     object.playerId = message.playerId;
-                if (message.tickInterval != null && Object.hasOwnProperty.call(message, "tickInterval"))
+                if (message.tickInterval != null && $Object.hasOwnProperty.call(message, "tickInterval"))
                     object.tickInterval = message.tickInterval;
                 return object;
             };
@@ -2816,23 +3182,22 @@ export const wire = $root.wire = (() => {
              * @instance
              * @returns {Object.<string,*>} JSON object
              */
-            EventGameStart.prototype.toJSON = function toJSON() {
-                return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
+            EventGameStart.prototype.toJSON = function() {
+                return EventGameStart.toObject(this, $protobuf.util.toJSONOptions);
             };
 
             /**
-             * Gets the default type url for EventGameStart
+             * Gets the type url for EventGameStart
              * @function getTypeUrl
              * @memberof wire.msg.EventGameStart
              * @static
-             * @param {string} [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
-             * @returns {string} The default type url
+             * @param {string} [prefix] Custom type url prefix, defaults to `"type.googleapis.com"`
+             * @returns {string} The type url
              */
-            EventGameStart.getTypeUrl = function getTypeUrl(typeUrlPrefix) {
-                if (typeUrlPrefix === undefined) {
-                    typeUrlPrefix = "type.googleapis.com";
-                }
-                return typeUrlPrefix + "/wire.msg.EventGameStart";
+            EventGameStart.getTypeUrl = function(prefix) {
+                if (prefix === $undefined)
+                    prefix = "type.googleapis.com";
+                return prefix + "/wire.msg.EventGameStart";
             };
 
             return EventGameStart;
@@ -2842,25 +3207,38 @@ export const wire = $root.wire = (() => {
 
             /**
              * Properties of an EventGameOver.
+             * @typedef {Object} wire.msg.EventGameOver.$Properties
+             * @property {string|null} [winnerId] EventGameOver winnerId
+             * @property {Array.<Uint8Array>} [$unknowns] Unknown fields preserved while decoding when enabled
+             */
+
+            /**
+             * Properties of an EventGameOver.
              * @memberof wire.msg
              * @interface IEventGameOver
-             * @property {string|null} [winnerId] EventGameOver winnerId
+             * @augments wire.msg.EventGameOver.$Properties
+             * @deprecated Use wire.msg.EventGameOver.$Properties instead.
+             */
+
+            /**
+             * Shape of an EventGameOver.
+             * @typedef {wire.msg.EventGameOver.$Properties} wire.msg.EventGameOver.$Shape
              */
 
             /**
              * Constructs a new EventGameOver.
              * @memberof wire.msg
              * @classdesc Represents an EventGameOver.
-             * @implements IEventGameOver
              * @constructor
-             * @param {wire.msg.IEventGameOver=} [properties] Properties to set
+             * @param {wire.msg.EventGameOver.$Properties=} [properties] Properties to set
+             * @property {Array.<Uint8Array>} [$unknowns] Unknown fields preserved while decoding when enabled
              */
-            function EventGameOver(properties) {
+            const EventGameOver = function (properties) {
                 if (properties)
-                    for (let keys = Object.keys(properties), i = 0; i < keys.length; ++i)
+                    for (let keys = $Object.keys(properties), i = 0; i < keys.length; ++i)
                         if (properties[keys[i]] != null && keys[i] !== "__proto__")
                             this[keys[i]] = properties[keys[i]];
-            }
+            };
 
             /**
              * EventGameOver winnerId.
@@ -2875,10 +3253,14 @@ export const wire = $root.wire = (() => {
              * @function create
              * @memberof wire.msg.EventGameOver
              * @static
-             * @param {wire.msg.IEventGameOver=} [properties] Properties to set
+             * @param {wire.msg.EventGameOver.$Properties=} [properties] Properties to set
              * @returns {wire.msg.EventGameOver} EventGameOver instance
+             * @type {{
+             *   (properties: wire.msg.EventGameOver.$Shape): wire.msg.EventGameOver & wire.msg.EventGameOver.$Shape;
+             *   (properties?: wire.msg.EventGameOver.$Properties): wire.msg.EventGameOver;
+             * }}
              */
-            EventGameOver.create = function create(properties) {
+            EventGameOver.create = function(properties) {
                 return new EventGameOver(properties);
             };
 
@@ -2887,19 +3269,22 @@ export const wire = $root.wire = (() => {
              * @function encode
              * @memberof wire.msg.EventGameOver
              * @static
-             * @param {wire.msg.IEventGameOver} message EventGameOver message or plain object to encode
+             * @param {wire.msg.EventGameOver.$Properties} message EventGameOver message or plain object to encode
              * @param {$protobuf.Writer} [writer] Writer to encode to
              * @returns {$protobuf.Writer} Writer
              */
-            EventGameOver.encode = function encode(message, writer, q) {
+            EventGameOver.encode = function (message, writer, _depth) {
                 if (!writer)
                     writer = $Writer.create();
-                if (q === undefined)
-                    q = 0;
-                if (q > $util.recursionLimit)
-                    throw Error("max depth exceeded");
-                if (message.winnerId != null && Object.hasOwnProperty.call(message, "winnerId"))
+                if (_depth === $undefined)
+                    _depth = 0;
+                if (_depth > $util.recursionLimit)
+                    throw $Error("max depth exceeded");
+                if (message.winnerId != null && $Object.hasOwnProperty.call(message, "winnerId") && message.winnerId !== "")
                     writer.uint32(/* id 1, wireType 2 =*/10).string(message.winnerId);
+                if (message.$unknowns != null && $Object.hasOwnProperty.call(message, "$unknowns"))
+                    for (let i = 0; i < message.$unknowns.length; ++i)
+                        writer.raw(message.$unknowns[i]);
                 return writer;
             };
 
@@ -2908,12 +3293,12 @@ export const wire = $root.wire = (() => {
              * @function encodeDelimited
              * @memberof wire.msg.EventGameOver
              * @static
-             * @param {wire.msg.IEventGameOver} message EventGameOver message or plain object to encode
+             * @param {wire.msg.EventGameOver.$Properties} message EventGameOver message or plain object to encode
              * @param {$protobuf.Writer} [writer] Writer to encode to
              * @returns {$protobuf.Writer} Writer
              */
-            EventGameOver.encodeDelimited = function encodeDelimited(message, writer) {
-                return this.encode(message, writer && writer.len ? writer.fork() : writer).ldelim();
+            EventGameOver.encodeDelimited = function(message, writer) {
+                return this.encode(message, (writer || $Writer.create()).fork()).ldelim();
             };
 
             /**
@@ -2923,47 +3308,60 @@ export const wire = $root.wire = (() => {
              * @static
              * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
              * @param {number} [length] Message length if known beforehand
-             * @returns {wire.msg.EventGameOver} EventGameOver
+             * @returns {wire.msg.EventGameOver & wire.msg.EventGameOver.$Shape} EventGameOver
              * @throws {Error} If the payload is not a reader or valid buffer
              * @throws {$protobuf.util.ProtocolError} If required fields are missing
              */
-            EventGameOver.decode = function decode(reader, length, error, long) {
+            EventGameOver.decode = function (reader, length, _end, _depth, _target) {
                 if (!(reader instanceof $Reader))
                     reader = $Reader.create(reader);
-                if (long === undefined)
-                    long = 0;
-                if (long > $Reader.recursionLimit)
-                    throw Error("maximum nesting depth exceeded");
-                let end, message;
-                if (length === undefined)
+                if (_depth === $undefined)
+                    _depth = 0;
+                if (_depth > $Reader.recursionLimit)
+                    throw $Error("max depth exceeded");
+                let end, message, value;
+                if (length === $undefined)
                     end = reader.len;
                 else {
                     end = reader.pos + length;
                     if (end > reader.len)
-                        throw RangeError("index out of range");
+                        throw $RangeError("index out of range");
                     length = reader.len;
                     reader.len = end;
                 }
-                message = new $root.wire.msg.EventGameOver();
+                message = _target || new $root.wire.msg.EventGameOver();
                 while (reader.pos < end) {
-                    let tag = reader.uint32();
-                    if (tag === error)
-                        break;
-                    switch (tag >>> 3) {
-                    case 1: {
-                            message.winnerId = reader.string();
-                            break;
-                        }
-                    default:
-                        reader.skipType(tag & 7, long);
+                    let start = reader.pos;
+                    let tag = reader.tag();
+                    if (tag === _end) {
+                        _end = $undefined;
                         break;
                     }
+                    let wireType = tag & 7;
+                    switch (tag >>>= 3) {
+                    case 1: {
+                            if (wireType !== 2)
+                                break;
+                            if ((value = reader.stringVerify()).length)
+                                message.winnerId = value;
+                            else
+                                delete message.winnerId;
+                            continue;
+                        }
+                    }
+                    reader.skipType(wireType, _depth, tag);
+                    if (!reader.discardUnknown) {
+                        $util.makeProp(message, "$unknowns", false);
+                        (message.$unknowns || (message.$unknowns = [])).push(reader.raw(start, reader.pos));
+                    }
                 }
-                if (length !== undefined) {
+                if (length !== $undefined) {
                     if (reader.pos !== end)
-                        throw RangeError("index out of range");
+                        throw $RangeError("index out of range");
                     reader.len = length;
                 }
+                if (_end !== $undefined)
+                    throw $Error("missing end group");
                 return message;
             };
 
@@ -2973,14 +3371,14 @@ export const wire = $root.wire = (() => {
              * @memberof wire.msg.EventGameOver
              * @static
              * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
-             * @returns {wire.msg.EventGameOver} EventGameOver
+             * @returns {wire.msg.EventGameOver & wire.msg.EventGameOver.$Shape} EventGameOver
              * @throws {Error} If the payload is not a reader or valid buffer
              * @throws {$protobuf.util.ProtocolError} If required fields are missing
              */
-            EventGameOver.decodeDelimited = function decodeDelimited(reader) {
+            EventGameOver.decodeDelimited = function(reader) {
                 if (!(reader instanceof $Reader))
                     reader = new $Reader(reader);
-                return this.decode(reader, reader.uint32());
+                return this.decode(reader, reader.size());
             };
 
             /**
@@ -2991,14 +3389,14 @@ export const wire = $root.wire = (() => {
              * @param {Object.<string,*>} message Plain object to verify
              * @returns {string|null} `null` if valid, otherwise the reason why it is not
              */
-            EventGameOver.verify = function verify(message, long) {
+            EventGameOver.verify = function (message, _depth) {
                 if (typeof message !== "object" || message === null)
                     return "object expected";
-                if (long === undefined)
-                    long = 0;
-                if (long > $util.recursionLimit)
-                    return "maximum nesting depth exceeded";
-                if (message.winnerId != null && Object.hasOwnProperty.call(message, "winnerId"))
+                if (_depth === $undefined)
+                    _depth = 0;
+                if (_depth > $util.recursionLimit)
+                    return "max depth exceeded";
+                if (message.winnerId != null && $Object.hasOwnProperty.call(message, "winnerId"))
                     if (!$util.isString(message.winnerId))
                         return "winnerId: string expected";
                 return null;
@@ -3012,18 +3410,19 @@ export const wire = $root.wire = (() => {
              * @param {Object.<string,*>} object Plain object
              * @returns {wire.msg.EventGameOver} EventGameOver
              */
-            EventGameOver.fromObject = function fromObject(object, long) {
+            EventGameOver.fromObject = function (object, _depth) {
                 if (object instanceof $root.wire.msg.EventGameOver)
                     return object;
                 if (!$util.isObject(object))
-                    throw TypeError(".wire.msg.EventGameOver: object expected");
-                if (long === undefined)
-                    long = 0;
-                if (long > $util.recursionLimit)
-                    throw Error("maximum nesting depth exceeded");
+                    throw $TypeError(".wire.msg.EventGameOver: object expected");
+                if (_depth === $undefined)
+                    _depth = 0;
+                if (_depth > $util.recursionLimit)
+                    throw $Error("max depth exceeded");
                 let message = new $root.wire.msg.EventGameOver();
                 if (object.winnerId != null)
-                    message.winnerId = String(object.winnerId);
+                    if (typeof object.winnerId !== "string" || object.winnerId.length)
+                        message.winnerId = $String(object.winnerId);
                 return message;
             };
 
@@ -3036,17 +3435,17 @@ export const wire = $root.wire = (() => {
              * @param {$protobuf.IConversionOptions} [options] Conversion options
              * @returns {Object.<string,*>} Plain object
              */
-            EventGameOver.toObject = function toObject(message, options, q) {
+            EventGameOver.toObject = function (message, options, _depth) {
                 if (!options)
                     options = {};
-                if (q === undefined)
-                    q = 0;
-                if (q > $util.recursionLimit)
-                    throw Error("max depth exceeded");
+                if (_depth === $undefined)
+                    _depth = 0;
+                if (_depth > $util.recursionLimit)
+                    throw $Error("max depth exceeded");
                 let object = {};
                 if (options.defaults)
                     object.winnerId = "";
-                if (message.winnerId != null && Object.hasOwnProperty.call(message, "winnerId"))
+                if (message.winnerId != null && $Object.hasOwnProperty.call(message, "winnerId"))
                     object.winnerId = message.winnerId;
                 return object;
             };
@@ -3058,23 +3457,22 @@ export const wire = $root.wire = (() => {
              * @instance
              * @returns {Object.<string,*>} JSON object
              */
-            EventGameOver.prototype.toJSON = function toJSON() {
-                return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
+            EventGameOver.prototype.toJSON = function() {
+                return EventGameOver.toObject(this, $protobuf.util.toJSONOptions);
             };
 
             /**
-             * Gets the default type url for EventGameOver
+             * Gets the type url for EventGameOver
              * @function getTypeUrl
              * @memberof wire.msg.EventGameOver
              * @static
-             * @param {string} [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
-             * @returns {string} The default type url
+             * @param {string} [prefix] Custom type url prefix, defaults to `"type.googleapis.com"`
+             * @returns {string} The type url
              */
-            EventGameOver.getTypeUrl = function getTypeUrl(typeUrlPrefix) {
-                if (typeUrlPrefix === undefined) {
-                    typeUrlPrefix = "type.googleapis.com";
-                }
-                return typeUrlPrefix + "/wire.msg.EventGameOver";
+            EventGameOver.getTypeUrl = function(prefix) {
+                if (prefix === $undefined)
+                    prefix = "type.googleapis.com";
+                return prefix + "/wire.msg.EventGameOver";
             };
 
             return EventGameOver;
@@ -3084,29 +3482,42 @@ export const wire = $root.wire = (() => {
 
             /**
              * Properties of an EventGameTick.
+             * @typedef {Object} wire.msg.EventGameTick.$Properties
+             * @property {wire.msg.Game.$Properties|null} [game] EventGameTick game
+             * @property {Array.<Uint8Array>} [$unknowns] Unknown fields preserved while decoding when enabled
+             */
+
+            /**
+             * Properties of an EventGameTick.
              * @memberof wire.msg
              * @interface IEventGameTick
-             * @property {wire.msg.IGame|null} [game] EventGameTick game
+             * @augments wire.msg.EventGameTick.$Properties
+             * @deprecated Use wire.msg.EventGameTick.$Properties instead.
+             */
+
+            /**
+             * Shape of an EventGameTick.
+             * @typedef {wire.msg.EventGameTick.$Properties} wire.msg.EventGameTick.$Shape
              */
 
             /**
              * Constructs a new EventGameTick.
              * @memberof wire.msg
              * @classdesc Represents an EventGameTick.
-             * @implements IEventGameTick
              * @constructor
-             * @param {wire.msg.IEventGameTick=} [properties] Properties to set
+             * @param {wire.msg.EventGameTick.$Properties=} [properties] Properties to set
+             * @property {Array.<Uint8Array>} [$unknowns] Unknown fields preserved while decoding when enabled
              */
-            function EventGameTick(properties) {
+            const EventGameTick = function (properties) {
                 if (properties)
-                    for (let keys = Object.keys(properties), i = 0; i < keys.length; ++i)
+                    for (let keys = $Object.keys(properties), i = 0; i < keys.length; ++i)
                         if (properties[keys[i]] != null && keys[i] !== "__proto__")
                             this[keys[i]] = properties[keys[i]];
-            }
+            };
 
             /**
              * EventGameTick game.
-             * @member {wire.msg.IGame|null|undefined} game
+             * @member {wire.msg.Game.$Properties|null|undefined} game
              * @memberof wire.msg.EventGameTick
              * @instance
              */
@@ -3117,10 +3528,14 @@ export const wire = $root.wire = (() => {
              * @function create
              * @memberof wire.msg.EventGameTick
              * @static
-             * @param {wire.msg.IEventGameTick=} [properties] Properties to set
+             * @param {wire.msg.EventGameTick.$Properties=} [properties] Properties to set
              * @returns {wire.msg.EventGameTick} EventGameTick instance
+             * @type {{
+             *   (properties: wire.msg.EventGameTick.$Shape): wire.msg.EventGameTick & wire.msg.EventGameTick.$Shape;
+             *   (properties?: wire.msg.EventGameTick.$Properties): wire.msg.EventGameTick;
+             * }}
              */
-            EventGameTick.create = function create(properties) {
+            EventGameTick.create = function(properties) {
                 return new EventGameTick(properties);
             };
 
@@ -3129,19 +3544,22 @@ export const wire = $root.wire = (() => {
              * @function encode
              * @memberof wire.msg.EventGameTick
              * @static
-             * @param {wire.msg.IEventGameTick} message EventGameTick message or plain object to encode
+             * @param {wire.msg.EventGameTick.$Properties} message EventGameTick message or plain object to encode
              * @param {$protobuf.Writer} [writer] Writer to encode to
              * @returns {$protobuf.Writer} Writer
              */
-            EventGameTick.encode = function encode(message, writer, q) {
+            EventGameTick.encode = function (message, writer, _depth) {
                 if (!writer)
                     writer = $Writer.create();
-                if (q === undefined)
-                    q = 0;
-                if (q > $util.recursionLimit)
-                    throw Error("max depth exceeded");
-                if (message.game != null && Object.hasOwnProperty.call(message, "game"))
-                    $root.wire.msg.Game.encode(message.game, writer.uint32(/* id 1, wireType 2 =*/10).fork(), q + 1).ldelim();
+                if (_depth === $undefined)
+                    _depth = 0;
+                if (_depth > $util.recursionLimit)
+                    throw $Error("max depth exceeded");
+                if (message.game != null && $Object.hasOwnProperty.call(message, "game"))
+                    $root.wire.msg.Game.encode(message.game, writer.uint32(/* id 1, wireType 2 =*/10).fork(), _depth + 1).ldelim();
+                if (message.$unknowns != null && $Object.hasOwnProperty.call(message, "$unknowns"))
+                    for (let i = 0; i < message.$unknowns.length; ++i)
+                        writer.raw(message.$unknowns[i]);
                 return writer;
             };
 
@@ -3150,12 +3568,12 @@ export const wire = $root.wire = (() => {
              * @function encodeDelimited
              * @memberof wire.msg.EventGameTick
              * @static
-             * @param {wire.msg.IEventGameTick} message EventGameTick message or plain object to encode
+             * @param {wire.msg.EventGameTick.$Properties} message EventGameTick message or plain object to encode
              * @param {$protobuf.Writer} [writer] Writer to encode to
              * @returns {$protobuf.Writer} Writer
              */
-            EventGameTick.encodeDelimited = function encodeDelimited(message, writer) {
-                return this.encode(message, writer && writer.len ? writer.fork() : writer).ldelim();
+            EventGameTick.encodeDelimited = function(message, writer) {
+                return this.encode(message, (writer || $Writer.create()).fork()).ldelim();
             };
 
             /**
@@ -3165,47 +3583,57 @@ export const wire = $root.wire = (() => {
              * @static
              * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
              * @param {number} [length] Message length if known beforehand
-             * @returns {wire.msg.EventGameTick} EventGameTick
+             * @returns {wire.msg.EventGameTick & wire.msg.EventGameTick.$Shape} EventGameTick
              * @throws {Error} If the payload is not a reader or valid buffer
              * @throws {$protobuf.util.ProtocolError} If required fields are missing
              */
-            EventGameTick.decode = function decode(reader, length, error, long) {
+            EventGameTick.decode = function (reader, length, _end, _depth, _target) {
                 if (!(reader instanceof $Reader))
                     reader = $Reader.create(reader);
-                if (long === undefined)
-                    long = 0;
-                if (long > $Reader.recursionLimit)
-                    throw Error("maximum nesting depth exceeded");
-                let end, message;
-                if (length === undefined)
+                if (_depth === $undefined)
+                    _depth = 0;
+                if (_depth > $Reader.recursionLimit)
+                    throw $Error("max depth exceeded");
+                let end, message, value;
+                if (length === $undefined)
                     end = reader.len;
                 else {
                     end = reader.pos + length;
                     if (end > reader.len)
-                        throw RangeError("index out of range");
+                        throw $RangeError("index out of range");
                     length = reader.len;
                     reader.len = end;
                 }
-                message = new $root.wire.msg.EventGameTick();
+                message = _target || new $root.wire.msg.EventGameTick();
                 while (reader.pos < end) {
-                    let tag = reader.uint32();
-                    if (tag === error)
-                        break;
-                    switch (tag >>> 3) {
-                    case 1: {
-                            message.game = $root.wire.msg.Game.decode(reader, reader.uint32(), undefined, long + 1);
-                            break;
-                        }
-                    default:
-                        reader.skipType(tag & 7, long);
+                    let start = reader.pos;
+                    let tag = reader.tag();
+                    if (tag === _end) {
+                        _end = $undefined;
                         break;
                     }
+                    let wireType = tag & 7;
+                    switch (tag >>>= 3) {
+                    case 1: {
+                            if (wireType !== 2)
+                                break;
+                            message.game = $root.wire.msg.Game.decode(reader, reader.size(), $undefined, _depth + 1, message.game);
+                            continue;
+                        }
+                    }
+                    reader.skipType(wireType, _depth, tag);
+                    if (!reader.discardUnknown) {
+                        $util.makeProp(message, "$unknowns", false);
+                        (message.$unknowns || (message.$unknowns = [])).push(reader.raw(start, reader.pos));
+                    }
                 }
-                if (length !== undefined) {
+                if (length !== $undefined) {
                     if (reader.pos !== end)
-                        throw RangeError("index out of range");
+                        throw $RangeError("index out of range");
                     reader.len = length;
                 }
+                if (_end !== $undefined)
+                    throw $Error("missing end group");
                 return message;
             };
 
@@ -3215,14 +3643,14 @@ export const wire = $root.wire = (() => {
              * @memberof wire.msg.EventGameTick
              * @static
              * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
-             * @returns {wire.msg.EventGameTick} EventGameTick
+             * @returns {wire.msg.EventGameTick & wire.msg.EventGameTick.$Shape} EventGameTick
              * @throws {Error} If the payload is not a reader or valid buffer
              * @throws {$protobuf.util.ProtocolError} If required fields are missing
              */
-            EventGameTick.decodeDelimited = function decodeDelimited(reader) {
+            EventGameTick.decodeDelimited = function(reader) {
                 if (!(reader instanceof $Reader))
                     reader = new $Reader(reader);
-                return this.decode(reader, reader.uint32());
+                return this.decode(reader, reader.size());
             };
 
             /**
@@ -3233,15 +3661,15 @@ export const wire = $root.wire = (() => {
              * @param {Object.<string,*>} message Plain object to verify
              * @returns {string|null} `null` if valid, otherwise the reason why it is not
              */
-            EventGameTick.verify = function verify(message, long) {
+            EventGameTick.verify = function (message, _depth) {
                 if (typeof message !== "object" || message === null)
                     return "object expected";
-                if (long === undefined)
-                    long = 0;
-                if (long > $util.recursionLimit)
-                    return "maximum nesting depth exceeded";
-                if (message.game != null && Object.hasOwnProperty.call(message, "game")) {
-                    let error = $root.wire.msg.Game.verify(message.game, long + 1);
+                if (_depth === $undefined)
+                    _depth = 0;
+                if (_depth > $util.recursionLimit)
+                    return "max depth exceeded";
+                if (message.game != null && $Object.hasOwnProperty.call(message, "game")) {
+                    let error = $root.wire.msg.Game.verify(message.game, _depth + 1);
                     if (error)
                         return "game." + error;
                 }
@@ -3256,20 +3684,20 @@ export const wire = $root.wire = (() => {
              * @param {Object.<string,*>} object Plain object
              * @returns {wire.msg.EventGameTick} EventGameTick
              */
-            EventGameTick.fromObject = function fromObject(object, long) {
+            EventGameTick.fromObject = function (object, _depth) {
                 if (object instanceof $root.wire.msg.EventGameTick)
                     return object;
                 if (!$util.isObject(object))
-                    throw TypeError(".wire.msg.EventGameTick: object expected");
-                if (long === undefined)
-                    long = 0;
-                if (long > $util.recursionLimit)
-                    throw Error("maximum nesting depth exceeded");
+                    throw $TypeError(".wire.msg.EventGameTick: object expected");
+                if (_depth === $undefined)
+                    _depth = 0;
+                if (_depth > $util.recursionLimit)
+                    throw $Error("max depth exceeded");
                 let message = new $root.wire.msg.EventGameTick();
                 if (object.game != null) {
                     if (!$util.isObject(object.game))
-                        throw TypeError(".wire.msg.EventGameTick.game: object expected");
-                    message.game = $root.wire.msg.Game.fromObject(object.game, long + 1);
+                        throw $TypeError(".wire.msg.EventGameTick.game: object expected");
+                    message.game = $root.wire.msg.Game.fromObject(object.game, _depth + 1);
                 }
                 return message;
             };
@@ -3283,18 +3711,18 @@ export const wire = $root.wire = (() => {
              * @param {$protobuf.IConversionOptions} [options] Conversion options
              * @returns {Object.<string,*>} Plain object
              */
-            EventGameTick.toObject = function toObject(message, options, q) {
+            EventGameTick.toObject = function (message, options, _depth) {
                 if (!options)
                     options = {};
-                if (q === undefined)
-                    q = 0;
-                if (q > $util.recursionLimit)
-                    throw Error("max depth exceeded");
+                if (_depth === $undefined)
+                    _depth = 0;
+                if (_depth > $util.recursionLimit)
+                    throw $Error("max depth exceeded");
                 let object = {};
                 if (options.defaults)
                     object.game = null;
-                if (message.game != null && Object.hasOwnProperty.call(message, "game"))
-                    object.game = $root.wire.msg.Game.toObject(message.game, options, q + 1);
+                if (message.game != null && $Object.hasOwnProperty.call(message, "game"))
+                    object.game = $root.wire.msg.Game.toObject(message.game, options, _depth + 1);
                 return object;
             };
 
@@ -3305,23 +3733,22 @@ export const wire = $root.wire = (() => {
              * @instance
              * @returns {Object.<string,*>} JSON object
              */
-            EventGameTick.prototype.toJSON = function toJSON() {
-                return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
+            EventGameTick.prototype.toJSON = function() {
+                return EventGameTick.toObject(this, $protobuf.util.toJSONOptions);
             };
 
             /**
-             * Gets the default type url for EventGameTick
+             * Gets the type url for EventGameTick
              * @function getTypeUrl
              * @memberof wire.msg.EventGameTick
              * @static
-             * @param {string} [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
-             * @returns {string} The default type url
+             * @param {string} [prefix] Custom type url prefix, defaults to `"type.googleapis.com"`
+             * @returns {string} The type url
              */
-            EventGameTick.getTypeUrl = function getTypeUrl(typeUrlPrefix) {
-                if (typeUrlPrefix === undefined) {
-                    typeUrlPrefix = "type.googleapis.com";
-                }
-                return typeUrlPrefix + "/wire.msg.EventGameTick";
+            EventGameTick.getTypeUrl = function(prefix) {
+                if (prefix === $undefined)
+                    prefix = "type.googleapis.com";
+                return prefix + "/wire.msg.EventGameTick";
             };
 
             return EventGameTick;
@@ -3331,30 +3758,50 @@ export const wire = $root.wire = (() => {
 
             /**
              * Properties of an ActionEnvelope.
+             * @typedef {Object} wire.msg.ActionEnvelope.$Properties
+             * @property {wire.msg.ActionGameLeave.$Properties|null} [actionGameLeave] ActionEnvelope actionGameLeave
+             * @property {wire.msg.ActionGameLaunch.$Properties|null} [actionGameLaunch] ActionEnvelope actionGameLaunch
+             * @property {"actionGameLeave"|"actionGameLaunch"} [action] ActionEnvelope action
+             * @property {Array.<Uint8Array>} [$unknowns] Unknown fields preserved while decoding when enabled
+             */
+
+            /**
+             * Properties of an ActionEnvelope.
              * @memberof wire.msg
              * @interface IActionEnvelope
-             * @property {wire.msg.IActionGameLeave|null} [actionGameLeave] ActionEnvelope actionGameLeave
-             * @property {wire.msg.IActionGameLaunch|null} [actionGameLaunch] ActionEnvelope actionGameLaunch
+             * @augments wire.msg.ActionEnvelope.$Properties
+             * @deprecated Use wire.msg.ActionEnvelope.$Properties instead.
+             */
+
+            /**
+             * Narrowed shape of an ActionEnvelope.
+             * @typedef {{
+             *   actionGameLeave?: wire.msg.ActionGameLeave.$Shape|null;
+             *   actionGameLaunch?: wire.msg.ActionGameLaunch.$Shape|null;
+             *   $unknowns?: Array.<Uint8Array>;
+             * } & (
+             *   ({ action?: undefined; actionGameLeave?: null; actionGameLaunch?: null }|{ action?: "actionGameLeave"; actionGameLeave: wire.msg.ActionGameLeave.$Shape; actionGameLaunch?: null }|{ action?: "actionGameLaunch"; actionGameLeave?: null; actionGameLaunch: wire.msg.ActionGameLaunch.$Shape })
+             * )} wire.msg.ActionEnvelope.$Shape
              */
 
             /**
              * Constructs a new ActionEnvelope.
              * @memberof wire.msg
              * @classdesc Represents an ActionEnvelope.
-             * @implements IActionEnvelope
              * @constructor
-             * @param {wire.msg.IActionEnvelope=} [properties] Properties to set
+             * @param {wire.msg.ActionEnvelope.$Properties=} [properties] Properties to set
+             * @property {Array.<Uint8Array>} [$unknowns] Unknown fields preserved while decoding when enabled
              */
-            function ActionEnvelope(properties) {
+            const ActionEnvelope = function (properties) {
                 if (properties)
-                    for (let keys = Object.keys(properties), i = 0; i < keys.length; ++i)
+                    for (let keys = $Object.keys(properties), i = 0; i < keys.length; ++i)
                         if (properties[keys[i]] != null && keys[i] !== "__proto__")
                             this[keys[i]] = properties[keys[i]];
-            }
+            };
 
             /**
              * ActionEnvelope actionGameLeave.
-             * @member {wire.msg.IActionGameLeave|null|undefined} actionGameLeave
+             * @member {wire.msg.ActionGameLeave.$Properties|null|undefined} actionGameLeave
              * @memberof wire.msg.ActionEnvelope
              * @instance
              */
@@ -3362,7 +3809,7 @@ export const wire = $root.wire = (() => {
 
             /**
              * ActionEnvelope actionGameLaunch.
-             * @member {wire.msg.IActionGameLaunch|null|undefined} actionGameLaunch
+             * @member {wire.msg.ActionGameLaunch.$Properties|null|undefined} actionGameLaunch
              * @memberof wire.msg.ActionEnvelope
              * @instance
              */
@@ -3377,7 +3824,7 @@ export const wire = $root.wire = (() => {
              * @memberof wire.msg.ActionEnvelope
              * @instance
              */
-            Object.defineProperty(ActionEnvelope.prototype, "action", {
+            $Object.defineProperty(ActionEnvelope.prototype, "action", {
                 get: $util.oneOfGetter($oneOfFields = ["actionGameLeave", "actionGameLaunch"]),
                 set: $util.oneOfSetter($oneOfFields)
             });
@@ -3387,10 +3834,14 @@ export const wire = $root.wire = (() => {
              * @function create
              * @memberof wire.msg.ActionEnvelope
              * @static
-             * @param {wire.msg.IActionEnvelope=} [properties] Properties to set
+             * @param {wire.msg.ActionEnvelope.$Properties=} [properties] Properties to set
              * @returns {wire.msg.ActionEnvelope} ActionEnvelope instance
+             * @type {{
+             *   (properties: wire.msg.ActionEnvelope.$Shape): wire.msg.ActionEnvelope & wire.msg.ActionEnvelope.$Shape;
+             *   (properties?: wire.msg.ActionEnvelope.$Properties): wire.msg.ActionEnvelope;
+             * }}
              */
-            ActionEnvelope.create = function create(properties) {
+            ActionEnvelope.create = function(properties) {
                 return new ActionEnvelope(properties);
             };
 
@@ -3399,21 +3850,24 @@ export const wire = $root.wire = (() => {
              * @function encode
              * @memberof wire.msg.ActionEnvelope
              * @static
-             * @param {wire.msg.IActionEnvelope} message ActionEnvelope message or plain object to encode
+             * @param {wire.msg.ActionEnvelope.$Properties} message ActionEnvelope message or plain object to encode
              * @param {$protobuf.Writer} [writer] Writer to encode to
              * @returns {$protobuf.Writer} Writer
              */
-            ActionEnvelope.encode = function encode(message, writer, q) {
+            ActionEnvelope.encode = function (message, writer, _depth) {
                 if (!writer)
                     writer = $Writer.create();
-                if (q === undefined)
-                    q = 0;
-                if (q > $util.recursionLimit)
-                    throw Error("max depth exceeded");
-                if (message.actionGameLeave != null && Object.hasOwnProperty.call(message, "actionGameLeave"))
-                    $root.wire.msg.ActionGameLeave.encode(message.actionGameLeave, writer.uint32(/* id 1, wireType 2 =*/10).fork(), q + 1).ldelim();
-                if (message.actionGameLaunch != null && Object.hasOwnProperty.call(message, "actionGameLaunch"))
-                    $root.wire.msg.ActionGameLaunch.encode(message.actionGameLaunch, writer.uint32(/* id 2, wireType 2 =*/18).fork(), q + 1).ldelim();
+                if (_depth === $undefined)
+                    _depth = 0;
+                if (_depth > $util.recursionLimit)
+                    throw $Error("max depth exceeded");
+                if (message.actionGameLeave != null && $Object.hasOwnProperty.call(message, "actionGameLeave"))
+                    $root.wire.msg.ActionGameLeave.encode(message.actionGameLeave, writer.uint32(/* id 1, wireType 2 =*/10).fork(), _depth + 1).ldelim();
+                if (message.actionGameLaunch != null && $Object.hasOwnProperty.call(message, "actionGameLaunch"))
+                    $root.wire.msg.ActionGameLaunch.encode(message.actionGameLaunch, writer.uint32(/* id 2, wireType 2 =*/18).fork(), _depth + 1).ldelim();
+                if (message.$unknowns != null && $Object.hasOwnProperty.call(message, "$unknowns"))
+                    for (let i = 0; i < message.$unknowns.length; ++i)
+                        writer.raw(message.$unknowns[i]);
                 return writer;
             };
 
@@ -3422,12 +3876,12 @@ export const wire = $root.wire = (() => {
              * @function encodeDelimited
              * @memberof wire.msg.ActionEnvelope
              * @static
-             * @param {wire.msg.IActionEnvelope} message ActionEnvelope message or plain object to encode
+             * @param {wire.msg.ActionEnvelope.$Properties} message ActionEnvelope message or plain object to encode
              * @param {$protobuf.Writer} [writer] Writer to encode to
              * @returns {$protobuf.Writer} Writer
              */
-            ActionEnvelope.encodeDelimited = function encodeDelimited(message, writer) {
-                return this.encode(message, writer && writer.len ? writer.fork() : writer).ldelim();
+            ActionEnvelope.encodeDelimited = function(message, writer) {
+                return this.encode(message, (writer || $Writer.create()).fork()).ldelim();
             };
 
             /**
@@ -3437,51 +3891,65 @@ export const wire = $root.wire = (() => {
              * @static
              * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
              * @param {number} [length] Message length if known beforehand
-             * @returns {wire.msg.ActionEnvelope} ActionEnvelope
+             * @returns {wire.msg.ActionEnvelope & wire.msg.ActionEnvelope.$Shape} ActionEnvelope
              * @throws {Error} If the payload is not a reader or valid buffer
              * @throws {$protobuf.util.ProtocolError} If required fields are missing
              */
-            ActionEnvelope.decode = function decode(reader, length, error, long) {
+            ActionEnvelope.decode = function (reader, length, _end, _depth, _target) {
                 if (!(reader instanceof $Reader))
                     reader = $Reader.create(reader);
-                if (long === undefined)
-                    long = 0;
-                if (long > $Reader.recursionLimit)
-                    throw Error("maximum nesting depth exceeded");
+                if (_depth === $undefined)
+                    _depth = 0;
+                if (_depth > $Reader.recursionLimit)
+                    throw $Error("max depth exceeded");
                 let end, message;
-                if (length === undefined)
+                if (length === $undefined)
                     end = reader.len;
                 else {
                     end = reader.pos + length;
                     if (end > reader.len)
-                        throw RangeError("index out of range");
+                        throw $RangeError("index out of range");
                     length = reader.len;
                     reader.len = end;
                 }
-                message = new $root.wire.msg.ActionEnvelope();
+                message = _target || new $root.wire.msg.ActionEnvelope();
                 while (reader.pos < end) {
-                    let tag = reader.uint32();
-                    if (tag === error)
-                        break;
-                    switch (tag >>> 3) {
-                    case 1: {
-                            message.actionGameLeave = $root.wire.msg.ActionGameLeave.decode(reader, reader.uint32(), undefined, long + 1);
-                            break;
-                        }
-                    case 2: {
-                            message.actionGameLaunch = $root.wire.msg.ActionGameLaunch.decode(reader, reader.uint32(), undefined, long + 1);
-                            break;
-                        }
-                    default:
-                        reader.skipType(tag & 7, long);
+                    let start = reader.pos;
+                    let tag = reader.tag();
+                    if (tag === _end) {
+                        _end = $undefined;
                         break;
                     }
+                    let wireType = tag & 7;
+                    switch (tag >>>= 3) {
+                    case 1: {
+                            if (wireType !== 2)
+                                break;
+                            message.actionGameLeave = $root.wire.msg.ActionGameLeave.decode(reader, reader.size(), $undefined, _depth + 1, message.actionGameLeave);
+                            message.action = "actionGameLeave";
+                            continue;
+                        }
+                    case 2: {
+                            if (wireType !== 2)
+                                break;
+                            message.actionGameLaunch = $root.wire.msg.ActionGameLaunch.decode(reader, reader.size(), $undefined, _depth + 1, message.actionGameLaunch);
+                            message.action = "actionGameLaunch";
+                            continue;
+                        }
+                    }
+                    reader.skipType(wireType, _depth, tag);
+                    if (!reader.discardUnknown) {
+                        $util.makeProp(message, "$unknowns", false);
+                        (message.$unknowns || (message.$unknowns = [])).push(reader.raw(start, reader.pos));
+                    }
                 }
-                if (length !== undefined) {
+                if (length !== $undefined) {
                     if (reader.pos !== end)
-                        throw RangeError("index out of range");
+                        throw $RangeError("index out of range");
                     reader.len = length;
                 }
+                if (_end !== $undefined)
+                    throw $Error("missing end group");
                 return message;
             };
 
@@ -3491,14 +3959,14 @@ export const wire = $root.wire = (() => {
              * @memberof wire.msg.ActionEnvelope
              * @static
              * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
-             * @returns {wire.msg.ActionEnvelope} ActionEnvelope
+             * @returns {wire.msg.ActionEnvelope & wire.msg.ActionEnvelope.$Shape} ActionEnvelope
              * @throws {Error} If the payload is not a reader or valid buffer
              * @throws {$protobuf.util.ProtocolError} If required fields are missing
              */
-            ActionEnvelope.decodeDelimited = function decodeDelimited(reader) {
+            ActionEnvelope.decodeDelimited = function(reader) {
                 if (!(reader instanceof $Reader))
                     reader = new $Reader(reader);
-                return this.decode(reader, reader.uint32());
+                return this.decode(reader, reader.size());
             };
 
             /**
@@ -3509,28 +3977,28 @@ export const wire = $root.wire = (() => {
              * @param {Object.<string,*>} message Plain object to verify
              * @returns {string|null} `null` if valid, otherwise the reason why it is not
              */
-            ActionEnvelope.verify = function verify(message, long) {
+            ActionEnvelope.verify = function (message, _depth) {
                 if (typeof message !== "object" || message === null)
                     return "object expected";
-                if (long === undefined)
-                    long = 0;
-                if (long > $util.recursionLimit)
-                    return "maximum nesting depth exceeded";
+                if (_depth === $undefined)
+                    _depth = 0;
+                if (_depth > $util.recursionLimit)
+                    return "max depth exceeded";
                 let properties = {};
-                if (message.actionGameLeave != null && Object.hasOwnProperty.call(message, "actionGameLeave")) {
+                if (message.actionGameLeave != null && $Object.hasOwnProperty.call(message, "actionGameLeave")) {
                     properties.action = 1;
                     {
-                        let error = $root.wire.msg.ActionGameLeave.verify(message.actionGameLeave, long + 1);
+                        let error = $root.wire.msg.ActionGameLeave.verify(message.actionGameLeave, _depth + 1);
                         if (error)
                             return "actionGameLeave." + error;
                     }
                 }
-                if (message.actionGameLaunch != null && Object.hasOwnProperty.call(message, "actionGameLaunch")) {
+                if (message.actionGameLaunch != null && $Object.hasOwnProperty.call(message, "actionGameLaunch")) {
                     if (properties.action === 1)
                         return "action: multiple values";
                     properties.action = 1;
                     {
-                        let error = $root.wire.msg.ActionGameLaunch.verify(message.actionGameLaunch, long + 1);
+                        let error = $root.wire.msg.ActionGameLaunch.verify(message.actionGameLaunch, _depth + 1);
                         if (error)
                             return "actionGameLaunch." + error;
                     }
@@ -3546,25 +4014,25 @@ export const wire = $root.wire = (() => {
              * @param {Object.<string,*>} object Plain object
              * @returns {wire.msg.ActionEnvelope} ActionEnvelope
              */
-            ActionEnvelope.fromObject = function fromObject(object, long) {
+            ActionEnvelope.fromObject = function (object, _depth) {
                 if (object instanceof $root.wire.msg.ActionEnvelope)
                     return object;
                 if (!$util.isObject(object))
-                    throw TypeError(".wire.msg.ActionEnvelope: object expected");
-                if (long === undefined)
-                    long = 0;
-                if (long > $util.recursionLimit)
-                    throw Error("maximum nesting depth exceeded");
+                    throw $TypeError(".wire.msg.ActionEnvelope: object expected");
+                if (_depth === $undefined)
+                    _depth = 0;
+                if (_depth > $util.recursionLimit)
+                    throw $Error("max depth exceeded");
                 let message = new $root.wire.msg.ActionEnvelope();
                 if (object.actionGameLeave != null) {
                     if (!$util.isObject(object.actionGameLeave))
-                        throw TypeError(".wire.msg.ActionEnvelope.actionGameLeave: object expected");
-                    message.actionGameLeave = $root.wire.msg.ActionGameLeave.fromObject(object.actionGameLeave, long + 1);
+                        throw $TypeError(".wire.msg.ActionEnvelope.actionGameLeave: object expected");
+                    message.actionGameLeave = $root.wire.msg.ActionGameLeave.fromObject(object.actionGameLeave, _depth + 1);
                 }
                 if (object.actionGameLaunch != null) {
                     if (!$util.isObject(object.actionGameLaunch))
-                        throw TypeError(".wire.msg.ActionEnvelope.actionGameLaunch: object expected");
-                    message.actionGameLaunch = $root.wire.msg.ActionGameLaunch.fromObject(object.actionGameLaunch, long + 1);
+                        throw $TypeError(".wire.msg.ActionEnvelope.actionGameLaunch: object expected");
+                    message.actionGameLaunch = $root.wire.msg.ActionGameLaunch.fromObject(object.actionGameLaunch, _depth + 1);
                 }
                 return message;
             };
@@ -3578,21 +4046,21 @@ export const wire = $root.wire = (() => {
              * @param {$protobuf.IConversionOptions} [options] Conversion options
              * @returns {Object.<string,*>} Plain object
              */
-            ActionEnvelope.toObject = function toObject(message, options, q) {
+            ActionEnvelope.toObject = function (message, options, _depth) {
                 if (!options)
                     options = {};
-                if (q === undefined)
-                    q = 0;
-                if (q > $util.recursionLimit)
-                    throw Error("max depth exceeded");
+                if (_depth === $undefined)
+                    _depth = 0;
+                if (_depth > $util.recursionLimit)
+                    throw $Error("max depth exceeded");
                 let object = {};
-                if (message.actionGameLeave != null && Object.hasOwnProperty.call(message, "actionGameLeave")) {
-                    object.actionGameLeave = $root.wire.msg.ActionGameLeave.toObject(message.actionGameLeave, options, q + 1);
+                if (message.actionGameLeave != null && $Object.hasOwnProperty.call(message, "actionGameLeave")) {
+                    object.actionGameLeave = $root.wire.msg.ActionGameLeave.toObject(message.actionGameLeave, options, _depth + 1);
                     if (options.oneofs)
                         object.action = "actionGameLeave";
                 }
-                if (message.actionGameLaunch != null && Object.hasOwnProperty.call(message, "actionGameLaunch")) {
-                    object.actionGameLaunch = $root.wire.msg.ActionGameLaunch.toObject(message.actionGameLaunch, options, q + 1);
+                if (message.actionGameLaunch != null && $Object.hasOwnProperty.call(message, "actionGameLaunch")) {
+                    object.actionGameLaunch = $root.wire.msg.ActionGameLaunch.toObject(message.actionGameLaunch, options, _depth + 1);
                     if (options.oneofs)
                         object.action = "actionGameLaunch";
                 }
@@ -3606,23 +4074,22 @@ export const wire = $root.wire = (() => {
              * @instance
              * @returns {Object.<string,*>} JSON object
              */
-            ActionEnvelope.prototype.toJSON = function toJSON() {
-                return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
+            ActionEnvelope.prototype.toJSON = function() {
+                return ActionEnvelope.toObject(this, $protobuf.util.toJSONOptions);
             };
 
             /**
-             * Gets the default type url for ActionEnvelope
+             * Gets the type url for ActionEnvelope
              * @function getTypeUrl
              * @memberof wire.msg.ActionEnvelope
              * @static
-             * @param {string} [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
-             * @returns {string} The default type url
+             * @param {string} [prefix] Custom type url prefix, defaults to `"type.googleapis.com"`
+             * @returns {string} The type url
              */
-            ActionEnvelope.getTypeUrl = function getTypeUrl(typeUrlPrefix) {
-                if (typeUrlPrefix === undefined) {
-                    typeUrlPrefix = "type.googleapis.com";
-                }
-                return typeUrlPrefix + "/wire.msg.ActionEnvelope";
+            ActionEnvelope.getTypeUrl = function(prefix) {
+                if (prefix === $undefined)
+                    prefix = "type.googleapis.com";
+                return prefix + "/wire.msg.ActionEnvelope";
             };
 
             return ActionEnvelope;
@@ -3632,34 +4099,51 @@ export const wire = $root.wire = (() => {
 
             /**
              * Properties of an ActionGameLeave.
+             * @typedef {Object} wire.msg.ActionGameLeave.$Properties
+             * @property {Array.<Uint8Array>} [$unknowns] Unknown fields preserved while decoding when enabled
+             */
+
+            /**
+             * Properties of an ActionGameLeave.
              * @memberof wire.msg
              * @interface IActionGameLeave
+             * @augments wire.msg.ActionGameLeave.$Properties
+             * @deprecated Use wire.msg.ActionGameLeave.$Properties instead.
+             */
+
+            /**
+             * Shape of an ActionGameLeave.
+             * @typedef {wire.msg.ActionGameLeave.$Properties} wire.msg.ActionGameLeave.$Shape
              */
 
             /**
              * Constructs a new ActionGameLeave.
              * @memberof wire.msg
              * @classdesc Represents an ActionGameLeave.
-             * @implements IActionGameLeave
              * @constructor
-             * @param {wire.msg.IActionGameLeave=} [properties] Properties to set
+             * @param {wire.msg.ActionGameLeave.$Properties=} [properties] Properties to set
+             * @property {Array.<Uint8Array>} [$unknowns] Unknown fields preserved while decoding when enabled
              */
-            function ActionGameLeave(properties) {
+            const ActionGameLeave = function (properties) {
                 if (properties)
-                    for (let keys = Object.keys(properties), i = 0; i < keys.length; ++i)
+                    for (let keys = $Object.keys(properties), i = 0; i < keys.length; ++i)
                         if (properties[keys[i]] != null && keys[i] !== "__proto__")
                             this[keys[i]] = properties[keys[i]];
-            }
+            };
 
             /**
              * Creates a new ActionGameLeave instance using the specified properties.
              * @function create
              * @memberof wire.msg.ActionGameLeave
              * @static
-             * @param {wire.msg.IActionGameLeave=} [properties] Properties to set
+             * @param {wire.msg.ActionGameLeave.$Properties=} [properties] Properties to set
              * @returns {wire.msg.ActionGameLeave} ActionGameLeave instance
+             * @type {{
+             *   (properties: wire.msg.ActionGameLeave.$Shape): wire.msg.ActionGameLeave & wire.msg.ActionGameLeave.$Shape;
+             *   (properties?: wire.msg.ActionGameLeave.$Properties): wire.msg.ActionGameLeave;
+             * }}
              */
-            ActionGameLeave.create = function create(properties) {
+            ActionGameLeave.create = function(properties) {
                 return new ActionGameLeave(properties);
             };
 
@@ -3668,17 +4152,20 @@ export const wire = $root.wire = (() => {
              * @function encode
              * @memberof wire.msg.ActionGameLeave
              * @static
-             * @param {wire.msg.IActionGameLeave} message ActionGameLeave message or plain object to encode
+             * @param {wire.msg.ActionGameLeave.$Properties} message ActionGameLeave message or plain object to encode
              * @param {$protobuf.Writer} [writer] Writer to encode to
              * @returns {$protobuf.Writer} Writer
              */
-            ActionGameLeave.encode = function encode(message, writer, q) {
+            ActionGameLeave.encode = function (message, writer, _depth) {
                 if (!writer)
                     writer = $Writer.create();
-                if (q === undefined)
-                    q = 0;
-                if (q > $util.recursionLimit)
-                    throw Error("max depth exceeded");
+                if (_depth === $undefined)
+                    _depth = 0;
+                if (_depth > $util.recursionLimit)
+                    throw $Error("max depth exceeded");
+                if (message.$unknowns != null && $Object.hasOwnProperty.call(message, "$unknowns"))
+                    for (let i = 0; i < message.$unknowns.length; ++i)
+                        writer.raw(message.$unknowns[i]);
                 return writer;
             };
 
@@ -3687,12 +4174,12 @@ export const wire = $root.wire = (() => {
              * @function encodeDelimited
              * @memberof wire.msg.ActionGameLeave
              * @static
-             * @param {wire.msg.IActionGameLeave} message ActionGameLeave message or plain object to encode
+             * @param {wire.msg.ActionGameLeave.$Properties} message ActionGameLeave message or plain object to encode
              * @param {$protobuf.Writer} [writer] Writer to encode to
              * @returns {$protobuf.Writer} Writer
              */
-            ActionGameLeave.encodeDelimited = function encodeDelimited(message, writer) {
-                return this.encode(message, writer && writer.len ? writer.fork() : writer).ldelim();
+            ActionGameLeave.encodeDelimited = function(message, writer) {
+                return this.encode(message, (writer || $Writer.create()).fork()).ldelim();
             };
 
             /**
@@ -3702,43 +4189,48 @@ export const wire = $root.wire = (() => {
              * @static
              * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
              * @param {number} [length] Message length if known beforehand
-             * @returns {wire.msg.ActionGameLeave} ActionGameLeave
+             * @returns {wire.msg.ActionGameLeave & wire.msg.ActionGameLeave.$Shape} ActionGameLeave
              * @throws {Error} If the payload is not a reader or valid buffer
              * @throws {$protobuf.util.ProtocolError} If required fields are missing
              */
-            ActionGameLeave.decode = function decode(reader, length, error, long) {
+            ActionGameLeave.decode = function (reader, length, _end, _depth, _target) {
                 if (!(reader instanceof $Reader))
                     reader = $Reader.create(reader);
-                if (long === undefined)
-                    long = 0;
-                if (long > $Reader.recursionLimit)
-                    throw Error("maximum nesting depth exceeded");
+                if (_depth === $undefined)
+                    _depth = 0;
+                if (_depth > $Reader.recursionLimit)
+                    throw $Error("max depth exceeded");
                 let end, message;
-                if (length === undefined)
+                if (length === $undefined)
                     end = reader.len;
                 else {
                     end = reader.pos + length;
                     if (end > reader.len)
-                        throw RangeError("index out of range");
+                        throw $RangeError("index out of range");
                     length = reader.len;
                     reader.len = end;
                 }
-                message = new $root.wire.msg.ActionGameLeave();
+                message = _target || new $root.wire.msg.ActionGameLeave();
                 while (reader.pos < end) {
-                    let tag = reader.uint32();
-                    if (tag === error)
-                        break;
-                    switch (tag >>> 3) {
-                    default:
-                        reader.skipType(tag & 7, long);
+                    let start = reader.pos;
+                    let tag = reader.tag();
+                    if (tag === _end) {
+                        _end = $undefined;
                         break;
                     }
+                    reader.skipType(tag & 7, _depth, tag);
+                    if (!reader.discardUnknown) {
+                        $util.makeProp(message, "$unknowns", false);
+                        (message.$unknowns || (message.$unknowns = [])).push(reader.raw(start, reader.pos));
+                    }
                 }
-                if (length !== undefined) {
+                if (length !== $undefined) {
                     if (reader.pos !== end)
-                        throw RangeError("index out of range");
+                        throw $RangeError("index out of range");
                     reader.len = length;
                 }
+                if (_end !== $undefined)
+                    throw $Error("missing end group");
                 return message;
             };
 
@@ -3748,14 +4240,14 @@ export const wire = $root.wire = (() => {
              * @memberof wire.msg.ActionGameLeave
              * @static
              * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
-             * @returns {wire.msg.ActionGameLeave} ActionGameLeave
+             * @returns {wire.msg.ActionGameLeave & wire.msg.ActionGameLeave.$Shape} ActionGameLeave
              * @throws {Error} If the payload is not a reader or valid buffer
              * @throws {$protobuf.util.ProtocolError} If required fields are missing
              */
-            ActionGameLeave.decodeDelimited = function decodeDelimited(reader) {
+            ActionGameLeave.decodeDelimited = function(reader) {
                 if (!(reader instanceof $Reader))
                     reader = new $Reader(reader);
-                return this.decode(reader, reader.uint32());
+                return this.decode(reader, reader.size());
             };
 
             /**
@@ -3766,13 +4258,13 @@ export const wire = $root.wire = (() => {
              * @param {Object.<string,*>} message Plain object to verify
              * @returns {string|null} `null` if valid, otherwise the reason why it is not
              */
-            ActionGameLeave.verify = function verify(message, long) {
+            ActionGameLeave.verify = function (message, _depth) {
                 if (typeof message !== "object" || message === null)
                     return "object expected";
-                if (long === undefined)
-                    long = 0;
-                if (long > $util.recursionLimit)
-                    return "maximum nesting depth exceeded";
+                if (_depth === $undefined)
+                    _depth = 0;
+                if (_depth > $util.recursionLimit)
+                    return "max depth exceeded";
                 return null;
             };
 
@@ -3784,9 +4276,15 @@ export const wire = $root.wire = (() => {
              * @param {Object.<string,*>} object Plain object
              * @returns {wire.msg.ActionGameLeave} ActionGameLeave
              */
-            ActionGameLeave.fromObject = function fromObject(object, long) {
+            ActionGameLeave.fromObject = function (object, _depth) {
                 if (object instanceof $root.wire.msg.ActionGameLeave)
                     return object;
+                if (!$util.isObject(object))
+                    throw $TypeError(".wire.msg.ActionGameLeave: object expected");
+                if (_depth === $undefined)
+                    _depth = 0;
+                if (_depth > $util.recursionLimit)
+                    throw $Error("max depth exceeded");
                 return new $root.wire.msg.ActionGameLeave();
             };
 
@@ -3799,7 +4297,7 @@ export const wire = $root.wire = (() => {
              * @param {$protobuf.IConversionOptions} [options] Conversion options
              * @returns {Object.<string,*>} Plain object
              */
-            ActionGameLeave.toObject = function toObject() {
+            ActionGameLeave.toObject = function () {
                 return {};
             };
 
@@ -3810,23 +4308,22 @@ export const wire = $root.wire = (() => {
              * @instance
              * @returns {Object.<string,*>} JSON object
              */
-            ActionGameLeave.prototype.toJSON = function toJSON() {
-                return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
+            ActionGameLeave.prototype.toJSON = function() {
+                return ActionGameLeave.toObject(this, $protobuf.util.toJSONOptions);
             };
 
             /**
-             * Gets the default type url for ActionGameLeave
+             * Gets the type url for ActionGameLeave
              * @function getTypeUrl
              * @memberof wire.msg.ActionGameLeave
              * @static
-             * @param {string} [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
-             * @returns {string} The default type url
+             * @param {string} [prefix] Custom type url prefix, defaults to `"type.googleapis.com"`
+             * @returns {string} The type url
              */
-            ActionGameLeave.getTypeUrl = function getTypeUrl(typeUrlPrefix) {
-                if (typeUrlPrefix === undefined) {
-                    typeUrlPrefix = "type.googleapis.com";
-                }
-                return typeUrlPrefix + "/wire.msg.ActionGameLeave";
+            ActionGameLeave.getTypeUrl = function(prefix) {
+                if (prefix === $undefined)
+                    prefix = "type.googleapis.com";
+                return prefix + "/wire.msg.ActionGameLeave";
             };
 
             return ActionGameLeave;
@@ -3836,26 +4333,39 @@ export const wire = $root.wire = (() => {
 
             /**
              * Properties of an ActionGameLaunch.
-             * @memberof wire.msg
-             * @interface IActionGameLaunch
+             * @typedef {Object} wire.msg.ActionGameLaunch.$Properties
              * @property {string|null} [fromId] ActionGameLaunch fromId
              * @property {string|null} [toId] ActionGameLaunch toId
+             * @property {Array.<Uint8Array>} [$unknowns] Unknown fields preserved while decoding when enabled
+             */
+
+            /**
+             * Properties of an ActionGameLaunch.
+             * @memberof wire.msg
+             * @interface IActionGameLaunch
+             * @augments wire.msg.ActionGameLaunch.$Properties
+             * @deprecated Use wire.msg.ActionGameLaunch.$Properties instead.
+             */
+
+            /**
+             * Shape of an ActionGameLaunch.
+             * @typedef {wire.msg.ActionGameLaunch.$Properties} wire.msg.ActionGameLaunch.$Shape
              */
 
             /**
              * Constructs a new ActionGameLaunch.
              * @memberof wire.msg
              * @classdesc Represents an ActionGameLaunch.
-             * @implements IActionGameLaunch
              * @constructor
-             * @param {wire.msg.IActionGameLaunch=} [properties] Properties to set
+             * @param {wire.msg.ActionGameLaunch.$Properties=} [properties] Properties to set
+             * @property {Array.<Uint8Array>} [$unknowns] Unknown fields preserved while decoding when enabled
              */
-            function ActionGameLaunch(properties) {
+            const ActionGameLaunch = function (properties) {
                 if (properties)
-                    for (let keys = Object.keys(properties), i = 0; i < keys.length; ++i)
+                    for (let keys = $Object.keys(properties), i = 0; i < keys.length; ++i)
                         if (properties[keys[i]] != null && keys[i] !== "__proto__")
                             this[keys[i]] = properties[keys[i]];
-            }
+            };
 
             /**
              * ActionGameLaunch fromId.
@@ -3878,10 +4388,14 @@ export const wire = $root.wire = (() => {
              * @function create
              * @memberof wire.msg.ActionGameLaunch
              * @static
-             * @param {wire.msg.IActionGameLaunch=} [properties] Properties to set
+             * @param {wire.msg.ActionGameLaunch.$Properties=} [properties] Properties to set
              * @returns {wire.msg.ActionGameLaunch} ActionGameLaunch instance
+             * @type {{
+             *   (properties: wire.msg.ActionGameLaunch.$Shape): wire.msg.ActionGameLaunch & wire.msg.ActionGameLaunch.$Shape;
+             *   (properties?: wire.msg.ActionGameLaunch.$Properties): wire.msg.ActionGameLaunch;
+             * }}
              */
-            ActionGameLaunch.create = function create(properties) {
+            ActionGameLaunch.create = function(properties) {
                 return new ActionGameLaunch(properties);
             };
 
@@ -3890,21 +4404,24 @@ export const wire = $root.wire = (() => {
              * @function encode
              * @memberof wire.msg.ActionGameLaunch
              * @static
-             * @param {wire.msg.IActionGameLaunch} message ActionGameLaunch message or plain object to encode
+             * @param {wire.msg.ActionGameLaunch.$Properties} message ActionGameLaunch message or plain object to encode
              * @param {$protobuf.Writer} [writer] Writer to encode to
              * @returns {$protobuf.Writer} Writer
              */
-            ActionGameLaunch.encode = function encode(message, writer, q) {
+            ActionGameLaunch.encode = function (message, writer, _depth) {
                 if (!writer)
                     writer = $Writer.create();
-                if (q === undefined)
-                    q = 0;
-                if (q > $util.recursionLimit)
-                    throw Error("max depth exceeded");
-                if (message.fromId != null && Object.hasOwnProperty.call(message, "fromId"))
+                if (_depth === $undefined)
+                    _depth = 0;
+                if (_depth > $util.recursionLimit)
+                    throw $Error("max depth exceeded");
+                if (message.fromId != null && $Object.hasOwnProperty.call(message, "fromId") && message.fromId !== "")
                     writer.uint32(/* id 1, wireType 2 =*/10).string(message.fromId);
-                if (message.toId != null && Object.hasOwnProperty.call(message, "toId"))
+                if (message.toId != null && $Object.hasOwnProperty.call(message, "toId") && message.toId !== "")
                     writer.uint32(/* id 2, wireType 2 =*/18).string(message.toId);
+                if (message.$unknowns != null && $Object.hasOwnProperty.call(message, "$unknowns"))
+                    for (let i = 0; i < message.$unknowns.length; ++i)
+                        writer.raw(message.$unknowns[i]);
                 return writer;
             };
 
@@ -3913,12 +4430,12 @@ export const wire = $root.wire = (() => {
              * @function encodeDelimited
              * @memberof wire.msg.ActionGameLaunch
              * @static
-             * @param {wire.msg.IActionGameLaunch} message ActionGameLaunch message or plain object to encode
+             * @param {wire.msg.ActionGameLaunch.$Properties} message ActionGameLaunch message or plain object to encode
              * @param {$protobuf.Writer} [writer] Writer to encode to
              * @returns {$protobuf.Writer} Writer
              */
-            ActionGameLaunch.encodeDelimited = function encodeDelimited(message, writer) {
-                return this.encode(message, writer && writer.len ? writer.fork() : writer).ldelim();
+            ActionGameLaunch.encodeDelimited = function(message, writer) {
+                return this.encode(message, (writer || $Writer.create()).fork()).ldelim();
             };
 
             /**
@@ -3928,51 +4445,69 @@ export const wire = $root.wire = (() => {
              * @static
              * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
              * @param {number} [length] Message length if known beforehand
-             * @returns {wire.msg.ActionGameLaunch} ActionGameLaunch
+             * @returns {wire.msg.ActionGameLaunch & wire.msg.ActionGameLaunch.$Shape} ActionGameLaunch
              * @throws {Error} If the payload is not a reader or valid buffer
              * @throws {$protobuf.util.ProtocolError} If required fields are missing
              */
-            ActionGameLaunch.decode = function decode(reader, length, error, long) {
+            ActionGameLaunch.decode = function (reader, length, _end, _depth, _target) {
                 if (!(reader instanceof $Reader))
                     reader = $Reader.create(reader);
-                if (long === undefined)
-                    long = 0;
-                if (long > $Reader.recursionLimit)
-                    throw Error("maximum nesting depth exceeded");
-                let end, message;
-                if (length === undefined)
+                if (_depth === $undefined)
+                    _depth = 0;
+                if (_depth > $Reader.recursionLimit)
+                    throw $Error("max depth exceeded");
+                let end, message, value;
+                if (length === $undefined)
                     end = reader.len;
                 else {
                     end = reader.pos + length;
                     if (end > reader.len)
-                        throw RangeError("index out of range");
+                        throw $RangeError("index out of range");
                     length = reader.len;
                     reader.len = end;
                 }
-                message = new $root.wire.msg.ActionGameLaunch();
+                message = _target || new $root.wire.msg.ActionGameLaunch();
                 while (reader.pos < end) {
-                    let tag = reader.uint32();
-                    if (tag === error)
-                        break;
-                    switch (tag >>> 3) {
-                    case 1: {
-                            message.fromId = reader.string();
-                            break;
-                        }
-                    case 2: {
-                            message.toId = reader.string();
-                            break;
-                        }
-                    default:
-                        reader.skipType(tag & 7, long);
+                    let start = reader.pos;
+                    let tag = reader.tag();
+                    if (tag === _end) {
+                        _end = $undefined;
                         break;
                     }
+                    let wireType = tag & 7;
+                    switch (tag >>>= 3) {
+                    case 1: {
+                            if (wireType !== 2)
+                                break;
+                            if ((value = reader.stringVerify()).length)
+                                message.fromId = value;
+                            else
+                                delete message.fromId;
+                            continue;
+                        }
+                    case 2: {
+                            if (wireType !== 2)
+                                break;
+                            if ((value = reader.stringVerify()).length)
+                                message.toId = value;
+                            else
+                                delete message.toId;
+                            continue;
+                        }
+                    }
+                    reader.skipType(wireType, _depth, tag);
+                    if (!reader.discardUnknown) {
+                        $util.makeProp(message, "$unknowns", false);
+                        (message.$unknowns || (message.$unknowns = [])).push(reader.raw(start, reader.pos));
+                    }
                 }
-                if (length !== undefined) {
+                if (length !== $undefined) {
                     if (reader.pos !== end)
-                        throw RangeError("index out of range");
+                        throw $RangeError("index out of range");
                     reader.len = length;
                 }
+                if (_end !== $undefined)
+                    throw $Error("missing end group");
                 return message;
             };
 
@@ -3982,14 +4517,14 @@ export const wire = $root.wire = (() => {
              * @memberof wire.msg.ActionGameLaunch
              * @static
              * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
-             * @returns {wire.msg.ActionGameLaunch} ActionGameLaunch
+             * @returns {wire.msg.ActionGameLaunch & wire.msg.ActionGameLaunch.$Shape} ActionGameLaunch
              * @throws {Error} If the payload is not a reader or valid buffer
              * @throws {$protobuf.util.ProtocolError} If required fields are missing
              */
-            ActionGameLaunch.decodeDelimited = function decodeDelimited(reader) {
+            ActionGameLaunch.decodeDelimited = function(reader) {
                 if (!(reader instanceof $Reader))
                     reader = new $Reader(reader);
-                return this.decode(reader, reader.uint32());
+                return this.decode(reader, reader.size());
             };
 
             /**
@@ -4000,17 +4535,17 @@ export const wire = $root.wire = (() => {
              * @param {Object.<string,*>} message Plain object to verify
              * @returns {string|null} `null` if valid, otherwise the reason why it is not
              */
-            ActionGameLaunch.verify = function verify(message, long) {
+            ActionGameLaunch.verify = function (message, _depth) {
                 if (typeof message !== "object" || message === null)
                     return "object expected";
-                if (long === undefined)
-                    long = 0;
-                if (long > $util.recursionLimit)
-                    return "maximum nesting depth exceeded";
-                if (message.fromId != null && Object.hasOwnProperty.call(message, "fromId"))
+                if (_depth === $undefined)
+                    _depth = 0;
+                if (_depth > $util.recursionLimit)
+                    return "max depth exceeded";
+                if (message.fromId != null && $Object.hasOwnProperty.call(message, "fromId"))
                     if (!$util.isString(message.fromId))
                         return "fromId: string expected";
-                if (message.toId != null && Object.hasOwnProperty.call(message, "toId"))
+                if (message.toId != null && $Object.hasOwnProperty.call(message, "toId"))
                     if (!$util.isString(message.toId))
                         return "toId: string expected";
                 return null;
@@ -4024,20 +4559,22 @@ export const wire = $root.wire = (() => {
              * @param {Object.<string,*>} object Plain object
              * @returns {wire.msg.ActionGameLaunch} ActionGameLaunch
              */
-            ActionGameLaunch.fromObject = function fromObject(object, long) {
+            ActionGameLaunch.fromObject = function (object, _depth) {
                 if (object instanceof $root.wire.msg.ActionGameLaunch)
                     return object;
                 if (!$util.isObject(object))
-                    throw TypeError(".wire.msg.ActionGameLaunch: object expected");
-                if (long === undefined)
-                    long = 0;
-                if (long > $util.recursionLimit)
-                    throw Error("maximum nesting depth exceeded");
+                    throw $TypeError(".wire.msg.ActionGameLaunch: object expected");
+                if (_depth === $undefined)
+                    _depth = 0;
+                if (_depth > $util.recursionLimit)
+                    throw $Error("max depth exceeded");
                 let message = new $root.wire.msg.ActionGameLaunch();
                 if (object.fromId != null)
-                    message.fromId = String(object.fromId);
+                    if (typeof object.fromId !== "string" || object.fromId.length)
+                        message.fromId = $String(object.fromId);
                 if (object.toId != null)
-                    message.toId = String(object.toId);
+                    if (typeof object.toId !== "string" || object.toId.length)
+                        message.toId = $String(object.toId);
                 return message;
             };
 
@@ -4050,21 +4587,21 @@ export const wire = $root.wire = (() => {
              * @param {$protobuf.IConversionOptions} [options] Conversion options
              * @returns {Object.<string,*>} Plain object
              */
-            ActionGameLaunch.toObject = function toObject(message, options, q) {
+            ActionGameLaunch.toObject = function (message, options, _depth) {
                 if (!options)
                     options = {};
-                if (q === undefined)
-                    q = 0;
-                if (q > $util.recursionLimit)
-                    throw Error("max depth exceeded");
+                if (_depth === $undefined)
+                    _depth = 0;
+                if (_depth > $util.recursionLimit)
+                    throw $Error("max depth exceeded");
                 let object = {};
                 if (options.defaults) {
                     object.fromId = "";
                     object.toId = "";
                 }
-                if (message.fromId != null && Object.hasOwnProperty.call(message, "fromId"))
+                if (message.fromId != null && $Object.hasOwnProperty.call(message, "fromId"))
                     object.fromId = message.fromId;
-                if (message.toId != null && Object.hasOwnProperty.call(message, "toId"))
+                if (message.toId != null && $Object.hasOwnProperty.call(message, "toId"))
                     object.toId = message.toId;
                 return object;
             };
@@ -4076,23 +4613,22 @@ export const wire = $root.wire = (() => {
              * @instance
              * @returns {Object.<string,*>} JSON object
              */
-            ActionGameLaunch.prototype.toJSON = function toJSON() {
-                return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
+            ActionGameLaunch.prototype.toJSON = function() {
+                return ActionGameLaunch.toObject(this, $protobuf.util.toJSONOptions);
             };
 
             /**
-             * Gets the default type url for ActionGameLaunch
+             * Gets the type url for ActionGameLaunch
              * @function getTypeUrl
              * @memberof wire.msg.ActionGameLaunch
              * @static
-             * @param {string} [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
-             * @returns {string} The default type url
+             * @param {string} [prefix] Custom type url prefix, defaults to `"type.googleapis.com"`
+             * @returns {string} The type url
              */
-            ActionGameLaunch.getTypeUrl = function getTypeUrl(typeUrlPrefix) {
-                if (typeUrlPrefix === undefined) {
-                    typeUrlPrefix = "type.googleapis.com";
-                }
-                return typeUrlPrefix + "/wire.msg.ActionGameLaunch";
+            ActionGameLaunch.getTypeUrl = function(prefix) {
+                if (prefix === $undefined)
+                    prefix = "type.googleapis.com";
+                return prefix + "/wire.msg.ActionGameLaunch";
             };
 
             return ActionGameLaunch;
@@ -4104,4 +4640,6 @@ export const wire = $root.wire = (() => {
     return wire;
 })();
 
-export { $root as default };
+export {
+  $root as default
+};
