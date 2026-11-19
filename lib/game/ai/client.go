@@ -148,6 +148,9 @@ func (c *Client) onTick(ctx context.Context, evt *model.PlayerEventTick) error {
 		case c.actionCh <- act:
 		case <-ctx.Done():
 			return ctx.Err()
+		case <-c.disconnectCh:
+			// Nobody reads actionCh after a disconnect, so don't block on it.
+			return errors.New("Disconnected")
 		}
 	}
 	return nil
