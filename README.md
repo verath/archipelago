@@ -5,8 +5,7 @@ with the same name.
 
 ![Screenshot Archipelago](assets/screenshot3.png)
 
-[![CircleCI](https://circleci.com/gh/verath/archipelago.svg?style=svg)](https://circleci.com/gh/verath/archipelago)
-[![Codeclimate Maintainability](https://api.codeclimate.com/v1/badges/4ae6b5cd15e1050fd3d3/maintainability)](https://codeclimate.com/github/verath/archipelago/maintainability)
+[![CI](https://github.com/verath/archipelago/actions/workflows/ci.yml/badge.svg)](https://github.com/verath/archipelago/actions/workflows/ci.yml)
 
 The game can be played at https://playarchipelago.com.
 
@@ -38,59 +37,95 @@ using protocol buffers defined in the [proto](./proto) directory.
 
 ### Frontend
 
-The frontend project is found in the [web](./web) directory. It is based on [Pixi.js](https://github.com/pixijs/pixi.js) 
-for WebGL/canvas rendering. The frontend is written in ES6, and is transpiled to ES5 via Babel. 
-[Yarn](https://yarnpkg.com/lang/en/) is used to manage dependencies, and [Webpack4](https://webpack.js.org/) 
-is used to bundle the frontend application (including js, css and images).
+The frontend project is found in the [web](./web) directory. It uses [Pixi.js](https://pixijs.com/) 8
+for WebGL rendering and [React](https://react.dev/) 19 for the UI around the game. Dependencies are
+managed with npm and the app is bundled with [Vite](https://vite.dev/).
 
 ### Backend
 
-The backend is written in go and uses standard go modules for managing
-dependencies. The backend relies primarily on the go standard library, but
-uses [Gorilla/WebSocket](https://github.com/gorilla/websocket) for WebSocket handling, 
-[Logrus](https://github.com/sirupsen/logrus) for logging, and [pkg/errors](https://github.com/pkg/errors) 
-for better error handling. 
+The backend is written in Go and uses Go modules. It relies primarily on the Go standard library
+(including `log/slog` for logging) and uses [gorilla/websocket](https://github.com/gorilla/websocket)
+for WebSocket handling.
 
 The backend code is found in the [lib](./lib) directory.
 
 ## Running the Project
 
-To run and build the project, make sure to have the following installed:
-* [Go](https://golang.org/dl/)
-* [Node.JS](https://nodejs.org/en/download/)
-* [Yarn](https://yarnpkg.com/en/docs/install)
+To build and run the project, install:
+* [Go](https://go.dev/dl/) (the version in `go.mod`; with the default `GOTOOLCHAIN=auto` an older
+  Go downloads it automatically)
+* [Node.js](https://nodejs.org/en/download/) 24 or newer (npm is included)
 
-Then clone the project:
-```
-$ git clone git@github.com:verath/archipelago.git
-```
-
-This will include all dependencies required for the backend code. However, the client 
-side dependencies are not included in the repo and have to be fetched via yarn,
-and then built/bundled:
+Then clone the project and build the frontend:
 
 ```
-$ cd web
-$ yarn install
-$ yarn run build:prod
+git clone git@github.com:verath/archipelago.git
+cd archipelago/web
+npm ci
+npm run build
 ```
 
-Now run the project as a go project, e.g. using `go run` from the root directory:
+Now run the backend from the repository root. With `-serveStatic` it also serves the built
+frontend from `web/dist`:
 
 ```
-$ go run main.go -debug -serveStatic -skipWSOriginCheck
+go run main.go -debug -serveStatic -skipWSOriginCheck
 ```
 
-This should start the server, and make it available at 
-[http://localhost:8080](http://localhost:8080) by default.
+The game is then available at [http://localhost:8080](http://localhost:8080).
 
 ## Developing
 
-### Protocol Buffers (protobuf)
-To regenerate the protobuf files it is necessary to install the protobuf compiler (`protoc`) and
-the go proto compiler plugin (`protoc-gen-go`), see the [protoc-gen-go](https://github.com/golang/protobuf)
-project for instructions. [dcodeIO/protobuf.js](https://github.com/dcodeIO/ProtoBuf.js/) is also
-required but should already be installed via yarn.
+### Frontend dev server
 
-With these tools installed and available on the path, use the `proto/build.ps1` PowerShell script
-to build both the server (.pb.go) and the client (.js, .d.ts) files.
+For frontend work, run the backend as above (the `-serveStatic` flag is optional) and start the
+Vite dev server in `web/`:
+
+```
+npm run dev
+```
+
+Open [http://localhost:5173](http://localhost:5173). Vite reloads on changes and proxies the game
+WebSocket (`/app/ws`) to the backend on port 8080.
+
+### Checks
+
+These run in CI ([.github/workflows/ci.yml](.github/workflows/ci.yml)) on every push and pull request:
+
+```
+go vet ./...
+go test -race ./...      # -race needs cgo, i.e. a C compiler
+cd web && npm run lint && npm run build
+```
+
+### Protocol Buffers (protobuf)
+
+The wire format is defined in [proto](./proto). To regenerate the Go (`.pb.go`) and JavaScript
+(`.js`, `.d.ts`) files, install the protobuf compiler (`protoc`) and the Go plugin
+(`go install google.golang.org/protobuf/cmd/protoc-gen-go@latest`), make sure both are on the
+`PATH`, and run from `web/`:
+
+```
+npm run proto
+```
+
+The JavaScript tooling (protobufjs-cli) is installed by `npm ci`.
+
+## Deployment
+
+Pushes to `master` deploy automatically after CI passes, but only the half that changed:
+
+* **Backend** → [Fly.io](https://fly.io) (`ws.playarchipelago.com`), built from the
+  [Dockerfile](Dockerfile) and configured in [fly.toml](fly.toml). It runs on a single machine,
+  because game state lives in memory. The machine is suspended when idle and resumes on the next
+  connection. To deploy by hand, run `fly deploy` from the repository root.
+* **Frontend** → Firebase Hosting (`playarchipelago.com`), configured in
+  [web/firebase.json](web/firebase.json). To deploy by hand, run `npm run deploy` in `web/` after
+  `npm run build`.
+
+The CI workflow can also be run manually on `master` with "deploy" ticked to deploy both.
+
+Dependencies are kept up to date by Dependabot. Minor and patch updates are merged automatically
+once CI passes, and major updates are left for review. Those automatic merges don't trigger a
+deploy (GitHub doesn't run workflows for pushes made with the workflow token). They go out with
+the next normal push to `master`, or a manual run with "deploy" ticked.
