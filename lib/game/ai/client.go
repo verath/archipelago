@@ -138,7 +138,9 @@ func (c *Client) onTick(ctx context.Context, evt *model.PlayerEventTick) error {
 	defer c.stateMu.Unlock()
 	act, err := c.strategy.NextAction(c.state, evt.Game)
 	if err != nil {
-		errors.Wrap(err, "failed getting next action from strategy")
+		// Not fatal for the client; log it and carry on. Debug level, as
+		// this runs on every tick.
+		c.logEntry.WithError(err).Debug("failed getting next action from strategy")
 	}
 	if act != nil {
 		select {
