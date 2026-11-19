@@ -8,15 +8,6 @@
     ],
     "headers": [
       {
-        "source": "/sw.js",
-        "headers": [
-          {
-            "key": "Cache-Control",
-            "value": "max-age=0"
-          }
-        ]
-      },
-      {
         "source": "**",
         "headers": [
           {
