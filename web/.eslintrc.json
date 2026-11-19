@@ -16,6 +16,11 @@
             "impliedStrict": true
         }
     },
+    "settings": {
+        "react": {
+            "version": "detect"
+        }
+    },
     "rules": {
         "indent": [
             "error",
