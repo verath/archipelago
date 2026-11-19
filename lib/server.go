@@ -37,8 +37,10 @@ type Server struct {
 
 // New returns a new Server using the provided logger.
 // skipWSOriginCheck controls if websocket origin checking is disabled.
-func New(logger *slog.Logger, skipWSOriginCheck bool) (*Server, error) {
-	gameCoordinator, err := game.NewCoordinator(logger)
+// coordinatorOpts configures how games are created, see
+// game.DefaultCoordinatorOptions for the production defaults.
+func New(logger *slog.Logger, skipWSOriginCheck bool, coordinatorOpts game.CoordinatorOptions) (*Server, error) {
+	gameCoordinator, err := game.NewCoordinator(logger, coordinatorOpts)
 	if err != nil {
 		return nil, fmt.Errorf("error creating game coordinator: %w", err)
 	}
