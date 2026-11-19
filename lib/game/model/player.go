@@ -3,10 +3,9 @@ package model
 // A PlayerState represents the current exclusive state of a Player.
 // During a game a Player transitions between PlayerStates:
 //
-//   Alive <-> PendingRevival -> Dead
-//   |             v             |
-//   ---------> LeftGame <--------
-//
+//	Alive <-> PendingRevival -> Dead
+//	|             v             |
+//	---------> LeftGame <--------
 type PlayerState int
 
 const (

@@ -12,10 +12,11 @@ func CreateDummyGameEmpty() *Game {
 }
 
 // CreateDummyGameSimple Creates a 9x9 board with 3 islands:
-//  * (0,0) - player 1 island
-//  * (8,8) - player 2 island
-//  * (4,4) - neutral island
-//  * (0,8) - neutral island
+//   - (0,0) - player 1 island
+//   - (8,8) - player 2 island
+//   - (4,4) - neutral island
+//   - (0,8) - neutral island
+//
 // All starting with a strength of 10 and a growth interval of 1/second
 func CreateDummyGameSimple() *Game {
 	p1, _ := NewPlayer()

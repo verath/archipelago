@@ -1,14 +1,20 @@
 module github.com/verath/archipelago
 
-go 1.18
+go 1.27
+
+toolchain go1.27.4
 
 require (
-	github.com/gorilla/websocket v1.5.0
+	github.com/gorilla/websocket v1.5.3
 	github.com/pkg/errors v0.9.1
-	github.com/pkg/profile v1.6.0
-	github.com/sirupsen/logrus v1.9.0
-	golang.org/x/time v0.0.0-20220722155302-e5dcc9cfc0b9
-	google.golang.org/protobuf v1.28.1
+	github.com/pkg/profile v1.7.0
+	github.com/sirupsen/logrus v1.10.2
+	golang.org/x/time v0.16.0
+	google.golang.org/protobuf v1.36.12
 )
 
-require golang.org/x/sys v0.0.0-20220731174439-a90be440212d // indirect
+require (
+	github.com/felixge/fgprof v0.9.5 // indirect
+	github.com/google/pprof v0.0.0-20261118010117-084b33a85f63 // indirect
+	golang.org/x/sys v0.50.0 // indirect
+)
