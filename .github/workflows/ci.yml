@@ -1,0 +1,113 @@
+# Build and test on every push and pull request. On pushes to master, deploy
+# whichever half (backend -> Fly.io, frontend -> Firebase Hosting) changed,
+# but only after its build/test job is green.
+name: CI
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+  workflow_dispatch:
+    inputs:
+      deploy:
+        description: "Deploy backend and frontend regardless of changed paths (only when run on master)"
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+jobs:
+  backend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-go@v7
+        with:
+          go-version-file: go.mod
+      - name: gofmt
+        run: test -z "$(gofmt -l .)" || (gofmt -l . && exit 1)
+      - run: go build ./...
+      - run: go vet ./...
+      - run: go test -race -timeout 60s ./...
+      # The image Fly deploys; build it here so a broken Dockerfile fails CI.
+      - run: docker build -t archipelago-backend .
+
+  frontend:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: web
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run build
+      - uses: actions/upload-artifact@v7
+        with:
+          name: web-dist
+          path: web/dist
+          retention-days: 7
+
+  # Which halves changed in this push (only used for deploys).
+  changes:
+    if: github.ref == 'refs/heads/master' && github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    outputs:
+      backend: ${{ steps.filter.outputs.backend }}
+      frontend: ${{ steps.filter.outputs.frontend }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: dorny/paths-filter@v4
+        id: filter
+        with:
+          filters: |
+            backend:
+              - "main.go"
+              - "lib/**"
+              - "go.mod"
+              - "go.sum"
+              - "Dockerfile"
+              - ".dockerignore"
+              - "fly.toml"
+            frontend:
+              - "web/**"
+
+  deploy-backend:
+    needs: [backend, changes]
+    if: needs.changes.outputs.backend == 'true' || inputs.deploy
+    runs-on: ubuntu-latest
+    environment: production
+    # Never run two deploys at once: the app is a single in-memory machine.
+    concurrency: deploy-backend
+    steps:
+      - uses: actions/checkout@v7
+      - uses: superfly/flyctl-actions/setup-flyctl@1.5
+      - run: flyctl deploy --remote-only
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+
+  deploy-frontend:
+    needs: [frontend, changes]
+    if: needs.changes.outputs.frontend == 'true' || inputs.deploy
+    runs-on: ubuntu-latest
+    environment: production
+    concurrency: deploy-frontend
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/download-artifact@v8
+        with:
+          name: web-dist
+          path: web/dist
+      - uses: FirebaseExtended/action-hosting-deploy@v0
+        with:
+          repoToken: ${{ secrets.GITHUB_TOKEN }}
+          firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_ARCHIPELAGO_F7A28 }}
+          channelId: live
+          projectId: archipelago-f7a28
+          entryPoint: ./web
