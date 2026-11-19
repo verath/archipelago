@@ -101,12 +101,12 @@ func startProfiling(profileMode string) func() {
 	}
 }
 
-// lifetimeContext returns a context that is cancelled on the first SIGINT, SIGTERM,
-// or SIGKILL signal received. The application is force closed if more than one
+// lifetimeContext returns a context that is cancelled on the first SIGINT or
+// SIGTERM signal received. The application is force closed if more than one
 // signal is received.
 func lifetimeContext(logger *logrus.Logger) context.Context {
 	ctx, cancel := context.WithCancel(context.Background())
-	stopSigs := []os.Signal{os.Interrupt, os.Kill, syscall.SIGTERM}
+	stopSigs := []os.Signal{os.Interrupt, syscall.SIGTERM}
 	stopCh := make(chan os.Signal, len(stopSigs))
 	signal.Notify(stopCh, stopSigs...)
 	go func() {
