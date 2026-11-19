@@ -18,7 +18,6 @@
     "eslint": "^9.39.5",
     "eslint-plugin-react": "^7.37.5",
     "eslint-plugin-react-hooks": "^7.1.1",
-    "firebase-tools": "^7.12.1",
     "globals": "^17.14.0",
     "vite": "^8.3.8"
   },
@@ -27,7 +26,7 @@
     "build": "vite build",
     "preview": "vite preview",
     "lint": "eslint .",
-    "deploy": "firebase deploy --non-interactive"
+    "deploy": "npx firebase-tools deploy --non-interactive"
   },
   "dependencies": {
     "eventemitter3": "^4.0.0",
