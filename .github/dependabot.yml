@@ -1,0 +1,38 @@
+# Weekly dependency updates. Minor and patch bumps are grouped into one PR per
+# ecosystem and auto-merged once CI is green (see
+# .github/workflows/dependabot-automerge.yml). Major bumps arrive as their own
+# PRs and are reviewed by hand.
+version: 2
+
+updates:
+  - package-ecosystem: gomod
+    directory: /
+    schedule:
+      interval: weekly
+    groups:
+      go-minor-and-patch:
+        update-types: [minor, patch]
+
+  - package-ecosystem: npm
+    directory: /web
+    schedule:
+      interval: weekly
+    groups:
+      npm-minor-and-patch:
+        update-types: [minor, patch]
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    groups:
+      actions-minor-and-patch:
+        update-types: [minor, patch]
+
+  - package-ecosystem: docker
+    directory: /
+    schedule:
+      interval: weekly
+    groups:
+      docker-minor-and-patch:
+        update-types: [minor, patch]

@@ -1,0 +1,36 @@
+# Enable auto-merge on Dependabot PRs for minor and patch updates. GitHub only
+# merges once the required status checks (branch protection on master) pass,
+# so a red CI run blocks the merge. Major updates are left for manual review.
+#
+# Requires, in the repository settings:
+#   - General > "Allow auto-merge"
+#   - Branch protection / ruleset on master with the CI jobs "backend" and
+#     "frontend" as required status checks.
+#
+# Note: merges done this way are made with GITHUB_TOKEN, so they do NOT trigger
+# the push-to-master deploy in ci.yml. Deploy dependency updates by running
+# the CI workflow manually with "deploy" checked, or with the next normal push.
+name: Dependabot auto-merge
+
+on: pull_request
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  automerge:
+    if: github.event.pull_request.user.login == 'dependabot[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - id: metadata
+        uses: dependabot/fetch-metadata@v3
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+      - if: >-
+          steps.metadata.outputs.update-type == 'version-update:semver-minor' ||
+          steps.metadata.outputs.update-type == 'version-update:semver-patch'
+        run: gh pr merge --auto --squash "$PR_URL"
+        env:
+          PR_URL: ${{ github.event.pull_request.html_url }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
