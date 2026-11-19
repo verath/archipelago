@@ -85,15 +85,42 @@ To try the production build instead, run `npm run build && npm run preview` and 
 
 ## Developing
 
-### Checks
+### Checks and tests
 
 These run in CI ([.github/workflows/ci.yml](.github/workflows/ci.yml)) on every push and pull request:
 
 ```
 go vet ./...
 go test -race ./...      # -race needs cgo, i.e. a C compiler
-cd web && npm run lint && npm run build
+cd web && npm run lint && npm test && npm run build
+cd web && npm run test:e2e
 ```
+
+* **Backend unit tests:** `go test ./...`.
+* **Frontend unit tests** ([Vitest](https://vitest.dev/)): `npm test` in `web/` (or
+  `npm run test:watch`). Tests live next to the code as `*.test.js(x)` and cover the game models,
+  the WebSocket connection, the game controller, the React UI and the protobuf bundle.
+* **End-to-end tests** ([Playwright](https://playwright.dev/), Chromium): `npm run test:e2e` in
+  `web/`. Before the first run, install the browser with `npx playwright install chromium`. The
+  suite builds the Go backend and both frontend builds itself (note: this overwrites `web/dist`),
+  then plays real games against a backend started per test. The tests check that:
+  * the production build loads under the CSP from `web/firebase.json`;
+  * a game against AI starts;
+  * launching an airplane works;
+  * the remaining player wins when the other one leaves;
+  * the UI copes with the backend going away.
+
+  Specs are in [web/e2e](web/e2e). On failure, `npx playwright show-report` opens the report.
+
+The e2e tests use a test build (`npm run build:e2e`, output in `web/dist-e2e`) that exposes a
+read-only `window.__archipelagoTest` hook; production builds don't contain it. Both builds are
+served by `vite preview` with the headers (incl. the CSP) from `web/firebase.json`. The tests also
+use backend flags that make test games fast and predictable:
+
+* `-lobbyWait <duration>`: how long to wait for more players before starting a game (default
+  `8s`).
+* `-aiPlayers <n>`: `-1` fills each game up to 4 players (default), `0` adds no AI, so a game
+  needs 2 humans; `n` adds exactly `n` (at most 10).
 
 ### Protocol Buffers (protobuf)
 
