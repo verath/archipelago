@@ -29,15 +29,6 @@ const PRODUCTION_HOSTNAME = "playarchipelago.com";
 
 
 (async function main() {
-    // Register service worker.
-    if ("serviceWorker" in navigator) {
-        try {
-            await navigator.serviceWorker.register("/sw.js");
-        } catch (e) {
-            console.error("sw registration failed:", e);
-        }
-    }
-
     const wsURL = (() => {
         let protocol = (window.location.protocol === "https:") ? "wss://" : "ws://";
         let host = PRODUCTION_WS_HOST;

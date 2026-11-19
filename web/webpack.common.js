@@ -43,7 +43,6 @@ module.exports = {
         new CopyWebpackPlugin([
             { from: "src/static/manifest.json", to: "static/manifest.json" },
             { from: "src/static/icon192.png", to: "static/icon192.png" },
-            { from: "src/sw.js", to: "." },
         ], { copyUnmodified: true })
     ],
     optimization: {
