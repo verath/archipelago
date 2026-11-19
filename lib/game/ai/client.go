@@ -2,10 +2,11 @@ package ai
 
 import (
 	"context"
+	"errors"
+	"fmt"
 	"math/rand"
 	"sync"
 
-	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"github.com/verath/archipelago/lib/common"
 	"github.com/verath/archipelago/lib/game/model"
@@ -54,7 +55,7 @@ func NewClient(log *logrus.Logger, strategyCreator StrategyCreatorFunc) (*Client
 	logEntry := common.ModuleLogEntryWithID(log, "ai/client")
 	strategy, err := strategyCreator()
 	if err != nil {
-		return nil, errors.Wrap(err, "failed creating strategy")
+		return nil, fmt.Errorf("failed creating strategy: %w", err)
 	}
 	return &Client{
 		logEntry:     logEntry,
@@ -92,7 +93,7 @@ func (c *Client) WritePlayerEvent(ctx context.Context, playerEvent model.PlayerE
 	case *model.PlayerEventGameOver:
 		return c.onGameOver(ctx, evt)
 	default:
-		return errors.Errorf("unexpected playerEvent type %T", playerEvent)
+		return fmt.Errorf("unexpected playerEvent type %T", playerEvent)
 	}
 }
 

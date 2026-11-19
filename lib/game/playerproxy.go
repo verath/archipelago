@@ -2,8 +2,9 @@ package game
 
 import (
 	"context"
+	"errors"
+	"fmt"
 
-	"github.com/pkg/errors"
 	"github.com/verath/archipelago/lib/game/model"
 )
 
@@ -34,7 +35,7 @@ func newPlayerProxy(player *model.Player, client Client) (*playerProxy, error) {
 func (pp *playerProxy) WriteEvent(ctx context.Context, evt model.Event) error {
 	playerEvent := evt.ToPlayerEvent(pp.playerID)
 	if err := pp.client.WritePlayerEvent(ctx, playerEvent); err != nil {
-		return errors.Wrap(err, "Error writing PlayerEvent to Client")
+		return fmt.Errorf("Error writing PlayerEvent to Client: %w", err)
 	}
 	return nil
 }
@@ -45,7 +46,7 @@ func (pp *playerProxy) WriteEvent(ctx context.Context, evt model.Event) error {
 func (pp *playerProxy) ReadAction(ctx context.Context) (model.Action, error) {
 	playerAction, err := pp.client.ReadPlayerAction(ctx)
 	if err != nil {
-		return nil, errors.Wrap(err, "Error reading player action from Client")
+		return nil, fmt.Errorf("Error reading player action from Client: %w", err)
 	}
 	return playerAction.ToAction(pp.playerID), nil
 }

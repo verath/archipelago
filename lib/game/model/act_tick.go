@@ -1,10 +1,9 @@
 package model
 
 import (
+	"errors"
 	"math"
 	"time"
-
-	"github.com/pkg/errors"
 )
 
 // ActionTick is an action that performs a tick (i.e. update)

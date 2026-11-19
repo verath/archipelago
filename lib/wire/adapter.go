@@ -2,8 +2,8 @@ package wire
 
 import (
 	"context"
+	"fmt"
 
-	"github.com/pkg/errors"
 	"github.com/verath/archipelago/lib/game/model"
 	"github.com/verath/archipelago/lib/wire/msg"
 	"google.golang.org/protobuf/proto"
@@ -50,10 +50,10 @@ func (ca *PBClientAdapter) WritePlayerEvent(ctx context.Context, playerEvent mod
 		evtOver := msg.EncodeEventGameOver(evt)
 		pbMsg.Event = &msg.EventEnvelope_EventGameOver{EventGameOver: evtOver}
 	default:
-		return errors.Errorf("Unknown PlayerEvent type: %T", playerEvent)
+		return fmt.Errorf("Unknown PlayerEvent type: %T", playerEvent)
 	}
 	if err := ca.writeProtobufMessage(ctx, pbMsg); err != nil {
-		return errors.Wrap(err, "Error writing protobuf message to client")
+		return fmt.Errorf("Error writing protobuf message to client: %w", err)
 	}
 	return nil
 }
@@ -63,7 +63,7 @@ func (ca *PBClientAdapter) WritePlayerEvent(ctx context.Context, playerEvent mod
 func (ca *PBClientAdapter) ReadPlayerAction(ctx context.Context) (model.PlayerAction, error) {
 	actEnv := &msg.ActionEnvelope{}
 	if err := ca.readProtobufMessage(ctx, actEnv); err != nil {
-		return nil, errors.Wrap(err, "Error reading protobuf message from client")
+		return nil, fmt.Errorf("Error reading protobuf message from client: %w", err)
 	}
 	switch act := actEnv.Action.(type) {
 	case *msg.ActionEnvelope_ActionGameLeave:
@@ -71,7 +71,7 @@ func (ca *PBClientAdapter) ReadPlayerAction(ctx context.Context) (model.PlayerAc
 	case *msg.ActionEnvelope_ActionGameLaunch:
 		return msg.DecodeActionGameLaunch(act.ActionGameLaunch), nil
 	default:
-		return nil, errors.Errorf("Unknown ActionEnvelope.Action type: %T", actEnv.Action)
+		return nil, fmt.Errorf("Unknown ActionEnvelope.Action type: %T", actEnv.Action)
 	}
 }
 
@@ -81,10 +81,10 @@ func (ca *PBClientAdapter) ReadPlayerAction(ctx context.Context) (model.PlayerAc
 func (ca *PBClientAdapter) writeProtobufMessage(ctx context.Context, pbMsg proto.Message) error {
 	msg, err := proto.Marshal(pbMsg)
 	if err != nil {
-		return errors.Wrap(err, "Failed encoding protobuf message")
+		return fmt.Errorf("Failed encoding protobuf message: %w", err)
 	}
 	if err := ca.client.WriteMessage(ctx, msg); err != nil {
-		return errors.Wrap(err, "Error writing message to Client")
+		return fmt.Errorf("Error writing message to Client: %w", err)
 	}
 	return nil
 }
@@ -95,10 +95,10 @@ func (ca *PBClientAdapter) writeProtobufMessage(ctx context.Context, pbMsg proto
 func (ca *PBClientAdapter) readProtobufMessage(ctx context.Context, pbMsg proto.Message) error {
 	msg, err := ca.client.ReadMessage(ctx)
 	if err != nil {
-		return errors.Wrap(err, "Could not read message from Client")
+		return fmt.Errorf("Could not read message from Client: %w", err)
 	}
 	if err := proto.Unmarshal(msg, pbMsg); err != nil {
-		return errors.Wrap(err, "Error unmarshalling message as protobuf")
+		return fmt.Errorf("Error unmarshalling message as protobuf: %w", err)
 	}
 	return nil
 }

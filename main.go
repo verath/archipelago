@@ -2,14 +2,15 @@ package main
 
 import (
 	"context"
+	"errors"
 	"flag"
+	"fmt"
 	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
 	"time"
 
-	"github.com/pkg/errors"
 	"github.com/pkg/profile"
 	"github.com/sirupsen/logrus"
 	archipelago "github.com/verath/archipelago/lib"
@@ -74,7 +75,7 @@ func main() {
 	}
 	// Run archipelago server, HTTP Server.
 	err = runBackend(logger, archipelagoServer, httpServer)
-	if errors.Cause(err) == context.Canceled {
+	if errors.Is(err, context.Canceled) {
 		logger.Debugf("Error caught in main: %v", err)
 	} else {
 		logger.Fatalf("Error caught in main: %+v", err)
@@ -123,11 +124,17 @@ func runBackend(logger *logrus.Logger, archipelagoServer *archipelago.Server, ht
 	errCh := make(chan error)
 	go func() {
 		err := archipelagoServer.Run(ctx)
-		errCh <- errors.Wrap(err, "archipelagoServer error")
+		if err != nil {
+			err = fmt.Errorf("archipelagoServer error: %w", err)
+		}
+		errCh <- err
 	}()
 	go func() {
 		err := runHTTPServer(ctx, httpServer)
-		errCh <- errors.Wrap(err, "httpServer error")
+		if err != nil {
+			err = fmt.Errorf("httpServer error: %w", err)
+		}
+		errCh <- err
 	}()
 	logger.Info("Archipelago backend started.")
 	err := <-errCh
@@ -142,7 +149,10 @@ func runHTTPServer(ctx context.Context, server *http.Server) error {
 	errCh := make(chan error)
 	go func() {
 		err := server.ListenAndServe()
-		errCh <- errors.Wrap(err, "ListenAndServe error")
+		if err != nil {
+			err = fmt.Errorf("ListenAndServe error: %w", err)
+		}
+		errCh <- err
 	}()
 	select {
 	case err := <-errCh:

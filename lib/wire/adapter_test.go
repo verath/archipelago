@@ -3,11 +3,12 @@ package wire_test
 import (
 	"bytes"
 	"context"
+	"errors"
+	"fmt"
 	"reflect"
 	"testing"
 	"time"
 
-	"github.com/pkg/errors"
 	"github.com/verath/archipelago/lib/game/model"
 	"github.com/verath/archipelago/lib/wire"
 	"github.com/verath/archipelago/lib/wire/msg"
@@ -17,8 +18,7 @@ import (
 func protoMarshalOrPanic(pb proto.Message) []byte {
 	msg, err := proto.Marshal(pb)
 	if err != nil {
-		errors.Wrap(err, "Could not marshal protobuf message")
-		panic(err)
+		panic(fmt.Errorf("Could not marshal protobuf message: %w", err))
 	}
 	return msg
 }
@@ -26,8 +26,7 @@ func protoMarshalOrPanic(pb proto.Message) []byte {
 func newPBClientAdapterOrFail(tb testing.TB, client wire.Client) *wire.PBClientAdapter {
 	pbClient, err := wire.NewPBClientAdapter(client)
 	if err != nil {
-		errors.Wrap(err, "Error creating NewPBClientAdapter")
-		tb.Fatalf("%+v", err)
+		tb.Fatalf("Error creating NewPBClientAdapter: %v", err)
 	}
 	return pbClient
 }

@@ -2,12 +2,13 @@ package game
 
 import (
 	"context"
+	"errors"
+	"fmt"
 	"math"
 	"math/rand"
 	"sync"
 	"time"
 
-	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"github.com/verath/archipelago/lib/common"
 	"github.com/verath/archipelago/lib/game/ai"
@@ -118,11 +119,11 @@ func (c *Coordinator) awaitRemoteClients(ctx context.Context, minNumClients, max
 			clients = clients[:len(clients)+1]
 			clients[len(clients)-1] = nextClient
 			c.logEntry.Debug("awaitClients: new client")
-		} else if errors.Cause(err) == errNextClientTimeout {
+		} else if errors.Is(err, errNextClientTimeout) {
 			timeoutExpired = true
 			c.logEntry.Debug("awaitClients: timeout")
 		} else {
-			return nil, errors.Wrap(err, "error waiting for next client")
+			return nil, fmt.Errorf("error waiting for next client: %w", err)
 		}
 		// Prune disconnected clients, *then* test exit conditions.
 		clients = removeDisconnected(clients)
@@ -144,7 +145,7 @@ func (c *Coordinator) run(ctx context.Context) error {
 	for {
 		clients, err := c.awaitRemoteClients(ctx, minRemoteClientsPerGame, maxRemoteClientsPerGame)
 		if err != nil {
-			return errors.Wrap(err, "error awaiting remote clients")
+			return fmt.Errorf("error awaiting remote clients: %w", err)
 		}
 
 		// Add a couple of AI clients.
@@ -161,7 +162,7 @@ func (c *Coordinator) run(ctx context.Context) error {
 				aiClient, err = ai.NewClient(c.logEntry.Logger, ai.OpportunisticStrategy())
 			}
 			if err != nil {
-				return errors.Wrap(err, "error creating ai client")
+				return fmt.Errorf("error creating ai client: %w", err)
 			}
 			clients = append(clients, aiClient)
 		}
@@ -172,7 +173,7 @@ func (c *Coordinator) run(ctx context.Context) error {
 			// As we still own the clients here, make sure we stop them
 			// before quiting ourselves.
 			disconnectAll(clients)
-			return errors.Wrap(err, "Error starting game")
+			return fmt.Errorf("Error starting game: %w", err)
 		}
 	}
 }
@@ -184,22 +185,22 @@ func (c *Coordinator) startGame(ctx context.Context, clients []Client) error {
 	numClients := len(clients)
 	game, err := createBasicGame(numClients)
 	if err != nil {
-		return errors.Wrap(err, "Error creating game")
+		return fmt.Errorf("Error creating game: %w", err)
 	}
 	gameLoop, err := newGameLoop(c.logEntry.Logger, game)
 	if err != nil {
-		return errors.Wrap(err, "Error creating gameLoop")
+		return fmt.Errorf("Error creating gameLoop: %w", err)
 	}
 	playerProxies := make([]*playerProxy, numClients)
 	for i, player := range game.Players() {
 		playerProxies[i], err = newPlayerProxy(player, clients[i])
 		if err != nil {
-			return errors.Wrapf(err, "error creating player proxy")
+			return fmt.Errorf("error creating player proxy: %w", err)
 		}
 	}
 	ctrl, err := newController(c.logEntry.Logger, gameLoop, playerProxies)
 	if err != nil {
-		return errors.Wrap(err, "Error creating game controller")
+		return fmt.Errorf("Error creating game controller: %w", err)
 	}
 
 	// Run a "monitoring" goroutine that disconnects all clients if all non-AI
@@ -225,7 +226,7 @@ func (c *Coordinator) startGame(ctx context.Context, clients []Client) error {
 		defer cancel()
 		err := ctrl.run(gameCtx)
 		if err != nil {
-			if errors.Cause(err) == context.Canceled {
+			if errors.Is(err, context.Canceled) {
 				c.logEntry.Debugf("game stopped with ctx error: %v", err)
 			} else {
 				c.logEntry.Errorf("game stopped with error: %+v", err)

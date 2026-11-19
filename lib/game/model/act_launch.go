@@ -1,6 +1,6 @@
 package model
 
-import "github.com/pkg/errors"
+import "errors"
 
 // actionLaunch wraps a PlayerActionLaunch, also providing
 // the PlayerID of the player that created the action.

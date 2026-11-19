@@ -2,11 +2,11 @@ package game
 
 import (
 	"context"
+	"fmt"
 	"sync"
 	"sync/atomic"
 	"time"
 
-	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"github.com/verath/archipelago/lib/common"
 	"github.com/verath/archipelago/lib/game/model"
@@ -110,8 +110,10 @@ func (gl *gameLoop) AddAction(action model.Action) {
 func (gl *gameLoop) Run(ctx context.Context) error {
 	gl.logEntry.Debug("Starting")
 	defer gl.logEntry.Debug("Stopped")
-	err := gl.tickLoop(ctx)
-	return errors.Wrap(err, "error while running tickLoop")
+	if err := gl.tickLoop(ctx); err != nil {
+		return fmt.Errorf("error while running tickLoop: %w", err)
+	}
+	return nil
 }
 
 // setGameOver sets the game over flag to true.
@@ -130,7 +132,7 @@ func (gl *gameLoop) isGameOver() bool {
 func (gl *gameLoop) tickLoop(ctx context.Context) error {
 	// Perform an initial tick as soon as we can.
 	if err := gl.tick(0); err != nil {
-		return errors.Wrap(err, "initial tick error")
+		return fmt.Errorf("initial tick error: %w", err)
 	}
 	// Perform a new tick each tickInterval.
 	ticker := time.NewTicker(gl.tickInterval)
@@ -145,7 +147,7 @@ func (gl *gameLoop) tickLoop(ctx context.Context) error {
 			return ctx.Err()
 		case <-ticker.C:
 			if err := gl.tick(time.Since(lastTick)); err != nil {
-				return errors.Wrap(err, "tick error")
+				return fmt.Errorf("tick error: %w", err)
 			}
 			lastTick = time.Now()
 		}
@@ -159,7 +161,7 @@ func (gl *gameLoop) tick(elapsed time.Duration) error {
 	perTickActions := gl.getPerTickActions(elapsed)
 	actions = append(actions, perTickActions...)
 	if err := gl.applyActions(actions); err != nil {
-		return errors.Wrap(err, "failed aplying actions")
+		return fmt.Errorf("failed aplying actions: %w", err)
 	}
 	return nil
 }
@@ -188,7 +190,7 @@ func (gl *gameLoop) getPerTickActions(elapsed time.Duration) []model.Action {
 func (gl *gameLoop) applyActions(actions []model.Action) error {
 	for _, action := range actions {
 		if err := gl.applyAction(action); err != nil {
-			return errors.Wrap(err, "Error applying action")
+			return fmt.Errorf("Error applying action: %w", err)
 		}
 		if gl.isGameOver() {
 			break
@@ -206,10 +208,10 @@ func (gl *gameLoop) applyAction(action model.Action) error {
 			gl.logEntry.Debugf("Ignoring illegal action error: %v", err)
 			return nil
 		}
-		return errors.Wrapf(err, "Error applying action: %+v (%T)", action, action)
+		return fmt.Errorf("Error applying action: %+v (%T): %w", action, action, err)
 	}
 	if err := gl.handleEvents(events); err != nil {
-		return errors.Wrap(err, "Error handling events")
+		return fmt.Errorf("Error handling events: %w", err)
 	}
 	return nil
 }
@@ -220,7 +222,7 @@ func (gl *gameLoop) applyAction(action model.Action) error {
 func (gl *gameLoop) handleEvents(events []model.Event) error {
 	for _, event := range events {
 		if err := gl.handleEvent(event); err != nil {
-			return errors.Wrapf(err, "Error handling event: %+v (%T)", event, event)
+			return fmt.Errorf("Error handling event: %+v (%T): %w", event, event, err)
 		}
 		// Stop processing events if we just sent a game over event
 		if model.IsGameOverEvent(event) {
@@ -233,6 +235,8 @@ func (gl *gameLoop) handleEvents(events []model.Event) error {
 
 // handleEvent handles a single event by forwarding it to the registered eventHandler.
 func (gl *gameLoop) handleEvent(event model.Event) error {
-	err := gl.eventHandler.handleEvent(event)
-	return errors.Wrap(err, "event handler error while handling event")
+	if err := gl.eventHandler.handleEvent(event); err != nil {
+		return fmt.Errorf("event handler error while handling event: %w", err)
+	}
+	return nil
 }
