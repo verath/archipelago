@@ -1,0 +1,57 @@
+# Fly.io config for the Go backend (WebSocket game server).
+#
+# SINGLE-MACHINE APP. Game state and matchmaking live in memory (lib/game), so
+# it must never run on more than one machine: two machines would each hold
+# their own games and waiting players, splitting players into separate worlds.
+# fly.toml cannot cap the machine count; enforce it out-of-band and re-check
+# after every deploy:
+#   fly scale count 1 --max-per-region 1
+#   fly machine list          # must show exactly one machine
+# auto_start only ever wakes the *existing* stopped/suspended machine, so with
+# a count of 1 the proxy can never bring a second one up.
+#
+# The app name must be globally unique on Fly; change it if it is taken.
+app = "archipelago-backend"
+primary_region = "arn"
+
+# main.go shuts down gracefully on SIGINT/SIGTERM.
+kill_signal = "SIGINT"
+kill_timeout = "10s"
+
+[build]
+  # Uses ./Dockerfile.
+
+# Replace the single machine in place on deploy instead of standing up a second
+# one alongside it (bluegreen/canary would briefly run two). A deploy restarts
+# the process and ends any running games anyway.
+[deploy]
+  strategy = "immediate"
+
+[http_service]
+  internal_port = 8080
+  force_https = true
+  # Idle (no connections) -> suspend: memory is snapshotted and restored in
+  # well under a second on the next request. An open WebSocket counts as a
+  # connection, so a game in progress is never suspended.
+  auto_stop_machines = "suspend"
+  auto_start_machines = true
+  min_machines_running = 0
+
+  # Per-machine ceiling on concurrent WebSocket connections. The single machine
+  # absorbs all load; if exceeded, the proxy queues rather than scaling out
+  # (there is nothing to scale out to).
+  [http_service.concurrency]
+    type = "connections"
+    soft_limit = 200
+    hard_limit = 250
+
+  [[http_service.checks]]
+    method = "GET"
+    path = "/healthcheck"
+    interval = "30s"
+    timeout = "5s"
+    grace_period = "5s"
+
+[[vm]]
+  size = "shared-cpu-1x"
+  memory = "256mb"
