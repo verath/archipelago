@@ -5,7 +5,7 @@ import globals from "globals";
 
 export default [
     {
-        ignores: ["dist/", "dist-e2e/", "node_modules/", "src/wire/proto_bundle.*"],
+        ignores: ["dist/", "dist-e2e/", "playwright-report/", "test-results/", "node_modules/", "src/wire/proto_bundle.*"],
     },
     js.configs.recommended,
     react.configs.flat.recommended,
@@ -36,8 +36,21 @@ export default [
         },
     },
     {
+        // Node, plus browser globals for code passed to page.evaluate.
+        files: ["e2e/**/*.js"],
+        languageOptions: {
+            ecmaVersion: "latest",
+            globals: { ...globals.node, ...globals.browser },
+        },
+        rules: {
+            // Playwright fixtures call use(), which is not a React hook.
+            "react-hooks/rules-of-hooks": "off",
+        },
+    },
+    {
         files: ["*.config.js"],
         languageOptions: {
+            ecmaVersion: "latest",
             globals: { ...globals.node },
         },
     },
