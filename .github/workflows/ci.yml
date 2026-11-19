@@ -55,6 +55,37 @@ jobs:
           path: web/dist
           retention-days: 7
 
+  # End-to-end tests: the real Go backend and frontend builds, driven by
+  # Playwright in headless Chromium (see web/e2e). Not (yet) required by
+  # the deploy jobs.
+  e2e:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: web
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-go@v7
+        with:
+          go-version-file: go.mod
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - run: npm run test:e2e
+      - uses: actions/upload-artifact@v7
+        if: failure()
+        with:
+          name: playwright-report
+          path: |
+            web/playwright-report
+            web/test-results
+          retention-days: 7
+
   # Which halves changed in this push (only used for deploys).
   changes:
     if: github.ref == 'refs/heads/master' && github.event_name != 'pull_request'
