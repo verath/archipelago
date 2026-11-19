@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useRef } from "react";
-import ReactDOM from "react-dom";
+import React, { useState, useEffect, useRef, useCallback, useSyncExternalStore } from "react";
+import { createRoot } from "react-dom/client";
 import EventEmitter from "eventemitter3";
 import * as PIXI from "pixi.js";
 
@@ -78,18 +78,27 @@ export class Archipelago {
          * @private
          */
         this._gameController = null;
+
+        /**
+         * @member {import("react-dom/client").Root | null}
+         * @private
+         */
+        this._reactRoot = null;
     }
 
     init() {
         this._connectToServer();
         // Render our react app into the root element.
         const archipelagoView = React.createElement(ArchipelagoView, {
-            initialModel: this._model,
+            getModel: () => this._model,
             addModelChangeListener: this._addModelChangeListener.bind(this),
             removeModelChangeListener: this._removeModelChangeListener.bind(this),
             dispatch: this._dispatch.bind(this),
         }, null);
-        ReactDOM.render(archipelagoView, this._rootElement);
+        if (this._reactRoot == null) {
+            this._reactRoot = createRoot(this._rootElement);
+        }
+        this._reactRoot.render(archipelagoView);
     }
 
     _addModelChangeListener(listener) {
@@ -184,19 +193,20 @@ export class Archipelago {
 
 /**
  * @param {Object} props Props
- * @param {ArchipelagoModel} props.initialModel
+ * @param {function():ArchipelagoModel} props.getModel
  * @param {any} props.addModelChangeListener
  * @param {any} props.removeModelChangeListener
  * @param {function(UIAction):void} props.dispatch
  */
-const ArchipelagoView = ({ initialModel, addModelChangeListener, removeModelChangeListener, dispatch }) => {
-    // Listen for "model changed" events.
-    const [model, setModel] = useState(initialModel);
-    useEffect(() => {
-        const onModelChange = (model) => { setModel(model); };
-        addModelChangeListener(onModelChange);
-        return () => { removeModelChangeListener(onModelChange); };
-    }, [setModel, addModelChangeListener, removeModelChangeListener]);
+const ArchipelagoView = ({ getModel, addModelChangeListener, removeModelChangeListener, dispatch }) => {
+    // Subscribe to "model changed" events. useSyncExternalStore re-reads the
+    // model after subscribing, so a change made before the (deferred) first
+    // render and subscription, e.g. the WebSocket connecting, is not lost.
+    const subscribe = useCallback((onChange) => {
+        addModelChangeListener(onChange);
+        return () => { removeModelChangeListener(onChange); };
+    }, [addModelChangeListener, removeModelChangeListener]);
+    const model = useSyncExternalStore(subscribe, getModel);
 
     // Load game view resources.
     const resourceHolder = useResourceHolder();
