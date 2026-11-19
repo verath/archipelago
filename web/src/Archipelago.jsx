@@ -9,6 +9,7 @@ import ResourceLoader from "./resource/ResourceLoader";
 import GameController from "./game/controller/GameController";
 import GameModel from "./game/model/GameModel";
 import GameView from "./game/view/GameView";
+import { installTestHook, setTestHookGameView } from "./testHook.js";
 
 
 /**
@@ -87,6 +88,9 @@ export class Archipelago {
     }
 
     init() {
+        if (import.meta.env.MODE === "e2e") {
+            installTestHook(() => this._model);
+        }
         this._connectToServer();
         // Render our react app into the root element.
         const archipelagoView = React.createElement(ArchipelagoView, {
@@ -335,6 +339,10 @@ const GameViewWrapper = ({ gameModel, resourceHolder, dispatch }) => {
             // The renderer is created asynchronously, so the model may already
             // have changed. Sync the view with the current model.
             gameView.onModelChanged();
+            if (import.meta.env.MODE === "e2e") {
+                setTestHookGameView(gameView);
+                cleanup.unshift(() => { setTestHookGameView(null); });
+            }
 
             // Listen and dispatch island click events from GameView.
             let islandClickListener = (islandId) => {

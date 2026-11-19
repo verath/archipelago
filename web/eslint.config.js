@@ -5,7 +5,7 @@ import globals from "globals";
 
 export default [
     {
-        ignores: ["dist/", "node_modules/", "src/wire/proto_bundle.*"],
+        ignores: ["dist/", "dist-e2e/", "node_modules/", "src/wire/proto_bundle.*"],
     },
     js.configs.recommended,
     react.configs.flat.recommended,
