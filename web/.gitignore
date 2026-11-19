@@ -1,4 +1,6 @@
 # Folder holding the "built" frontend
 dist
+# Test build, with the e2e test hook (npm run build:e2e)
+dist-e2e
 
 node_modules
