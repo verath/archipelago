@@ -25,8 +25,8 @@
     "eventemitter3": "^4.0.7",
     "pixi.js": "^4.8.9",
     "protobufjs": "^7.6.6",
-    "react": "^16.14.0",
-    "react-dom": "^16.14.0"
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.5",
