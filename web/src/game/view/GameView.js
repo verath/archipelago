@@ -1,6 +1,5 @@
 import EventEmitter from "eventemitter3";
-import * as PIXI from "pixi.js";
-import { WebGLRenderer, CanvasRenderer } from "pixi.js/lib/core";
+import { Container } from "pixi.js";
 
 import ResourceHolder from "../../resource/ResourceHolder.js";
 import AirplaneModel from "../model/AirplaneModel.js";
@@ -11,6 +10,8 @@ import AirplaneSprite from "./AirplaneSprite.js";
 import IslandSprite from "./IslandSprite.js";
 import FogOfWarSprite from "./FogOfWarSprite.js";
 
+/** @typedef {import("pixi.js").Renderer} Renderer */
+
 /** @type {symbol}*/
 const EVENT_ISLAND_CLICKED = Symbol("EVENT_ISLAND_CLICKED");
 
@@ -20,7 +21,7 @@ export const TILE_HEIGHT = 128;
 export default class GameView {
     /**
      * @param {ResourceHolder} resourceHolder
-     * @param {WebGLRenderer|CanvasRenderer} renderer
+     * @param {Renderer} renderer
      * @param {GameModel} gameModel
      */
     constructor(resourceHolder, renderer, gameModel) {
@@ -32,7 +33,7 @@ export default class GameView {
         this._resourceHolder = resourceHolder;
 
         /**
-         * @member {WebGLRenderer|CanvasRenderer}
+         * @member {Renderer}
          * @private
          */
         this._renderer = renderer;
@@ -57,31 +58,31 @@ export default class GameView {
 
         /**
          * The stage is the PIXI container that we render.
-         * @type {PIXI.Container}
+         * @type {Container}
          * @private
          */
-        this._stage = new PIXI.Container();
+        this._stage = new Container();
 
         /**
          * The "layer" holding island sprites.
-         * @type {PIXI.Container}
+         * @type {Container}
          * @private
          */
-        this._layerIslands = new PIXI.Container();
+        this._layerIslands = new Container();
 
         /**
          * The "layer" holding airplane sprites
-         * @type {PIXI.Container}
+         * @type {Container}
          * @private
          */
-        this._layerAirplanes = new PIXI.Container();
+        this._layerAirplanes = new Container();
 
         /**
          * The "layer" holding fog of war sprites
-         * @type {PIXI.Container}
+         * @type {Container}
          * @private
          */
-        this._layerFogOfWar = new PIXI.Container();
+        this._layerFogOfWar = new Container();
 
         /**
          * @member EventEmitter
@@ -219,7 +220,7 @@ export default class GameView {
 
     resize() {
         let pixelRatio = (window.devicePixelRatio || 1);
-        let canvas = this._renderer.view;
+        let canvas = this._renderer.canvas;
 
         // Center crop(?) the canvas, keep the aspect ratio
         let width, height;
@@ -233,13 +234,11 @@ export default class GameView {
             width = height * (this._stageHeight / this._stageWidth);
         }
 
-        canvas.width = width * pixelRatio;
-        canvas.height = height * pixelRatio;
+        // Resize the renderer (and the canvas) to the device pixel size, but
+        // display the canvas at its CSS pixel size.
+        this._renderer.resize(width * pixelRatio, height * pixelRatio);
         canvas.style.width = width + "px";
         canvas.style.height = height + "px";
-
-        // Notify pixi that the canvas has been resized
-        this._renderer.resize(canvas.width, canvas.height);
 
         // Rescale our stage
         this._stage.scale.x = (width * pixelRatio) / this._stageWidth;

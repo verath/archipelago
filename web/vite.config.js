@@ -1,11 +1,6 @@
 import { defineConfig } from "vite";
 
 export default defineConfig({
-    // TODO(phase3): remove with Pixi 8 (Pixi 4 and its CommonJS deps reference
-    // the Node `global` object).
-    define: {
-        global: "globalThis",
-    },
     build: {
         outDir: "dist",
         emptyOutDir: true,

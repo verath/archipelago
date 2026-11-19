@@ -1,11 +1,11 @@
 export default class ResourceHolder {
 
     /**
-     * @param {Map<string, PIXI.Texture>} textures
+     * @param {Map<string, import("pixi.js").Texture>} textures
      */
     constructor(textures) {
         /**
-         * @type {Map<string, PIXI.Texture>}
+         * @type {Map<string, import("pixi.js").Texture>}
          * @private
          */
         this._textures = textures;
@@ -13,7 +13,7 @@ export default class ResourceHolder {
 
     /**
      * @param {string} textureId
-     * @returns {PIXI.Texture}
+     * @returns {import("pixi.js").Texture}
      */
     getTexture(textureId) {
         if (!this._textures.has(textureId)) {
