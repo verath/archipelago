@@ -29,10 +29,10 @@
     "deploy": "npx firebase-tools deploy --non-interactive"
   },
   "dependencies": {
-    "eventemitter3": "^4.0.0",
-    "pixi.js": "^4.5.4",
+    "eventemitter3": "^4.0.7",
+    "pixi.js": "^4.8.9",
     "protobufjs": "~6.9.0",
-    "react": "^16.13.1",
-    "react-dom": "^16.13.1"
+    "react": "^16.14.0",
+    "react-dom": "^16.14.0"
   }
 }
