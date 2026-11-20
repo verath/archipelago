@@ -70,6 +70,14 @@ func (ca *PBClientAdapter) Disconnect() {
 	ca.client.Disconnect()
 }
 
+// PeerClosed reports whether the underlying client disconnected because the
+// peer closed the connection on purpose, if the client can tell (see
+// network.Client.PeerClosed).
+func (ca *PBClientAdapter) PeerClosed() bool {
+	pc, ok := ca.client.(interface{ PeerClosed() bool })
+	return ok && pc.PeerClosed()
+}
+
 // DisconnectCh returns a channel that is closed when the underlying
 // client is disconnected.
 func (ca *PBClientAdapter) DisconnectCh() <-chan struct{} {

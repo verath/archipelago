@@ -19,6 +19,14 @@ export interface GameResultError {
 export type GameResult = GameResultGameOver | GameResultError;
 
 /**
+ * Delay before the first retry to resume after the connection broke [ms];
+ * doubled after each failed retry, up to RESUME_MAX_RETRY_DELAY.
+ */
+const RESUME_FIRST_RETRY_DELAY = 250;
+
+const RESUME_MAX_RETRY_DELAY = 2000;
+
+/**
  * GameController
  */
 export default class GameController {
@@ -42,6 +50,23 @@ export default class GameController {
      * The seq of our next launch, see ActionGameLaunch.seq.
      */
     private _nextLaunchSeq = 1;
+
+    /**
+     * The token to resume the game with if the connection breaks, null if
+     * the server gave none (EventGameStart.resume_token).
+     */
+    private _resumeToken: string | null = null;
+
+    /**
+     * How long after the connection broke we may resume [ms].
+     */
+    private _resumeTimeout = 0;
+
+    /**
+     * Until when we try to resume [performance.now() ms], null while the
+     * game is running on a connection.
+     */
+    private _resumeDeadline: number | null = null;
 
     constructor(connection: Connection, gameModel: GameModel) {
         this._connection = connection;
@@ -95,6 +120,37 @@ export default class GameController {
         // Missing scalars are their defaults, as in a decoded protobuf message.
         this._gameModel.myPlayerId = evtStart.playerId ?? null;
         this._gameModel.serverTickInterval = evtStart.tickInterval ?? 0;
+        this._resumeToken = evtStart.resumeToken || null;
+        this._resumeTimeout = evtStart.resumeTimeout ?? 0;
+        // The server sends the game start again when we resumed.
+        this._resumeDeadline = null;
+    }
+
+    /**
+     * Tries to resume the game on a new connection after the connection
+     * broke, retrying until the resume timeout (counted from when it first
+     * broke). Resolves to true once a new connection is open; the server
+     * then sends the game start and a snapshot.
+     */
+    private async _resume(): Promise<boolean> {
+        if (this._resumeToken === null) {
+            return false;
+        }
+        if (this._resumeDeadline === null) {
+            this._resumeDeadline = performance.now() + this._resumeTimeout;
+        }
+        let retryDelay = RESUME_FIRST_RETRY_DELAY;
+        while (performance.now() < this._resumeDeadline) {
+            if (await this._connection.resume(this._resumeToken)) {
+                // Launches not processed by now may have been lost.
+                this._gameModel.dropLocalLaunches();
+                return true;
+            }
+            const wait = Math.min(retryDelay, this._resumeDeadline - performance.now());
+            await new Promise(resolve => setTimeout(resolve, Math.max(wait, 0)));
+            retryDelay = Math.min(retryDelay * 2, RESUME_MAX_RETRY_DELAY);
+        }
+        return false;
     }
 
     private _onSnapshotEvent(snapshot: wire.msg.EventGameSnapshot.$Properties): void {
@@ -178,7 +234,11 @@ export default class GameController {
                     //
                 }
                 if (!this._connection.hasNext()) {
-                    // TODO: reason: "ERROR".
+                    // The connection broke. Resume the game on a new one if
+                    // we can, otherwise the game is over for us.
+                    if (await this._resume()) {
+                        continue;
+                    }
                     gameResult = { reason: "GAME_OVER", winnerId: "" };
                     break;
                 }

@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/gorilla/websocket"
+	"github.com/verath/archipelago/lib/network"
 )
 
 // wsVersion is the version the tests connect with by default.
@@ -225,6 +226,34 @@ func TestReadMessage_RejectsMessageInflatingPastLimit(t *testing.T) {
 	_, err := server.ReadMessage(ctxWithTimeout(t))
 	if !errors.Is(err, errMessageTooBig) {
 		t.Fatalf("ReadMessage err = %v, want %v", err, errMessageTooBig)
+	}
+}
+
+func TestReadMessage_PeerClosed(t *testing.T) {
+	url, connCh := startServer(t, UpgraderOptions{})
+	client, _ := dial(t, url, true)
+	server := nextConn(t, connCh)
+
+	// A close frame, as a browser sends when the tab is closed.
+	msg := websocket.FormatCloseMessage(websocket.CloseGoingAway, "")
+	if err := client.WriteControl(websocket.CloseMessage, msg, time.Now().Add(time.Second)); err != nil {
+		t.Fatalf("WriteControl: %v", err)
+	}
+	if _, err := server.ReadMessage(ctxWithTimeout(t)); !errors.Is(err, network.ErrPeerClosed) {
+		t.Errorf("ReadMessage err = %v, want ErrPeerClosed", err)
+	}
+}
+
+func TestReadMessage_ConnectionBroken_NotPeerClosed(t *testing.T) {
+	url, connCh := startServer(t, UpgraderOptions{})
+	client, _ := dial(t, url, true)
+	server := nextConn(t, connCh)
+
+	// No close frame, like a network that went away.
+	client.NetConn().Close()
+	_, err := server.ReadMessage(ctxWithTimeout(t))
+	if err == nil || errors.Is(err, network.ErrPeerClosed) {
+		t.Errorf("ReadMessage err = %v, want an error that is not ErrPeerClosed", err)
 	}
 }
 

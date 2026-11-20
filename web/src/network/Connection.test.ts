@@ -12,11 +12,16 @@ type FakeHandler<E> = ((event: E) => void) | null;
  */
 class FakeWebSocket {
     static instances: FakeWebSocket[] = [];
+    static readonly CONNECTING = 0;
+    static readonly OPEN = 1;
+    static readonly CLOSING = 2;
+    static readonly CLOSED = 3;
 
     readonly url: string;
     binaryType: BinaryType = "blob";
     readonly sent: Uint8Array[] = [];
     closed = false;
+    readyState = FakeWebSocket.CONNECTING;
     onopen: FakeHandler<object> = null;
     onmessage: FakeHandler<{ data: ArrayBuffer }> = null;
     onclose: FakeHandler<object> = null;
@@ -27,13 +32,18 @@ class FakeWebSocket {
         FakeWebSocket.instances.push(this);
     }
 
-    send(data: Uint8Array): void { this.sent.push(data); }
-    close(): void { this.closed = true; }
+    send(data: Uint8Array): void {
+        if (this.readyState === FakeWebSocket.CONNECTING) {
+            throw new Error("InvalidStateError");
+        }
+        this.sent.push(data);
+    }
+    close(): void { this.closed = true; this.readyState = FakeWebSocket.CLOSED; }
 
     // Helpers for tests to play the server / network.
-    open(): void { this.onopen?.({}); }
+    open(): void { this.readyState = FakeWebSocket.OPEN; this.onopen?.({}); }
     receive(data: ArrayBuffer): void { this.onmessage?.({ data }); }
-    drop(): void { this.onclose?.({}); }
+    drop(): void { this.readyState = FakeWebSocket.CLOSED; this.onclose?.({}); }
     fail(): void { this.onerror?.({}); }
 }
 
@@ -252,10 +262,63 @@ describe("Connection.sendAction", () => {
         expect(decoded.actionGameLaunch?.toId).toBe("b");
     });
 
+    it("sends nothing while the socket is still connecting", () => {
+        const conn = new Connection("ws://x");
+        conn.connect();
+        conn.sendAction(wire.msg.ActionEnvelope.create({ actionGameLeave: {} }));
+        expect(lastSocket().sent).toHaveLength(0);
+        expect(console.warn).toHaveBeenCalled();
+    });
+
     it("warns and sends nothing when not connected", () => {
         const conn = new Connection("ws://x");
         conn.sendAction(new wire.msg.ActionEnvelope());
         expect(console.warn).toHaveBeenCalled();
         expect(FakeWebSocket.instances).toHaveLength(0);
+    });
+});
+
+describe("Connection.resume", () => {
+    it("opens a new socket with the resume token and resolves true when it opens", async () => {
+        const { conn, ws } = connected("ws://example/app/ws?v=5");
+        const reconnecting = vi.fn();
+        conn.addReconnectingListener(reconnecting);
+        ws.drop();
+
+        const resumed = conn.resume("tok/en");
+        expect(reconnecting).toHaveBeenCalledTimes(1);
+        const url = new URL(lastSocket().url);
+        expect(url.searchParams.get("v")).toBe("5");
+        expect(url.searchParams.get("resume")).toBe("tok/en");
+        expect(lastSocket()).not.toBe(ws);
+        lastSocket().open();
+        await expect(resumed).resolves.toBe(true);
+    });
+
+    it("resolves false when the new socket closes before opening", async () => {
+        const { conn, ws } = connected();
+        ws.drop();
+        const resumed = conn.resume("t");
+        lastSocket().fail();
+        lastSocket().drop();
+        await expect(resumed).resolves.toBe(false);
+    });
+
+    it("ignores the old socket", async () => {
+        const { conn, ws } = connected();
+        const resumed = conn.resume("t");
+        expect(ws.closed).toBe(true);
+        // A late close of the old socket doesn't fail the resume.
+        ws.onclose?.({});
+        lastSocket().open();
+        await expect(resumed).resolves.toBe(true);
+    });
+
+    it("keeps events received before", async () => {
+        const { conn, ws } = connected();
+        ws.receive(encodeEvent("eventGameOver", { winnerId: "w" }));
+        ws.drop();
+        conn.resume("t");
+        expect(conn.hasNext()).toBe(true);
     });
 });

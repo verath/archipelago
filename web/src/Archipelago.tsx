@@ -23,7 +23,10 @@ export interface UIActionGameClickIsland {
 
 export type UIAction = UIActionGameStart | UIActionGameClickIsland;
 
-export type ConnectionState = "CONNECTING" | "CONNECTED" | "DISCONNECTED";
+/**
+ * RECONNECTING is while trying to resume a game after the connection broke.
+ */
+export type ConnectionState = "CONNECTING" | "CONNECTED" | "RECONNECTING" | "DISCONNECTED";
 
 export interface ArchipelagoModel {
     connectionState: ConnectionState;
@@ -112,7 +115,14 @@ export class Archipelago {
 
     private _connectToServer(): void {
         this._connection.addDisconnectListener(() => {
-            this._setModel({ ...this._model, connectionState: "DISCONNECTED" });
+            // While reconnecting, a failed attempt is followed by another
+            // one, until the game controller gives up (see _runGame).
+            if (this._model.connectionState !== "RECONNECTING") {
+                this._setModel({ ...this._model, connectionState: "DISCONNECTED" });
+            }
+        });
+        this._connection.addReconnectingListener(() => {
+            this._setModel({ ...this._model, connectionState: "RECONNECTING" });
         });
         this._connection.addConnectedListener(() => {
             this._setModel({ ...this._model, connectionState: "CONNECTED" });
@@ -156,7 +166,9 @@ export class Archipelago {
 
         this._gameController = new GameController(this._connection, gameModel);
         gameResult = await this._gameController.run();
-        this._setModel({ ...this._model, gameResult });
+        // If the game ended while reconnecting, we gave up reconnecting.
+        const connectionState = (this._model.connectionState === "RECONNECTING") ? "DISCONNECTED" : this._model.connectionState;
+        this._setModel({ ...this._model, gameResult, connectionState });
     }
 }
 
@@ -197,6 +209,7 @@ export const ArchipelagoView = ({ getModel, addModelChangeListener, removeModelC
         return (<GameScreen
             gameModel={model.gameModel}
             gameResult={model.gameResult}
+            reconnecting={model.connectionState === "RECONNECTING"}
             resourceHolder={resourceHolder}
             dispatch={dispatch}
         />);
@@ -252,12 +265,14 @@ export const LobbyScreen = ({ connectionState }: LobbyScreenProps): React.JSX.El
 interface GameScreenProps {
     gameModel: GameModel;
     gameResult: GameResult | null;
+    reconnecting: boolean;
     resourceHolder: ResourceHolder;
     dispatch: (action: UIAction) => void;
 }
 
-const GameScreen = ({ gameModel, gameResult, resourceHolder, dispatch }: GameScreenProps): React.JSX.Element => (
+const GameScreen = ({ gameModel, gameResult, reconnecting, resourceHolder, dispatch }: GameScreenProps): React.JSX.Element => (
     <>
+        {(reconnecting && gameResult == null) ? <ReconnectingView /> : null}
         <GameResultView
             gameModel={gameModel}
             gameResult={gameResult} />
@@ -367,6 +382,18 @@ export interface GameResultViewProps {
     gameModel: GameModel;
     gameResult: GameResult | null;
 }
+
+/**
+ * Shown over the game while trying to resume it on a new connection.
+ */
+export const ReconnectingView = (): React.JSX.Element => (
+    <div className="reconnecting-wrap">
+        <span className="progressText">Reconnecting</span>
+        <span className="progress-text-dot progress-text-dot1">.</span>
+        <span className="progress-text-dot progress-text-dot2">.</span>
+        <span className="progress-text-dot progress-text-dot3">.</span>
+    </div>
+);
 
 export const GameResultView = ({ gameModel, gameResult }: GameResultViewProps): React.JSX.Element | null => {
     if (gameResult == null) {

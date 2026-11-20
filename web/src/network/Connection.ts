@@ -4,6 +4,7 @@ import { wire } from "../wire/proto_bundle.js";
 const EVENT_SERVER_EVENT = Symbol("EVENT_SERVER_EVENT");
 const EVENT_CONNECTED = Symbol("EVENT_CONNECTED");
 const EVENT_DISCONNECT = Symbol("EVENT_DISCONNECT");
+const EVENT_RECONNECTING = Symbol("EVENT_RECONNECTING");
 
 /**
  * An event received from the server, as decoded from the wire. Switching on
@@ -23,6 +24,7 @@ export default class Connection {
         [EVENT_SERVER_EVENT]: [];
         [EVENT_CONNECTED]: [];
         [EVENT_DISCONNECT]: [];
+        [EVENT_RECONNECTING]: [];
     }>;
 
     private readonly _serverEvents: ServerEvent[];
@@ -88,12 +90,54 @@ export default class Connection {
         this._eventEmitter.off(EVENT_CONNECTED, listener, context);
     }
 
+    addReconnectingListener(listener: ConnectionListener, context: unknown = null): void {
+        this._eventEmitter.on(EVENT_RECONNECTING, listener, context);
+    }
+
+    removeReconnectingListener(listener: ConnectionListener, context: unknown = null): void {
+        this._eventEmitter.off(EVENT_RECONNECTING, listener, context);
+    }
+
     connect(): void {
         if (this._conn !== null) {
             console.warn("connect called when Connection already connected");
             return;
         }
-        this._conn = new WebSocket(this._url);
+        this._open(this._url);
+    }
+
+    /**
+     * Opens a new connection that resumes the game with the given resume
+     * token (EventGameStart.resume_token), closing the current one if any.
+     * Events already received stay queued. Resolves to true once the new
+     * connection is open, false if it closed (or failed) before that, e.g.
+     * because the network is still down or the game can't be resumed.
+     */
+    resume(resumeToken: string): Promise<boolean> {
+        if (this._conn !== null) {
+            this.disconnect();
+        }
+        // The url is absolute (ws:// or wss://).
+        const url = new URL(this._url);
+        url.searchParams.set("resume", resumeToken);
+        this._eventEmitter.emit(EVENT_RECONNECTING);
+        // Only the new socket emits these: disconnect() unhooked the old one.
+        const opened = new Promise<boolean>(resolve => {
+            const onConnected = () => { done(); resolve(true); };
+            const onDisconnect = () => { done(); resolve(false); };
+            const done = () => {
+                this._eventEmitter.off(EVENT_CONNECTED, onConnected);
+                this._eventEmitter.off(EVENT_DISCONNECT, onDisconnect);
+            };
+            this._eventEmitter.on(EVENT_CONNECTED, onConnected);
+            this._eventEmitter.on(EVENT_DISCONNECT, onDisconnect);
+        });
+        this._open(url.toString());
+        return opened;
+    }
+
+    private _open(url: string): void {
+        this._conn = new WebSocket(url);
         this._conn.binaryType = "arraybuffer";
         this._conn.onmessage = this._onWSMessage.bind(this);
         this._conn.onclose = this._onWSClose.bind(this);
@@ -156,7 +200,8 @@ export default class Connection {
     }
 
     sendAction(actionEnvelope: wire.msg.ActionEnvelope): void {
-        if (this._conn === null) {
+        if (this._conn === null || this._conn.readyState !== WebSocket.OPEN) {
+            // E.g. while reconnecting. send() would throw while connecting.
             console.warn("sendAction called when Connection was not connected");
             return;
         }
