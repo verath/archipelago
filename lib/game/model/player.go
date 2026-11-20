@@ -26,6 +26,9 @@ type Player struct {
 	// fogOfWar is a set of coordinates for tiles where the player has Fog of
 	// War (limited) vision.
 	fogOfWar map[Coordinate]struct{}
+	// lastLaunchSeq is the highest PlayerActionLaunch.Seq processed for the
+	// player.
+	lastLaunchSeq uint32
 }
 
 // NewPlayer creates a new Player with a new generated ID.
@@ -78,6 +81,17 @@ func (p *Player) SetFogOfWar(fogOfWar map[Coordinate]struct{}) {
 	p.fogOfWar = fogOfWar
 }
 
+// LastLaunchSeq returns the highest PlayerActionLaunch.Seq processed for the
+// player, whether the launch succeeded or not. 0 if none.
+func (p *Player) LastLaunchSeq() uint32 {
+	return p.lastLaunchSeq
+}
+
+// SetLastLaunchSeq sets the highest PlayerActionLaunch.Seq processed.
+func (p *Player) SetLastLaunchSeq(seq uint32) {
+	p.lastLaunchSeq = seq
+}
+
 // Equals compares two players for equality. Equality is determined
 // by the ID of each player. Always returns false if other is nil.
 func (p *Player) Equals(other *Player) bool {
@@ -91,8 +105,9 @@ func (p *Player) Copy() *Player {
 		fogOfWar[c] = v
 	}
 	return &Player{
-		id:       p.id,
-		state:    p.state,
-		fogOfWar: fogOfWar,
+		id:            p.id,
+		state:         p.state,
+		fogOfWar:      fogOfWar,
+		lastLaunchSeq: p.lastLaunchSeq,
 	}
 }

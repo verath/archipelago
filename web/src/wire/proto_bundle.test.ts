@@ -49,6 +49,8 @@ const game = {
             position: { x: 2.5, y: 3.25 },
             direction: -1.5,
             speed: 0.25,
+            destinationId: "i1",
+            launchSeq: 7,
         },
     ],
 } satisfies wire.msg.Game.$Properties;
@@ -63,8 +65,8 @@ describe("model messages", () => {
     });
 
     it("Player", () => {
-        expect(roundTrip(msg.Player, { id: "p", state: msg.PlayerState.DEAD }))
-            .toEqual({ id: "p", state: msg.PlayerState.DEAD });
+        const player = { id: "p", state: msg.PlayerState.DEAD, lastLaunchSeq: 3 };
+        expect(roundTrip(msg.Player, player)).toEqual(player);
     });
 
     it("Army", () => {
@@ -111,6 +113,53 @@ describe("EventEnvelope", () => {
         expect(msg.Game.toObject(decodedGame, OPTS)).toEqual(expected(msg.Game, game));
     });
 
+    it("carries EventGameSnapshot (v5)", () => {
+        const decoded = msg.EventEnvelope.decode(msg.EventEnvelope.encode({
+            eventGameSnapshot: { seq: 1, gameTime: 1234, game },
+        }).finish());
+        expect(decoded.event).toBe("eventGameSnapshot");
+        expect(decoded.eventGameSnapshot?.seq).toBe(1);
+        expect(decoded.eventGameSnapshot?.gameTime).toBe(1234);
+        const decodedGame = decoded.eventGameSnapshot?.game as wire.msg.Game;
+        expect(msg.Game.toObject(decodedGame, OPTS)).toEqual(expected(msg.Game, game));
+    });
+
+    it("carries EventGameDelta (v5)", () => {
+        const delta = {
+            seq: 2,
+            gameTime: 1567,
+            players: [{ id: "p1", state: msg.PlayerState.ALIVE, lastLaunchSeq: 8 }],
+            islands: [{ id: "i1", army: { ownerId: "neutral", strength: 0 } }],
+            airplanesAdded: game.airplanes,
+            airplanesUpdated: [{ id: "a0", army: { ownerId: "p3", strength: -1 } }],
+            airplanesRemoved: ["a9"],
+        } satisfies wire.msg.EventGameDelta.$Properties;
+        const decoded = msg.EventEnvelope.decode(msg.EventEnvelope.encode({ eventGameDelta: delta }).finish());
+        expect(decoded.event).toBe("eventGameDelta");
+        const decodedDelta = decoded.eventGameDelta as wire.msg.EventGameDelta;
+        expect(msg.EventGameDelta.toObject(decodedDelta, OPTS)).toEqual(expected(msg.EventGameDelta, delta));
+    });
+
+    it("decodes the bytes the server sends for a delta (v5)", () => {
+        // From the Go encoder: EventEnvelope{event_game_delta(5){seq=2,
+        // game_time=300, islands=[{id="i", army={owner_id="o"}}],
+        // airplanes_removed=["a"]}}. Strength 0 is not on the wire.
+        const bytes = Uint8Array.from([
+            0x2a, 0x12, 0x08, 0x02, 0x10, 0xac, 0x02, 0x22, 0x08, 0x0a, 0x01, 0x69,
+            0x12, 0x03, 0x0a, 0x01, 0x6f, 0x3a, 0x01, 0x61,
+        ]);
+        const decoded = msg.EventEnvelope.decode(bytes);
+        expect(decoded.event).toBe("eventGameDelta");
+        const delta = decoded.eventGameDelta!;
+        expect(delta.seq).toBe(2);
+        expect(delta.gameTime).toBe(300);
+        expect(delta.islands?.[0]?.id).toBe("i");
+        expect(delta.islands?.[0]?.army?.ownerId).toBe("o");
+        expect(delta.islands?.[0]?.army?.strength).toBe(0);
+        expect(delta.airplanesRemoved).toEqual(["a"]);
+        expect(delta.airplanesAdded).toEqual([]);
+    });
+
     it("carries EventGameOver", () => {
         const decoded = msg.EventEnvelope.decode(msg.EventEnvelope.encode({
             eventGameOver: { winnerId: "p2" },
@@ -150,6 +199,14 @@ describe("ActionEnvelope", () => {
             actionGameLaunch: { fromId: "a", toId: "b" },
         }).finish();
         expect(Array.from(bytes)).toEqual([0x12, 0x06, 0x0a, 0x01, 0x61, 0x12, 0x01, 0x62]);
+    });
+
+    it("encodes ActionGameLaunch with a seq (v5) to the bytes the server expects", () => {
+        // ActionEnvelope{action_game_launch(2){from_id(1)="a", to_id(2)="b", seq(3)=3}}
+        const bytes = msg.ActionEnvelope.encode({
+            actionGameLaunch: { fromId: "a", toId: "b", seq: 3 },
+        }).finish();
+        expect(Array.from(bytes)).toEqual([0x12, 0x08, 0x0a, 0x01, 0x61, 0x12, 0x01, 0x62, 0x18, 0x03]);
     });
 
     it("carries ActionGameLeave", () => {

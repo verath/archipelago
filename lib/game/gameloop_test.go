@@ -97,3 +97,39 @@ func TestGameLoop_GameOverEvent(t *testing.T) {
 		t.Fatalf("expected no error, got: %v", err)
 	}
 }
+
+// Tests that the game time, the sum of the ticks' time steps, is in whole
+// milliseconds and keeps up with the wall clock.
+func TestGameLoop_TickStepsSumToWholeMilliseconds(t *testing.T) {
+	game := &model.Game{}
+	gl, err := newGameLoop(testutil.DiscardLogger, game)
+	if err != nil {
+		t.Fatalf("expected no error, got: %v", err)
+	}
+	gl.tickInterval = 3*time.Millisecond + 300*time.Microsecond
+	var steps []time.Duration
+	// Called on the game loop goroutine; read after Run returned.
+	gl.perTickActionsFunc = func(elapsed time.Duration) []model.Action {
+		steps = append(steps, elapsed)
+		return nil
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), 100*time.Millisecond)
+	defer cancel()
+	start := time.Now()
+	gl.Run(ctx)
+	wall := time.Since(start)
+
+	if len(steps) < 5 {
+		t.Fatalf("only %d ticks", len(steps))
+	}
+	var gameTime time.Duration
+	for _, step := range steps {
+		gameTime += step
+		if gameTime%time.Millisecond != 0 {
+			t.Fatalf("game time %v after steps %v is not whole milliseconds", gameTime, steps)
+		}
+	}
+	if gameTime > wall || gameTime < wall-gl.tickInterval-10*time.Millisecond {
+		t.Errorf("game time %v, want close to the wall clock %v", gameTime, wall)
+	}
+}
