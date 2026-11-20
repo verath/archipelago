@@ -2,12 +2,14 @@ import { describe, it, expect, vi } from "vitest";
 import GameModel from "./GameModel.ts";
 import { PLAYER_COLORS, PLAYER_COLOR_SELF, PLAYER_COLOR_NEUTRAL } from "./PlayerColors.ts";
 import { wire } from "../../wire/proto_bundle.js";
-import { NEUTRAL_ID, makeGame, makeIsland, makeAirplane, makePlayer } from "../../test/fixtures.js";
+import {
+    NEUTRAL_ID, defined, makeGame, makeIsland, makeAirplane, makePlayer, type GameOptions,
+} from "../../test/fixtures.ts";
 
 const { PlayerState } = wire.msg;
 
 /** A 5x5 game where "me" owns the island in the middle. */
-function newGame(overrides = {}) {
+function newGame(overrides: GameOptions = {}): GameModel {
     const model = new GameModel();
     model.myPlayerId = "me";
     model.update(makeGame({
@@ -22,7 +24,7 @@ function newGame(overrides = {}) {
     return model;
 }
 
-const countClear = (model) => model.myFogOfWar.filter(inFog => !inFog).length;
+const countClear = (model: GameModel): number => model.myFogOfWar.filter(inFog => !inFog).length;
 
 describe("GameModel.update", () => {
     it("starts empty", () => {
@@ -45,16 +47,16 @@ describe("GameModel.update", () => {
         expect(model.playerById("me")).not.toBeNull();
         expect(model.islands.map(i => i.id)).toEqual(["mine", "theirs", "free"]);
         expect(model.airplanes.map(a => a.id)).toEqual(["a1"]);
-        expect(model.airplaneById("a1").strength).toBe(4);
+        expect(model.airplaneById("a1")?.strength).toBe(4);
     });
 
     it("resolves island owners to players or the neutral player", () => {
         const model = newGame();
-        expect(model.islandById("mine").owner).toBe(model.playerById("me"));
-        expect(model.islandById("mine").owner.isSelf()).toBe(true);
-        expect(model.islandById("theirs").owner.isEnemy()).toBe(true);
-        expect(model.islandById("free").owner).toBe(model.playerNeutral);
-        expect(model.islandById("free").owner.isNeutral()).toBe(true);
+        expect(model.islandById("mine")?.owner).toBe(model.playerById("me"));
+        expect(model.islandById("mine")?.owner?.isSelf()).toBe(true);
+        expect(model.islandById("theirs")?.owner?.isEnemy()).toBe(true);
+        expect(model.islandById("free")?.owner).toBe(model.playerNeutral);
+        expect(model.islandById("free")?.owner?.isNeutral()).toBe(true);
     });
 
     it("assigns player colors by index, with self and neutral overriding", () => {
@@ -63,9 +65,9 @@ describe("GameModel.update", () => {
         model.update(makeGame({
             players: [makePlayer("e0"), makePlayer("me"), makePlayer("e2")],
         }));
-        expect(model.playerById("e0").color).toBe(PLAYER_COLORS[0]);
-        expect(model.playerById("e2").color).toBe(PLAYER_COLORS[2]);
-        expect(model.playerById("me").color).toBe(PLAYER_COLOR_SELF);
+        expect(model.playerById("e0")?.color).toBe(PLAYER_COLORS[0]);
+        expect(model.playerById("e2")?.color).toBe(PLAYER_COLORS[2]);
+        expect(model.playerById("me")?.color).toBe(PLAYER_COLOR_SELF);
         expect(model.playerNeutral.color).toBe(PLAYER_COLOR_NEUTRAL);
     });
 
@@ -80,13 +82,13 @@ describe("GameModel.update", () => {
                 makePlayer("d", PlayerState.LEFT_GAME),
             ],
         }));
-        expect(["a", "b", "c", "d"].map(id => model.playerById(id).state))
+        expect(["a", "b", "c", "d"].map(id => model.playerById(id)?.state))
             .toEqual(["ALIVE", "PENDING_REVIVAL", "DEAD", "LEFT_GAME"]);
     });
 
     it("updates island ownership and strength in place on later ticks", () => {
         const model = newGame();
-        const island = model.islandById("free");
+        const island = defined(model.islandById("free"));
         const islandListener = vi.fn();
         island.addChangeListener(islandListener);
 
@@ -102,7 +104,7 @@ describe("GameModel.update", () => {
         expect(model.islandById("free")).toBe(island);
         expect(island.owner).toBe(model.playerById("me"));
         expect(island.strength).toBe(2);
-        expect(model.islandById("mine").strength).toBe(11);
+        expect(model.islandById("mine")?.strength).toBe(11);
         expect(islandListener).toHaveBeenCalledTimes(1);
     });
 
@@ -191,7 +193,7 @@ describe("GameModel fog of war", () => {
     });
 
     it("gives a dead player full vision and a pending-revival player none", () => {
-        const players = (state) => [makePlayer("me", state), makePlayer("enemy")];
+        const players = (state: wire.msg.PlayerState): wire.msg.Player.$Properties[] => [makePlayer("me", state), makePlayer("enemy")];
         const model = newGame();
         expect(countClear(model)).toBe(9);
 
@@ -226,10 +228,10 @@ describe("GameModel.launchAirplane", () => {
         const model = newGame();
         const listener = vi.fn();
         model.addChangeListener(listener);
-        const origin = model.islandById("mine");
+        const origin = defined(model.islandById("mine"));
         origin.strength = 11;
 
-        model.launchAirplane(origin, model.islandById("theirs"));
+        model.launchAirplane(origin, defined(model.islandById("theirs")));
 
         expect(origin.strength).toBe(6);
         expect(model.airplanes).toHaveLength(1);
@@ -245,7 +247,7 @@ describe("GameModel.launchAirplane", () => {
 
     it("replaces the local airplane when the server reports the real one", () => {
         const model = newGame();
-        model.launchAirplane(model.islandById("mine"), model.islandById("theirs"));
+        model.launchAirplane(defined(model.islandById("mine")), defined(model.islandById("theirs")));
         expect(model.airplanes[0].id).toMatch(/^local-/);
 
         model.update(makeGame({
@@ -266,7 +268,7 @@ describe("GameModel.interpolate", () => {
             islands: [makeIsland("mine", 2, 2, "me", 10)],
             airplanes: [makeAirplane("a1", 1, 1, "me", 3, 0, 0.001)],
         }));
-        const plane = model.airplaneById("a1");
+        const plane = defined(model.airplaneById("a1"));
         expect([plane.position.x, plane.position.y]).toEqual([1, 1]);
 
         model.interpolate(500);

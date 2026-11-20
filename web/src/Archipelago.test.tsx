@@ -12,7 +12,7 @@ vi.mock("pixi.js", () => ({
     })),
     Ticker: class { add() { } start() { } destroy() { } },
 }));
-vi.mock("./game/view/GameView", () => ({
+vi.mock("./game/view/GameView.ts", () => ({
     default: class {
         onModelChanged() { }
         addIslandClickListener() { }
@@ -21,34 +21,40 @@ vi.mock("./game/view/GameView", () => ({
         render() { }
     },
 }));
-vi.mock("./resource/ResourceLoader", () => ({
+vi.mock("./resource/ResourceLoader.ts", () => ({
     default: { load: vi.fn(async () => ({ fake: "resources" })) },
 }));
 
-import { ArchipelagoView, GameResultView, LobbyScreen } from "./Archipelago.tsx";
+import {
+    ArchipelagoView, GameResultView, LobbyScreen,
+    type ArchipelagoModel, type ConnectionState, type ModelChangeListener, type UIAction,
+} from "./Archipelago.tsx";
 import GameModel from "./game/model/GameModel.ts";
 
 afterEach(cleanup);
 
 /** A minimal external store with the shape ArchipelagoView expects. */
-function makeStore(initialModel) {
+function makeStore(initialModel: ArchipelagoModel) {
     let model = initialModel;
-    const listeners = new Set();
+    const listeners = new Set<ModelChangeListener>();
     return {
         getModel: () => model,
-        addModelChangeListener: (l) => { listeners.add(l); },
-        removeModelChangeListener: (l) => { listeners.delete(l); },
-        dispatch: vi.fn(),
+        addModelChangeListener: (l: ModelChangeListener) => { listeners.add(l); },
+        removeModelChangeListener: (l: ModelChangeListener) => { listeners.delete(l); },
+        dispatch: vi.fn<(action: UIAction) => void>(),
         listenerCount: () => listeners.size,
         // Change the model without telling anyone, as if it happened earlier.
-        setSilently: (m) => { model = m; },
-        set: (m) => { model = m; listeners.forEach(l => l(model)); },
+        setSilently: (m: ArchipelagoModel) => { model = m; },
+        set: (m: ArchipelagoModel) => { model = m; listeners.forEach(l => l(model)); },
     };
 }
 
-const lobbyModel = (connectionState) => ({ connectionState, gameModel: null, gameResult: null });
+type Store = ReturnType<typeof makeStore>;
 
-function renderView(store) {
+const lobbyModel = (connectionState: ConnectionState): ArchipelagoModel => (
+    { connectionState, gameModel: null, gameResult: null });
+
+function renderView(store: Store) {
     return render(<ArchipelagoView
         getModel={store.getModel}
         addModelChangeListener={store.addModelChangeListener}
@@ -71,7 +77,7 @@ describe("LobbyScreen", () => {
 });
 
 describe("GameResultView", () => {
-    const gameModelFor = (myPlayerId) => {
+    const gameModelFor = (myPlayerId: string): GameModel => {
         const gm = new GameModel();
         gm.myPlayerId = myPlayerId;
         return gm;
@@ -157,7 +163,7 @@ describe("ArchipelagoView", () => {
     it("shows the result over the game when it ends", async () => {
         const gameModel = new GameModel();
         gameModel.myPlayerId = "me";
-        const inGame = { connectionState: "CONNECTED", gameModel, gameResult: null };
+        const inGame: ArchipelagoModel = { connectionState: "CONNECTED", gameModel, gameResult: null };
         const store = makeStore(inGame);
         renderView(store);
         // The (mocked) game canvas gets attached once the renderer is created.

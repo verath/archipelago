@@ -22,7 +22,7 @@ describe("BaseModel", () => {
     it("stops notifying removed listeners and honours the listener context", () => {
         const model = new BaseModel();
         const ctx = { n: 0 };
-        const listener = function () { this.n++; };
+        const listener = function (this: typeof ctx) { this.n++; };
         model.addChangeListener(listener, ctx);
         model.update({ id: "a" });
         expect(ctx.n).toBe(1);

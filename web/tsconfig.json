@@ -20,9 +20,9 @@
         "noFallthroughCasesInSwitch": true,
         "skipLibCheck": true,
 
-        // Temporary, while the code base is migrated from JavaScript.
-        "allowJs": true,
-        "checkJs": false
+        // Only the generated src/wire/proto_bundle.js is JavaScript, and its
+        // types come from proto_bundle.d.ts.
+        "allowJs": false
     },
     "include": ["src"]
 }

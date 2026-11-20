@@ -1,20 +1,30 @@
 import { describe, it, expect } from "vitest";
+import type { IConversionOptions, Writer } from "protobufjs";
 import { wire } from "./proto_bundle.js";
 
 const { msg } = wire;
 
 // Fields at their default (e.g. state ALIVE = 0) are not put on the wire, so
 // compare both sides with defaults filled in.
-const OPTS = { defaults: true, enums: Number };
+const OPTS: IConversionOptions = { defaults: true, enums: Number };
+
+/** The static methods of a generated message class M, with properties P. */
+interface MessageType<M, P> {
+    create(properties: P): M;
+    encode(message: M): Writer;
+    decode(bytes: Uint8Array): M;
+    fromObject(object: P): M;
+    toObject(message: M, options: IConversionOptions): Record<string, unknown>;
+}
 
 /** Encodes and decodes a message, returning the plain-object form of the result. */
-function roundTrip(Type, payload) {
+function roundTrip<M, P>(Type: MessageType<M, P>, payload: NoInfer<P>): Record<string, unknown> {
     const bytes = Type.encode(Type.create(payload)).finish();
     return Type.toObject(Type.decode(bytes), OPTS);
 }
 
 /** The plain-object form of what we expect back. */
-function expected(Type, payload) {
+function expected<M, P>(Type: MessageType<M, P>, payload: NoInfer<P>): Record<string, unknown> {
     return Type.toObject(Type.fromObject(payload), OPTS);
 }
 
@@ -41,7 +51,7 @@ const game = {
             speed: 0.25,
         },
     ],
-};
+} satisfies wire.msg.Game.$Properties;
 
 describe("model messages", () => {
     it("Coordinate", () => {
@@ -86,8 +96,8 @@ describe("EventEnvelope", () => {
             eventGameStart: { playerId: "p1", tickInterval: 250 },
         }).finish());
         expect(decoded.event).toBe("eventGameStart");
-        expect(decoded.eventGameStart.playerId).toBe("p1");
-        expect(decoded.eventGameStart.tickInterval).toBe(250);
+        expect(decoded.eventGameStart?.playerId).toBe("p1");
+        expect(decoded.eventGameStart?.tickInterval).toBe(250);
     });
 
     it("carries EventGameTick with a full game", () => {
@@ -95,7 +105,10 @@ describe("EventEnvelope", () => {
             eventGameTick: { game },
         }).finish());
         expect(decoded.event).toBe("eventGameTick");
-        expect(msg.Game.toObject(decoded.eventGameTick.game, OPTS)).toEqual(expected(msg.Game, game));
+        // decode() makes nested messages instances of their class, but the
+        // generated types only promise the properties.
+        const decodedGame = decoded.eventGameTick?.game as wire.msg.Game;
+        expect(msg.Game.toObject(decodedGame, OPTS)).toEqual(expected(msg.Game, game));
     });
 
     it("carries EventGameOver", () => {
@@ -103,7 +116,7 @@ describe("EventEnvelope", () => {
             eventGameOver: { winnerId: "p2" },
         }).finish());
         expect(decoded.event).toBe("eventGameOver");
-        expect(decoded.eventGameOver.winnerId).toBe("p2");
+        expect(decoded.eventGameOver?.winnerId).toBe("p2");
     });
 
     it("decodes the bytes the server sends for a game over", () => {
@@ -111,7 +124,7 @@ describe("EventEnvelope", () => {
         const bytes = Uint8Array.from([0x12, 0x03, 0x0a, 0x01, 0x77]);
         const decoded = msg.EventEnvelope.decode(bytes);
         expect(decoded.event).toBe("eventGameOver");
-        expect(decoded.eventGameOver.winnerId).toBe("w");
+        expect(decoded.eventGameOver?.winnerId).toBe("w");
     });
 
     it("has no event set when empty", () => {
@@ -127,8 +140,8 @@ describe("ActionEnvelope", () => {
         }).finish();
         const decoded = msg.ActionEnvelope.decode(bytes);
         expect(decoded.action).toBe("actionGameLaunch");
-        expect(decoded.actionGameLaunch.fromId).toBe("a");
-        expect(decoded.actionGameLaunch.toId).toBe("b");
+        expect(decoded.actionGameLaunch?.fromId).toBe("a");
+        expect(decoded.actionGameLaunch?.toId).toBe("b");
     });
 
     it("encodes ActionGameLaunch to the bytes the server expects", () => {

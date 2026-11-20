@@ -1,37 +1,46 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import Connection from "./Connection.ts";
 import { wire } from "../wire/proto_bundle.js";
-import { encodeEvent } from "../test/fixtures.js";
+import { defined, encodeEvent } from "../test/fixtures.ts";
 
+type FakeHandler<E> = ((event: E) => void) | null;
+
+/**
+ * Stands in for the global WebSocket (via vi.stubGlobal, which is untyped).
+ * It has the members Connection uses, with the events reduced to what
+ * Connection reads from them.
+ */
 class FakeWebSocket {
-    constructor(url) {
+    static instances: FakeWebSocket[] = [];
+
+    readonly url: string;
+    binaryType: BinaryType = "blob";
+    readonly sent: Uint8Array[] = [];
+    closed = false;
+    onopen: FakeHandler<object> = null;
+    onmessage: FakeHandler<{ data: ArrayBuffer }> = null;
+    onclose: FakeHandler<object> = null;
+    onerror: FakeHandler<object> = null;
+
+    constructor(url: string) {
         this.url = url;
-        this.binaryType = "blob";
-        this.sent = [];
-        this.closed = false;
-        this.onopen = null;
-        this.onmessage = null;
-        this.onclose = null;
-        this.onerror = null;
         FakeWebSocket.instances.push(this);
     }
 
-    send(data) { this.sent.push(data); }
-    close() { this.closed = true; }
+    send(data: Uint8Array): void { this.sent.push(data); }
+    close(): void { this.closed = true; }
 
     // Helpers for tests to play the server / network.
-    open() { this.onopen?.({}); }
-    receive(data) { this.onmessage?.({ data }); }
-    drop() { this.onclose?.({}); }
-    fail() { this.onerror?.({}); }
+    open(): void { this.onopen?.({}); }
+    receive(data: ArrayBuffer): void { this.onmessage?.({ data }); }
+    drop(): void { this.onclose?.({}); }
+    fail(): void { this.onerror?.({}); }
 }
 
-FakeWebSocket.instances = [];
-
-const lastSocket = () => FakeWebSocket.instances.at(-1);
+const lastSocket = (): FakeWebSocket => defined(FakeWebSocket.instances.at(-1));
 
 /** A connected Connection together with its fake socket. */
-function connected(url = "ws://example/app/ws") {
+function connected(url = "ws://example/app/ws"): { conn: Connection; ws: FakeWebSocket } {
     const conn = new Connection(url);
     conn.connect();
     lastSocket().open();
@@ -146,14 +155,14 @@ describe("Connection receiving events", () => {
         const first = conn.peekNext();
         expect(first).toBeInstanceOf(wire.msg.EventEnvelope);
         expect(first.event).toBe("eventGameStart");
-        expect(first.eventGameStart.playerId).toBe("p1");
-        expect(first.eventGameStart.tickInterval).toBe(250);
+        expect(first.eventGameStart?.playerId).toBe("p1");
+        expect(first.eventGameStart?.tickInterval).toBe(250);
 
         // peek does not consume.
         expect(conn.getNext()).toBe(first);
         const second = conn.getNext();
         expect(second.event).toBe("eventGameOver");
-        expect(second.eventGameOver.winnerId).toBe("p2");
+        expect(second.eventGameOver?.winnerId).toBe("p2");
         expect(conn.hasNext()).toBe(false);
     });
 
@@ -208,7 +217,8 @@ describe("Connection.waitNext", () => {
 
     it("does not leak listeners", async () => {
         const { conn, ws } = connected();
-        const emitter = conn._eventEmitter;
+        // Bracket access reaches the private emitter, keeping its type.
+        const emitter = conn["_eventEmitter"];
         const before = emitter.eventNames().map(n => emitter.listenerCount(n));
 
         const pending = conn.waitNext();
@@ -223,7 +233,7 @@ describe("Connection.waitNext", () => {
         ws.receive(encodeEvent("eventGameOver", { winnerId: "x" }));
         ws.drop();
         expect(conn.hasNext()).toBe(true);
-        expect(conn.getNext().eventGameOver.winnerId).toBe("x");
+        expect(conn.getNext().eventGameOver?.winnerId).toBe("x");
     });
 });
 
@@ -238,8 +248,8 @@ describe("Connection.sendAction", () => {
         expect(ws.sent).toHaveLength(1);
         const decoded = wire.msg.ActionEnvelope.decode(ws.sent[0]);
         expect(decoded.action).toBe("actionGameLaunch");
-        expect(decoded.actionGameLaunch.fromId).toBe("a");
-        expect(decoded.actionGameLaunch.toId).toBe("b");
+        expect(decoded.actionGameLaunch?.fromId).toBe("a");
+        expect(decoded.actionGameLaunch?.toId).toBe("b");
     });
 
     it("warns and sends nothing when not connected", () => {
