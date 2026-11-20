@@ -56,37 +56,34 @@ To build and run the project, install:
   Go downloads it automatically)
 * [Node.js](https://nodejs.org/en/download/) 24 or newer (npm is included)
 
-Then clone the project and build the frontend:
+Then clone the project and install the frontend dependencies:
 
 ```
 git clone git@github.com:verath/archipelago.git
 cd archipelago/web
 npm ci
-npm run build
 ```
 
-Now run the backend from the repository root. With `-serveStatic` it also serves the built
-frontend from `web/dist`:
+Run the backend from the repository root. It only serves the game WebSocket; the frontend is
+served by Vite:
 
 ```
-go run main.go -debug -serveStatic -skipWSOriginCheck
+go run main.go -debug -skipWSOriginCheck
 ```
 
-The game is then available at [http://localhost:8080](http://localhost:8080).
-
-## Developing
-
-### Frontend dev server
-
-For frontend work, run the backend as above (the `-serveStatic` flag is optional) and start the
-Vite dev server in `web/`:
+Then, in `web/`, start the Vite dev server:
 
 ```
 npm run dev
 ```
 
-Open [http://localhost:5173](http://localhost:5173). Vite reloads on changes and proxies the game
-WebSocket (`/app/ws`) to the backend on port 8080.
+The game is then available at [http://localhost:5173](http://localhost:5173). Vite reloads on
+changes and proxies the game WebSocket (`/app/ws`) to the backend on port 8080.
+
+To try the production build instead, run `npm run build && npm run preview` and open
+[http://localhost:4173](http://localhost:4173). The preview proxies the WebSocket the same way.
+
+## Developing
 
 ### Checks
 

@@ -10,7 +10,7 @@
             "request": "launch",
             "mode": "debug",
             "program": "${workspaceFolder}\\main.go",
-            "args": ["-debug", "-serveStatic", "-skipWSOriginCheck"]
+            "args": ["-debug", "-skipWSOriginCheck"]
         }
     ]
 }

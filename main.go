@@ -24,13 +24,11 @@ const (
 func main() {
 	var (
 		debug             bool
-		serveStatic       bool
 		skipWSOriginCheck bool
 		httpAddr          string
 		profileMode       string
 	)
 	flag.BoolVar(&debug, "debug", false, "Set to true to log debug messages.")
-	flag.BoolVar(&serveStatic, "serveStatic", false, "Enable serving of static assets.")
 	flag.BoolVar(&skipWSOriginCheck, "skipWSOriginCheck", false, "")
 	flag.StringVar(&httpAddr, "addr", ":8080", "TCP address for the http server to listen on.")
 	flag.StringVar(&profileMode, "profile", "", "Enable profiling mode, one of [cpu, mem, mutex, block]")
@@ -42,9 +40,6 @@ func main() {
 	logger := slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{Level: logLevel}))
 	if debug {
 		logger.Info("Debug logging enabled")
-	}
-	if serveStatic {
-		logger.Info("Serving static resources.")
 	}
 	if skipWSOriginCheck {
 		logger.Info("Skipping WebSocket origin check.")
@@ -65,10 +60,6 @@ func main() {
 	http.HandleFunc("/healthcheck", func(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("OK"))
 	})
-	if serveStatic {
-		staticPath := "./web/dist"
-		http.Handle("/", http.FileServer(http.Dir(staticPath)))
-	}
 	// Setup toplevel HTTP server.
 	httpServer := &http.Server{
 		Addr:         httpAddr,
