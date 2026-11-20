@@ -9,17 +9,59 @@ import (
 	"google.golang.org/protobuf/proto"
 )
 
+// ProtocolVersion is a version of the wire protocol, see EventEnvelope in
+// game.proto for how they differ.
+type ProtocolVersion int
+
+const (
+	// ProtocolV4 sends the full game state every tick.
+	ProtocolV4 ProtocolVersion = 4
+	// ProtocolV5 sends a snapshot of the game state, then deltas.
+	ProtocolV5 ProtocolVersion = 5
+)
+
+// SupportedProtocolVersions returns the protocol versions ParseProtocolVersion
+// accepts, as given in the "v" query parameter of the websocket URL.
+func SupportedProtocolVersions() []string {
+	return []string{"4", "5"}
+}
+
+// ParseProtocolVersion parses a protocol version, as given in the "v" query
+// parameter of the websocket URL.
+func ParseProtocolVersion(s string) (ProtocolVersion, error) {
+	switch s {
+	case "4":
+		return ProtocolV4, nil
+	case "5":
+		return ProtocolV5, nil
+	default:
+		return 0, fmt.Errorf("unsupported protocol version %q", s)
+	}
+}
+
 // PBClientAdapter is an adapter for a client that reads and writes byte slices,
 // providing higher level abstractions. The encoding/decoding is based on protobuf.
+//
+// WritePlayerEvent must not be called concurrently, as the v5 encoding
+// depends on the previously written events.
 type PBClientAdapter struct {
-	client Client
+	client  Client
+	version ProtocolVersion
+	// deltaEncoder encodes ticks for ProtocolV5.
+	deltaEncoder deltaEncoder
 }
 
 // NewPBClientAdapter creates a new PBClientAdapter wrapping the provided
-// client.
-func NewPBClientAdapter(client Client) (*PBClientAdapter, error) {
+// client, encoding events with the given protocol version.
+func NewPBClientAdapter(client Client, version ProtocolVersion) (*PBClientAdapter, error) {
+	switch version {
+	case ProtocolV4, ProtocolV5:
+	default:
+		return nil, fmt.Errorf("unsupported protocol version %d", version)
+	}
 	return &PBClientAdapter{
-		client: client,
+		client:  client,
+		version: version,
 	}, nil
 }
 
@@ -44,8 +86,12 @@ func (ca *PBClientAdapter) WritePlayerEvent(ctx context.Context, playerEvent mod
 		evtStart := msg.EncodeEventGameStart(evt)
 		pbMsg.Event = &msg.EventEnvelope_EventGameStart{EventGameStart: evtStart}
 	case *model.PlayerEventTick:
-		evtTick := msg.EncodeEventGameTick(evt)
-		pbMsg.Event = &msg.EventEnvelope_EventGameTick{EventGameTick: evtTick}
+		if ca.version == ProtocolV5 {
+			pbMsg = ca.deltaEncoder.encodeTick(evt)
+		} else {
+			evtTick := msg.EncodeEventGameTick(evt)
+			pbMsg.Event = &msg.EventEnvelope_EventGameTick{EventGameTick: evtTick}
+		}
 	case *model.PlayerEventGameOver:
 		evtOver := msg.EncodeEventGameOver(evt)
 		pbMsg.Event = &msg.EventEnvelope_EventGameOver{EventGameOver: evtOver}

@@ -13,10 +13,15 @@ import (
 	"github.com/gorilla/websocket"
 )
 
+// wsVersion is the version the tests connect with by default.
+const wsVersion = "5"
+
 // startServer starts an HTTP server upgrading requests with an Upgrader
-// created from opts. Upgraded connections are sent on the returned channel.
+// created from opts, supporting versions 4 and 5. Upgraded connections are
+// sent on the returned channel.
 func startServer(t *testing.T, opts UpgraderOptions) (string, <-chan *WSConnection) {
 	t.Helper()
+	opts.Versions = []string{"4", wsVersion}
 	upgrader, err := NewUpgrader(opts)
 	if err != nil {
 		t.Fatalf("NewUpgrader: %v", err)
@@ -101,6 +106,25 @@ func TestUpgrade_NegotiatesCompressionAndCountsWireBytes(t *testing.T) {
 	}
 }
 
+func TestWriteMessage_DoesNotCompressSmallMessages(t *testing.T) {
+	url, connCh := startServer(t, UpgraderOptions{})
+	client, _ := dial(t, url, true)
+	server := nextConn(t, connCh)
+	before := server.Stats().WireBytesWritten
+
+	small := compressible[:100]
+	if err := server.WriteMessage(ctxWithTimeout(t), small); err != nil {
+		t.Fatalf("WriteMessage: %v", err)
+	}
+	if _, got, err := client.ReadMessage(); err != nil || !bytes.Equal(got, small) {
+		t.Fatalf("client ReadMessage = %q, %v; want %q", got, err, small)
+	}
+	// Sent as is: the payload plus a 2 byte frame header (for < 126 bytes).
+	if written := server.Stats().WireBytesWritten - before; written != int64(len(small))+2 {
+		t.Errorf("wrote %d bytes for a %d byte message, want %d (uncompressed)", written, len(small), len(small)+2)
+	}
+}
+
 func TestUpgrade_DisableCompression(t *testing.T) {
 	url, connCh := startServer(t, UpgraderOptions{SkipOriginCheck: true, DisableCompression: true})
 	client, resp := dial(t, url, true)
@@ -132,6 +156,22 @@ func TestUpgrade_ClientWithoutCompression(t *testing.T) {
 	}
 	if _, got, err := client.ReadMessage(); err != nil || !bytes.Equal(got, compressible) {
 		t.Fatalf("client ReadMessage = %d bytes, %v; want %d bytes", len(got), err, len(compressible))
+	}
+}
+
+func TestUpgrade_Versions(t *testing.T) {
+	url, connCh := startServer(t, UpgraderOptions{SkipOriginCheck: true})
+	for _, v := range []string{"4", "5"} {
+		dial(t, strings.Replace(url, "v="+wsVersion, "v="+v, 1), true)
+		if got := nextConn(t, connCh).Version(); got != v {
+			t.Errorf("Version() = %q, want %q", got, v)
+		}
+	}
+}
+
+func TestNewUpgrader_NoVersions(t *testing.T) {
+	if _, err := NewUpgrader(UpgraderOptions{}); err == nil {
+		t.Error("NewUpgrader without versions succeeded, want error")
 	}
 }
 

@@ -24,7 +24,7 @@ func protoMarshalOrPanic(pb proto.Message) []byte {
 }
 
 func newPBClientAdapterOrFail(tb testing.TB, client wire.Client) *wire.PBClientAdapter {
-	pbClient, err := wire.NewPBClientAdapter(client)
+	pbClient, err := wire.NewPBClientAdapter(client, wire.ProtocolV4)
 	if err != nil {
 		tb.Fatalf("Error creating NewPBClientAdapter: %v", err)
 	}
@@ -255,5 +255,95 @@ func TestPBClientAdapter_WritePlayerEvent(t *testing.T) {
 				tt.expectedMsg,
 				actualMsg)
 		}
+	}
+}
+
+func TestParseProtocolVersion(t *testing.T) {
+	for s, want := range map[string]wire.ProtocolVersion{"4": wire.ProtocolV4, "5": wire.ProtocolV5} {
+		if got, err := wire.ParseProtocolVersion(s); err != nil || got != want {
+			t.Errorf("ParseProtocolVersion(%q) = %v, %v; want %v, nil", s, got, err, want)
+		}
+	}
+	for _, s := range []string{"", "3", "6", "v5"} {
+		if _, err := wire.ParseProtocolVersion(s); err == nil {
+			t.Errorf("ParseProtocolVersion(%q) succeeded, want error", s)
+		}
+	}
+}
+
+func TestNewPBClientAdapter_UnsupportedVersion(t *testing.T) {
+	if _, err := wire.NewPBClientAdapter(&wire.MockClient{}, 3); err == nil {
+		t.Error("NewPBClientAdapter with version 3 succeeded, want error")
+	}
+}
+
+func TestPBClientAdapter_ReadPlayerAction_LaunchSeq(t *testing.T) {
+	mockClient := &wire.MockClient{
+		ReadMessageFunc: func(context.Context) ([]byte, error) {
+			return protoMarshalOrPanic(&msg.ActionEnvelope{
+				Action: &msg.ActionEnvelope_ActionGameLaunch{
+					ActionGameLaunch: &msg.ActionGameLaunch{FromId: "a", ToId: "b", Seq: 42},
+				},
+			}), nil
+		},
+	}
+	pbClient, err := wire.NewPBClientAdapter(mockClient, wire.ProtocolV5)
+	if err != nil {
+		t.Fatalf("NewPBClientAdapter: %v", err)
+	}
+	act, err := pbClient.ReadPlayerAction(context.Background())
+	if err != nil {
+		t.Fatalf("ReadPlayerAction: %v", err)
+	}
+	want := &model.PlayerActionLaunch{From: "a", To: "b", Seq: 42}
+	if !reflect.DeepEqual(act, want) {
+		t.Errorf("ReadPlayerAction = %+v, want %+v", act, want)
+	}
+}
+
+// TestPBClientAdapter_WritePlayerEvent_V5 checks the sequence of messages a
+// v5 client gets: game start, a snapshot, deltas, game over.
+func TestPBClientAdapter_WritePlayerEvent_V5(t *testing.T) {
+	var written []*msg.EventEnvelope
+	mockClient := &wire.MockClient{
+		WriteMessageFunc: func(_ context.Context, b []byte) error {
+			env := &msg.EventEnvelope{}
+			if err := proto.Unmarshal(b, env); err != nil {
+				t.Fatalf("Unmarshal: %v", err)
+			}
+			written = append(written, env)
+			return nil
+		},
+	}
+	pbClient, err := wire.NewPBClientAdapter(mockClient, wire.ProtocolV5)
+	if err != nil {
+		t.Fatalf("NewPBClientAdapter: %v", err)
+	}
+	game := model.CreateDummyGameSimple()
+	tick := func() model.PlayerEvent {
+		return (&model.EventTick{Game: game.Copy()}).ToPlayerEvent(game.Players()[0].ID())
+	}
+	for _, evt := range []model.PlayerEvent{eventGameStart, tick(), tick(), tick(), eventGameOver} {
+		if err := pbClient.WritePlayerEvent(context.Background(), evt); err != nil {
+			t.Fatalf("WritePlayerEvent(%T): %v", evt, err)
+		}
+	}
+
+	if len(written) != 5 {
+		t.Fatalf("%d messages written, want 5", len(written))
+	}
+	if !proto.Equal(written[0], eventGameStartExpected) {
+		t.Errorf("message 0 = %v, want game start", written[0])
+	}
+	if snap := written[1].GetEventGameSnapshot(); snap == nil || snap.Seq != 1 {
+		t.Errorf("message 1 = %v, want snapshot with seq 1", written[1])
+	}
+	for i, seq := range map[int]uint32{2: 2, 3: 3} {
+		if d := written[i].GetEventGameDelta(); d == nil || d.Seq != seq {
+			t.Errorf("message %d = %v, want delta with seq %d", i, written[i], seq)
+		}
+	}
+	if !proto.Equal(written[4], eventGameOverExpected) {
+		t.Errorf("message 4 = %v, want game over", written[4])
 	}
 }

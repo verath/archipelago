@@ -25,6 +25,11 @@ const (
 	// Maximum message size allowed from peer. With compression this limits
 	// both the compressed and the decompressed size of a message.
 	connMaxMessageSize = 2048
+
+	// Messages smaller than this are sent uncompressed, also when compression
+	// was negotiated. Deflating a game delta (typically < 128 bytes) makes it
+	// 7-16% larger, while larger messages shrink to 50-85%.
+	connMinCompressSize = 128
 )
 
 // errMessageTooBig is returned when a message read from the peer
@@ -40,6 +45,9 @@ type WSConnection struct {
 	// is required as our read spawns an internal ping-writing goroutine.
 	writeMu sync.Mutex
 
+	// version is the protocol version the client requested.
+	version string
+
 	// netConn is the connection wsConn reads and writes on, used for
 	// counting wire bytes. May be nil, then no wire bytes are counted.
 	netConn *countingConn
@@ -51,15 +59,23 @@ type WSConnection struct {
 }
 
 // newWSConnection creates a new WSConnection, wrapping the provided gorilla
-// wsConn. netConn should be the connection wsConn uses, or nil.
-func newWSConnection(wsConn *websocket.Conn, netConn *countingConn) (*WSConnection, error) {
+// wsConn. netConn should be the connection wsConn uses, or nil. version is
+// the protocol version requested by the client.
+func newWSConnection(wsConn *websocket.Conn, netConn *countingConn, version string) (*WSConnection, error) {
 	if wsConn == nil {
 		return nil, errors.New("wsConn cannot be nil")
 	}
 	return &WSConnection{
 		wsConn:  wsConn,
 		netConn: netConn,
+		version: version,
 	}, nil
+}
+
+// Version returns the protocol version requested by the client, one of the
+// versions the Upgrader supports.
+func (c *WSConnection) Version() string {
+	return c.version
 }
 
 // Stats returns the traffic counters of the connection. Safe to call
@@ -100,6 +116,8 @@ func (c *WSConnection) ReadMessage(ctx context.Context) (msg []byte, err error) 
 func (c *WSConnection) WriteMessage(ctx context.Context, message []byte) error {
 	c.writeMu.Lock()
 	defer c.writeMu.Unlock()
+	// No-op if compression was not negotiated.
+	c.wsConn.EnableWriteCompression(len(message) >= connMinCompressSize)
 	if err := c.writeMessage(ctx, websocket.BinaryMessage, message); err != nil {
 		return err
 	}
