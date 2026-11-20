@@ -38,13 +38,15 @@ type Server struct {
 
 // New returns a new Server using the provided logger.
 // wsOpts configures the websocket endpoint, its zero value is the production
-// configuration. coordinatorOpts configures how games are created, see
+// configuration; its Versions are set to the protocol versions the server
+// implements. coordinatorOpts configures how games are created, see
 // game.DefaultCoordinatorOptions for the production defaults.
 func New(logger *slog.Logger, wsOpts websocket.UpgraderOptions, coordinatorOpts game.CoordinatorOptions) (*Server, error) {
 	gameCoordinator, err := game.NewCoordinator(logger, coordinatorOpts)
 	if err != nil {
 		return nil, fmt.Errorf("error creating game coordinator: %w", err)
 	}
+	wsOpts.Versions = wire.SupportedProtocolVersions()
 	wsUpgrader, err := websocket.NewUpgrader(wsOpts)
 	if err != nil {
 		return nil, fmt.Errorf("error creating websocket upgrader: %w", err)
@@ -115,11 +117,15 @@ func (srv *Server) handleWSConnect() http.HandlerFunc {
 
 // newWSClient starts a new websocket client for the provided ws connection.
 func (srv *Server) newWSClient(ctx context.Context, wsConn *websocket.WSConnection) error {
+	version, err := wire.ParseProtocolVersion(wsConn.Version())
+	if err != nil {
+		return fmt.Errorf("error parsing protocol version: %w", err)
+	}
 	client, err := network.NewClient(srv.logger, wsConn)
 	if err != nil {
 		return fmt.Errorf("error creating new Client from ws connection: %w", err)
 	}
-	wireClient, err := wire.NewPBClientAdapter(client)
+	wireClient, err := wire.NewPBClientAdapter(client, version)
 	if err != nil {
 		return fmt.Errorf("error creating client wire adapter: %w", err)
 	}
@@ -132,6 +138,7 @@ func (srv *Server) newWSClient(ctx context.Context, wsConn *websocket.WSConnecti
 	go func() {
 		defer srv.clientsWG.Done()
 		start := time.Now()
+		srv.logger.Debug("client connected", "protocolVersion", version)
 		err := client.Run(clientCtx)
 		if err != nil {
 			if errors.Is(err, context.Canceled) {

@@ -12,11 +12,6 @@ import (
 	"github.com/gorilla/websocket"
 )
 
-// wsVersion is the version of the websocket protocol that the server
-// is currently implementing. Used to make sure that the client "talks"
-// the same version as we do.
-const wsVersion = "4"
-
 func noOriginCheck(*http.Request) bool {
 	return true
 }
@@ -40,9 +35,14 @@ func strictOriginCheck(req *http.Request) bool {
 	return false
 }
 
-// UpgraderOptions configures an Upgrader. The zero value is the production
-// configuration.
+// UpgraderOptions configures an Upgrader. Apart from Versions, which must be
+// set, the zero value is the production configuration.
 type UpgraderOptions struct {
+	// Versions are the protocol versions the server implements. A client
+	// requests one with the "v" query parameter of the URL; requests for
+	// other versions are rejected. What the versions mean is up to the user
+	// of the WSConnection, see WSConnection.Version.
+	Versions []string
 	// SkipOriginCheck disables checking the Origin of the request. Otherwise
 	// the origin must be either exactly "playarchipelago.com" or a subdomain
 	// of "playarchipelago.com".
@@ -56,10 +56,18 @@ type UpgraderOptions struct {
 // upgrades HTTP requests to websocket connections.
 type Upgrader struct {
 	wsUpgrader websocket.Upgrader
+	versions   map[string]bool
 }
 
 // NewUpgrader creates a new Upgrader.
 func NewUpgrader(opts UpgraderOptions) (*Upgrader, error) {
+	if len(opts.Versions) == 0 {
+		return nil, errors.New("no protocol versions")
+	}
+	versions := make(map[string]bool, len(opts.Versions))
+	for _, v := range opts.Versions {
+		versions[v] = true
+	}
 	checkOriginFunc := strictOriginCheck
 	if opts.SkipOriginCheck {
 		checkOriginFunc = noOriginCheck
@@ -73,6 +81,7 @@ func NewUpgrader(opts UpgraderOptions) (*Upgrader, error) {
 			// takeover, i.e. each message is compressed on its own.
 			EnableCompression: !opts.DisableCompression,
 		},
+		versions: versions,
 	}, nil
 }
 
@@ -81,7 +90,7 @@ func NewUpgrader(opts UpgraderOptions) (*Upgrader, error) {
 func (h *Upgrader) Upgrade(w http.ResponseWriter, r *http.Request) (*WSConnection, error) {
 	// Verify client wanted version is current version.
 	clientWSVersion := r.URL.Query().Get("v")
-	if clientWSVersion != wsVersion {
+	if !h.versions[clientWSVersion] {
 		err := errors.New("version missmatch")
 		http.Error(w, http.StatusText(http.StatusBadRequest)+" (version missmatch)", http.StatusBadRequest)
 		return nil, err
@@ -101,7 +110,7 @@ func (h *Upgrader) Upgrade(w http.ResponseWriter, r *http.Request) (*WSConnectio
 		return nil, fmt.Errorf("setting compression level failed: %w", err)
 	}
 	// Wrap in our WSConnection.
-	wsConn, err := newWSConnection(gorillaWSConn, cw.conn)
+	wsConn, err := newWSConnection(gorillaWSConn, cw.conn, clientWSVersion)
 	if err != nil {
 		// The connection is hijacked, an HTTP error can no longer be sent.
 		gorillaWSConn.Close()

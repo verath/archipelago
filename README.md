@@ -128,7 +128,8 @@ use backend flags that make test games fast and predictable:
 ### Network traffic
 
 WebSocket messages are compressed with `permessage-deflate`, which all browsers negotiate on their
-own. The backend flag `-wsCompression=false` turns it off. When a client disconnects, the backend
+own, except messages under 128 bytes (most v5 deltas, see below), which deflate would make larger.
+The backend flag `-wsCompression=false` turns compression off. When a client disconnects, the backend
 logs one `client traffic` line with the messages and bytes sent and received, both before
 compression (`payloadBytes*`) and as sent over the connection (`wireBytes*`, after compression
 and incl. WebSocket framing, excl. TCP/TLS).
@@ -145,6 +146,18 @@ npm run proto
 ```
 
 The JavaScript tooling (protobufjs-cli) is installed by `npm ci`.
+
+The client picks the protocol version with the `v` query parameter of the WebSocket URL, and the
+backend supports two (see `EventEnvelope` in [game.proto](proto/wire/msg/game.proto)):
+
+* **v4** sends the full game state every tick (`EventGameTick`).
+* **v5** sends the full state once (`EventGameSnapshot`), then only what changed each tick
+  (`EventGameDelta`), about 5% of the size. Airplanes are sent once, when they appear; the client
+  computes their position from the game time each message carries. The deltas are computed per
+  client, between the state last sent to it and the current one (both after fog of war), in
+  [lib/wire/delta.go](lib/wire/delta.go).
+
+Supporting both lets the backend be deployed before a frontend that switches versions.
 
 ## Deployment
 
