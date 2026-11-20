@@ -1,5 +1,15 @@
 import { defineConfig } from "vite";
 
+// Forward the game websocket to the locally running Go backend
+// (go run main.go -debug -skipWSOriginCheck), for both the dev server
+// (npm run dev) and the production build preview (npm run preview).
+const backendProxy = {
+    "/app/ws": {
+        target: "ws://localhost:8080",
+        ws: true,
+    },
+};
+
 export default defineConfig({
     build: {
         outDir: "dist",
@@ -12,13 +22,9 @@ export default defineConfig({
         environment: "node",
     },
     server: {
-        proxy: {
-            // Forward the game websocket to the locally running Go backend
-            // (go run main.go -debug -serveStatic -skipWSOriginCheck).
-            "/app/ws": {
-                target: "ws://localhost:8080",
-                ws: true,
-            },
-        },
+        proxy: backendProxy,
+    },
+    preview: {
+        proxy: backendProxy,
     },
 });
