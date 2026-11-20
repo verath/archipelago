@@ -47,7 +47,7 @@ func main() {
 		"AI players per game: -1 fills each game up to 4 players with at least 1 AI; "+
 			"0 adds none, so a game needs at least 2 human players; n > 0 adds exactly n (at most 10).")
 	flag.DurationVar(&resumeGrace, "resumeGrace", session.DefaultGrace,
-		"Time a (v5) client whose connection broke during a game has to resume it on a new connection.")
+		"Time a client whose connection broke during a game has to resume it on a new connection.")
 	flag.Parse()
 	logLevel := slog.LevelInfo
 	if debug {

@@ -21,7 +21,7 @@ export class ProtocolError extends Error {
 
 /**
  * GameModel is the client's copy of the game, as seen by our player. It is
- * built from the server's snapshot and deltas (protocol v5), and moves
+ * built from the server's snapshot and deltas, and moves
  * airplanes itself in between, using a GameClock.
  *
  * Our own launches take effect right away: the island shows the strength

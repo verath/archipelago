@@ -62,29 +62,21 @@ func readEvents(t *testing.T, conn *gorilla.Conn, n int) []*msg.EventEnvelope {
 	return events
 }
 
-func TestServer_ProtocolVersions(t *testing.T) {
+func TestServer_Protocol(t *testing.T) {
 	url := startTestServer(t)
 
-	t.Run("v4", func(t *testing.T) {
-		conn, _, err := gorilla.DefaultDialer.Dial(url+"?v=4", nil)
-		if err != nil {
-			t.Fatalf("Dial: %v", err)
+	t.Run("other versions are rejected", func(t *testing.T) {
+		// E.g. a frontend for protocol version 4, cached by a browser.
+		_, resp, err := gorilla.DefaultDialer.Dial(url+"?v=4", nil)
+		if err == nil {
+			t.Fatal("Dial succeeded, want error")
 		}
-		defer conn.Close()
-		events := readEvents(t, conn, 3)
-		if start := events[0].GetEventGameStart(); start == nil {
-			t.Errorf("event 0 = %v, want game start", events[0])
-		} else if start.ResumeToken != "" || start.ResumeTimeout != 0 {
-			t.Errorf("game start = %v, want no resume token or timeout for v4", start)
-		}
-		for _, evt := range events[1:] {
-			if evt.GetEventGameTick() == nil {
-				t.Errorf("event = %v, want tick", evt)
-			}
+		if resp == nil || resp.StatusCode != http.StatusBadRequest {
+			t.Errorf("Dial = %v, %v; want status 400", resp, err)
 		}
 	})
 
-	t.Run("v5", func(t *testing.T) {
+	t.Run("snapshot then deltas", func(t *testing.T) {
 		conn, _, err := gorilla.DefaultDialer.Dial(url+"?v=5", nil)
 		if err != nil {
 			t.Fatalf("Dial: %v", err)
@@ -106,7 +98,7 @@ func TestServer_ProtocolVersions(t *testing.T) {
 	})
 }
 
-// Test that a v5 client can resume a game after its connection broke.
+// Test that a client can resume a game after its connection broke.
 func TestServer_Resume(t *testing.T) {
 	url := startTestServer(t)
 	conn, _, err := gorilla.DefaultDialer.Dial(url+"?v=5", nil)

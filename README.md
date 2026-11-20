@@ -111,7 +111,7 @@ cd web && npm run test:e2e
   * launching an airplane works;
   * the remaining player wins when the other one leaves;
   * the UI copes with the backend going away;
-  * the client uses protocol v5, with compression, and its traffic is small;
+  * the client gets a snapshot and then deltas, with compression, and its traffic is small;
   * airplanes move between server messages;
   * the game resumes after the connection breaks, showing "Reconnecting" while the network is down.
 
@@ -126,13 +126,13 @@ use backend flags that make test games fast and predictable:
   `8s`).
 * `-aiPlayers <n>`: `-1` fills each game up to 4 players (default), `0` adds no AI, so a game
   needs 2 humans; `n` adds exactly `n` (at most 10).
-* `-resumeGrace <duration>`: how long a v5 client whose connection broke during a game has to
+* `-resumeGrace <duration>`: how long a client whose connection broke during a game has to
   resume it on a new connection (default `20s`, see "Reconnecting" below).
 
 ### Network traffic
 
 WebSocket messages are compressed with `permessage-deflate`, which all browsers negotiate on their
-own, except messages under 128 bytes (most v5 deltas, see below), which deflate would make larger.
+own, except messages under 128 bytes (most deltas, see below), which deflate would make larger.
 The backend flag `-wsCompression=false` turns compression off. When a client disconnects, the backend
 logs one `client traffic` line with the messages and bytes sent and received, both before
 compression (`payloadBytes*`) and as sent over the connection (`wireBytes*`, after compression
@@ -151,18 +151,15 @@ npm run proto
 
 The JavaScript tooling (protobufjs-cli) is installed by `npm ci`.
 
-The client picks the protocol version with the `v` query parameter of the WebSocket URL, and the
-backend supports two (see `EventEnvelope` in [game.proto](proto/wire/msg/game.proto)):
+The backend sends the full game state once (`EventGameSnapshot`), then only what changed each tick
+(`EventGameDelta`), about 5% of the size (see `EventEnvelope` in
+[game.proto](proto/wire/msg/game.proto)). Airplanes are sent once, when they appear; the client
+computes their position from the game time each message carries. The deltas are computed per
+client, between the state last sent to it and the current one (both after fog of war), in
+[lib/wire/delta.go](lib/wire/delta.go).
 
-* **v4** sends the full game state every tick (`EventGameTick`).
-* **v5**, which the frontend uses, sends the full state once (`EventGameSnapshot`), then only what
-  changed each tick (`EventGameDelta`), about 5% of the size. Airplanes are sent once, when they appear; the client
-  computes their position from the game time each message carries. The deltas are computed per
-  client, between the state last sent to it and the current one (both after fog of war), in
-  [lib/wire/delta.go](lib/wire/delta.go).
-
-Supporting both lets the backend be deployed before a frontend that switches versions, and keeps
-frontends that browsers still have cached working.
+The client asks for the protocol version with the `v` query parameter of the WebSocket URL (`5`);
+the backend rejects other versions with HTTP 400, e.g. from an old frontend a browser has cached.
 
 The frontend's model (`web/src/game/model/GameModel.ts`) applies the snapshot and deltas, and moves
 airplanes in between with a `GameClock` that estimates the server's game time. Our own launches show
@@ -171,7 +168,7 @@ reports (`Player.last_launch_seq`) that it processed the launch.
 
 #### Reconnecting
 
-A v5 client whose connection breaks during a game (e.g. a phone switching from wifi to mobile
+A client whose connection breaks during a game (e.g. a phone switching from wifi to mobile
 data) can resume the game on a new connection: `EventGameStart` carries a `resume_token`, and
 connecting with `?v=5&resume=<token>` within `resume_timeout` (the backend's `-resumeGrace`)
 continues the game with a new snapshot. Until then the player stays in the game. A connection the

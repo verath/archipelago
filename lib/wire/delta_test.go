@@ -13,7 +13,7 @@ import (
 	"google.golang.org/protobuf/proto"
 )
 
-// replica is a reference implementation of a v5 client: it applies
+// replica is a reference implementation of a client: it applies
 // snapshots and deltas to its copy of the game state.
 type replica struct {
 	seq      uint32
@@ -265,12 +265,13 @@ func TestDeltaEncoder_Replay(t *testing.T) {
 						t.Fatalf("tick %d, player %s: apply: %v", tick, v.id, err)
 					}
 					v.messages++
-					if d := diffStates(v.replica.state(), msg.EncodeGameV5(view, v.id)); d != "" {
+					if d := diffStates(v.replica.state(), msg.EncodeGame(view, v.id)); d != "" {
 						t.Fatalf("tick %d, player %s: replica differs from state: %s", tick, v.id, d)
 					}
 					if v.every == 1 {
-						full, _ := proto.Marshal(&msg.EventEnvelope{Event: &msg.EventEnvelope_EventGameTick{
-							EventGameTick: &msg.EventGameTick{Game: msg.EncodeGame(view)},
+						// What sending the full state every tick would cost.
+						full, _ := proto.Marshal(&msg.EventEnvelope{Event: &msg.EventEnvelope_EventGameSnapshot{
+							EventGameSnapshot: &msg.EventGameSnapshot{Seq: v.replica.seq, GameTime: v.replica.gameTime, Game: msg.EncodeGame(view, v.id)},
 						}})
 						fullBytes += len(full)
 						if v.messages == 1 {
@@ -292,9 +293,9 @@ func TestDeltaEncoder_Replay(t *testing.T) {
 			}
 			ticks := deltas + snapshots
 			avgFull, avgDelta := fullBytes/ticks, deltaBytes/deltas
-			t.Logf("avg v4 tick %d B, avg v5 delta %d B (%.1f%%)", avgFull, avgDelta, 100*float64(avgDelta)/float64(avgFull))
+			t.Logf("avg full state %d B, avg delta %d B (%.1f%%)", avgFull, avgDelta, 100*float64(avgDelta)/float64(avgFull))
 			if avgDelta*5 > avgFull {
-				t.Errorf("avg delta %d B is more than 20%% of avg full tick %d B", avgDelta, avgFull)
+				t.Errorf("avg delta %d B is more than 20%% of avg full state %d B", avgDelta, avgFull)
 			}
 		})
 	}
@@ -331,7 +332,7 @@ func TestDeltaEncoder_SnapshotThenDeltas(t *testing.T) {
 	if snap.Seq != 1 || snap.GameTime != 1500 {
 		t.Errorf("snapshot seq, game_time = %d, %d; want 1, 1500", snap.Seq, snap.GameTime)
 	}
-	if !proto.Equal(snap.Game, msg.EncodeGameV5(game, game.Players()[0].ID())) {
+	if !proto.Equal(snap.Game, msg.EncodeGame(game, game.Players()[0].ID())) {
 		t.Errorf("snapshot game = %v, want the full state", snap.Game)
 	}
 
@@ -398,7 +399,7 @@ func TestDeltaEncoder_Airplanes(t *testing.T) {
 	}
 	airplane := game.Airplanes()[0]
 	d := mustDelta(t, e.encodeTick(tick(game)))
-	if len(d.AirplanesAdded) != 1 || !proto.Equal(d.AirplanesAdded[0], msg.EncodeGameV5(game, p1.ID()).Airplanes[0]) {
+	if len(d.AirplanesAdded) != 1 || !proto.Equal(d.AirplanesAdded[0], msg.EncodeGame(game, p1.ID()).Airplanes[0]) {
 		t.Fatalf("delta airplanes_added = %v, want the new airplane in full", d.AirplanesAdded)
 	}
 	if a := d.AirplanesAdded[0]; a.DestinationId != "p2" || a.LaunchSeq != 1 {
@@ -454,7 +455,7 @@ func TestDeltaEncoder_SnapshotWhenDeltaCantDescribeChange(t *testing.T) {
 
 func TestCanDelta(t *testing.T) {
 	game := testGame()
-	base := msg.EncodeGameV5(game, game.Players()[0].ID())
+	base := msg.EncodeGame(game, game.Players()[0].ID())
 	for name, modify := range map[string]func(g *msg.Game){
 		"game id":        func(g *msg.Game) { g.Id = "other" },
 		"size":           func(g *msg.Game) { g.Size.X++ },
@@ -511,7 +512,7 @@ func TestDeltaEncoder_LeavingPlayersAirplanesBecomeNeutral(t *testing.T) {
 	}
 }
 
-func TestEncodeGameV5_AirplaneFields(t *testing.T) {
+func TestEncodeGame_AirplaneFields(t *testing.T) {
 	game := testGame()
 	p1, p2 := game.Players()[0], game.Players()[1]
 	for i, act := range []model.PlayerActionLaunch{{From: "p1", To: "pn", Seq: 1}, {From: "p2", To: "pn", Seq: 2}} {
@@ -521,7 +522,7 @@ func TestEncodeGameV5_AirplaneFields(t *testing.T) {
 	}
 	evt := (&model.EventTick{Game: game.Copy()}).ToPlayerEvent(p1.ID()).(*model.PlayerEventTick)
 	defaultSpeed := float32(model.AirplaneDefaultSpeed * float64(time.Millisecond))
-	for _, a := range msg.EncodeGameV5(evt.Game, p1.ID()).Airplanes {
+	for _, a := range msg.EncodeGame(evt.Game, p1.ID()).Airplanes {
 		if a.Speed != defaultSpeed {
 			t.Errorf("airplane %s: speed = %v, want the default speed %v set", a.Id, a.Speed, defaultSpeed)
 		}

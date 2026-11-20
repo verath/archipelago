@@ -29,7 +29,7 @@ enum PlayerState {
 message Player {
     string id = 1;
     PlayerState state = 2;
-    // v5: Only set for the receiving player: the highest ActionGameLaunch.seq
+    // Only set for the receiving player: the highest ActionGameLaunch.seq
     // the server has processed, whether the launch succeeded or not.
     uint32 last_launch_seq = 3;
 }
@@ -44,13 +44,13 @@ message Airplane {
     Army army = 2;
     FloatCoordinate position = 3;
     float direction = 4;
-    // Speed of the Airplane [tiles/ms]. v4: Not set if default speed
-    // (1/3000 tiles/ms, i.e. 1 tile per 3 s). v5: Always set.
+    // Speed of the Airplane [tiles/ms]. The default is 1/3000 tiles/ms, i.e.
+    // 1 tile per 3 s.
     float speed = 5;
-    // v5: Only set for the receiving player's own airplanes: id of the
-    // island the airplane is flying to.
+    // Only set for the receiving player's own airplanes: id of the island
+    // the airplane is flying to.
     string destination_id = 6;
-    // v5: Only set for the receiving player's own airplanes: the
+    // Only set for the receiving player's own airplanes: the
     // ActionGameLaunch.seq of the launch that created the airplane. Not set
     // for airplanes not created by a launch (e.g. when revived).
     uint32 launch_seq = 7;
@@ -74,25 +74,22 @@ message Game {
 
 /* Event */
 
-// Protocol versions (the "v" query parameter of the websocket URL):
-//  - v4: The server sends EventGameStart, then an EventGameTick with the full
-//        game state every tick, then EventGameOver.
-//  - v5: The server sends EventGameStart, then an EventGameSnapshot with the
-//        full game state, then an EventGameDelta with the changes since the
-//        previous snapshot/delta every tick, then EventGameOver. The server
-//        may send another EventGameSnapshot instead of a delta at any time.
-//        The client sets ActionGameLaunch.seq. A client whose connection
-//        broke during the game can resume it on a new connection, see
-//        EventGameStart.resume_token.
+// The protocol (version 5, the "v" query parameter of the websocket URL):
+// The server sends EventGameStart, then an EventGameSnapshot with the full
+// game state, then an EventGameDelta with the changes since the previous
+// snapshot/delta every tick, then EventGameOver. The server may send another
+// EventGameSnapshot instead of a delta at any time. The client sends
+// actions, setting ActionGameLaunch.seq. A client whose connection broke
+// during the game can resume it on a new connection, see
+// EventGameStart.resume_token.
 message EventEnvelope {
+    // 3 was EventGameTick, the full game state every tick (version 4).
+    reserved 3;
+    reserved "event_game_tick";
     oneof event {
         EventGameStart event_game_start = 1;
         EventGameOver event_game_over = 2;
-        // v4 only.
-        EventGameTick event_game_tick = 3;
-        // v5 only.
         EventGameSnapshot event_game_snapshot = 4;
-        // v5 only.
         EventGameDelta event_game_delta = 5;
     }
 }
@@ -101,7 +98,7 @@ message EventGameStart {
     string player_id = 1;
     // Aprox. time between ticks [ms].
     uint32 tick_interval = 2;
-    // v5: Token for resuming the game after the connection broke. To resume,
+    // Token for resuming the game after the connection broke. To resume,
     // connect to the websocket URL with the query parameters
     // "v=5&resume=<token>" within resume_timeout of the server noticing the
     // old connection broke (a server notices within ~10 s, or right away when
@@ -113,19 +110,15 @@ message EventGameStart {
     // be resumed (unknown or expired token, or the game is over and its
     // EventGameOver was delivered), the server responds with HTTP 410 Gone
     // instead of upgrading to a websocket. ActionGameLaunch.seq continues
-    // across reconnects. Not set for v4.
+    // across reconnects.
     string resume_token = 3;
-    // v5: How long after the connection broke the client may resume [ms],
-    // see resume_token. Not set for v4.
+    // How long after the connection broke the client may resume [ms], see
+    // resume_token.
     uint32 resume_timeout = 4;
 }
 
 message EventGameOver {
     string winner_id = 1;
-}
-
-message EventGameTick {
-    Game game = 1;
 }
 
 // EventGameSnapshot is the full game state, as seen by the receiving player.
@@ -202,7 +195,7 @@ message ActionGameLeave {
 message ActionGameLaunch {
     string from_id = 1;
     string to_id = 2;
-    // v5: Sequence number chosen by the client, starting at 1 and increasing
+    // Sequence number chosen by the client, starting at 1 and increasing
     // with each launch during the game, also across reconnects (a client
     // that lost count continues after the Player.last_launch_seq it gets).
     // Echoed in Player.last_launch_seq and Airplane.launch_seq.

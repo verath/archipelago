@@ -121,8 +121,8 @@ func (ctrl *controller) gameLoopEventHandler(eventCh chan<- model.Event) eventHa
 // Ticks are coalesced: if a player is slower than the game, more events are
 // queued on eventCh by the time a write has finished. Of a run of queued
 // ticks only the latest one is written, as each tick has the full game state
-// (for v5 clients, deltas are computed against what was last sent, so
-// skipping ticks is fine too). Other events are never skipped and keep their
+// (the client gets a delta computed against what was last sent to it, so
+// skipping ticks is fine). Other events are never skipped and keep their
 // order relative to the ticks.
 func (ctrl *controller) playerEventLoop(ctx context.Context, player *playerProxy, eventCh <-chan model.Event) error {
 	// next is an event taken from eventCh while coalescing ticks, to be

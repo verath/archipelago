@@ -6,43 +6,19 @@ import (
 	"github.com/verath/archipelago/lib/game/model"
 )
 
-// EncodeGame transforms a game model Game to its v4 wire representation.
-func EncodeGame(game *model.Game) *Game {
-	return encodeGame(game, false, "")
-}
-
-// EncodeGameV5 transforms a game model Game to its v5 wire representation,
-// which also has Player.last_launch_seq, Airplane.destination_id and
-// Airplane.launch_seq, and always has Airplane.speed.
+// EncodeGame transforms a game model Game to its wire representation.
 //
 // The game should be a player's view (see EventTick.ToPlayerEvent), and
-// viewer the player's id: destination_id is only set for the viewer's own
-// airplanes, as in v4 other players' targets were not sent either.
-func EncodeGameV5(game *model.Game, viewer model.PlayerID) *Game {
-	return encodeGame(game, true, viewer)
-}
-
-func encodeGame(game *model.Game, v5 bool, viewer model.PlayerID) *Game {
+// viewer the player's id: Airplane.destination_id is only set for the
+// viewer's own airplanes, so that players don't learn others' targets.
+func EncodeGame(game *model.Game, viewer model.PlayerID) *Game {
 	players := make([]*Player, 0)
 	for _, player := range game.Players() {
-		wirePlayer := EncodePlayer(player)
-		if v5 {
-			wirePlayer.LastLaunchSeq = player.LastLaunchSeq()
-		}
-		players = append(players, wirePlayer)
+		players = append(players, EncodePlayer(player))
 	}
 	airplanes := make([]*Airplane, 0)
 	for _, airplane := range game.Airplanes() {
-		wireAirplane := EncodeAirplane(airplane)
-		if v5 {
-			// v5 sends an airplane once, so don't leave out the default.
-			wireAirplane.Speed = float32(airplane.Speed() * float64(time.Millisecond))
-			if airplane.Owner().ID() == viewer {
-				wireAirplane.DestinationId = string(airplane.Destination())
-			}
-			wireAirplane.LaunchSeq = airplane.LaunchSeq()
-		}
-		airplanes = append(airplanes, wireAirplane)
+		airplanes = append(airplanes, EncodeAirplane(airplane, viewer))
 	}
 	islands := make([]*Island, 0)
 	for _, island := range game.Islands() {
@@ -71,8 +47,9 @@ func EncodeFloatCoordinate(coordinate model.FloatCoordinate) *FloatCoordinate {
 // EncodePlayer transforms a game model Player to its wire representation
 func EncodePlayer(player *model.Player) *Player {
 	return &Player{
-		Id:    string(player.ID()),
-		State: EncodePlayerState(player.State()),
+		Id:            string(player.ID()),
+		State:         EncodePlayerState(player.State()),
+		LastLaunchSeq: player.LastLaunchSeq(),
 	}
 }
 
@@ -101,16 +78,18 @@ func EncodeArmy(army *model.Army) *Army {
 }
 
 // EncodeAirplane transforms a game model Airplane to its wire representation
-func EncodeAirplane(airplane *model.Airplane) *Airplane {
+// for a player's view whose player is viewer, see EncodeGame.
+func EncodeAirplane(airplane *model.Airplane, viewer model.PlayerID) *Airplane {
 	wireAirplane := &Airplane{
 		Id:        string(airplane.ID()),
 		Army:      EncodeArmy(airplane.Army),
 		Position:  EncodeFloatCoordinate(airplane.Position()),
 		Direction: float32(airplane.Direction()),
+		Speed:     float32(airplane.Speed() * float64(time.Millisecond)),
+		LaunchSeq: airplane.LaunchSeq(),
 	}
-	// If speed is default we leave it out of the wire encoding.
-	if airplane.Speed() != model.AirplaneDefaultSpeed {
-		wireAirplane.Speed = float32(airplane.Speed() * float64(time.Millisecond))
+	if airplane.Owner().ID() == viewer {
+		wireAirplane.DestinationId = string(airplane.Destination())
 	}
 	return wireAirplane
 }
@@ -146,13 +125,6 @@ func EncodeEventGameStart(evt *model.PlayerEventGameStart) *EventGameStart {
 		PlayerId:      string(evt.PlayerID),
 		ResumeToken:   evt.ResumeToken,
 		ResumeTimeout: uint32(evt.ResumeTimeout.Milliseconds()),
-	}
-}
-
-// EncodeEventGameTick transforms a game model PlayerEventTick to its wire representation
-func EncodeEventGameTick(evt *model.PlayerEventTick) *EventGameTick {
-	return &EventGameTick{
-		Game: EncodeGame(evt.Game),
 	}
 }
 

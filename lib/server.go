@@ -28,8 +28,8 @@ var canceledClientContext context.Context = func() context.Context {
 // Options configures a Server. The zero value is the production
 // configuration.
 type Options struct {
-	// ResumeGrace is how long a v5 client whose connection broke during a
-	// game has to resume the game on a new connection. Zero means
+	// ResumeGrace is how long a client whose connection broke during a game
+	// has to resume the game on a new connection. Zero means
 	// session.DefaultGrace.
 	ResumeGrace time.Duration
 }
@@ -40,7 +40,7 @@ type Server struct {
 	gameCoordinator *game.Coordinator
 	wsUpgrader      *websocket.Upgrader
 	router          *http.ServeMux
-	// sessions holds the sessions of v5 clients, which can resume.
+	// sessions holds the sessions of remote clients, which can resume.
 	sessions *session.Registry
 
 	clientContextMu sync.RWMutex
@@ -50,8 +50,7 @@ type Server struct {
 
 // New returns a new Server using the provided logger.
 // wsOpts configures the websocket endpoint, its zero value is the production
-// configuration; its Versions are set to the protocol versions the server
-// implements. coordinatorOpts configures how games are created, see
+// configuration. coordinatorOpts configures how games are created, see
 // game.DefaultCoordinatorOptions for the production defaults. opts
 // configures the rest.
 func New(logger *slog.Logger, wsOpts websocket.UpgraderOptions, coordinatorOpts game.CoordinatorOptions, opts Options) (*Server, error) {
@@ -65,7 +64,6 @@ func New(logger *slog.Logger, wsOpts websocket.UpgraderOptions, coordinatorOpts 
 	if err != nil {
 		return nil, fmt.Errorf("error creating game coordinator: %w", err)
 	}
-	wsOpts.Versions = wire.SupportedProtocolVersions()
 	wsUpgrader, err := websocket.NewUpgrader(wsOpts)
 	if err != nil {
 		return nil, fmt.Errorf("error creating websocket upgrader: %w", err)
@@ -129,8 +127,10 @@ func (srv *Server) handleWSConnect() http.HandlerFunc {
 		if query := r.URL.Query(); query.Has("resume") {
 			// Fail before upgrading, so that the client can tell a game it
 			// can't resume from a network error.
-			if query.Get("v") != "5" {
-				http.Error(w, http.StatusText(http.StatusBadRequest)+" (resume requires v=5)", http.StatusBadRequest)
+			// A wrong version fails the upgrade too, but should not
+			// look like a game that can't be resumed.
+			if query.Get("v") != websocket.Version {
+				http.Error(w, http.StatusText(http.StatusBadRequest)+" (version missmatch)", http.StatusBadRequest)
 				return
 			}
 			resume = srv.sessions.Resumable(query.Get("resume"))
@@ -157,15 +157,11 @@ func (srv *Server) handleWSConnect() http.HandlerFunc {
 // If resume is not nil, the client is attached to that session, otherwise
 // it is added to the game coordinator to join a new game.
 func (srv *Server) newWSClient(ctx context.Context, wsConn *websocket.WSConnection, resume *session.Session) error {
-	version, err := wire.ParseProtocolVersion(wsConn.Version())
-	if err != nil {
-		return fmt.Errorf("error parsing protocol version: %w", err)
-	}
 	client, err := network.NewClient(srv.logger, wsConn)
 	if err != nil {
 		return fmt.Errorf("error creating new Client from ws connection: %w", err)
 	}
-	wireClient, err := wire.NewPBClientAdapter(client, version)
+	wireClient, err := wire.NewPBClientAdapter(client)
 	if err != nil {
 		return fmt.Errorf("error creating client wire adapter: %w", err)
 	}
@@ -178,7 +174,7 @@ func (srv *Server) newWSClient(ctx context.Context, wsConn *websocket.WSConnecti
 	go func() {
 		defer srv.clientsWG.Done()
 		start := time.Now()
-		srv.logger.Debug("client connected", "protocolVersion", version, "resume", resume != nil)
+		srv.logger.Debug("client connected", "resume", resume != nil)
 		err := client.Run(clientCtx)
 		if err != nil {
 			if errors.Is(err, context.Canceled) {
@@ -197,11 +193,7 @@ func (srv *Server) newWSClient(ctx context.Context, wsConn *websocket.WSConnecti
 		srv.logger.Debug("client resumed session")
 		return nil
 	}
-	// Only v5 clients get a resume token, so only they can resume.
-	var gameClient game.Client = wireClient
-	if version == wire.ProtocolV5 {
-		gameClient = srv.sessions.New(wireClient)
-	}
+	gameClient := srv.sessions.New(wireClient)
 	if err := srv.gameCoordinator.AddClient(ctx, gameClient); err != nil {
 		gameClient.Disconnect()
 		return fmt.Errorf("error adding client to game coordinator: %w", err)
