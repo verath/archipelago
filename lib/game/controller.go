@@ -10,7 +10,13 @@ import (
 	"log/slog"
 )
 
-const eventQueueSize = 16
+// eventQueueSize is the number of events queued for a player before the
+// player is considered too slow and disconnected. Queued ticks are coalesced
+// (see playerEventLoop), so the queue only fills up if writing a single event
+// blocks. 64 events is ~21 s of ticks, longer than the network write timeout,
+// so a client on a slow connection is disconnected by the write timeout
+// rather than by a full queue.
+const eventQueueSize = 64
 
 // playerError is a struct holding both an error and the playerProxy in which
 // the error occurred.
@@ -111,19 +117,59 @@ func (ctrl *controller) gameLoopEventHandler(eventCh chan<- model.Event) eventHa
 
 // playerEventLoop forwards events published on eventCh to a player. Blocks
 // until eventCh is closed, an error occurs, or the context is canceled.
+//
+// Ticks are coalesced: if a player is slower than the game, more events are
+// queued on eventCh by the time a write has finished. Of a run of queued
+// ticks only the latest one is written, as each tick has the full game state
+// (for v5 clients, deltas are computed against what was last sent, so
+// skipping ticks is fine too). Other events are never skipped and keep their
+// order relative to the ticks.
 func (ctrl *controller) playerEventLoop(ctx context.Context, player *playerProxy, eventCh <-chan model.Event) error {
+	// next is an event taken from eventCh while coalescing ticks, to be
+	// written next.
+	var next model.Event
+	for {
+		evt := next
+		next = nil
+		if evt == nil {
+			select {
+			case e, ok := <-eventCh:
+				if !ok {
+					// eventCh closed, we have handled all events.
+					return nil
+				}
+				evt = e
+			case <-ctx.Done():
+				return ctx.Err()
+			}
+		}
+		if _, isTick := evt.(*model.EventTick); isTick {
+			evt, next = latestQueuedTick(evt, eventCh)
+		}
+		if err := player.WriteEvent(ctx, evt); err != nil {
+			return err
+		}
+	}
+}
+
+// latestQueuedTick takes events already queued on eventCh, without blocking,
+// for as long as they are ticks. It returns the last tick of the run, starting
+// with tick, and the first queued non-tick event, or nil if there was none.
+func latestQueuedTick(tick model.Event, eventCh <-chan model.Event) (latest, next model.Event) {
+	latest = tick
 	for {
 		select {
 		case evt, ok := <-eventCh:
 			if !ok {
-				// eventCh closed, we have handled all events.
-				return nil
+				// Closed. The caller sees that on its next receive.
+				return latest, nil
 			}
-			if err := player.WriteEvent(ctx, evt); err != nil {
-				return err
+			if _, isTick := evt.(*model.EventTick); !isTick {
+				return latest, evt
 			}
-		case <-ctx.Done():
-			return ctx.Err()
+			latest = evt
+		default:
+			return latest, nil
 		}
 	}
 }

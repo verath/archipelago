@@ -2,6 +2,7 @@ package game
 
 import (
 	"context"
+	"slices"
 	"testing"
 	"time"
 
@@ -65,4 +66,63 @@ func TestController_Run_BroadcastsGameStart(t *testing.T) {
 	// Tear down, wait for controller to stop
 	cancel()
 	<-ctrlRunErrCh
+}
+
+// Test that playerEventLoop coalesces ticks queued while a write is blocked:
+// of a run of queued ticks only the latest is written, and other events are
+// written in order.
+func TestController_PlayerEventLoop_CoalescesTicks(t *testing.T) {
+	game := model.CreateDummyGameSimple()
+	tick := func(ms int) model.Event {
+		g := game.Copy()
+		g.SetTime(time.Duration(ms) * time.Millisecond)
+		return &model.EventTick{Game: g}
+	}
+	gameOver := &model.EventGameOver{WinnerID: "winner"}
+
+	writingCh := make(chan struct{})
+	unblockCh := make(chan struct{})
+	var written []string
+	client := &mockClient{
+		WritePlayerEventFunc: func(ctx context.Context, evt model.PlayerEvent) error {
+			if len(written) == 0 {
+				// Block the first write until the other events are queued.
+				close(writingCh)
+				<-unblockCh
+			}
+			switch evt := evt.(type) {
+			case *model.PlayerEventTick:
+				written = append(written, "tick "+evt.Game.Time().String())
+			case *model.PlayerEventGameOver:
+				written = append(written, "gameOver")
+			default:
+				t.Errorf("unexpected event %T", evt)
+			}
+			return nil
+		},
+	}
+	player, err := newPlayerProxy(game.Players()[0], client)
+	if err != nil {
+		t.Fatalf("expected no error creating player proxy, got: %+v", err)
+	}
+	ctrl := &controller{logger: testutil.DiscardLogger}
+
+	eventCh := make(chan model.Event, eventQueueSize)
+	errCh := make(chan error)
+	go func() { errCh <- ctrl.playerEventLoop(context.Background(), player, eventCh) }()
+	eventCh <- tick(0)
+	<-writingCh
+	for _, evt := range []model.Event{tick(1), tick(2), gameOver, tick(3), tick(4)} {
+		eventCh <- evt
+	}
+	close(eventCh)
+	close(unblockCh)
+	if err := <-errCh; err != nil {
+		t.Fatalf("expected no error from playerEventLoop, got: %+v", err)
+	}
+
+	want := []string{"tick 0s", "tick 2ms", "gameOver", "tick 4ms"}
+	if !slices.Equal(written, want) {
+		t.Errorf("written events = %q, want %q", written, want)
+	}
 }
