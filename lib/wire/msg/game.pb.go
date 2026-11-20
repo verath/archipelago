@@ -554,7 +554,9 @@ func (x *Game) GetAirplanes() []*Airplane {
 //     full game state, then an EventGameDelta with the changes since the
 //     previous snapshot/delta every tick, then EventGameOver. The server
 //     may send another EventGameSnapshot instead of a delta at any time.
-//     The client sets ActionGameLaunch.seq.
+//     The client sets ActionGameLaunch.seq. A client whose connection
+//     broke during the game can resume it on a new connection, see
+//     EventGameStart.resume_token.
 type EventEnvelope struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	// Types that are valid to be assigned to Event:
@@ -692,7 +694,24 @@ type EventGameStart struct {
 	state    protoimpl.MessageState `protogen:"open.v1"`
 	PlayerId string                 `protobuf:"bytes,1,opt,name=player_id,json=playerId,proto3" json:"player_id,omitempty"`
 	// Aprox. time between ticks [ms].
-	TickInterval  uint32 `protobuf:"varint,2,opt,name=tick_interval,json=tickInterval,proto3" json:"tick_interval,omitempty"`
+	TickInterval uint32 `protobuf:"varint,2,opt,name=tick_interval,json=tickInterval,proto3" json:"tick_interval,omitempty"`
+	// v5: Token for resuming the game after the connection broke. To resume,
+	// connect to the websocket URL with the query parameters
+	// "v=5&resume=<token>" within resume_timeout of the server noticing the
+	// old connection broke (a server notices within ~10 s, or right away when
+	// the client resumes). The server then sends EventGameStart again (same
+	// player_id and resume_token), an EventGameSnapshot with the current
+	// state (seq starting over at 1), then deltas as usual. If the game ended
+	// meanwhile, the snapshot is followed by EventGameOver. A connection the
+	// server still considers open is closed by the resume. If the game can't
+	// be resumed (unknown or expired token, or the game is over and its
+	// EventGameOver was delivered), the server responds with HTTP 410 Gone
+	// instead of upgrading to a websocket. ActionGameLaunch.seq continues
+	// across reconnects. Not set for v4.
+	ResumeToken string `protobuf:"bytes,3,opt,name=resume_token,json=resumeToken,proto3" json:"resume_token,omitempty"`
+	// v5: How long after the connection broke the client may resume [ms],
+	// see resume_token. Not set for v4.
+	ResumeTimeout uint32 `protobuf:"varint,4,opt,name=resume_timeout,json=resumeTimeout,proto3" json:"resume_timeout,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -737,6 +756,20 @@ func (x *EventGameStart) GetPlayerId() string {
 func (x *EventGameStart) GetTickInterval() uint32 {
 	if x != nil {
 		return x.TickInterval
+	}
+	return 0
+}
+
+func (x *EventGameStart) GetResumeToken() string {
+	if x != nil {
+		return x.ResumeToken
+	}
+	return ""
+}
+
+func (x *EventGameStart) GetResumeTimeout() uint32 {
+	if x != nil {
+		return x.ResumeTimeout
 	}
 	return 0
 }
@@ -1348,10 +1381,12 @@ const file_wire_msg_game_proto_rawDesc = "" +
 	"\x0fevent_game_tick\x18\x03 \x01(\v2\x17.wire.msg.EventGameTickH\x00R\reventGameTick\x12M\n" +
 	"\x13event_game_snapshot\x18\x04 \x01(\v2\x1b.wire.msg.EventGameSnapshotH\x00R\x11eventGameSnapshot\x12D\n" +
 	"\x10event_game_delta\x18\x05 \x01(\v2\x18.wire.msg.EventGameDeltaH\x00R\x0eeventGameDeltaB\a\n" +
-	"\x05event\"R\n" +
+	"\x05event\"\x9c\x01\n" +
 	"\x0eEventGameStart\x12\x1b\n" +
 	"\tplayer_id\x18\x01 \x01(\tR\bplayerId\x12#\n" +
-	"\rtick_interval\x18\x02 \x01(\rR\ftickInterval\",\n" +
+	"\rtick_interval\x18\x02 \x01(\rR\ftickInterval\x12!\n" +
+	"\fresume_token\x18\x03 \x01(\tR\vresumeToken\x12%\n" +
+	"\x0eresume_timeout\x18\x04 \x01(\rR\rresumeTimeout\",\n" +
 	"\rEventGameOver\x12\x1b\n" +
 	"\twinner_id\x18\x01 \x01(\tR\bwinnerId\"3\n" +
 	"\rEventGameTick\x12\"\n" +

@@ -258,6 +258,35 @@ func TestPBClientAdapter_WritePlayerEvent(t *testing.T) {
 	}
 }
 
+// Test that the resume token and timeout are only sent to v5 clients.
+func TestPBClientAdapter_WritePlayerEvent_ResumeToken(t *testing.T) {
+	evt := *eventGameStart
+	evt.ResumeToken = "token"
+	evt.ResumeTimeout = 20 * time.Second
+	for version, want := range map[wire.ProtocolVersion]*msg.EventGameStart{
+		wire.ProtocolV4: {PlayerId: "playerIDTest", TickInterval: 1000},
+		wire.ProtocolV5: {PlayerId: "playerIDTest", TickInterval: 1000, ResumeToken: "token", ResumeTimeout: 20000},
+	} {
+		var got *msg.EventEnvelope
+		mockClient := &wire.MockClient{
+			WriteMessageFunc: func(_ context.Context, b []byte) error {
+				got = &msg.EventEnvelope{}
+				return proto.Unmarshal(b, got)
+			},
+		}
+		pbClient, err := wire.NewPBClientAdapter(mockClient, version)
+		if err != nil {
+			t.Fatalf("NewPBClientAdapter: %v", err)
+		}
+		if err := pbClient.WritePlayerEvent(context.Background(), &evt); err != nil {
+			t.Fatalf("v%d: WritePlayerEvent: %v", version, err)
+		}
+		if !proto.Equal(got.GetEventGameStart(), want) {
+			t.Errorf("v%d: game start = %v, want %v", version, got, want)
+		}
+	}
+}
+
 func TestParseProtocolVersion(t *testing.T) {
 	for s, want := range map[string]wire.ProtocolVersion{"4": wire.ProtocolV4, "5": wire.ProtocolV5} {
 		if got, err := wire.ParseProtocolVersion(s); err != nil || got != want {

@@ -12,6 +12,7 @@ import (
 	"github.com/verath/archipelago/lib/game"
 	"github.com/verath/archipelago/lib/network"
 	"github.com/verath/archipelago/lib/network/websocket"
+	"github.com/verath/archipelago/lib/session"
 	"github.com/verath/archipelago/lib/wire"
 	"log/slog"
 )
@@ -24,12 +25,23 @@ var canceledClientContext context.Context = func() context.Context {
 	return ctx
 }()
 
+// Options configures a Server. The zero value is the production
+// configuration.
+type Options struct {
+	// ResumeGrace is how long a v5 client whose connection broke during a
+	// game has to resume the game on a new connection. Zero means
+	// session.DefaultGrace.
+	ResumeGrace time.Duration
+}
+
 // Server is the main entry point to the game server.
 type Server struct {
 	logger          *slog.Logger
 	gameCoordinator *game.Coordinator
 	wsUpgrader      *websocket.Upgrader
 	router          *http.ServeMux
+	// sessions holds the sessions of v5 clients, which can resume.
+	sessions *session.Registry
 
 	clientContextMu sync.RWMutex
 	clientContext   func() context.Context
@@ -40,8 +52,15 @@ type Server struct {
 // wsOpts configures the websocket endpoint, its zero value is the production
 // configuration; its Versions are set to the protocol versions the server
 // implements. coordinatorOpts configures how games are created, see
-// game.DefaultCoordinatorOptions for the production defaults.
-func New(logger *slog.Logger, wsOpts websocket.UpgraderOptions, coordinatorOpts game.CoordinatorOptions) (*Server, error) {
+// game.DefaultCoordinatorOptions for the production defaults. opts
+// configures the rest.
+func New(logger *slog.Logger, wsOpts websocket.UpgraderOptions, coordinatorOpts game.CoordinatorOptions, opts Options) (*Server, error) {
+	if opts.ResumeGrace < 0 {
+		return nil, fmt.Errorf("ResumeGrace must not be negative, got %v", opts.ResumeGrace)
+	}
+	if opts.ResumeGrace == 0 {
+		opts.ResumeGrace = session.DefaultGrace
+	}
 	gameCoordinator, err := game.NewCoordinator(logger, coordinatorOpts)
 	if err != nil {
 		return nil, fmt.Errorf("error creating game coordinator: %w", err)
@@ -56,6 +75,7 @@ func New(logger *slog.Logger, wsOpts websocket.UpgraderOptions, coordinatorOpts 
 		gameCoordinator: gameCoordinator,
 		router:          http.NewServeMux(),
 		wsUpgrader:      wsUpgrader,
+		sessions:        session.NewRegistry(opts.ResumeGrace),
 
 		clientContext: func() context.Context { return canceledClientContext },
 	}
@@ -98,17 +118,35 @@ func (srv *Server) setClientContext(clientCtx context.Context) {
 }
 
 // handleWSConnect returns an HTTP handler that handles new websocket
-// connections.
+// connections. With the "resume" query parameter, the connection resumes
+// the game of the session with that token (see EventGameStart.resume_token
+// in game.proto). If that game can't be resumed, the request fails with
+// 410 Gone.
 func (srv *Server) handleWSConnect() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
+		var resume *session.Session
+		if query := r.URL.Query(); query.Has("resume") {
+			// Fail before upgrading, so that the client can tell a game it
+			// can't resume from a network error.
+			if query.Get("v") != "5" {
+				http.Error(w, http.StatusText(http.StatusBadRequest)+" (resume requires v=5)", http.StatusBadRequest)
+				return
+			}
+			resume = srv.sessions.Resumable(query.Get("resume"))
+			if resume == nil {
+				srv.logger.Debug("Can't resume, unknown or ended session")
+				http.Error(w, http.StatusText(http.StatusGone)+" (game can't be resumed)", http.StatusGone)
+				return
+			}
+		}
 		wsConn, err := srv.wsUpgrader.Upgrade(w, r)
 		if err != nil {
 			// Note upgrader has already written error response.
 			srv.logger.Debug("Failed upgrading to ws", "err", err)
 			return
 		}
-		if err := srv.newWSClient(ctx, wsConn); err != nil {
+		if err := srv.newWSClient(ctx, wsConn, resume); err != nil {
 			srv.logger.Debug("Error handling new ws connection", "err", err)
 			wsConn.Close()
 		}
@@ -116,7 +154,9 @@ func (srv *Server) handleWSConnect() http.HandlerFunc {
 }
 
 // newWSClient starts a new websocket client for the provided ws connection.
-func (srv *Server) newWSClient(ctx context.Context, wsConn *websocket.WSConnection) error {
+// If resume is not nil, the client is attached to that session, otherwise
+// it is added to the game coordinator to join a new game.
+func (srv *Server) newWSClient(ctx context.Context, wsConn *websocket.WSConnection, resume *session.Session) error {
 	version, err := wire.ParseProtocolVersion(wsConn.Version())
 	if err != nil {
 		return fmt.Errorf("error parsing protocol version: %w", err)
@@ -138,7 +178,7 @@ func (srv *Server) newWSClient(ctx context.Context, wsConn *websocket.WSConnecti
 	go func() {
 		defer srv.clientsWG.Done()
 		start := time.Now()
-		srv.logger.Debug("client connected", "protocolVersion", version)
+		srv.logger.Debug("client connected", "protocolVersion", version, "resume", resume != nil)
 		err := client.Run(clientCtx)
 		if err != nil {
 			if errors.Is(err, context.Canceled) {
@@ -149,8 +189,21 @@ func (srv *Server) newWSClient(ctx context.Context, wsConn *websocket.WSConnecti
 		}
 		srv.logClientTraffic(time.Since(start), wsConn.Stats())
 	}()
-	if err := srv.gameCoordinator.AddClient(ctx, wireClient); err != nil {
-		client.Disconnect()
+	if resume != nil {
+		// Attach disconnects the client on error.
+		if err := resume.Attach(clientCtx, wireClient); err != nil {
+			return fmt.Errorf("error resuming session: %w", err)
+		}
+		srv.logger.Debug("client resumed session")
+		return nil
+	}
+	// Only v5 clients get a resume token, so only they can resume.
+	var gameClient game.Client = wireClient
+	if version == wire.ProtocolV5 {
+		gameClient = srv.sessions.New(wireClient)
+	}
+	if err := srv.gameCoordinator.AddClient(ctx, gameClient); err != nil {
+		gameClient.Disconnect()
 		return fmt.Errorf("error adding client to game coordinator: %w", err)
 	}
 	return nil

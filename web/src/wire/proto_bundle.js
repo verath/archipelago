@@ -3070,6 +3070,8 @@ export const wire = $root.wire = (() => {
              * @typedef {Object} wire.msg.EventGameStart.$Properties
              * @property {string|null} [playerId] EventGameStart playerId
              * @property {number|null} [tickInterval] EventGameStart tickInterval
+             * @property {string|null} [resumeToken] EventGameStart resumeToken
+             * @property {number|null} [resumeTimeout] EventGameStart resumeTimeout
              * @property {Array.<Uint8Array>} [$unknowns] Unknown fields preserved while decoding when enabled
              */
 
@@ -3118,6 +3120,22 @@ export const wire = $root.wire = (() => {
             EventGameStart.prototype.tickInterval = 0;
 
             /**
+             * EventGameStart resumeToken.
+             * @member {string} resumeToken
+             * @memberof wire.msg.EventGameStart
+             * @instance
+             */
+            EventGameStart.prototype.resumeToken = "";
+
+            /**
+             * EventGameStart resumeTimeout.
+             * @member {number} resumeTimeout
+             * @memberof wire.msg.EventGameStart
+             * @instance
+             */
+            EventGameStart.prototype.resumeTimeout = 0;
+
+            /**
              * Creates a new EventGameStart instance using the specified properties.
              * @function create
              * @memberof wire.msg.EventGameStart
@@ -3153,6 +3171,10 @@ export const wire = $root.wire = (() => {
                     writer.uint32(/* id 1, wireType 2 =*/10).string(message.playerId);
                 if (message.tickInterval != null && $Object.hasOwnProperty.call(message, "tickInterval") && message.tickInterval !== 0)
                     writer.uint32(/* id 2, wireType 0 =*/16).uint32(message.tickInterval);
+                if (message.resumeToken != null && $Object.hasOwnProperty.call(message, "resumeToken") && message.resumeToken !== "")
+                    writer.uint32(/* id 3, wireType 2 =*/26).string(message.resumeToken);
+                if (message.resumeTimeout != null && $Object.hasOwnProperty.call(message, "resumeTimeout") && message.resumeTimeout !== 0)
+                    writer.uint32(/* id 4, wireType 0 =*/32).uint32(message.resumeTimeout);
                 if (message.$unknowns != null && $Object.hasOwnProperty.call(message, "$unknowns"))
                     for (let i = 0; i < message.$unknowns.length; ++i)
                         writer.raw(message.$unknowns[i]);
@@ -3228,6 +3250,24 @@ export const wire = $root.wire = (() => {
                                 delete message.tickInterval;
                             continue;
                         }
+                    case 3: {
+                            if (wireType !== 2)
+                                break;
+                            if ((value = reader.stringVerify()).length)
+                                message.resumeToken = value;
+                            else
+                                delete message.resumeToken;
+                            continue;
+                        }
+                    case 4: {
+                            if (wireType !== 0)
+                                break;
+                            if (value = reader.uint32())
+                                message.resumeTimeout = value;
+                            else
+                                delete message.resumeTimeout;
+                            continue;
+                        }
                     }
                     reader.skipType(wireType, _depth, tag);
                     if (!reader.discardUnknown) {
@@ -3282,6 +3322,12 @@ export const wire = $root.wire = (() => {
                 if (message.tickInterval != null && $Object.hasOwnProperty.call(message, "tickInterval"))
                     if (!$util.isInteger(message.tickInterval))
                         return "tickInterval: integer expected";
+                if (message.resumeToken != null && $Object.hasOwnProperty.call(message, "resumeToken"))
+                    if (!$util.isString(message.resumeToken))
+                        return "resumeToken: string expected";
+                if (message.resumeTimeout != null && $Object.hasOwnProperty.call(message, "resumeTimeout"))
+                    if (!$util.isInteger(message.resumeTimeout))
+                        return "resumeTimeout: integer expected";
                 return null;
             };
 
@@ -3309,6 +3355,12 @@ export const wire = $root.wire = (() => {
                 if (object.tickInterval != null)
                     if ($Number(object.tickInterval) !== 0)
                         message.tickInterval = object.tickInterval >>> 0;
+                if (object.resumeToken != null)
+                    if (typeof object.resumeToken !== "string" || object.resumeToken.length)
+                        message.resumeToken = $String(object.resumeToken);
+                if (object.resumeTimeout != null)
+                    if ($Number(object.resumeTimeout) !== 0)
+                        message.resumeTimeout = object.resumeTimeout >>> 0;
                 return message;
             };
 
@@ -3332,11 +3384,17 @@ export const wire = $root.wire = (() => {
                 if (options.defaults) {
                     object.playerId = "";
                     object.tickInterval = 0;
+                    object.resumeToken = "";
+                    object.resumeTimeout = 0;
                 }
                 if (message.playerId != null && $Object.hasOwnProperty.call(message, "playerId"))
                     object.playerId = message.playerId;
                 if (message.tickInterval != null && $Object.hasOwnProperty.call(message, "tickInterval"))
                     object.tickInterval = message.tickInterval;
+                if (message.resumeToken != null && $Object.hasOwnProperty.call(message, "resumeToken"))
+                    object.resumeToken = message.resumeToken;
+                if (message.resumeTimeout != null && $Object.hasOwnProperty.call(message, "resumeTimeout"))
+                    object.resumeTimeout = message.resumeTimeout;
                 return object;
             };
 
