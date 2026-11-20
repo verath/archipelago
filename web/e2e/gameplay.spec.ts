@@ -85,6 +85,33 @@ test.describe("launching an airplane", () => {
         expect(afterLaunch.strength).toBeLessThan(before);
         expect(afterLaunch.strength).toBeLessThanOrEqual(Math.ceil(before / 2) + 2);
 
+        // The client moves the airplane itself (protocol v5): sampled on
+        // every animation frame for 400 ms (at most 2 server messages), it
+        // gets closer to the target on each frame, not only when a message
+        // arrives. Sampled in the page, as a gameState() round trip can take
+        // longer than a frame in CI.
+        const distances = await page.evaluate(({ id, target }) => new Promise<number[]>((resolve) => {
+            const samples: number[] = [];
+            const end = performance.now() + 400;
+            const sample = () => {
+                const a = window.__archipelagoTest!.airplanes().find((p) => p.id === id);
+                if (a == null || performance.now() > end) {
+                    resolve(samples); // Done, or arrived already.
+                    return;
+                }
+                samples.push(Math.hypot(a.position.x - target.x, a.position.y - target.y));
+                requestAnimationFrame(sample);
+            };
+            requestAnimationFrame(sample);
+        }), { id: airplane.id, target: target.position });
+        expect(distances.length, "frames sampled before arrival").toBeGreaterThanOrEqual(3);
+        for (let i = 1; i < distances.length; i++) {
+            expect(distances[i], `distance ${i} <= distance ${i - 1}: ${distances}`).toBeLessThanOrEqual(distances[i - 1]);
+        }
+        // A frame may render before the airplane moved (e.g. the first one),
+        // but most frames move it.
+        expect(new Set(distances).size, `distinct distances: ${distances}`).toBeGreaterThanOrEqual(Math.min(3, distances.length));
+
         // Airplanes fly 1 tile per 3s. Wait for the arrival.
         let landed: TestHookIsland | undefined;
         await expect.poll(async () => {

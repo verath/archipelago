@@ -70,6 +70,18 @@ export default class PlayerModel extends BaseModel<PlayerData> {
         return this._state;
     }
 
+    /**
+     * Updates only the state, as sent in a delta. A change event is emitted
+     * if it changed.
+     */
+    updateState(state: wire.msg.PlayerState | null | undefined): void {
+        const playerState = decodePlayerState(state);
+        if (this._state !== playerState) {
+            this._state = playerState;
+            this._emitChanged();
+        }
+    }
+
     protected override _update(playerData: PlayerData): boolean {
         let changed = super._update(playerData);
         if (this._color !== playerData.color) {

@@ -125,21 +125,19 @@ export default class GameView {
         this._gameModel.islands
             .filter(islandModel => !this._islands.has(islandModel.id))
             .forEach(islandModel => this._addIsland(islandModel));
+        // Remove sprites of airplanes that are no longer part of the model,
+        // also when a new airplane model replaced one with the same id (a
+        // delta may remove and re-add an airplane).
+        const idsToRemove: (string | null)[] = [];
+        for (const [id, sprite] of this._airplanes) {
+            if (sprite.model !== this._gameModel.airplaneById(id)) {
+                idsToRemove.push(id);
+            }
+        }
+        idsToRemove.forEach(id => this._removeAirplane(id));
         this._gameModel.airplanes
             .filter(airplaneModel => !this._airplanes.has(airplaneModel.id))
             .forEach(airplaneModel => this._addAirplane(airplaneModel));
-
-
-        // Remove any airplanes that are no longer part of the model
-        if (this._airplanes.size > this._gameModel.airplanes.length) {
-            const idsToRemove: (string | null)[] = [];
-            for (const id of this._airplanes.keys()) {
-                if (!this._gameModel.airplaneById(id)) {
-                    idsToRemove.push(id);
-                }
-            }
-            idsToRemove.forEach(id => this._removeAirplane(id));
-        }
 
         // Check if the game model has changed size, if so we resize ourselves and
         // recreate the fog of war tiles.

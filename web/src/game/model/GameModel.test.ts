@@ -1,9 +1,10 @@
 import { describe, it, expect, vi } from "vitest";
-import GameModel from "./GameModel.ts";
+import GameModel, { ProtocolError } from "./GameModel.ts";
 import { PLAYER_COLORS, PLAYER_COLOR_SELF, PLAYER_COLOR_NEUTRAL } from "./PlayerColors.ts";
 import { wire } from "../../wire/proto_bundle.js";
 import {
-    NEUTRAL_ID, defined, makeGame, makeIsland, makeAirplane, makePlayer, type GameOptions,
+    NEUTRAL_ID, defined, makeGame, makeIsland, makeAirplane, makePlayer, makeSnapshot, makeDelta,
+    type GameOptions,
 } from "../../test/fixtures.ts";
 
 const { PlayerState } = wire.msg;
@@ -223,6 +224,98 @@ describe("GameModel fog of war", () => {
     });
 });
 
+describe("GameModel.applySnapshot", () => {
+    it("replaces the state, with airplanes at the snapshot's game time", () => {
+        let now = 10_000;
+        const model = new GameModel(() => now);
+        model.myPlayerId = "me";
+        model.applySnapshot(makeSnapshot(makeGame({
+            players: [makePlayer("me")],
+            islands: [makeIsland("mine", 0, 0, "me", 10)],
+            airplanes: [makeAirplane("a1", 1, 1, "me", 3, 0, 0.001)],
+        }), 1, 2000));
+
+        expect(model.gameTime).toBe(2000);
+        now += 500;
+        model.interpolate(500);
+        // The clock runs 1% slow between messages, see GameClock.
+        expect(model.gameTime).toBeCloseTo(2000 + 500 * 0.99);
+        expect(defined(model.airplaneById("a1")).position.x).toBeCloseTo(1 + 0.495);
+    });
+
+    it("throws a ProtocolError without a game", () => {
+        const model = new GameModel();
+        expect(() => model.applySnapshot({ seq: 1 })).toThrow(ProtocolError);
+    });
+});
+
+describe("GameModel.applyDelta", () => {
+    it("updates players, islands and airplanes", () => {
+        const model = newGame({ airplanes: [makeAirplane("a1", 1, 1, "enemy", 4), makeAirplane("a2", 3, 3, "enemy", 2)] });
+        const listener = vi.fn();
+        model.addChangeListener(listener);
+
+        model.applyDelta(makeDelta(2, 333, {
+            players: [makePlayer("enemy", PlayerState.DEAD)],
+            islands: [{ id: "free", army: { ownerId: "me", strength: 0 } }],
+            airplanesRemoved: ["a1"],
+            airplanesAdded: [makeAirplane("a3", 2, 2, "me", 6, 0, 0.001)],
+            airplanesUpdated: [{ id: "a2", army: { ownerId: "enemy", strength: -1 } }],
+        }));
+
+        expect(model.playerById("enemy")?.state).toBe("DEAD");
+        expect(model.islandById("free")?.owner).toBe(model.playerById("me"));
+        expect(model.islandById("free")?.strength).toBe(0);
+        expect(model.airplanes.map(a => a.id)).toEqual(["a2", "a3"]);
+        expect(model.airplaneById("a1")).toBeNull();
+        expect(model.airplaneById("a2")?.strength).toBe(-1);
+        expect(model.airplaneById("a3")?.strength).toBe(6);
+        // Airplanes were added and removed.
+        expect(listener).toHaveBeenCalled();
+    });
+
+    it("positions added airplanes at the delta's game time", () => {
+        let now = 0;
+        const model = new GameModel(() => now);
+        model.myPlayerId = "me";
+        model.applySnapshot(makeSnapshot(makeGame({ players: [makePlayer("me")] }), 1, 0));
+        now = 1000;
+        model.applyDelta(makeDelta(2, 1000, { airplanesAdded: [makeAirplane("a", 0, 0, "me", 1, 0, 0.001)] }));
+        now = 1250;
+        model.interpolate(250);
+        expect(defined(model.airplaneById("a")).position.x).toBeCloseTo(0.25);
+    });
+
+    it("can remove and add the same airplane", () => {
+        const model = newGame({ airplanes: [makeAirplane("a1", 1, 1, "me", 4, 0)] });
+        model.applyDelta(makeDelta(2, 0, {
+            airplanesRemoved: ["a1"],
+            airplanesAdded: [makeAirplane("a1", 1, 1, "me", 4, Math.PI)],
+        }));
+        expect(model.airplanes).toHaveLength(1);
+        expect(model.airplaneById("a1")?.direction).toBeCloseTo(Math.PI);
+    });
+
+    it("updates the fog of war", () => {
+        const model = newGame();
+        expect(countClear(model)).toBe(9);
+        model.applyDelta(makeDelta(2, 333, { islands: [{ id: "free", army: { ownerId: "me", strength: 3 } }] }));
+        // "free" at (0, 0) clears 4 tiles, (1, 1) of which "mine" already did.
+        expect(countClear(model)).toBe(9 + 4 - 1);
+    });
+
+    it.each([
+        ["an unknown player", { players: [makePlayer("nobody")] }],
+        ["an unknown island", { islands: [{ id: "nope", army: { ownerId: "me", strength: 1 } }] }],
+        ["removing an unknown airplane", { airplanesRemoved: ["nope"] }],
+        ["updating an unknown airplane", { airplanesUpdated: [{ id: "nope", army: { ownerId: "me", strength: 1 } }] }],
+        ["adding a known airplane", { airplanesAdded: [makeAirplane("a1", 0, 0, "me")] }],
+    ])("throws a ProtocolError for %s", (_, delta) => {
+        const model = newGame({ airplanes: [makeAirplane("a1", 1, 1, "me", 4)] });
+        expect(() => model.applyDelta(makeDelta(2, 0, delta))).toThrow(ProtocolError);
+    });
+});
+
 describe("GameModel.launchAirplane", () => {
     it("takes half the strength (rounded down) into a local airplane", () => {
         const model = newGame();
@@ -231,13 +324,14 @@ describe("GameModel.launchAirplane", () => {
         const origin = defined(model.islandById("mine"));
         origin.strength = 11;
 
-        model.launchAirplane(origin, defined(model.islandById("theirs")));
+        model.launchAirplane(origin, defined(model.islandById("theirs")), 1);
 
         expect(origin.strength).toBe(6);
         expect(model.airplanes).toHaveLength(1);
         const plane = model.airplanes[0];
         expect(plane.id).toMatch(/^local-\d+$/);
         expect(plane.strength).toBe(5);
+        expect(plane.launchSeq).toBe(1);
         expect(plane.owner).toBe(model.playerById("me"));
         expect([plane.position.x, plane.position.y]).toEqual([2, 2]);
         // Heading down-right towards (4, 4).
@@ -245,34 +339,92 @@ describe("GameModel.launchAirplane", () => {
         expect(listener).toHaveBeenCalled();
     });
 
-    it("replaces the local airplane when the server reports the real one", () => {
+    it("keeps the island's predicted strength while the server's changes", () => {
         const model = newGame();
-        model.launchAirplane(defined(model.islandById("mine")), defined(model.islandById("theirs")));
-        expect(model.airplanes[0].id).toMatch(/^local-/);
+        const origin = defined(model.islandById("mine"));
+        model.launchAirplane(origin, defined(model.islandById("theirs")), 1);
+        expect(origin.strength).toBe(5);
 
-        model.update(makeGame({
-            players: [makePlayer("me"), makePlayer("enemy")],
-            islands: [makeIsland("mine", 2, 2, "me", 5)],
-            airplanes: [makeAirplane("srv-1", 2.1, 2.1, "me", 5, Math.PI / 4)],
+        // The island grew before the server processed the launch.
+        model.applyDelta(makeDelta(2, 333, { islands: [{ id: "mine", army: { ownerId: "me", strength: 11 } }] }));
+        expect(origin.strength).toBe(6);
+        expect(model.airplanes).toHaveLength(1);
+    });
+
+    it("replaces the local airplane with the server's once the launch was processed", () => {
+        const model = newGame();
+        const origin = defined(model.islandById("mine"));
+        model.launchAirplane(origin, defined(model.islandById("theirs")), 1);
+        const local = model.airplanes[0];
+        const listener = vi.fn();
+        model.addChangeListener(listener);
+
+        model.applyDelta(makeDelta(2, 333, {
+            players: [makePlayer("me", PlayerState.ALIVE, 1)],
+            islands: [{ id: "mine", army: { ownerId: "me", strength: 5 } }],
+            airplanesAdded: [makeAirplane("srv-1", 2.1, 2.1, "me", 5, Math.PI / 4, 0.001, { destinationId: "theirs", launchSeq: 1 })],
         }));
+
         expect(model.airplanes.map(a => a.id)).toEqual(["srv-1"]);
+        expect(model.myLastLaunchSeq).toBe(1);
+        expect(origin.strength).toBe(5);
+        // The server's airplane takes over from where the local one was shown.
+        const real = defined(model.airplaneById("srv-1"));
+        expect([real.position.x, real.position.y]).toEqual([local.position.x, local.position.y]);
+        expect(listener).toHaveBeenCalled();
+    });
+
+    it("removes the local airplane and restores the island when the launch failed", () => {
+        const model = newGame();
+        const origin = defined(model.islandById("mine"));
+        model.launchAirplane(origin, defined(model.islandById("theirs")), 1);
+        model.launchAirplane(origin, defined(model.islandById("free")), 2);
+        expect(origin.strength).toBe(3);
+
+        // Launch 1 failed (no airplane, island unchanged), 2 is not processed yet.
+        model.applyDelta(makeDelta(2, 333, { players: [makePlayer("me", PlayerState.ALIVE, 1)] }));
+
+        expect(model.airplanes.map(a => a.launchSeq)).toEqual([2]);
+        expect(origin.strength).toBe(10 - 2);
+    });
+
+    it("keeps unprocessed local airplanes over a snapshot", () => {
+        const model = newGame();
+        model.launchAirplane(defined(model.islandById("mine")), defined(model.islandById("theirs")), 1);
+        model.applySnapshot(makeSnapshot(makeGame({
+            players: [makePlayer("me"), makePlayer("enemy")],
+            islands: [makeIsland("mine", 2, 2, "me", 10), makeIsland("theirs", 4, 4, "enemy", 7)],
+        }), 9, 0));
+        expect(model.airplanes.map(a => a.launchSeq)).toEqual([1]);
+        expect(model.islandById("mine")?.strength).toBe(5);
+    });
+
+    it("ignores predictions for an island we lost", () => {
+        const model = newGame();
+        const origin = defined(model.islandById("mine"));
+        model.launchAirplane(origin, defined(model.islandById("theirs")), 1);
+        model.applyDelta(makeDelta(2, 333, { islands: [{ id: "mine", army: { ownerId: "enemy", strength: 3 } }] }));
+        expect(origin.strength).toBe(3);
     });
 });
 
 describe("GameModel.interpolate", () => {
-    it("moves airplanes along their direction", () => {
-        const model = newGame();
-        model.serverTickInterval = 1000;
-        model.update(makeGame({
+    it("moves airplanes to the estimated game time", () => {
+        let now = 0;
+        const model = new GameModel(() => now);
+        model.myPlayerId = "me";
+        model.applySnapshot(makeSnapshot(makeGame({
             players: [makePlayer("me"), makePlayer("enemy")],
             islands: [makeIsland("mine", 2, 2, "me", 10)],
             airplanes: [makeAirplane("a1", 1, 1, "me", 3, 0, 0.001)],
-        }));
+        }), 1, 0));
         const plane = defined(model.airplaneById("a1"));
         expect([plane.position.x, plane.position.y]).toEqual([1, 1]);
 
+        now = 500;
         model.interpolate(500);
-        expect(plane.position.x).toBeCloseTo(1.5);
+        // 495 ms of game time: the clock runs 1% slow between messages.
+        expect(plane.position.x).toBeCloseTo(1.495);
         expect(plane.position.y).toBeCloseTo(1);
     });
 });

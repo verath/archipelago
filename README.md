@@ -111,7 +111,8 @@ cd web && npm run test:e2e
   * launching an airplane works;
   * the remaining player wins when the other one leaves;
   * the UI copes with the backend going away;
-  * the WebSocket traffic is compressed.
+  * the client uses protocol v5, with compression, and its traffic is small;
+  * airplanes move between server messages.
 
   Specs are in [web/e2e](web/e2e). On failure, `npx playwright show-report` opens the report.
 
@@ -151,13 +152,19 @@ The client picks the protocol version with the `v` query parameter of the WebSoc
 backend supports two (see `EventEnvelope` in [game.proto](proto/wire/msg/game.proto)):
 
 * **v4** sends the full game state every tick (`EventGameTick`).
-* **v5** sends the full state once (`EventGameSnapshot`), then only what changed each tick
-  (`EventGameDelta`), about 5% of the size. Airplanes are sent once, when they appear; the client
+* **v5**, which the frontend uses, sends the full state once (`EventGameSnapshot`), then only what
+  changed each tick (`EventGameDelta`), about 5% of the size. Airplanes are sent once, when they appear; the client
   computes their position from the game time each message carries. The deltas are computed per
   client, between the state last sent to it and the current one (both after fog of war), in
   [lib/wire/delta.go](lib/wire/delta.go).
 
-Supporting both lets the backend be deployed before a frontend that switches versions.
+Supporting both lets the backend be deployed before a frontend that switches versions, and keeps
+frontends that browsers still have cached working.
+
+The frontend's model (`web/src/game/model/GameModel.ts`) applies the snapshot and deltas, and moves
+airplanes in between with a `GameClock` that estimates the server's game time. Our own launches show
+right away: a local airplane flies, and the island shows the strength it took, until the server
+reports (`Player.last_launch_seq`) that it processed the launch.
 
 ## Deployment
 

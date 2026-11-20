@@ -38,6 +38,10 @@ export interface TestHookAirplane {
     ownerId: string | null;
     strength: number;
     /**
+     * The displayed position, in tiles.
+     */
+    position: TestHookPosition;
+    /**
      * True for airplanes created locally until the server confirms them.
      */
     local: boolean;
@@ -126,6 +130,7 @@ export function installTestHook(getModel: () => ArchipelagoModel): void {
             id: airplane.id,
             ownerId: ownerId(airplane),
             strength: airplane.strength,
+            position: { x: airplane.position.x, y: airplane.position.y },
             // Airplanes created locally until the server confirms them.
             local: airplane.id?.startsWith("local-") ?? false,
         })),
