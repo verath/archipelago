@@ -1,20 +1,15 @@
 import { Sprite } from "pixi.js";
 
-import ResourceHolder from "../../resource/ResourceHolder.js";
-import { TEXTURE_FOG } from "../../images";
-import { TILE_WIDTH, TILE_HEIGHT } from "./GameView";
+import type ResourceHolder from "../../resource/ResourceHolder.ts";
+import { TEXTURE_FOG } from "../../images/index.ts";
+import { TILE_WIDTH, TILE_HEIGHT } from "./GameView.ts";
 
 /**
  * FogOfWarSprite is a static sprite representing a tile covered in fog of war.
  */
 export default class FogOfWarSprite extends Sprite {
 
-    /**
-     * @param {ResourceHolder} resourceHolder
-     * @param {number} x
-     * @param {number} y
-     */
-    constructor(resourceHolder, x, y) {
+    constructor(resourceHolder: ResourceHolder, x: number, y: number) {
         super(resourceHolder.getTexture(TEXTURE_FOG));
         this.pivot.set(TILE_WIDTH / 2, TILE_HEIGHT / 2);
 

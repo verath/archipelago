@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import Coordinate from "./Coordinate.js";
+import Coordinate from "./Coordinate.ts";
 
 describe("Coordinate", () => {
     it("defaults to an off-screen position", () => {

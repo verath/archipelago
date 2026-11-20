@@ -1,91 +1,56 @@
-import BaseModel from "./BaseModel.js";
-import AirplaneModel from "./AirplaneModel.js";
-import Coordinate from "./Coordinate.js";
-import PlayerModel from "./PlayerModel.js";
-import { PLAYER_COLORS, PLAYER_COLOR_NEUTRAL } from "./PlayerColors.js";
-import IslandModel from "./IslandModel.js";
-import LocalAirplaneModel from "./LocalAirplaneModel.js";
-import { wire } from "../../wire/proto_bundle.js";
+import BaseModel from "./BaseModel.ts";
+import AirplaneModel from "./AirplaneModel.ts";
+import Coordinate from "./Coordinate.ts";
+import PlayerModel from "./PlayerModel.ts";
+import { PLAYER_COLORS, PLAYER_COLOR_NEUTRAL } from "./PlayerColors.ts";
+import IslandModel from "./IslandModel.ts";
+import LocalAirplaneModel from "./LocalAirplaneModel.ts";
+import type { wire } from "../../wire/proto_bundle.js";
 
-export default class GameModel extends BaseModel {
+export default class GameModel extends BaseModel<wire.msg.Game.$Properties> {
 
-    constructor() {
-        super();
+    private readonly _size = new Coordinate(0, 0);
 
-        /**
-         * @member {Coordinate}
-         * @private
-         */
-        this._size = new Coordinate(0, 0);
+    private readonly _playerNeutral: PlayerModel = new PlayerModel(this);
 
-        /**
-         * @member {PlayerModel}
-         * @private
-         */
-        this._playerNeutral = new PlayerModel(this);
+    private _players: PlayerModel[] = [];
 
-        /**
-         * @type {PlayerModel[]}
-         * @private
-         */
-        this._players = [];
+    private _islands: IslandModel[] = [];
 
-        /**
-         * @type {IslandModel[]}
-         * @private
-         */
-        this._islands = [];
-
-        /**
-         * @type {AirplaneModel[]}
-         * @private
-         */
-        this._airplanes = [];
-
-        /**
-         * Array of FoW status for each tile in the game for the player we
-         * represent. `true` if tile in FoW, otherwise `false`. Positions are
-         * top-left to bottom-right.
-         * @type {boolean[]}
-         * @private
-         */
-        this._myFogOfWar = [];
-
-        /**
-         * Our player's id, i.e. the player we represent.
-         * @type {?string}
-         * @private
-         */
-        this._myPlayerId = null;
-
-        /**
-         * The approximate tick interval (i.e. time between ticks)
-         * of the server, in milliseconds.
-         * @type {number}
-         * @private
-         */
-        this._serverTickInterval = 1;
-    }
+    private _airplanes: AirplaneModel[] = [];
 
     /**
-     * @param {wire.msg.IPlayer[]} players 
-     * @returns {Boolean}
-     * @private
+     * Array of FoW status for each tile in the game for the player we
+     * represent. `true` if tile in FoW, otherwise `false`. Positions are
+     * top-left to bottom-right.
      */
-    _updatePlayers(players) {
+    private _myFogOfWar: boolean[] = [];
+
+    /**
+     * Our player's id, i.e. the player we represent.
+     */
+    private _myPlayerId: string | null = null;
+
+    /**
+     * The approximate tick interval (i.e. time between ticks)
+     * of the server, in milliseconds.
+     */
+    private _serverTickInterval = 1;
+
+    private _updatePlayers(players: wire.msg.Player.$Properties[]): boolean {
         let changed = false;
-        let numPlayers = this._players.length;
+        const numPlayers = this._players.length;
 
         // Update each player, create new ones if necessary.
         this._players = players.map((playerData, index) => {
-            let player = this.playerById(playerData.id);
+            let player = this.playerById(playerData.id ?? null);
             if (!player) {
                 player = new PlayerModel(this);
                 // A player was added.
                 changed = true;
             }
-            let color = PLAYER_COLORS[index % PLAYER_COLORS.length];
-            let playerDataWithColor = { color, ...playerData };
+            const color = PLAYER_COLORS[index % PLAYER_COLORS.length];
+            const playerDataWithColor = { color, ...playerData };
             player.update(playerDataWithColor);
             return player;
         });
@@ -96,18 +61,13 @@ export default class GameModel extends BaseModel {
         return changed;
     }
 
-    /**
-     * @param {wire.msg.IAirplane[]} airplanes
-     * @returns {Boolean}
-     * @private
-     */
-    _updateAirplanes(airplanes) {
+    private _updateAirplanes(airplanes: wire.msg.Airplane.$Properties[]): boolean {
         let changed = false;
-        let numAirplanes = this._airplanes.length;
+        const numAirplanes = this._airplanes.length;
 
         // Update each airplane, and create new ones if necessary
         this._airplanes = airplanes.map(airplaneData => {
-            let airplane = this.airplaneById(airplaneData.id);
+            let airplane = this.airplaneById(airplaneData.id ?? null);
             if (!airplane) {
                 airplane = new AirplaneModel(this);
                 // An airplane was added
@@ -123,18 +83,13 @@ export default class GameModel extends BaseModel {
         return changed;
     }
 
-    /**
-     * @param {wire.msg.IIsland[]} islands
-     * @returns {Boolean}
-     * @private
-     */
-    _updateIslands(islands) {
+    private _updateIslands(islands: wire.msg.Island.$Properties[]): boolean {
         let changed = false;
-        let numIslands = this._islands.length;
+        const numIslands = this._islands.length;
 
         // Update each island, and create new ones if necessary
         this._islands = islands.map(islandData => {
-            let island = this.islandById(islandData.id);
+            let island = this.islandById(islandData.id ?? null);
             if (!island) {
                 island = new IslandModel(this);
                 // An island was added
@@ -150,21 +105,20 @@ export default class GameModel extends BaseModel {
         return changed;
     }
 
-    /**
-     * @returns {boolean}
-     * @private
-     */
-    _updateMyFogOfWar() {
+    private _updateMyFogOfWar(): boolean {
         let changed = false;
         if (this._myFogOfWar.length !== (this._size.x * this._size.y)) {
-            this._myFogOfWar = Array(this._size.x * this._size.y).fill(false);
+            this._myFogOfWar = Array<boolean>(this._size.x * this._size.y).fill(false);
             changed = true;
         }
         const myPlayer = this._players.find(p => p.id === this._myPlayerId);
+        if (myPlayer === undefined) {
+            throw new Error("GameModel: our player is not in the game");
+        }
         switch (myPlayer.state) {
             case "ALIVE": {
-                const myIslands = this._islands.filter(island => island.owner.id === this._myPlayerId);
-                const myAirplanes = this._airplanes.filter(airplane => airplane.owner.id === this._myPlayerId);
+                const myIslands = this._islands.filter(island => island.owner?.id === this._myPlayerId);
+                const myAirplanes = this._airplanes.filter(airplane => airplane.owner?.id === this._myPlayerId);
                 const fogOfWar = generateFogOfWar(this._size, myIslands, myAirplanes);
                 for (let i = 0; i < fogOfWar.length; i++) {
                     if (this._myFogOfWar[i] !== fogOfWar[i]) {
@@ -198,27 +152,26 @@ export default class GameModel extends BaseModel {
         return changed;
     }
 
-    /**
-     * @param {wire.msg.Game} gameData
-     * @override
-     * @inheritDoc
-     */
-    _update(gameData) {
+    protected override _update(gameData: wire.msg.Game.$Properties): boolean {
         let changed = super._update(gameData);
         if (!this._size.equals(gameData.size)) {
+            if (gameData.size == null) {
+                throw new Error("GameModel: data has no size");
+            }
             this._size.set(gameData.size);
             changed = true;
         }
         const playerNeutralData = gameData.playerNeutral;
         const playerNeutralDataWithColor = { color: PLAYER_COLOR_NEUTRAL, ...playerNeutralData };
         this._playerNeutral.update(playerNeutralDataWithColor);
-        if (this._updatePlayers(gameData.players)) {
+        // Missing repeated fields are empty, as in a decoded protobuf message.
+        if (this._updatePlayers(gameData.players ?? [])) {
             changed = true;
         }
-        if (this._updateAirplanes(gameData.airplanes)) {
+        if (this._updateAirplanes(gameData.airplanes ?? [])) {
             changed = true;
         }
-        if (this._updateIslands(gameData.islands)) {
+        if (this._updateIslands(gameData.islands ?? [])) {
             changed = true;
         }
         if (this._updateMyFogOfWar()) {
@@ -227,53 +180,34 @@ export default class GameModel extends BaseModel {
         return changed;
     }
 
-    /**
-     * @returns {Coordinate}
-     */
-    get size() {
+    get size(): Coordinate {
         return this._size;
     }
 
-    /**
-     * @returns {PlayerModel}
-     */
-    get playerNeutral() {
+    get playerNeutral(): PlayerModel {
         return this._playerNeutral;
     }
 
-    /**
-     * @returns {IslandModel[]}
-     */
-    get islands() {
+    get islands(): IslandModel[] {
         return this._islands;
     }
 
-    /**
-     * @returns {AirplaneModel[]}
-     */
-    get airplanes() {
+    get airplanes(): AirplaneModel[] {
         return this._airplanes;
     }
 
-    /**
-     * @returns {boolean[]}
-     */
-    get myFogOfWar() {
+    get myFogOfWar(): boolean[] {
         return this._myFogOfWar;
     }
 
     /**
      * Player id that we are representing.
-     * @returns {?string}
      */
-    get myPlayerId() {
+    get myPlayerId(): string | null {
         return this._myPlayerId;
     }
 
-    /**
-     * @param {?string} playerId
-     */
-    set myPlayerId(playerId) {
+    set myPlayerId(playerId: string | null) {
         if (this._myPlayerId !== playerId) {
             this._myPlayerId = playerId;
             this._emitChanged();
@@ -281,9 +215,9 @@ export default class GameModel extends BaseModel {
     }
 
     /**
-     * @param {number} tickInterval [ms]
+     * @param tickInterval [ms]
      */
-    set serverTickInterval(tickInterval) {
+    set serverTickInterval(tickInterval: number) {
         if (this._serverTickInterval !== tickInterval) {
             this._serverTickInterval = tickInterval;
             this._emitChanged();
@@ -291,47 +225,42 @@ export default class GameModel extends BaseModel {
     }
 
     /**
-     * @returns {number} [ms]
+     * @returns [ms]
      */
-    get serverTickInterval() {
+    get serverTickInterval(): number {
         return this._serverTickInterval;
     }
 
     /**
-     * @param {string} airplaneId An id identifying the model
-     * @returns {?AirplaneModel} The airplane, if found.
+     * @param airplaneId An id identifying the model
+     * @returns The airplane, if found.
      */
-    airplaneById(airplaneId) {
+    airplaneById(airplaneId: string | null): AirplaneModel | null {
         return this._airplanes.find(airplaneModel => airplaneModel.id === airplaneId) || null;
     }
 
     /**
-     * @param {string} islandId An id identifying the model
-     * @returns {?IslandModel} The island, if found.
+     * @param islandId An id identifying the model
+     * @returns The island, if found.
      */
-    islandById(islandId) {
+    islandById(islandId: string | null): IslandModel | null {
         return this._islands.find(islandModel => islandModel.id === islandId) || null;
     }
 
     /**
-     * @param {string} playerId
-     * @returns {?PlayerModel} The player, if found.
+     * @returns The player, if found.
      */
-    playerById(playerId) {
+    playerById(playerId: string | null): PlayerModel | null {
         return this._players.find(playerModel => playerModel.id === playerId) || null;
     }
 
-    /**
-     * @param {IslandModel} origin
-     * @param {IslandModel} target
-     */
-    launchAirplane(origin, target) {
+    launchAirplane(origin: IslandModel, target: IslandModel): void {
         // Take strength from the island
-        let airplaneStrength = Math.floor(origin.strength / 2);
+        const airplaneStrength = Math.floor(origin.strength / 2);
         origin.strength -= airplaneStrength;
 
         // Create a new "local" airplane
-        let airplane = new LocalAirplaneModel(this, origin, target, airplaneStrength);
+        const airplane = new LocalAirplaneModel(this, origin, target, airplaneStrength);
         this._airplanes.push(airplane);
 
         // Since we changed the airplane array, we notify
@@ -340,39 +269,24 @@ export default class GameModel extends BaseModel {
     }
 
     /**
-     * @param {number} delta [ms]
+     * @param delta [ms]
      */
-    interpolate(delta) {
+    override interpolate(delta: number): void {
         this._airplanes.forEach(airplane => airplane.interpolate(delta));
         this._islands.forEach(island => island.interpolate(delta));
     }
 }
 
-/**
- * @param {Coordinate} [gameSize]
- * @param {IslandModel[]} [playerIslands]
- * @param {AirplaneModel[]} [playerAirplanes]
- * @returns {boolean[]}
- */
-function generateFogOfWar(gameSize, playerIslands, playerAirplanes) {
-    /**@type {boolean[]} */
-    let fogOfWar = Array(gameSize.x * gameSize.y).fill(true);
-    /**
-     * @param {number} n
-     * @returns {number}
-     */
-    let roundAwayZero = (n) => Math.sign(n) * Math.round(Math.abs(n));
-    /**
-     * @param {Coordinate} center 
-     * @param {number} radius 
-     */
-    let clearArea = (center, radius) => {
+function generateFogOfWar(gameSize: Coordinate, playerIslands: IslandModel[], playerAirplanes: AirplaneModel[]): boolean[] {
+    const fogOfWar = Array<boolean>(gameSize.x * gameSize.y).fill(true);
+    const roundAwayZero = (n: number): number => Math.sign(n) * Math.round(Math.abs(n));
+    const clearArea = (center: Coordinate, radius: number) => {
         const [cx, cy] = [roundAwayZero(center.x), roundAwayZero(center.y)];
         const [xStart, xEnd] = [Math.max(cx - radius, 0), Math.min(cx + radius, gameSize.x - 1)];
         const [yStart, yEnd] = [Math.max(cy - radius, 0), Math.min(cy + radius, gameSize.y - 1)];
         for (let x = xStart; x <= xEnd; x++) {
             for (let y = yStart; y <= yEnd; y++) {
-                let idx = y * gameSize.x + x;
+                const idx = y * gameSize.x + x;
                 fogOfWar[idx] = false;
             }
         }

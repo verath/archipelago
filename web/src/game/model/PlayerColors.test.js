@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import {
     PLAYER_COLORS, PLAYER_COLOR_SELF, PLAYER_COLOR_NEUTRAL, PLAYER_COLOR_NOT_SET,
-} from "./PlayerColors.js";
+} from "./PlayerColors.ts";
 
 describe("PlayerColors", () => {
     it("has distinct fill colors for enemies, self and neutral", () => {

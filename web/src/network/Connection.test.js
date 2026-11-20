@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import Connection from "./Connection.js";
+import Connection from "./Connection.ts";
 import { wire } from "../wire/proto_bundle.js";
 import { encodeEvent } from "../test/fixtures.js";
 

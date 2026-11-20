@@ -1,69 +1,44 @@
 import { Ticker } from "pixi.js";
 
-import Connection from "../../network/Connection.js";
+import type Connection from "../../network/Connection.ts";
+import type { ServerEvent } from "../../network/Connection.ts";
 import { wire } from "../../wire/proto_bundle.js";
-import GameModel from "../model/GameModel.js";
-import IslandModel from "../model/IslandModel.js";
+import type GameModel from "../model/GameModel.ts";
+import type IslandModel from "../model/IslandModel.ts";
 
-/**
- * @typedef {(GameResultGameOver | GameResultError)} GameResult
- *
- * @typedef GameResultGameOver
- * @property {"GAME_OVER"} reason
- * @property {?string} winnerId
- *
- * @typedef GameResultError
- * @property {"ERROR"} reason
- */
+export interface GameResultGameOver {
+    reason: "GAME_OVER";
+    winnerId: string | null;
+}
+
+export interface GameResultError {
+    reason: "ERROR";
+}
+
+export type GameResult = GameResultGameOver | GameResultError;
 
 /**
  * GameController
  */
 export default class GameController {
 
-    /**
-     * @param {Connection} connection
-     * @param {GameModel} gameModel
-     */
-    constructor(connection, gameModel) {
-        /**
-         * @member {Connection}
-         * @private
-         */
+    private readonly _connection: Connection;
+
+    private readonly _gameModel: GameModel;
+
+    private _lastUpdateMS = 0;
+
+    private _isGameOver = false;
+
+    private _winnerId: string | null = null;
+
+    constructor(connection: Connection, gameModel: GameModel) {
         this._connection = connection;
-
-        /**
-         * @member {GameModel}
-         * @private
-         */
         this._gameModel = gameModel;
-
-        /**
-         * @member {number}
-         * @private
-         */
-        this._lastUpdateMS = 0;
-
-        /**
-         * @member {boolean}
-         * @private
-         */
-        this._isGameOver = false;
-
-        /**
-         * @member {?string}
-         * @private
-         */
-        this._winnerId = null;
     }
 
 
-    /**
-     * @param {IslandModel} originIsland
-     * @param {IslandModel} targetIsland
-     * @private
-     */
-    _launchAirplane(originIsland, targetIsland) {
+    private _launchAirplane(originIsland: IslandModel, targetIsland: IslandModel): void {
         if (originIsland.id === targetIsland.id) {
             // Target cannot be the same as the origin
             return;
@@ -77,7 +52,7 @@ export default class GameController {
         this._gameModel.launchAirplane(originIsland, targetIsland);
 
         // Create and send the action as an ActionEnvelope
-        let actEnvelope = new wire.msg.ActionEnvelope();
+        const actEnvelope = new wire.msg.ActionEnvelope();
         actEnvelope.actionGameLaunch = new wire.msg.ActionGameLaunch({
             fromId: originIsland.id,
             toId: targetIsland.id
@@ -85,54 +60,38 @@ export default class GameController {
         this._connection.sendAction(actEnvelope);
     }
 
-    _interpolate() {
-        let now = performance.now();
-        let delta = now - (this._lastUpdateMS || now);
+    private _interpolate(): void {
+        const now = performance.now();
+        const delta = now - (this._lastUpdateMS || now);
         this._lastUpdateMS = now;
         this._gameModel.interpolate(delta);
     }
 
-    /**
-     * @param {?string} winnerId
-     * @private
-     */
-    _onGameOver(winnerId) {
+    private _onGameOver(winnerId: string | null): void {
         this._winnerId = winnerId;
         this._isGameOver = true;
     }
 
-    /**
-     * @param {wire.msg.IEventGameStart} evtStart
-     * @private
-     */
-    _onGameStartEvent(evtStart) {
-        this._gameModel.myPlayerId = evtStart.playerId;
-        this._gameModel.serverTickInterval = evtStart.tickInterval;
+    private _onGameStartEvent(evtStart: wire.msg.EventGameStart.$Properties): void {
+        // Missing scalars are their defaults, as in a decoded protobuf message.
+        this._gameModel.myPlayerId = evtStart.playerId ?? null;
+        this._gameModel.serverTickInterval = evtStart.tickInterval ?? 0;
     }
 
-    /**
-     * @param {wire.msg.IEventGameTick} evtTick
-     * @private
-     */
-    _onTickEvent(evtTick) {
+    private _onTickEvent(evtTick: wire.msg.EventGameTick.$Properties): void {
         // TODO: Network latency compensation?
         this._lastUpdateMS = performance.now();
+        if (evtTick.game == null) {
+            throw new Error("GameController: eventGameTick has no game");
+        }
         this._gameModel.update(evtTick.game);
     }
 
-    /**
-     * @param {wire.msg.IEventGameOver} evtGameOver
-     * @private
-     */
-    _onGameOverEvent(evtGameOver) {
-        this._onGameOver(evtGameOver.winnerId);
+    private _onGameOverEvent(evtGameOver: wire.msg.EventGameOver.$Properties): void {
+        this._onGameOver(evtGameOver.winnerId ?? null);
     }
 
-    /**
-     * @param {wire.msg.EventEnvelope} envelope
-     * @private
-     */
-    _onServerEvent(envelope) {
+    private _onServerEvent(envelope: ServerEvent): void {
         switch (envelope.event) {
             case "eventGameStart":
                 this._onGameStartEvent(envelope.eventGameStart);
@@ -148,42 +107,35 @@ export default class GameController {
         }
     }
 
-    /**
-     * @param {string} islandId
-     */
-    onIslandClicked(islandId) {
+    onIslandClicked(islandId: string | null): void {
         if (this._isGameOver) {
             return;
         }
 
-        let clickedIsland = this._gameModel.islandById(islandId);
+        const clickedIsland = this._gameModel.islandById(islandId);
         if (!clickedIsland) {
             console.warn("_onIslandClicked: clickedIsland does not exist");
             return;
         }
 
-        let selectedIsland = this._gameModel.islands.find(island => island.selected);
+        const selectedIsland = this._gameModel.islands.find(island => island.selected);
         if (selectedIsland) {
             selectedIsland.selected = false;
             this._launchAirplane(selectedIsland, clickedIsland);
         } else {
             // If we didn't have an island select already, select the clicked island
             // if it is owned by us.
-            if (clickedIsland.owner.isSelf()) {
+            if (clickedIsland.owner?.isSelf()) {
                 clickedIsland.selected = true;
             }
         }
     }
 
-    /**
-     * @returns {Promise<GameResult>}
-     */
-    async run() {
-        let ticker = new Ticker();
+    async run(): Promise<GameResult> {
+        const ticker = new Ticker();
         ticker.add(this._interpolate, this);
 
-        /**@type {GameResult} */
-        let gameResult;
+        let gameResult: GameResult;
         ticker.start();
         try {
             for (; ;) {

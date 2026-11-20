@@ -1,4 +1,15 @@
+/**
+ * Anything with an (optional) x and y, e.g. a wire.msg.Coordinate.
+ */
+export interface CoordinateLike {
+    x?: number | null;
+    y?: number | null;
+}
+
 export default class Coordinate {
+
+    private _x: number;
+    private _y: number;
 
     /**
      * Creates a new Coordinate. A coordinate represents
@@ -10,62 +21,36 @@ export default class Coordinate {
      * screen, so we don't accidentally draw something
      * that has not been positioned yet
      *
-     * @param {number} [x=-1000] The initial x value
-     * @param {number} [y=-1000] The initial y value
+     * @param x The initial x value
+     * @param y The initial y value
      */
     constructor(x = -1000, y = -1000) {
-        /**
-         * @member {number}
-         * @private
-         */
         this._x = x || 0;
-        /**
-         * @member {number}
-         * @private
-         */
         this._y = y || 0;
     }
 
-    /**
-     * @returns {number}
-     */
-    get x() {
+    get x(): number {
         return this._x;
     }
 
-    /**
-     * @returns {number}
-     */
-    get y() {
+    get y(): number {
         return this._y;
     }
 
-    /**
-     * @param {number} newX
-     */
-    set x(newX) {
+    set x(newX: number) {
         this._x = newX || 0;
     }
 
-    /**
-     * @param {number} newY
-     */
-    set y(newY) {
+    set y(newY: number) {
         this._y = newY || 0;
     }
 
-    /**
-     * @param {{x: number?, y: number?}} newPos
-     */
-    set({ x: newX, y: newY }) {
+    set({ x: newX, y: newY }: CoordinateLike): void {
         this.x = newX || 0;
         this.y = newY || 0;
     }
 
-    /**
-     * @param {{x: number?, y:number?}} other
-     */
-    equals(other) {
+    equals(other: CoordinateLike | null | undefined): boolean {
         if (!other) {
             return false;
         }

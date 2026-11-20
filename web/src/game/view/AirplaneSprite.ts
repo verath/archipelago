@@ -1,40 +1,28 @@
 import { Text } from "pixi.js";
 
-import { TEXTURE_AIRPLANE } from "../../images";
-import ResourceHolder from "../../resource/ResourceHolder.js";
-import AirplaneModel from "../model/AirplaneModel.js";
-import BaseSprite from "./BaseSprite.js";
-import { FONT_FAMILY_DEFAULT } from "./constants.js";
-import { TILE_HEIGHT, TILE_WIDTH } from "./GameView.js";
+import { TEXTURE_AIRPLANE } from "../../images/index.ts";
+import type ResourceHolder from "../../resource/ResourceHolder.ts";
+import type AirplaneModel from "../model/AirplaneModel.ts";
+import BaseSprite, { ownerColor } from "./BaseSprite.ts";
+import { FONT_FAMILY_DEFAULT } from "./constants.ts";
+import { TILE_HEIGHT, TILE_WIDTH } from "./GameView.ts";
 
 
-/**
- * @extends BaseSprite
- */
-export default class AirplaneSprite extends BaseSprite {
+export default class AirplaneSprite extends BaseSprite<AirplaneModel> {
 
-    /**
-     * @param {ResourceHolder} resourceHolder
-     */
-    constructor(resourceHolder) {
+    private readonly _strengthText: Text;
+
+    constructor(resourceHolder: ResourceHolder) {
         super(resourceHolder, TEXTURE_AIRPLANE);
         // Center our position anchor to the middle of the tile
         this.pivot.set(TILE_WIDTH / 2, TILE_HEIGHT / 2);
 
-        /**
-         * @type {Text}
-         * @private
-         */
         this._strengthText = AirplaneSprite._createStrengthText();
         this.addChild(this._strengthText);
     }
 
-    /**
-     * @returns {Text}
-     * @private
-     */
-    static _createStrengthText() {
-        let strengthText = new Text({
+    private static _createStrengthText(): Text {
+        const strengthText = new Text({
             text: "",
             style: {
                 fontFamily: FONT_FAMILY_DEFAULT,
@@ -50,13 +38,16 @@ export default class AirplaneSprite extends BaseSprite {
         return strengthText;
     }
 
-    _onModelChanged() {
-        let airplane = /** @type {AirplaneModel} */ (this._model);
+    protected override _onModelChanged(): void {
+        const airplane = this._model;
+        if (airplane == null) {
+            throw new Error("this._model == null");
+        }
         // Update fill color.
-        this._sprite.tint = airplane.owner.color.fill;
+        this._sprite.tint = ownerColor(airplane).fill;
         // Update our position, account for anchor being in the center
-        let x = airplane.position.x * TILE_WIDTH + TILE_WIDTH / 2;
-        let y = airplane.position.y * TILE_HEIGHT + TILE_HEIGHT / 2;
+        const x = airplane.position.x * TILE_WIDTH + TILE_WIDTH / 2;
+        const y = airplane.position.y * TILE_HEIGHT + TILE_HEIGHT / 2;
         this.position.set(x, y);
         // Update rotation to match the direction we are heading
         this.rotation = airplane.direction;
@@ -65,11 +56,7 @@ export default class AirplaneSprite extends BaseSprite {
         this._updateScale(airplane);
     }
 
-    /**
-     * 
-     * @param {AirplaneModel} airplane 
-     */
-    _updateStrengthText(airplane) {
+    private _updateStrengthText(airplane: AirplaneModel): void {
         if (airplane.strength >= 0) {
             this._strengthText.text = "" + airplane.strength;
         } else {
@@ -80,19 +67,15 @@ export default class AirplaneSprite extends BaseSprite {
         this._strengthText.rotation = -airplane.direction;
     }
 
-    /**
-     * 
-     * @param {AirplaneModel} airplane 
-     */
-    _updateScale(airplane) {
-        let strength = Math.max(airplane.strength, 1);
+    private _updateScale(airplane: AirplaneModel): void {
+        const strength = Math.max(airplane.strength, 1);
         // Ratio by strength capped at strengthMax.
         const strengthMax = 100;
-        let ratio = Math.min(airplane.strength, strengthMax) / strengthMax;
+        const ratio = Math.min(airplane.strength, strengthMax) / strengthMax;
         // ratio -> reasonable scale for displaying.
         const scaleMax = 1;
         const scaleMin = 0.3;
-        let scale = ratio * (scaleMax - scaleMin) + scaleMin;
+        const scale = ratio * (scaleMax - scaleMin) + scaleMin;
         this.scale.set(scale, scale);
     }
 }

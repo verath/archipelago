@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from "vitest";
-import BaseModel from "./BaseModel.js";
+import BaseModel from "./BaseModel.ts";
 
 describe("BaseModel", () => {
     it("has a null id until updated", () => {

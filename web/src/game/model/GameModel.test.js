@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from "vitest";
-import GameModel from "./GameModel.js";
-import { PLAYER_COLORS, PLAYER_COLOR_SELF, PLAYER_COLOR_NEUTRAL } from "./PlayerColors.js";
+import GameModel from "./GameModel.ts";
+import { PLAYER_COLORS, PLAYER_COLOR_SELF, PLAYER_COLOR_NEUTRAL } from "./PlayerColors.ts";
 import { wire } from "../../wire/proto_bundle.js";
 import { NEUTRAL_ID, makeGame, makeIsland, makeAirplane, makePlayer } from "../../test/fixtures.js";
 

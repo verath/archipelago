@@ -1,14 +1,17 @@
 import { Sprite, Text } from "pixi.js";
 
-import * as images from "../../images";
-import ResourceHolder from "../../resource/ResourceHolder.js";
-import IslandModel from "../model/IslandModel.js";
-import BaseSprite from "./BaseSprite.js";
-import { FONT_FAMILY_DEFAULT } from "./constants.js";
-import { TILE_HEIGHT, TILE_WIDTH } from "./GameView.js";
+import * as images from "../../images/index.ts";
+import type ResourceHolder from "../../resource/ResourceHolder.ts";
+import type IslandModel from "../model/IslandModel.ts";
+import type { PlayerColor } from "../model/PlayerColors.ts";
+import BaseSprite, { ownerColor } from "./BaseSprite.ts";
+import { FONT_FAMILY_DEFAULT } from "./constants.ts";
+import { TILE_HEIGHT, TILE_WIDTH } from "./GameView.ts";
 
 
 const EVENT_CLICK = Symbol("EVENT_CLICK");
+
+export type IslandClickListener = (island: IslandModel) => void;
 
 const ISLAND_TEXTURES = [
     images.TEXTURE_ISLAND1,
@@ -21,40 +24,30 @@ const ISLAND_TEXTURES = [
 const SELECTED_TEXTURE = images.TEXTURE_SELECTED;
 const STRENGTH_TEXT_STROKE_WIDTH = 1;
 
-/**
- * @extends BaseSprite
- */
-export default class IslandSprite extends BaseSprite {
+export default class IslandSprite extends BaseSprite<IslandModel> {
+
+    private readonly _strengthText: Text;
 
     /**
-     * @param {ResourceHolder} resourceHolder
+     * The player color currently applied to the strength text.
      */
-    constructor(resourceHolder) {
-        let textureIdx = Math.floor(Math.random() * ISLAND_TEXTURES.length);
-        let textureId = ISLAND_TEXTURES[textureIdx];
+    private _strengthTextColor: PlayerColor | null;
+
+    private readonly _selectedIndicator: Sprite;
+
+    constructor(resourceHolder: ResourceHolder) {
+        const textureIdx = Math.floor(Math.random() * ISLAND_TEXTURES.length);
+        const textureId = ISLAND_TEXTURES[textureIdx];
         super(resourceHolder, textureId);
 
         // Center our anchor to the middle of the tile
         this.pivot.set(TILE_WIDTH / 2, TILE_HEIGHT / 2);
 
-        /**
-         * @type {Text}
-         * @private
-         */
         this._strengthText = IslandSprite._createStrengthText();
         this.addChild(this._strengthText);
 
-        /**
-         * The player color currently applied to the strength text.
-         * @type {?import("../model/PlayerColors.js").PlayerColor}
-         * @private
-         */
         this._strengthTextColor = null;
 
-        /**
-         * @type {Sprite}
-         * @private
-         */
         this._selectedIndicator = IslandSprite._createSelectedIndicator(resourceHolder);
         this._selectedIndicator.alpha = 0;
         this.addChild(this._selectedIndicator);
@@ -65,12 +58,8 @@ export default class IslandSprite extends BaseSprite {
     }
 
 
-    /**
-     * @returns {Text}
-     * @private
-     */
-    static _createStrengthText() {
-        let strengthText = new Text({
+    private static _createStrengthText(): Text {
+        const strengthText = new Text({
             text: "",
             style: {
                 fontFamily: FONT_FAMILY_DEFAULT,
@@ -86,37 +75,35 @@ export default class IslandSprite extends BaseSprite {
         return strengthText;
     }
 
-    /**
-     * @param {ResourceHolder} resourceHolder
-     * @returns {Sprite}
-     * @private
-     */
-    static _createSelectedIndicator(resourceHolder) {
-        let selectedIndicator = new Sprite(resourceHolder.getTexture(SELECTED_TEXTURE));
+    private static _createSelectedIndicator(resourceHolder: ResourceHolder): Sprite {
+        const selectedIndicator = new Sprite(resourceHolder.getTexture(SELECTED_TEXTURE));
         selectedIndicator.anchor.set(0.5, 0.5);
         selectedIndicator.x = (TILE_WIDTH / 2);
         selectedIndicator.y = (TILE_HEIGHT / 2);
         return selectedIndicator;
     }
 
-    _onAdded() {
+    protected override _onAdded(): void {
         super._onAdded();
-        let island = /** @type {IslandModel} */ (this._model);
+        const island = this._model;
+        if (island == null) {
+            throw new Error("this._model == null");
+        }
 
         // Set scale depending on the island size. Island size is 0-1,
         // we scale that to make sure they are not too small.
-        let scale = (island.size * 0.8 + 0.2);
+        const scale = (island.size * 0.8 + 0.2);
         this.scale.set(scale, scale);
         // Undo scale for selected indicator, implicitly use it as a larger
         // touch target.
         this._selectedIndicator.scale.set(1 / scale, 1 / scale);
 
         // Update our position, account for anchor being in the center
-        let x = island.position.x * TILE_WIDTH + TILE_WIDTH / 2;
-        let y = island.position.y * TILE_HEIGHT + TILE_HEIGHT / 2;
+        const x = island.position.x * TILE_WIDTH + TILE_WIDTH / 2;
+        const y = island.position.y * TILE_HEIGHT + TILE_HEIGHT / 2;
         this.position.set(x, y);
 
-        this._sprite.tint = island.owner.color.fill;
+        this._sprite.tint = ownerColor(island).fill;
         this._updateStrengthText(island);
 
         // Apply a random 90deg step rotation to sprite, to simulate variety.
@@ -125,10 +112,13 @@ export default class IslandSprite extends BaseSprite {
         this._strengthText.rotation -= this.rotation;
     }
 
-    _onModelChanged() {
-        let island = /** @type {IslandModel} */ (this._model);
+    protected override _onModelChanged(): void {
+        const island = this._model;
+        if (island == null) {
+            throw new Error("this._model == null");
+        }
 
-        this._sprite.tint = island.owner.color.fill;
+        this._sprite.tint = ownerColor(island).fill;
         this._updateStrengthText(island);
         // Show island selected indicator
         if (island.selected) {
@@ -141,10 +131,8 @@ export default class IslandSprite extends BaseSprite {
     /**
      * Update the strength text number, and set its color depending
      * on who owns the island
-     * @param {IslandModel} island
-     * @private
      */
-    _updateStrengthText(island) {
+    private _updateStrengthText(island: IslandModel): void {
         if (island.strength >= 0) {
             this._strengthText.text = "" + island.strength;
         } else {
@@ -153,7 +141,7 @@ export default class IslandSprite extends BaseSprite {
         }
         // Only touch the style when the color changes, as any style change
         // makes Pixi re-render the text.
-        const color = island.owner.color;
+        const color = ownerColor(island);
         if (this._strengthTextColor !== color) {
             this._strengthTextColor = color;
             this._strengthText.style.fill = color.textFill;
@@ -161,16 +149,16 @@ export default class IslandSprite extends BaseSprite {
         }
     }
 
-    _onClicked() {
-        let island = /** @type {IslandModel} */ (this._model);
+    private _onClicked(): void {
+        const island = this._model;
         this.emit(EVENT_CLICK, island);
     }
 
-    addClickListener(listener, context = null) {
+    addClickListener(listener: IslandClickListener, context: unknown = null): void {
         this.on(EVENT_CLICK, listener, context);
     }
 
-    removeClickListener(listener, context = null) {
+    removeClickListener(listener: IslandClickListener, context: unknown = null): void {
         this.off(EVENT_CLICK, listener, context);
     }
 }

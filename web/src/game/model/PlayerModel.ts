@@ -1,71 +1,59 @@
-import BaseModel from "./BaseModel.js";
-import GameModel from "./GameModel.js";
-import { PlayerColor, PLAYER_COLOR_NOT_SET, PLAYER_COLOR_SELF, PLAYER_COLOR_NEUTRAL } from "./PlayerColors.js";
+import BaseModel from "./BaseModel.ts";
+import type GameModel from "./GameModel.ts";
+import { type PlayerColor, PLAYER_COLOR_NOT_SET, PLAYER_COLOR_SELF, PLAYER_COLOR_NEUTRAL } from "./PlayerColors.ts";
 import { wire } from "../../wire/proto_bundle.js";
 
-/**
- * @typedef {"ALIVE" | "PENDING_REVIVAL" | "DEAD" | "LEFT_GAME"} PlayerState
- */
+export type PlayerState = "ALIVE" | "PENDING_REVIVAL" | "DEAD" | "LEFT_GAME";
 
 /**
- * @extends BaseModel
+ * The data a PlayerModel is updated from: the wire player, plus the color
+ * assigned to it by the GameModel.
  */
-export default class PlayerModel extends BaseModel {
+export interface PlayerData extends wire.msg.Player.$Properties {
+    color: PlayerColor;
+}
+
+export default class PlayerModel extends BaseModel<PlayerData> {
+
+    private readonly _gameModel: GameModel;
 
     /**
-     * @param {GameModel} gameModel
+     * The color of this player.
      */
-    constructor(gameModel) {
+    private _color: PlayerColor = PLAYER_COLOR_NOT_SET;
+
+    private _state: PlayerState = "ALIVE";
+
+    constructor(gameModel: GameModel) {
         super();
-
-        /**
-         * @type {GameModel}
-         * @private
-         */
         this._gameModel = gameModel;
-
-        /**
-         * The color of this player.
-         * @type {PlayerColor}
-         * @private
-         */
-        this._color = PLAYER_COLOR_NOT_SET;
-
-        /**
-         * @type {PlayerState} 
-         */
-        this._state = "ALIVE";
     }
 
     /**
      * Returns true if the PlayerModel represents our current player.
-     * @returns {boolean}
      */
-    isSelf() {
+    isSelf(): boolean {
         return (this.id === this._gameModel.myPlayerId);
     }
 
     /**
      * Returns true if the player is the neutral player.
-     * @returns {boolean}
      */
-    isNeutral() {
+    isNeutral(): boolean {
         return (this.id === this._gameModel.playerNeutral.id);
     }
 
     /**
      * Returns true if the player is the enemy player
-     * @returns {boolean}
      */
-    isEnemy() {
+    isEnemy(): boolean {
         return !(this.isSelf() || this.isNeutral());
     }
 
     /**
      * Returns PlayerColor for the player.
-     * @returns {PlayerColor}
      */
-    get color() {
+    get color(): PlayerColor {
         if (this.isSelf()) {
             return PLAYER_COLOR_SELF;
         } else if (this.isNeutral()) {
@@ -77,17 +65,12 @@ export default class PlayerModel extends BaseModel {
 
     /**
      * Returns the current PlayerState of the player.
-     * @returns {PlayerState}
      */
-    get state() {
+    get state(): PlayerState {
         return this._state;
     }
 
-    /**
-     * @param {{id: string, state: wire.msg.PlayerState, color: PlayerColor}} playerData
-     * @override
-     */
-    _update(playerData) {
+    protected override _update(playerData: PlayerData): boolean {
         let changed = super._update(playerData);
         if (this._color !== playerData.color) {
             this._color = playerData.color;
@@ -104,10 +87,8 @@ export default class PlayerModel extends BaseModel {
 
 /**
  * Decodes from wire representation of PlayerState to model PlayerState.
- * @param {wire.msg.PlayerState} playerState 
- * @return {PlayerState}
  */
-function decodePlayerState(playerState) {
+function decodePlayerState(playerState: wire.msg.PlayerState | null | undefined): PlayerState {
     switch (playerState) {
         default: // Fallthrough, protobuf uses first entry as default.
         case wire.msg.PlayerState.ALIVE:
