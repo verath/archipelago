@@ -8,6 +8,14 @@ type PlayerEventGameStart struct {
 	// PlayerID is the PlayerID that the receiver represents, used for
 	// all subsequent events for this particular game.
 	PlayerID PlayerID
+	// ResumeToken is a token the receiver can use to resume the game on a
+	// new connection. It is not set by the game, but by the network layer
+	// for clients that can resume (see the session package). Empty if the
+	// client can't resume.
+	ResumeToken string
+	// ResumeTimeout is how long after the connection broke the receiver
+	// may resume. Set together with ResumeToken.
+	ResumeTimeout time.Duration
 }
 
 // EventGameStart is the game start event.

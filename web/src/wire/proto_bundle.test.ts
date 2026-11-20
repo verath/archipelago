@@ -95,11 +95,13 @@ describe("model messages", () => {
 describe("EventEnvelope", () => {
     it("carries EventGameStart", () => {
         const decoded = msg.EventEnvelope.decode(msg.EventEnvelope.encode({
-            eventGameStart: { playerId: "p1", tickInterval: 250 },
+            eventGameStart: { playerId: "p1", tickInterval: 250, resumeToken: "t", resumeTimeout: 20000 },
         }).finish());
         expect(decoded.event).toBe("eventGameStart");
         expect(decoded.eventGameStart?.playerId).toBe("p1");
         expect(decoded.eventGameStart?.tickInterval).toBe(250);
+        expect(decoded.eventGameStart?.resumeToken).toBe("t");
+        expect(decoded.eventGameStart?.resumeTimeout).toBe(20000);
     });
 
     it("carries EventGameTick with a full game", () => {

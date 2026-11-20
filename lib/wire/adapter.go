@@ -84,6 +84,11 @@ func (ca *PBClientAdapter) WritePlayerEvent(ctx context.Context, playerEvent mod
 	switch evt := playerEvent.(type) {
 	case *model.PlayerEventGameStart:
 		evtStart := msg.EncodeEventGameStart(evt)
+		if ca.version == ProtocolV4 {
+			// v4 clients can't resume.
+			evtStart.ResumeToken = ""
+			evtStart.ResumeTimeout = 0
+		}
 		pbMsg.Event = &msg.EventEnvelope_EventGameStart{EventGameStart: evtStart}
 	case *model.PlayerEventTick:
 		if ca.version == ProtocolV5 {

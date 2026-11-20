@@ -4,6 +4,7 @@ import (
 	"context"
 	"io"
 	"log/slog"
+	"net/http"
 	"net/http/httptest"
 	"strings"
 	"testing"
@@ -12,6 +13,7 @@ import (
 	gorilla "github.com/gorilla/websocket"
 	"github.com/verath/archipelago/lib/game"
 	"github.com/verath/archipelago/lib/network/websocket"
+	"github.com/verath/archipelago/lib/session"
 	"github.com/verath/archipelago/lib/wire/msg"
 	"google.golang.org/protobuf/proto"
 )
@@ -22,7 +24,7 @@ func startTestServer(t *testing.T) string {
 	t.Helper()
 	logger := slog.New(slog.NewTextHandler(io.Discard, nil))
 	srv, err := New(logger, websocket.UpgraderOptions{SkipOriginCheck: true},
-		game.CoordinatorOptions{LobbyWait: 0, AIPlayers: 1})
+		game.CoordinatorOptions{LobbyWait: 0, AIPlayers: 1}, Options{})
 	if err != nil {
 		t.Fatalf("New: %v", err)
 	}
@@ -70,8 +72,10 @@ func TestServer_ProtocolVersions(t *testing.T) {
 		}
 		defer conn.Close()
 		events := readEvents(t, conn, 3)
-		if events[0].GetEventGameStart() == nil {
+		if start := events[0].GetEventGameStart(); start == nil {
 			t.Errorf("event 0 = %v, want game start", events[0])
+		} else if start.ResumeToken != "" || start.ResumeTimeout != 0 {
+			t.Errorf("game start = %v, want no resume token or timeout for v4", start)
 		}
 		for _, evt := range events[1:] {
 			if evt.GetEventGameTick() == nil {
@@ -100,4 +104,64 @@ func TestServer_ProtocolVersions(t *testing.T) {
 			}
 		}
 	})
+}
+
+// Test that a v5 client can resume a game after its connection broke.
+func TestServer_Resume(t *testing.T) {
+	url := startTestServer(t)
+	conn, _, err := gorilla.DefaultDialer.Dial(url+"?v=5", nil)
+	if err != nil {
+		t.Fatalf("Dial: %v", err)
+	}
+	defer conn.Close()
+	events := readEvents(t, conn, 3)
+	start := events[0].GetEventGameStart()
+	if start == nil || start.ResumeToken == "" {
+		t.Fatalf("event 0 = %v, want game start with resume token", events[0])
+	}
+	if want := uint32(session.DefaultGrace.Milliseconds()); start.ResumeTimeout != want {
+		t.Errorf("resume timeout = %d, want %d", start.ResumeTimeout, want)
+	}
+	if events[1].GetEventGameSnapshot() == nil || events[2].GetEventGameDelta() == nil {
+		t.Fatalf("events 1, 2 = %v, %v; want snapshot, delta", events[1], events[2])
+	}
+	// Break the connection, without a close frame.
+	conn.UnderlyingConn().Close()
+
+	conn2, _, err := gorilla.DefaultDialer.Dial(url+"?v=5&resume="+start.ResumeToken, nil)
+	if err != nil {
+		t.Fatalf("Dial to resume: %v", err)
+	}
+	defer conn2.Close()
+	events = readEvents(t, conn2, 3)
+	start2 := events[0].GetEventGameStart()
+	if start2 == nil || start2.PlayerId != start.PlayerId || start2.ResumeToken != start.ResumeToken {
+		t.Errorf("event 0 = %v, want game start %v", events[0], start)
+	}
+	if snap := events[1].GetEventGameSnapshot(); snap == nil || snap.Seq != 1 || len(snap.Game.Islands) == 0 {
+		t.Errorf("event 1 = %v, want snapshot with seq 1 and islands", events[1])
+	}
+	if d := events[2].GetEventGameDelta(); d == nil || d.Seq != 2 {
+		t.Errorf("event 2 = %v, want delta with seq 2", events[2])
+	}
+}
+
+// Test that resuming a game that can't be resumed fails before upgrading.
+func TestServer_Resume_Fails(t *testing.T) {
+	url := startTestServer(t)
+	for query, wantStatus := range map[string]int{
+		"?v=5&resume=bogus": http.StatusGone,
+		"?v=5&resume=":      http.StatusGone,
+		"?v=4&resume=bogus": http.StatusBadRequest,
+	} {
+		conn, resp, err := gorilla.DefaultDialer.Dial(url+query, nil)
+		if err == nil {
+			conn.Close()
+			t.Errorf("%s: Dial succeeded, want error", query)
+			continue
+		}
+		if resp == nil || resp.StatusCode != wantStatus {
+			t.Errorf("%s: Dial = %v, %v; want status %d", query, resp, err, wantStatus)
+		}
+	}
 }

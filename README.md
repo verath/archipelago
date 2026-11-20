@@ -125,6 +125,8 @@ use backend flags that make test games fast and predictable:
   `8s`).
 * `-aiPlayers <n>`: `-1` fills each game up to 4 players (default), `0` adds no AI, so a game
   needs 2 humans; `n` adds exactly `n` (at most 10).
+* `-resumeGrace <duration>`: how long a v5 client whose connection broke during a game has to
+  resume it on a new connection (default `20s`, see "Reconnecting" below).
 
 ### Network traffic
 
@@ -165,6 +167,14 @@ The frontend's model (`web/src/game/model/GameModel.ts`) applies the snapshot an
 airplanes in between with a `GameClock` that estimates the server's game time. Our own launches show
 right away: a local airplane flies, and the island shows the strength it took, until the server
 reports (`Player.last_launch_seq`) that it processed the launch.
+
+#### Reconnecting
+
+A v5 client whose connection breaks during a game (e.g. a phone switching from wifi to mobile
+data) can resume the game on a new connection: `EventGameStart` carries a `resume_token`, and
+connecting with `?v=5&resume=<token>` within `resume_timeout` (the backend's `-resumeGrace`)
+continues the game with a new snapshot. Until then the player stays in the game. A token that
+can't be resumed gets HTTP 410 Gone. The sessions are in [lib/session](lib/session).
 
 ## Deployment
 

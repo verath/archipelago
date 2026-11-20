@@ -142,8 +142,10 @@ func DecodeActionGameLaunch(act *ActionGameLaunch) *model.PlayerActionLaunch {
 // EncodeEventGameStart transforms a game model PlayerEventGameStart to its wire representation
 func EncodeEventGameStart(evt *model.PlayerEventGameStart) *EventGameStart {
 	return &EventGameStart{
-		TickInterval: uint32(evt.TickInterval.Milliseconds()),
-		PlayerId:     string(evt.PlayerID),
+		TickInterval:  uint32(evt.TickInterval.Milliseconds()),
+		PlayerId:      string(evt.PlayerID),
+		ResumeToken:   evt.ResumeToken,
+		ResumeTimeout: uint32(evt.ResumeTimeout.Milliseconds()),
 	}
 }
 

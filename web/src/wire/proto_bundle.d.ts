@@ -1137,6 +1137,12 @@ export namespace wire {
             /** EventGameStart tickInterval. */
             tickInterval: number;
 
+            /** EventGameStart resumeToken. */
+            resumeToken: string;
+
+            /** EventGameStart resumeTimeout. */
+            resumeTimeout: number;
+
             /**
              * Creates a new EventGameStart instance using the specified properties.
              * @param [properties] Properties to set
@@ -1226,6 +1232,12 @@ export namespace wire {
 
                 /** EventGameStart tickInterval */
                 tickInterval?: (number|null);
+
+                /** EventGameStart resumeToken */
+                resumeToken?: (string|null);
+
+                /** EventGameStart resumeTimeout */
+                resumeTimeout?: (number|null);
 
                 /** Unknown fields preserved while decoding when enabled */
                 $unknowns?: Uint8Array[];
