@@ -1,7 +1,7 @@
-import { test as base, expect } from "@playwright/test";
+import { test as base, expect, type BrowserContext, type Page } from "@playwright/test";
 
-import { DIST_DIR, DIST_E2E_DIR } from "./paths.js";
-import { startBackend, startPreview } from "./servers.js";
+import { DIST_DIR, DIST_E2E_DIR } from "./paths.ts";
+import { startBackend, startPreview, type Backend } from "./servers.ts";
 
 /**
  * Test fixtures. Every test gets its own Go backend, so games never mix
@@ -12,12 +12,22 @@ import { startBackend, startPreview } from "./servers.js";
  *   preview with the Firebase headers (incl. CSP) and a /app/ws proxy.
  *
  * Fixtures:
- * - backend: the running backend (see servers.js), e.g. backend.stop().
+ * - backend: the running backend (see servers.ts), e.g. backend.stop().
  * - baseURL: the frontend URL, so page.goto("/") opens the game.
  * - newPlayerPage({navigate = true}): a page for another player, in a new
  *   browser context; opens the game unless navigate is false.
  */
-export const test = base.extend({
+export interface TestOptions {
+    backendArgs: string[];
+    frontend: "e2e" | "production";
+}
+
+export interface TestFixtures {
+    backend: Backend;
+    newPlayerPage: (options?: { navigate?: boolean }) => Promise<Page>;
+}
+
+export const test = base.extend<TestOptions & TestFixtures>({
     backendArgs: [[], { option: true }],
     frontend: ["e2e", { option: true }],
 
@@ -43,7 +53,7 @@ export const test = base.extend({
     },
 
     newPlayerPage: async ({ browser, baseURL }, use) => {
-        const contexts = [];
+        const contexts: BrowserContext[] = [];
         await use(async ({ navigate = true } = {}) => {
             const context = await browser.newContext({ baseURL });
             contexts.push(context);

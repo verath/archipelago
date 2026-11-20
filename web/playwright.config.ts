@@ -1,12 +1,12 @@
 import { defineConfig, devices } from "@playwright/test";
 
-// End-to-end tests: each test starts its own Go backend (see e2e/fixtures.js)
+// End-to-end tests: each test starts its own Go backend (see e2e/fixtures.ts)
 // and drives headless Chromium against the production build (served by
 // vite preview with the Firebase headers) or the e2e test build (served by
-// the backend). e2e/global-setup.js builds the backend and both frontends.
+// the backend). e2e/global-setup.ts builds the backend and both frontends.
 export default defineConfig({
     testDir: "e2e",
-    globalSetup: "./e2e/global-setup.js",
+    globalSetup: "./e2e/global-setup.ts",
     fullyParallel: true,
     forbidOnly: !!process.env.CI,
     // Games use random maps and AI, so allow one retry on CI; a retried pass

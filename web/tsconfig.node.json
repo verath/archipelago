@@ -1,26 +1,26 @@
 // Type checking for code run by Node: the Playwright e2e tests and the
 // tool config files. The browser app is in tsconfig.json.
+// The e2e tests import the types of window.__archipelagoTest from
+// src/testHook.ts, so the src modules it imports are checked here too,
+// hence "jsx", "vite/client" and "DOM.Iterable" (as in tsconfig.json).
 {
     "compilerOptions": {
         "target": "ES2023",
-        "lib": ["ES2023", "DOM"],
+        "lib": ["ES2023", "DOM", "DOM.Iterable"],
         "module": "ESNext",
         "moduleResolution": "bundler",
         "allowImportingTsExtensions": true,
         "verbatimModuleSyntax": true,
         "isolatedModules": true,
         "moduleDetection": "force",
-        "types": ["node"],
+        "jsx": "react-jsx",
+        "types": ["node", "vite/client"],
         "noEmit": true,
 
         "strict": true,
         "noImplicitOverride": true,
         "noFallthroughCasesInSwitch": true,
-        "skipLibCheck": true,
-
-        // Temporary, while the code base is migrated from JavaScript.
-        "allowJs": true,
-        "checkJs": false
+        "skipLibCheck": true
     },
-    "include": ["e2e", "*.config.ts", "*.config.js"]
+    "include": ["e2e", "*.config.ts"]
 }

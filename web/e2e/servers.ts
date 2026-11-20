@@ -1,10 +1,10 @@
 import { spawn } from "node:child_process";
 import fs from "node:fs";
-import net from "node:net";
+import net, { type AddressInfo } from "node:net";
 import path from "node:path";
 import { preview } from "vite";
 
-import { BACKEND_BIN_ENV, DIST_DIR, REPO_DIR, WEB_DIR } from "./paths.js";
+import { BACKEND_BIN_ENV, DIST_DIR, REPO_DIR, WEB_DIR } from "./paths.ts";
 
 const HOST = "127.0.0.1";
 const BACKEND_START_TIMEOUT_MS = 15_000;
@@ -14,42 +14,50 @@ const BIND_GRACE_MS = 200;
 
 /**
  * Returns a currently free TCP port on HOST.
- * @returns {Promise<number>}
  */
-function getFreePort() {
+function getFreePort(): Promise<number> {
     return new Promise((resolve, reject) => {
         const srv = net.createServer();
         srv.unref();
         srv.on("error", reject);
         srv.listen(0, HOST, () => {
-            const { port } = srv.address();
+            // address() is an AddressInfo for a server listening on a TCP
+            // port (a string only for pipes and sockets, null if not listening).
+            const { port } = srv.address() as AddressInfo;
             srv.close(() => resolve(port));
         });
     });
 }
 
-/**
- * @typedef Backend
- * @property {string} url Base URL, e.g. http://127.0.0.1:1234
- * @property {number} port
- * @property {function(): string} logs Backend stdout and stderr so far.
- * @property {function(): Promise<void>} stop Kills the backend (SIGKILL, like
- *     a crash; idempotent) and waits for it to exit.
- */
+export interface Backend {
+    /**
+     * Base URL, e.g. http://127.0.0.1:1234
+     */
+    url: string;
+    port: number;
+    /**
+     * Backend stdout and stderr so far.
+     */
+    logs: () => string;
+    /**
+     * Kills the backend (SIGKILL, like a crash; idempotent) and waits for it
+     * to exit.
+     */
+    stop: () => Promise<void>;
+}
 
 /**
- * Starts the Go backend built by global-setup.js on a free port and waits
+ * Starts the Go backend built by global-setup.ts on a free port and waits
  * until it answers its healthcheck. Retries on another port if the backend
  * exits early (e.g. the port was taken between picking and binding it).
- * @param {string[]} args Extra backend flags.
- * @returns {Promise<Backend>}
+ * @param args Extra backend flags.
  */
-export async function startBackend(args) {
+export async function startBackend(args: string[]): Promise<Backend> {
     const bin = process.env[BACKEND_BIN_ENV];
     if (!bin) {
-        throw new Error(`${BACKEND_BIN_ENV} not set; is e2e/global-setup.js configured?`);
+        throw new Error(`${BACKEND_BIN_ENV} not set; is e2e/global-setup.ts configured?`);
     }
-    let lastErr;
+    let lastErr: unknown;
     for (let attempt = 0; attempt < START_ATTEMPTS; attempt++) {
         const port = await getFreePort();
         try {
@@ -61,28 +69,22 @@ export async function startBackend(args) {
     throw lastErr;
 }
 
-/**
- * @param {string} bin
- * @param {number} port
- * @param {string[]} args
- * @returns {Promise<Backend>}
- */
-async function startBackendOnPort(bin, port, args) {
+async function startBackendOnPort(bin: string, port: number, args: string[]): Promise<Backend> {
     const child = spawn(bin, ["-debug", "-skipWSOriginCheck", "-addr", `${HOST}:${port}`, ...args], {
         cwd: REPO_DIR,
         stdio: ["ignore", "pipe", "pipe"],
     });
     let output = "";
-    child.stdout.on("data", (d) => { output += d; });
-    child.stderr.on("data", (d) => { output += d; });
-    const exited = new Promise((resolve) => {
+    child.stdout.on("data", (d: Buffer) => { output += d; });
+    child.stderr.on("data", (d: Buffer) => { output += d; });
+    const exited = new Promise<void>((resolve) => {
         child.once("exit", () => resolve());
         child.once("error", (err) => { output += `spawn error: ${err}\n`; resolve(); });
     });
     let hasExited = false;
     exited.then(() => { hasExited = true; });
 
-    const stop = async () => {
+    const stop = async (): Promise<void> => {
         if (!hasExited) {
             child.kill("SIGKILL");
         }
@@ -101,7 +103,7 @@ async function startBackendOnPort(bin, port, args) {
                 // binding it, in which case it answered instead of our backend,
                 // which then exits with a bind error. Give that a moment to
                 // show, so startBackend retries on another port.
-                await Promise.race([exited, new Promise((r) => setTimeout(r, BIND_GRACE_MS))]);
+                await Promise.race([exited, new Promise<void>((r) => setTimeout(r, BIND_GRACE_MS))]);
                 if (hasExited) {
                     throw new Error(`backend exited during startup:\n${output}`);
                 }
@@ -117,19 +119,32 @@ async function startBackendOnPort(bin, port, args) {
             await stop();
             throw new Error(`backend did not become healthy:\n${output}`);
         }
-        await Promise.race([exited, new Promise((r) => setTimeout(r, 50))]);
+        await Promise.race([exited, new Promise<void>((r) => setTimeout(r, 50))]);
     }
     return { url, port, logs: () => output, stop };
 }
 
 /**
+ * The parts of web/firebase.json that firebaseHeaders reads.
+ */
+interface FirebaseConfig {
+    hosting: {
+        headers: {
+            source: string;
+            headers: { key: string; value: string }[];
+        }[];
+    };
+}
+
+/**
  * Returns the headers Firebase Hosting sends for every path ("**") as
  * configured in web/firebase.json, incl. the Content-Security-Policy.
- * @returns {Record<string, string>}
  */
-export function firebaseHeaders() {
-    const config = JSON.parse(fs.readFileSync(path.join(WEB_DIR, "firebase.json"), "utf8"));
-    const headers = {};
+export function firebaseHeaders(): Record<string, string> {
+    // Not validated: firebase.json is our own file, and Firebase checks it on
+    // deploy. A wrong shape fails the tests with a TypeError.
+    const config = JSON.parse(fs.readFileSync(path.join(WEB_DIR, "firebase.json"), "utf8")) as FirebaseConfig;
+    const headers: Record<string, string> = {};
     for (const entry of config.hosting.headers) {
         if (entry.source !== "**") {
             continue;
@@ -144,22 +159,19 @@ export function firebaseHeaders() {
     return headers;
 }
 
-/**
- * @typedef PreviewServer
- * @property {string} url
- * @property {function(): Promise<void>} stop
- */
+export interface PreviewServer {
+    url: string;
+    stop: () => Promise<void>;
+}
 
 /**
  * Serves a frontend build with vite preview, the way Firebase Hosting serves
  * production: with the Firebase Hosting headers (incl. the CSP), and with
  * /app/ws proxied to the backend.
- * @param {Backend} backend
- * @param {string} outDir The build to serve, e.g. DIST_DIR.
- * @returns {Promise<PreviewServer>}
+ * @param outDir The build to serve, e.g. DIST_DIR.
  */
-export async function startPreview(backend, outDir) {
-    let lastErr;
+export async function startPreview(backend: Backend, outDir: string): Promise<PreviewServer> {
+    let lastErr: unknown;
     for (let attempt = 0; attempt < START_ATTEMPTS; attempt++) {
         const port = await getFreePort();
         try {
