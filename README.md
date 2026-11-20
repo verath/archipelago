@@ -110,7 +110,8 @@ cd web && npm run test:e2e
   * a game against AI starts;
   * launching an airplane works;
   * the remaining player wins when the other one leaves;
-  * the UI copes with the backend going away.
+  * the UI copes with the backend going away;
+  * the WebSocket traffic is compressed.
 
   Specs are in [web/e2e](web/e2e). On failure, `npx playwright show-report` opens the report.
 
@@ -123,6 +124,14 @@ use backend flags that make test games fast and predictable:
   `8s`).
 * `-aiPlayers <n>`: `-1` fills each game up to 4 players (default), `0` adds no AI, so a game
   needs 2 humans; `n` adds exactly `n` (at most 10).
+
+### Network traffic
+
+WebSocket messages are compressed with `permessage-deflate`, which all browsers negotiate on their
+own. The backend flag `-wsCompression=false` turns it off. When a client disconnects, the backend
+logs one `client traffic` line with the messages and bytes sent and received, both before
+compression (`payloadBytes*`) and as sent over the connection (`wireBytes*`, after compression
+and incl. WebSocket framing, excl. TCP/TLS).
 
 ### Protocol Buffers (protobuf)
 

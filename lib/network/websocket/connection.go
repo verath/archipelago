@@ -4,7 +4,9 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"io"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/gorilla/websocket"
@@ -20,9 +22,14 @@ const (
 	// Send pings to peer with this period. Must be less than connReadTimeout.
 	connPingPeriod = 5 * time.Second
 
-	// Maximum message size allowed from peer.
+	// Maximum message size allowed from peer. With compression this limits
+	// both the compressed and the decompressed size of a message.
 	connMaxMessageSize = 2048
 )
+
+// errMessageTooBig is returned when a message read from the peer
+// decompresses to more than connMaxMessageSize bytes.
+var errMessageTooBig = errors.New("message exceeds read limit")
 
 // WSConnection is an adapter for a gorilla/websocket Conn implementing the
 // network.Connection interface.
@@ -32,17 +39,43 @@ type WSConnection struct {
 	// A mutex that must be held to write to the wsConn. This mutex
 	// is required as our read spawns an internal ping-writing goroutine.
 	writeMu sync.Mutex
+
+	// netConn is the connection wsConn reads and writes on, used for
+	// counting wire bytes. May be nil, then no wire bytes are counted.
+	netConn *countingConn
+
+	messagesRead        atomic.Int64
+	messagesWritten     atomic.Int64
+	payloadBytesRead    atomic.Int64
+	payloadBytesWritten atomic.Int64
 }
 
 // newWSConnection creates a new WSConnection, wrapping the provided gorilla
-// wsConn.
-func newWSConnection(wsConn *websocket.Conn) (*WSConnection, error) {
+// wsConn. netConn should be the connection wsConn uses, or nil.
+func newWSConnection(wsConn *websocket.Conn, netConn *countingConn) (*WSConnection, error) {
 	if wsConn == nil {
 		return nil, errors.New("wsConn cannot be nil")
 	}
 	return &WSConnection{
-		wsConn: wsConn,
+		wsConn:  wsConn,
+		netConn: netConn,
 	}, nil
+}
+
+// Stats returns the traffic counters of the connection. Safe to call
+// concurrently with reads and writes, and after the connection is closed.
+func (c *WSConnection) Stats() Stats {
+	stats := Stats{
+		MessagesRead:        c.messagesRead.Load(),
+		MessagesWritten:     c.messagesWritten.Load(),
+		PayloadBytesRead:    c.payloadBytesRead.Load(),
+		PayloadBytesWritten: c.payloadBytesWritten.Load(),
+	}
+	if c.netConn != nil {
+		stats.WireBytesRead = c.netConn.bytesRead.Load()
+		stats.WireBytesWritten = c.netConn.bytesWritten.Load()
+	}
+	return stats
 }
 
 // ReadMessage reads a binary message from the websocket connection. Blocks
@@ -57,6 +90,8 @@ func (c *WSConnection) ReadMessage(ctx context.Context) (msg []byte, err error) 
 	if msgType != websocket.BinaryMessage {
 		return nil, fmt.Errorf("Unexpected message type '%d'", msgType)
 	}
+	c.messagesRead.Add(1)
+	c.payloadBytesRead.Add(int64(len(msg)))
 	return msg, nil
 }
 
@@ -65,7 +100,12 @@ func (c *WSConnection) ReadMessage(ctx context.Context) (msg []byte, err error) 
 func (c *WSConnection) WriteMessage(ctx context.Context, message []byte) error {
 	c.writeMu.Lock()
 	defer c.writeMu.Unlock()
-	return c.writeMessage(ctx, websocket.BinaryMessage, message)
+	if err := c.writeMessage(ctx, websocket.BinaryMessage, message); err != nil {
+		return err
+	}
+	c.messagesWritten.Add(1)
+	c.payloadBytesWritten.Add(int64(len(message)))
+	return nil
 }
 
 // Shutdown attempts to cleanly shutdown the connection, sending a websocket
@@ -133,13 +173,33 @@ func (c *WSConnection) readMessage(ctx context.Context) (int, []byte, error) {
 		return nil
 	})
 	// Read message.
-	messageType, msg, err := c.wsConn.ReadMessage()
+	messageType, msg, err := c.readLimited()
 	// Wait for pingLoop to quit.
 	close(pingQuitCh)
 	if pingErr := <-pingErrCh; err == nil {
 		err = pingErr
 	}
 	return messageType, msg, err
+}
+
+// readLimited reads the next message from wsConn, failing if it is larger
+// than connMaxMessageSize. wsConn's read limit applies to the frame size,
+// which for a compressed message is the compressed size, so we also limit the
+// decompressed size here to not read e.g. a 2KiB message that inflates to
+// 2MiB.
+func (c *WSConnection) readLimited() (int, []byte, error) {
+	messageType, r, err := c.wsConn.NextReader()
+	if err != nil {
+		return messageType, nil, err
+	}
+	msg, err := io.ReadAll(io.LimitReader(r, connMaxMessageSize+1))
+	if err != nil {
+		return messageType, nil, err
+	}
+	if len(msg) > connMaxMessageSize {
+		return messageType, nil, errMessageTooBig
+	}
+	return messageType, msg, nil
 }
 
 // writeMessage writes a message to the underlying websocket connection.
