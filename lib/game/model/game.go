@@ -3,6 +3,7 @@ package model
 import (
 	"errors"
 	"fmt"
+	"time"
 )
 
 // Game represents a game instance, and acts as a container
@@ -10,6 +11,9 @@ import (
 type Game struct {
 	id   GameID
 	size Coordinate
+
+	// time is the game time, i.e. the sum of all ticks' time steps.
+	time time.Duration
 
 	reviveCount int
 
@@ -29,6 +33,17 @@ func (g *Game) ID() GameID {
 // Size is a getter for the size of the game.
 func (g *Game) Size() Coordinate {
 	return g.size
+}
+
+// Time returns the game time: how much time has elapsed in the game, i.e.
+// the sum of the time steps of all ticks so far.
+func (g *Game) Time() time.Duration {
+	return g.time
+}
+
+// SetTime sets the game time.
+func (g *Game) SetTime(t time.Duration) {
+	g.time = t
 }
 
 // ReviveCount returns how many times players have been revived this game.
@@ -130,6 +145,8 @@ func (g *Game) Copy() *Game {
 	return &Game{
 		id:            g.id,
 		size:          g.size,
+		time:          g.time,
+		reviveCount:   g.reviveCount,
 		playerNeutral: g.playerNeutral.Copy(),
 		players:       playersCopy,
 		islands:       islandsCopy,

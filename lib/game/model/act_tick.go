@@ -22,6 +22,7 @@ func (at *ActionTick) Apply(game *Game) ([]Event, error) {
 	at.updateAirplanes(game, at.Delta)
 	at.updateIslands(game, at.Delta)
 	at.updatePlayers(game, at.Delta)
+	game.SetTime(game.Time() + at.Delta)
 	tickEvt := &EventTick{Game: game.Copy()}
 	return []Event{tickEvt}, nil
 }

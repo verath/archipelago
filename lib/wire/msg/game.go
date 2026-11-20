@@ -6,15 +6,43 @@ import (
 	"github.com/verath/archipelago/lib/game/model"
 )
 
-// EncodeGame transforms a game model Game to its wire representation
+// EncodeGame transforms a game model Game to its v4 wire representation.
 func EncodeGame(game *model.Game) *Game {
+	return encodeGame(game, false, "")
+}
+
+// EncodeGameV5 transforms a game model Game to its v5 wire representation,
+// which also has Player.last_launch_seq, Airplane.destination_id and
+// Airplane.launch_seq, and always has Airplane.speed.
+//
+// The game should be a player's view (see EventTick.ToPlayerEvent), and
+// viewer the player's id: destination_id is only set for the viewer's own
+// airplanes, as in v4 other players' targets were not sent either.
+func EncodeGameV5(game *model.Game, viewer model.PlayerID) *Game {
+	return encodeGame(game, true, viewer)
+}
+
+func encodeGame(game *model.Game, v5 bool, viewer model.PlayerID) *Game {
 	players := make([]*Player, 0)
 	for _, player := range game.Players() {
-		players = append(players, EncodePlayer(player))
+		wirePlayer := EncodePlayer(player)
+		if v5 {
+			wirePlayer.LastLaunchSeq = player.LastLaunchSeq()
+		}
+		players = append(players, wirePlayer)
 	}
 	airplanes := make([]*Airplane, 0)
 	for _, airplane := range game.Airplanes() {
-		airplanes = append(airplanes, EncodeAirplane(airplane))
+		wireAirplane := EncodeAirplane(airplane)
+		if v5 {
+			// v5 sends an airplane once, so don't leave out the default.
+			wireAirplane.Speed = float32(airplane.Speed() * float64(time.Millisecond))
+			if airplane.Owner().ID() == viewer {
+				wireAirplane.DestinationId = string(airplane.Destination())
+			}
+			wireAirplane.LaunchSeq = airplane.LaunchSeq()
+		}
+		airplanes = append(airplanes, wireAirplane)
 	}
 	islands := make([]*Island, 0)
 	for _, island := range game.Islands() {
@@ -107,6 +135,7 @@ func DecodeActionGameLaunch(act *ActionGameLaunch) *model.PlayerActionLaunch {
 	return &model.PlayerActionLaunch{
 		From: model.IslandID(act.FromId),
 		To:   model.IslandID(act.ToId),
+		Seq:  act.Seq,
 	}
 }
 
@@ -123,6 +152,11 @@ func EncodeEventGameTick(evt *model.PlayerEventTick) *EventGameTick {
 	return &EventGameTick{
 		Game: EncodeGame(evt.Game),
 	}
+}
+
+// EncodeGameTime transforms a game time to its wire representation [ms].
+func EncodeGameTime(t time.Duration) uint32 {
+	return uint32(t.Milliseconds())
 }
 
 // EncodeEventGameOver transforms a game model PlayerEventGameOver to its wire representation

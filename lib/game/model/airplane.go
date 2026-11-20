@@ -24,6 +24,9 @@ type Airplane struct {
 	direction float64
 	// speed is the speed of the airplane [tiles/ns].
 	speed float64
+	// launchSeq is the PlayerActionLaunch.Seq of the launch that created the
+	// airplane, 0 if not created by a launch.
+	launchSeq uint32
 }
 
 // NewAirplane creates a new Airplane, starting at origin, targeting the
@@ -85,6 +88,18 @@ func (a *Airplane) SetSpeed(speed float64) {
 	a.speed = speed
 }
 
+// LaunchSeq returns the PlayerActionLaunch.Seq of the launch that created
+// the airplane, 0 if the airplane was not created by a launch with a seq.
+func (a *Airplane) LaunchSeq() uint32 {
+	return a.launchSeq
+}
+
+// SetLaunchSeq sets the PlayerActionLaunch.Seq of the launch that created the
+// airplane.
+func (a *Airplane) SetLaunchSeq(seq uint32) {
+	a.launchSeq = seq
+}
+
 // Copy performs a deep copy of the airplane.
 func (a *Airplane) Copy() *Airplane {
 	return &Airplane{
@@ -94,5 +109,6 @@ func (a *Airplane) Copy() *Airplane {
 		position:    a.position,
 		direction:   a.direction,
 		speed:       a.speed,
+		launchSeq:   a.launchSeq,
 	}
 }

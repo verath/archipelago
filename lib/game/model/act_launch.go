@@ -14,6 +14,11 @@ type actionLaunch struct {
 type PlayerActionLaunch struct {
 	From IslandID
 	To   IslandID
+	// Seq is an optional (0 if not set) sequence number chosen by the client,
+	// increasing with each launch. It is recorded as the player's
+	// LastLaunchSeq when the action is applied, whether the launch succeeds
+	// or not, and as the LaunchSeq of the launched airplane.
+	Seq uint32
 }
 
 // ToAction transforms the PlayerActionLaunch, and a PlayerID, to
@@ -33,6 +38,11 @@ func (act *actionLaunch) Apply(game *Game) ([]Event, error) {
 	owningPlayer := game.Player(act.playerID)
 	if owningPlayer == nil {
 		return nil, errors.New("Owning player does not exist")
+	}
+	// Record that the launch was processed before checking if it is legal, so
+	// the client also learns about rejected launches.
+	if act.Seq > owningPlayer.LastLaunchSeq() {
+		owningPlayer.SetLastLaunchSeq(act.Seq)
 	}
 	if fromIsland == nil {
 		return nil, NewIllegalActionError(errors.New("From island does not exist"))
@@ -54,6 +64,7 @@ func (act *actionLaunch) Apply(game *Game) ([]Event, error) {
 	airplaneStr := islandStr / 2
 	fromIsland.SetStrength(islandStr - airplaneStr)
 	airplane := NewAirplane(fromIsland.Position(), toIsland, owningPlayer, airplaneStr)
+	airplane.SetLaunchSeq(act.Seq)
 	game.AddAirplane(airplane)
 	return nil, nil
 }

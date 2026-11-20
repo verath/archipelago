@@ -134,10 +134,16 @@ func (gl *gameLoop) tickLoop(ctx context.Context) error {
 	if err := gl.tick(0); err != nil {
 		return fmt.Errorf("initial tick error: %w", err)
 	}
-	// Perform a new tick each tickInterval.
+	// Perform a new tick each tickInterval. Each tick's time step is the
+	// time since the previous tick, but the game time (the sum of the steps)
+	// is kept in whole milliseconds: clients get the game time in ms and
+	// compute airplane positions from it, so they then agree exactly with
+	// the server. Rounding the total rather than each step means the game
+	// time doesn't drift from the wall clock.
 	ticker := time.NewTicker(gl.tickInterval)
 	defer ticker.Stop()
-	lastTick := time.Now()
+	start := time.Now()
+	var gameTime time.Duration
 	for {
 		if gl.isGameOver() {
 			return nil
@@ -146,10 +152,11 @@ func (gl *gameLoop) tickLoop(ctx context.Context) error {
 		case <-ctx.Done():
 			return ctx.Err()
 		case <-ticker.C:
-			if err := gl.tick(time.Since(lastTick)); err != nil {
+			now := time.Since(start).Truncate(time.Millisecond)
+			if err := gl.tick(now - gameTime); err != nil {
 				return fmt.Errorf("tick error: %w", err)
 			}
-			lastTick = time.Now()
+			gameTime = now
 		}
 	}
 }
