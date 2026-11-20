@@ -1,57 +1,67 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { describe, it, expect, vi, beforeEach, afterEach, type MockInstance } from "vitest";
 import { Ticker } from "pixi.js";
-import GameController from "./GameController.ts";
+import GameController, { type GameResult } from "./GameController.ts";
 import GameModel from "../model/GameModel.ts";
+import type Connection from "../../network/Connection.ts";
+import type { ServerEvent } from "../../network/Connection.ts";
 import { wire } from "../../wire/proto_bundle.js";
 import {
-    NEUTRAL_ID, makeGame, makeIsland, makePlayer, makeEventEnvelope,
-} from "../../test/fixtures.js";
+    NEUTRAL_ID, makeGame, makeIsland, makePlayer, makeEventEnvelope, defined, type EventArgs,
+} from "../../test/fixtures.ts";
+
+/** The part of Connection that GameController uses. */
+type ServerEventQueue = Pick<Connection, "hasNext" | "getNext" | "peekNext" | "waitNext" | "sendAction">;
 
 /**
  * A stand-in for Connection with the same queueing interface. Tests push
  * server events into it and inspect the actions the controller sent.
  */
-class FakeConnection {
-    constructor() {
-        this.events = [];
-        this.sentActions = [];
-        this.ended = false;
-        this._waiters = [];
-    }
+class FakeConnection implements ServerEventQueue {
+    readonly events: ServerEvent[] = [];
+    readonly sentActions: wire.msg.ActionEnvelope[] = [];
+    ended = false;
+    private readonly _waiters: ((hasNext: boolean) => void)[] = [];
 
-    push(eventName, payload) {
-        this.events.push(makeEventEnvelope(eventName, payload));
+    push(...args: EventArgs): void {
+        this.events.push(makeEventEnvelope(...args));
         this._wake(true);
     }
 
-    end() {
+    end(): void {
         this.ended = true;
         this._wake(false);
     }
 
-    _wake(value) {
+    private _wake(value: boolean): void {
         this._waiters.splice(0).forEach(resolve => resolve(value));
     }
 
-    hasNext() { return this.events.length > 0; }
-    getNext() { return this.events.shift(); }
-    peekNext() { return this.events[0]; }
+    hasNext(): boolean { return this.events.length > 0; }
+    // Like Connection, throw rather than return undefined when empty.
+    getNext(): ServerEvent { return defined(this.events.shift()); }
+    peekNext(): ServerEvent { return defined(this.events[0]); }
 
-    waitNext() {
+    waitNext(): Promise<boolean> {
         if (this.ended) {
             return Promise.resolve(false);
         }
         return new Promise(resolve => this._waiters.push(resolve));
     }
 
-    sendAction(action) {
+    sendAction(action: wire.msg.ActionEnvelope): void {
         // Round-trip through the wire format, like the real Connection.
         const bytes = wire.msg.ActionEnvelope.encode(action).finish();
         this.sentActions.push(wire.msg.ActionEnvelope.decode(bytes));
     }
 }
 
-function tickGame(islands) {
+function newController(conn: FakeConnection, gameModel: GameModel): GameController {
+    // GameController takes a Connection, whose private members a fake cannot
+    // have; it only uses the ServerEventQueue part, which FakeConnection implements.
+    return new GameController(conn as unknown as Connection, gameModel);
+}
+
+function tickGame(islands: wire.msg.Island.$Properties[]): wire.msg.EventGameTick.$Shape {
     return {
         game: makeGame({
             players: [makePlayer("me"), makePlayer("enemy")],
@@ -66,19 +76,24 @@ const TWO_ISLANDS = () => [
     makeIsland("free", 0, 4, NEUTRAL_ID, 4),
 ];
 
-let connection, model, controller, destroySpy;
+let connection: FakeConnection;
+let model: GameModel;
+let controller: GameController;
+let destroySpy: MockInstance<Ticker["destroy"]>;
+/** The result of the run() started by the onIslandClicked tests. */
+let runResult: Promise<GameResult>;
 
 /** Lets run() process everything currently queued. */
-const flush = () => new Promise(resolve => setTimeout(resolve, 0));
+const flush = (): Promise<void> => new Promise(resolve => setTimeout(resolve, 0));
 
 beforeEach(() => {
     // Pixi's Ticker schedules itself with requestAnimationFrame, which node lacks.
-    vi.stubGlobal("requestAnimationFrame", (cb) => setTimeout(() => cb(performance.now()), 16));
-    vi.stubGlobal("cancelAnimationFrame", (id) => clearTimeout(id));
+    vi.stubGlobal("requestAnimationFrame", (cb: FrameRequestCallback) => setTimeout(() => cb(performance.now()), 16));
+    vi.stubGlobal("cancelAnimationFrame", (id: number) => clearTimeout(id));
     destroySpy = vi.spyOn(Ticker.prototype, "destroy");
     connection = new FakeConnection();
     model = new GameModel();
-    controller = new GameController(connection, model);
+    controller = newController(connection, model);
 });
 
 afterEach(() => {
@@ -96,7 +111,7 @@ describe("GameController.run", () => {
         expect(model.myPlayerId).toBe("me");
         expect(model.serverTickInterval).toBe(250);
         expect(model.islands.map(i => i.id)).toEqual(["mine", "theirs", "free"]);
-        expect(model.islandById("mine").owner.isSelf()).toBe(true);
+        expect(model.islandById("mine")?.owner?.isSelf()).toBe(true);
 
         connection.push("eventGameTick", tickGame([
             makeIsland("mine", 1, 1, "me", 11),
@@ -104,8 +119,8 @@ describe("GameController.run", () => {
             makeIsland("free", 0, 4, NEUTRAL_ID, 4),
         ]));
         await flush();
-        expect(model.islandById("mine").strength).toBe(11);
-        expect(model.islandById("theirs").strength).toBe(4);
+        expect(model.islandById("mine")?.strength).toBe(11);
+        expect(model.islandById("theirs")?.strength).toBe(4);
 
         connection.push("eventGameOver", { winnerId: "me" });
         await result;
@@ -146,7 +161,7 @@ describe("GameController.run", () => {
 
     it("ignores unknown events", async () => {
         vi.spyOn(console, "log").mockImplementation(() => { });
-        connection.events.push(new wire.msg.EventEnvelope());
+        connection.events.push(wire.msg.EventEnvelope.create({}));
         connection.push("eventGameOver", { winnerId: "me" });
         await expect(controller.run()).resolves.toEqual({ reason: "GAME_OVER", winnerId: "me" });
     });
@@ -158,7 +173,7 @@ describe("GameController.run", () => {
 
         const c2 = new FakeConnection();
         c2.end();
-        await new GameController(c2, new GameModel()).run();
+        await newController(c2, new GameModel()).run();
         expect(destroySpy).toHaveBeenCalledTimes(2);
 
         // A tick for a game our player is not in makes the model throw.
@@ -166,7 +181,7 @@ describe("GameController.run", () => {
         const c3 = new FakeConnection();
         c3.push("eventGameStart", { playerId: "nobody", tickInterval: 100 });
         c3.push("eventGameTick", tickGame(TWO_ISLANDS()));
-        await expect(new GameController(c3, new GameModel()).run()).rejects.toThrow();
+        await expect(newController(c3, new GameModel()).run()).rejects.toThrow();
         expect(destroySpy).toHaveBeenCalledTimes(3);
     });
 });
@@ -175,19 +190,18 @@ describe("GameController.onIslandClicked", () => {
     beforeEach(async () => {
         connection.push("eventGameStart", { playerId: "me", tickInterval: 250 });
         connection.push("eventGameTick", tickGame(TWO_ISLANDS()));
-        const result = controller.run();
+        runResult = controller.run();
         await flush();
-        controller.result = result;
     });
 
     afterEach(async () => {
         connection.push("eventGameOver", { winnerId: "me" });
-        await controller.result;
+        await runResult;
     });
 
     it("selects an own island on the first click", () => {
         controller.onIslandClicked("mine");
-        expect(model.islandById("mine").selected).toBe(true);
+        expect(model.islandById("mine")?.selected).toBe(true);
         expect(connection.sentActions).toHaveLength(0);
     });
 
@@ -204,12 +218,12 @@ describe("GameController.onIslandClicked", () => {
         expect(connection.sentActions).toHaveLength(1);
         const action = connection.sentActions[0];
         expect(action.action).toBe("actionGameLaunch");
-        expect(action.actionGameLaunch.fromId).toBe("mine");
-        expect(action.actionGameLaunch.toId).toBe("theirs");
+        expect(action.actionGameLaunch?.fromId).toBe("mine");
+        expect(action.actionGameLaunch?.toId).toBe("theirs");
 
         // The selection is consumed, and a local airplane takes half the strength.
-        expect(model.islandById("mine").selected).toBe(false);
-        expect(model.islandById("mine").strength).toBe(5);
+        expect(model.islandById("mine")?.selected).toBe(false);
+        expect(model.islandById("mine")?.strength).toBe(5);
         expect(model.airplanes).toHaveLength(1);
         expect(model.airplanes[0].strength).toBe(5);
     });
@@ -217,13 +231,13 @@ describe("GameController.onIslandClicked", () => {
     it("can launch to a neutral island too", () => {
         controller.onIslandClicked("mine");
         controller.onIslandClicked("free");
-        expect(connection.sentActions[0].actionGameLaunch.toId).toBe("free");
+        expect(connection.sentActions[0].actionGameLaunch?.toId).toBe("free");
     });
 
     it("deselects without launching when the same island is clicked again", () => {
         controller.onIslandClicked("mine");
         controller.onIslandClicked("mine");
-        expect(model.islandById("mine").selected).toBe(false);
+        expect(model.islandById("mine")?.selected).toBe(false);
         expect(connection.sentActions).toHaveLength(0);
         expect(model.airplanes).toHaveLength(0);
     });
@@ -248,8 +262,8 @@ describe("GameController.onIslandClicked", () => {
 
     it("ignores clicks once the game is over", async () => {
         connection.push("eventGameOver", { winnerId: "enemy" });
-        await controller.result;
+        await runResult;
         controller.onIslandClicked("mine");
-        expect(model.islandById("mine").selected).toBe(false);
+        expect(model.islandById("mine")?.selected).toBe(false);
     });
 });

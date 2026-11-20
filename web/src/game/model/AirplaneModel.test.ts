@@ -5,9 +5,9 @@ import { describe, it, expect, vi } from "vitest";
 import GameModel from "./GameModel.ts";
 import AirplaneModel, { DEFAULT_AIRPLANE_SPEED } from "./AirplaneModel.ts";
 import LocalAirplaneModel from "./LocalAirplaneModel.ts";
-import { makeAirplane, makeGame, makeIsland, makePlayer } from "../../test/fixtures.js";
+import { defined, makeAirplane, makeGame, makeIsland, makePlayer } from "../../test/fixtures.ts";
 
-function newGameWithTick(tickInterval) {
+function newGameWithTick(tickInterval: number): GameModel {
     const game = new GameModel();
     game.myPlayerId = "me";
     game.serverTickInterval = tickInterval;
@@ -73,8 +73,8 @@ describe("LocalAirplaneModel", () => {
             players: [makePlayer("me")],
             islands: [makeIsland("o", 1, 1, "me", 10), makeIsland("t", 1, 4, "me", 1)],
         }));
-        const origin = game.islandById("o");
-        const target = game.islandById("t");
+        const origin = defined(game.islandById("o"));
+        const target = defined(game.islandById("t"));
 
         const plane = new LocalAirplaneModel(game, origin, target, 5);
 
@@ -91,7 +91,7 @@ describe("LocalAirplaneModel", () => {
             players: [makePlayer("me")],
             islands: [makeIsland("o", 1, 1, "me", 10)],
         }));
-        const o = game.islandById("o");
+        const o = defined(game.islandById("o"));
         const a = new LocalAirplaneModel(game, o, o, 1);
         const b = new LocalAirplaneModel(game, o, o, 1);
         expect(a.id).not.toBe(b.id);
