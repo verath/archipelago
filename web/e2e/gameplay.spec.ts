@@ -1,5 +1,12 @@
-import { test, expect } from "./fixtures.js";
-import { gameState, myIsland, waitForGameStarted } from "./helpers.js";
+import type { TestHookAirplane, TestHookIsland } from "../src/testHook.ts";
+import { test, expect } from "./fixtures.ts";
+import { gameState, myIsland, waitForGameStarted } from "./helpers.ts";
+
+// Non-null assertions (!) below: gameState is non-null once the game has
+// started (the test hook is installed), waitForGameStarted waited for
+// myIsland and its screen position, and islands and airplanes are looked up
+// by ids the test got from the game. If one is wrong, the test fails with a
+// TypeError, as it did in JavaScript.
 
 test.describe("game against AI", () => {
     test.use({ backendArgs: ["-lobbyWait", "500ms"] });
@@ -16,20 +23,21 @@ test.describe("game against AI", () => {
         expect(owners.size).toBe(4);
         expect(owners).toContain(state.myPlayerId);
 
-        // All islands are rendered on the canvas.
-        const canvas = await page.locator("canvas").boundingBox();
+        // All islands are rendered on the canvas (so it has a bounding box).
+        const canvas = (await page.locator("canvas").boundingBox())!;
         for (const island of state.islands) {
             expect(island.screen).not.toBeNull();
-            expect(island.screen.x).toBeGreaterThan(canvas.x);
-            expect(island.screen.x).toBeLessThan(canvas.x + canvas.width);
-            expect(island.screen.y).toBeGreaterThan(canvas.y);
-            expect(island.screen.y).toBeLessThan(canvas.y + canvas.height);
+            const screen = island.screen!;
+            expect(screen.x).toBeGreaterThan(canvas.x);
+            expect(screen.x).toBeLessThan(canvas.x + canvas.width);
+            expect(screen.y).toBeGreaterThan(canvas.y);
+            expect(screen.y).toBeLessThan(canvas.y + canvas.height);
         }
 
         // The model ticks: my (large) island grows by 1 every 2s.
-        const mine = myIsland(state);
+        const mine = myIsland(state)!;
         await expect.poll(async () => {
-            const island = (await gameState(page)).islands.find((i) => i.id === mine.id);
+            const island = (await gameState(page))!.islands.find((i) => i.id === mine.id)!;
             return island.ownerId === state.myPlayerId ? island.strength : -1;
         }, { message: "my island's strength grows", timeout: 20_000 }).toBeGreaterThan(mine.strength);
     });
@@ -44,10 +52,10 @@ test.describe("launching an airplane", () => {
         await newPlayerPage();
         const state = await waitForGameStarted(page);
         const me = state.myPlayerId;
-        const origin = myIsland(state);
+        const origin = myIsland(state)!;
 
         // Target the nearest neutral island in sight (strength >= 0).
-        const dist = (i) => Math.hypot(i.position.x - origin.position.x, i.position.y - origin.position.y);
+        const dist = (i: TestHookIsland) => Math.hypot(i.position.x - origin.position.x, i.position.y - origin.position.y);
         const targets = state.islands
             .filter((i) => i.ownerId === state.neutralPlayerId && i.strength >= 0)
             .sort((a, b) => dist(a) - dist(b));
@@ -55,36 +63,40 @@ test.describe("launching an airplane", () => {
         const target = targets[0];
 
         // Select my island, then click the target.
-        await page.mouse.click(origin.screen.x, origin.screen.y);
-        await expect.poll(async () => (await gameState(page)).islands.find((i) => i.id === origin.id).selected,
+        await page.mouse.click(origin.screen!.x, origin.screen!.y);
+        await expect.poll(async () => (await gameState(page))!.islands.find((i) => i.id === origin.id)!.selected,
             { message: "my island is selected" }).toBe(true);
-        const before = (await gameState(page)).islands.find((i) => i.id === origin.id).strength;
-        await page.mouse.click(target.screen.x, target.screen.y);
+        const before = (await gameState(page))!.islands.find((i) => i.id === origin.id)!.strength;
+        await page.mouse.click(target.screen!.x, target.screen!.y);
 
         // The server confirms an airplane carrying half my island's army (my
         // island may have grown by one before the server handled the launch).
-        let airplane = null;
+        let reported: TestHookAirplane | null = null;
         await expect.poll(async () => {
-            airplane = (await gameState(page)).airplanes.find((a) => !a.local && a.ownerId === me) ?? null;
-            return airplane != null;
+            reported = (await gameState(page))!.airplanes.find((a) => !a.local && a.ownerId === me) ?? null;
+            return reported != null;
         }, { message: "the server reports my airplane" }).toBe(true);
+        // The poll passed, so its last call found my airplane.
+        const airplane = reported!;
         expect(airplane.strength).toBeGreaterThanOrEqual(Math.floor(before / 2));
         expect(airplane.strength).toBeLessThanOrEqual(Math.floor((before + 1) / 2));
-        const afterLaunch = (await gameState(page)).islands.find((i) => i.id === origin.id);
+        const afterLaunch = (await gameState(page))!.islands.find((i) => i.id === origin.id)!;
         expect(afterLaunch.selected).toBe(false);
         expect(afterLaunch.strength).toBeLessThan(before);
         expect(afterLaunch.strength).toBeLessThanOrEqual(Math.ceil(before / 2) + 2);
 
         // Airplanes fly 1 tile per 3s. Wait for the arrival.
-        let arrived = null;
+        let landed: TestHookIsland | undefined;
         await expect.poll(async () => {
-            const s = await gameState(page);
+            const s = (await gameState(page))!;
             if (s.airplanes.some((a) => a.id === airplane.id)) {
                 return false;
             }
-            arrived = s.islands.find((i) => i.id === target.id);
+            landed = s.islands.find((i) => i.id === target.id);
             return true;
         }, { message: "my airplane arrives", timeout: 40_000 }).toBe(true);
+        // The poll passed, so its last call found the target after the arrival.
+        const arrived = landed!;
 
         // Neutral armies only shrink over time, so on arrival the target had
         // at most target.strength. Airplane stronger => captured with the

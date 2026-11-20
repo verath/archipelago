@@ -1,19 +1,17 @@
 import fs from "node:fs";
 import path from "node:path";
 
-import { test, expect } from "./fixtures.js";
-import { collectPageProblems } from "./helpers.js";
-import { DIST_DIR } from "./paths.js";
-import { firebaseHeaders } from "./servers.js";
+import { test, expect } from "./fixtures.ts";
+import { collectPageProblems, type CSPViolation } from "./helpers.ts";
+import { DIST_DIR } from "./paths.ts";
+import { firebaseHeaders } from "./servers.ts";
 
 /**
  * The `long` package (used by protobufjs) probes for WebAssembly support in
  * a try/catch and falls back to plain JS when the CSP (no 'wasm-unsafe-eval')
  * blocks it. That probe is reported as a violation but is harmless.
- * @param {import("./helpers.js").CSPViolation} violation
- * @returns {boolean}
  */
-function isKnownCSPViolation(violation) {
+function isKnownCSPViolation(violation: CSPViolation): boolean {
     return violation.directive === "script-src" && violation.blockedURI === "wasm-eval";
 }
 
@@ -24,7 +22,8 @@ test.describe("production build", () => {
 
     test("loads and starts a game without errors or CSP violations", async ({ page, newPlayerPage }) => {
         const problems1 = await collectPageProblems(page);
-        const response = await page.goto("/");
+        // Non-null: goto returns null only for same-document navigations.
+        const response = (await page.goto("/"))!;
         expect(response.headers()["content-security-policy"])
             .toBe(firebaseHeaders()["Content-Security-Policy"]);
         await expect(page.getByText("Finding a game")).toBeVisible();
@@ -39,7 +38,7 @@ test.describe("production build", () => {
             await expect.poll(async () => (await p.locator("canvas").boundingBox())?.width ?? 0)
                 .toBeGreaterThan(100);
             // Let a few more frames render.
-            await p.evaluate(() => new Promise((resolve) => {
+            await p.evaluate(() => new Promise<void>((resolve) => {
                 let frames = 10;
                 const next = () => (--frames > 0) ? requestAnimationFrame(next) : resolve();
                 requestAnimationFrame(next);
@@ -47,7 +46,8 @@ test.describe("production build", () => {
         }
         await expect(page.getByText("Game Over")).toHaveCount(0);
 
-        for (const [p, problems] of [[page, problems1], [page2, problems2]]) {
+        // "as const" so that p and problems keep their own types.
+        for (const [p, problems] of [[page, problems1], [page2, problems2]] as const) {
             expect(problems.errors).toEqual([]);
             expect((await problems.cspViolations()).filter((v) => !isKnownCSPViolation(v))).toEqual([]);
             // The production bundle must not contain the e2e test hook.

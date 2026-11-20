@@ -3,11 +3,11 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 
-import { BACKEND_BIN_ENV, REPO_DIR, WEB_DIR } from "./paths.js";
+import { BACKEND_BIN_ENV, REPO_DIR, WEB_DIR } from "./paths.ts";
 
 // Builds the Go backend once (to a temp dir) and both frontend builds.
 // Set E2E_SKIP_FRONTEND_BUILD=1 to reuse existing dist/ and dist-e2e/.
-export default function globalSetup() {
+export default function globalSetup(): () => void {
     const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "archipelago-e2e-"));
     const binName = process.platform === "win32" ? "archipelago.exe" : "archipelago";
     const bin = path.join(tmpDir, binName);

@@ -1,5 +1,5 @@
-import { test, expect } from "./fixtures.js";
-import { gameState, waitForGameStarted } from "./helpers.js";
+import { test, expect } from "./fixtures.ts";
+import { gameState, waitForGameStarted } from "./helpers.ts";
 
 test.describe("human vs human", () => {
     test.use({ backendArgs: ["-aiPlayers", "0", "-lobbyWait", "2s"] });
@@ -19,7 +19,9 @@ test.describe("human vs human", () => {
 
         await expect(page.getByText("Game Over")).toBeVisible();
         await expect(page.getByText("You Won!")).toBeVisible();
-        expect((await gameState(page)).gameResult)
+        // gameState is non-null from here on: the game started, so the
+        // test hook is installed.
+        expect((await gameState(page))!.gameResult)
             .toEqual({ reason: "GAME_OVER", winnerId: state1.myPlayerId });
     });
 });
@@ -34,9 +36,11 @@ test.describe("server gone", () => {
         await backend.stop();
 
         await expect(page.getByText("Game Over")).toBeVisible();
-        await expect.poll(async () => (await gameState(page)).connectionState).toBe("DISCONNECTED");
+        // gameState is non-null from here on: the game started, so the
+        // test hook is installed.
+        await expect.poll(async () => (await gameState(page))!.connectionState).toBe("DISCONNECTED");
         // Connection loss is reported as a game over without a winner.
-        expect((await gameState(page)).gameResult).toEqual({ reason: "GAME_OVER", winnerId: "" });
+        expect((await gameState(page))!.gameResult).toEqual({ reason: "GAME_OVER", winnerId: "" });
         await expect(page.getByText("You Lost!")).toBeVisible();
     });
 });
