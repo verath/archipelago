@@ -1,3 +1,4 @@
+/// <reference types="vitest/config" />
 import { defineConfig } from "vite";
 
 // Forward the game websocket to the locally running Go backend
@@ -17,7 +18,7 @@ export default defineConfig({
         sourcemap: true,
     },
     test: {
-        include: ["src/**/*.test.{js,jsx}"],
+        include: ["src/**/*.test.{js,jsx,ts,tsx}"],
         // Tests needing a DOM opt in with a "@vitest-environment jsdom" comment.
         environment: "node",
     },

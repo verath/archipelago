@@ -1,0 +1,28 @@
+// Type checking for the browser app (src/), including its unit tests.
+// Vite/Vitest do the actual transpiling; tsc only type checks (noEmit).
+// Node-side code (e2e tests, config files) is in tsconfig.node.json.
+{
+    "compilerOptions": {
+        "target": "ES2022",
+        "lib": ["ES2022", "DOM", "DOM.Iterable"],
+        "module": "ESNext",
+        "moduleResolution": "bundler",
+        "allowImportingTsExtensions": true,
+        "verbatimModuleSyntax": true,
+        "isolatedModules": true,
+        "moduleDetection": "force",
+        "jsx": "react-jsx",
+        "types": ["vite/client"],
+        "noEmit": true,
+
+        "strict": true,
+        "noImplicitOverride": true,
+        "noFallthroughCasesInSwitch": true,
+        "skipLibCheck": true,
+
+        // Temporary, while the code base is migrated from JavaScript.
+        "allowJs": true,
+        "checkJs": false
+    },
+    "include": ["src"]
+}
