@@ -18,8 +18,14 @@ export function makeIsland(
     };
 }
 
+export interface AirplaneOptions {
+    destinationId?: string;
+    launchSeq?: number;
+}
+
 export function makeAirplane(
     id: string, x: number, y: number, ownerId: string, strength = 5, direction = 0, speed = 0,
+    { destinationId = "", launchSeq = 0 }: AirplaneOptions = {},
 ): wire.msg.Airplane.$Properties {
     return {
         id,
@@ -27,11 +33,13 @@ export function makeAirplane(
         position: { x, y },
         direction,
         speed,
+        destinationId,
+        launchSeq,
     };
 }
 
-export function makePlayer(id: string, state = wire.msg.PlayerState.ALIVE): wire.msg.Player.$Properties {
-    return { id, state };
+export function makePlayer(id: string, state = wire.msg.PlayerState.ALIVE, lastLaunchSeq = 0): wire.msg.Player.$Properties {
+    return { id, state, lastLaunchSeq };
 }
 
 export interface GameOptions {
@@ -57,6 +65,8 @@ export interface EventPayloads {
     eventGameStart: wire.msg.EventGameStart.$Shape;
     eventGameOver: wire.msg.EventGameOver.$Shape;
     eventGameTick: wire.msg.EventGameTick.$Shape;
+    eventGameSnapshot: wire.msg.EventGameSnapshot.$Shape;
+    eventGameDelta: wire.msg.EventGameDelta.$Shape;
 }
 
 /**
@@ -65,6 +75,20 @@ export interface EventPayloads {
  * name narrows the payload.
  */
 export type EventArgs = { [K in keyof EventPayloads]: [eventName: K, payload: EventPayloads[K]] }[keyof EventPayloads];
+
+/**
+ * An EventGameSnapshot of the game, as the server sends it first.
+ */
+export function makeSnapshot(game: wire.msg.Game, seq = 1, gameTime = 0): wire.msg.EventGameSnapshot {
+    return wire.msg.EventGameSnapshot.create({ seq, gameTime, game });
+}
+
+/**
+ * An EventGameDelta; lists not given are empty, as in a decoded message.
+ */
+export function makeDelta(seq: number, gameTime: number, delta: Omit<wire.msg.EventGameDelta.$Properties, "seq" | "gameTime"> = {}): wire.msg.EventGameDelta {
+    return wire.msg.EventGameDelta.create({ seq, gameTime, ...delta });
+}
 
 /**
  * Wraps an event in an EventEnvelope.
@@ -77,6 +101,10 @@ export function makeEventEnvelope(...[eventName, payload]: EventArgs): ServerEve
             return wire.msg.EventEnvelope.create({ eventGameOver: payload });
         case "eventGameTick":
             return wire.msg.EventEnvelope.create({ eventGameTick: payload });
+        case "eventGameSnapshot":
+            return wire.msg.EventEnvelope.create({ eventGameSnapshot: payload });
+        case "eventGameDelta":
+            return wire.msg.EventEnvelope.create({ eventGameDelta: payload });
     }
 }
 

@@ -6,7 +6,8 @@ import type Connection from "../../network/Connection.ts";
 import type { ServerEvent } from "../../network/Connection.ts";
 import { wire } from "../../wire/proto_bundle.js";
 import {
-    NEUTRAL_ID, makeGame, makeIsland, makePlayer, makeEventEnvelope, defined, type EventArgs,
+    makeAirplane, NEUTRAL_ID, makeGame, makeIsland, makePlayer, makeEventEnvelope, makeSnapshot, makeDelta, defined,
+    type EventArgs,
 } from "../../test/fixtures.ts";
 
 /** The part of Connection that GameController uses. */
@@ -61,13 +62,11 @@ function newController(conn: FakeConnection, gameModel: GameModel): GameControll
     return new GameController(conn as unknown as Connection, gameModel);
 }
 
-function tickGame(islands: wire.msg.Island.$Properties[]): wire.msg.EventGameTick.$Shape {
-    return {
-        game: makeGame({
-            players: [makePlayer("me"), makePlayer("enemy")],
-            islands,
-        }),
-    };
+function snapshotOf(islands: wire.msg.Island.$Properties[], seq = 1): wire.msg.EventGameSnapshot.$Shape {
+    return makeSnapshot(makeGame({
+        players: [makePlayer("me"), makePlayer("enemy")],
+        islands,
+    }), seq);
 }
 
 const TWO_ISLANDS = () => [
@@ -102,10 +101,10 @@ afterEach(() => {
 });
 
 describe("GameController.run", () => {
-    it("applies game start and tick events to the model", async () => {
+    it("applies game start, snapshot and delta events to the model", async () => {
         const result = controller.run();
         connection.push("eventGameStart", { playerId: "me", tickInterval: 250 });
-        connection.push("eventGameTick", tickGame(TWO_ISLANDS()));
+        connection.push("eventGameSnapshot", snapshotOf(TWO_ISLANDS()));
         await flush();
 
         expect(model.myPlayerId).toBe("me");
@@ -113,11 +112,12 @@ describe("GameController.run", () => {
         expect(model.islands.map(i => i.id)).toEqual(["mine", "theirs", "free"]);
         expect(model.islandById("mine")?.owner?.isSelf()).toBe(true);
 
-        connection.push("eventGameTick", tickGame([
-            makeIsland("mine", 1, 1, "me", 11),
-            makeIsland("theirs", 3, 3, "enemy", 4),
-            makeIsland("free", 0, 4, NEUTRAL_ID, 4),
-        ]));
+        connection.push("eventGameDelta", makeDelta(2, 333, {
+            islands: [
+                { id: "mine", army: { ownerId: "me", strength: 11 } },
+                { id: "theirs", army: { ownerId: "enemy", strength: 4 } },
+            ],
+        }));
         await flush();
         expect(model.islandById("mine")?.strength).toBe(11);
         expect(model.islandById("theirs")?.strength).toBe(4);
@@ -129,7 +129,7 @@ describe("GameController.run", () => {
     it("resolves with the winner on game over", async () => {
         const result = controller.run();
         connection.push("eventGameStart", { playerId: "me", tickInterval: 250 });
-        connection.push("eventGameTick", tickGame(TWO_ISLANDS()));
+        connection.push("eventGameSnapshot", snapshotOf(TWO_ISLANDS()));
         connection.push("eventGameOver", { winnerId: "enemy" });
         await expect(result).resolves.toEqual({ reason: "GAME_OVER", winnerId: "enemy" });
     });
@@ -137,7 +137,7 @@ describe("GameController.run", () => {
     it("stops reading events after game over", async () => {
         connection.push("eventGameStart", { playerId: "me", tickInterval: 250 });
         connection.push("eventGameOver", { winnerId: "me" });
-        connection.push("eventGameTick", tickGame(TWO_ISLANDS()));
+        connection.push("eventGameSnapshot", snapshotOf(TWO_ISLANDS()));
         await controller.run();
         expect(model.islands).toHaveLength(0);
         expect(connection.hasNext()).toBe(true);
@@ -166,6 +166,52 @@ describe("GameController.run", () => {
         await expect(controller.run()).resolves.toEqual({ reason: "GAME_OVER", winnerId: "me" });
     });
 
+    it("ends the game with an error when a delta's seq skips one", async () => {
+        vi.spyOn(console, "error").mockImplementation(() => { });
+        connection.push("eventGameStart", { playerId: "me", tickInterval: 250 });
+        connection.push("eventGameSnapshot", snapshotOf(TWO_ISLANDS(), 5));
+        connection.push("eventGameDelta", makeDelta(6, 333));
+        connection.push("eventGameDelta", makeDelta(8, 999));
+        await expect(controller.run()).resolves.toEqual({ reason: "ERROR" });
+        expect(destroySpy).toHaveBeenCalledTimes(1);
+    });
+
+    it("ends the game with an error on a delta before any snapshot", async () => {
+        vi.spyOn(console, "error").mockImplementation(() => { });
+        connection.push("eventGameStart", { playerId: "me", tickInterval: 250 });
+        connection.push("eventGameDelta", makeDelta(1, 0));
+        await expect(controller.run()).resolves.toEqual({ reason: "ERROR" });
+    });
+
+    it("ends the game with an error on a delta that doesn't fit the state", async () => {
+        vi.spyOn(console, "error").mockImplementation(() => { });
+        connection.push("eventGameStart", { playerId: "me", tickInterval: 250 });
+        connection.push("eventGameSnapshot", snapshotOf(TWO_ISLANDS()));
+        connection.push("eventGameDelta", makeDelta(2, 333, { airplanesRemoved: ["unknown"] }));
+        await expect(controller.run()).resolves.toEqual({ reason: "ERROR" });
+    });
+
+    it("ends the game with an error on a delta the model can't apply", async () => {
+        vi.spyOn(console, "error").mockImplementation(() => { });
+        connection.push("eventGameStart", { playerId: "me", tickInterval: 250 });
+        connection.push("eventGameSnapshot", snapshotOf(TWO_ISLANDS()));
+        // An island update without an army.
+        connection.push("eventGameDelta", makeDelta(2, 333, { islands: [{ id: "mine" }] }));
+        await expect(controller.run()).resolves.toEqual({ reason: "ERROR" });
+    });
+
+    it("accepts a new snapshot at any time", async () => {
+        const result = controller.run();
+        connection.push("eventGameStart", { playerId: "me", tickInterval: 250 });
+        connection.push("eventGameSnapshot", snapshotOf(TWO_ISLANDS(), 1));
+        connection.push("eventGameSnapshot", snapshotOf([makeIsland("mine", 1, 1, "me", 3)], 7));
+        connection.push("eventGameDelta", makeDelta(8, 666));
+        await flush();
+        expect(model.islands.map(i => i.id)).toEqual(["mine"]);
+        connection.push("eventGameOver", { winnerId: "me" });
+        await expect(result).resolves.toEqual({ reason: "GAME_OVER", winnerId: "me" });
+    });
+
     it("destroys its ticker on game over, connection end, and errors", async () => {
         connection.push("eventGameOver", { winnerId: "me" });
         await controller.run();
@@ -176,12 +222,12 @@ describe("GameController.run", () => {
         await newController(c2, new GameModel()).run();
         expect(destroySpy).toHaveBeenCalledTimes(2);
 
-        // A tick for a game our player is not in makes the model throw.
-        vi.spyOn(console, "log").mockImplementation(() => { });
+        // A snapshot of a game our player is not in makes the model throw.
+        vi.spyOn(console, "error").mockImplementation(() => { });
         const c3 = new FakeConnection();
         c3.push("eventGameStart", { playerId: "nobody", tickInterval: 100 });
-        c3.push("eventGameTick", tickGame(TWO_ISLANDS()));
-        await expect(newController(c3, new GameModel()).run()).rejects.toThrow();
+        c3.push("eventGameSnapshot", snapshotOf(TWO_ISLANDS()));
+        await expect(newController(c3, new GameModel()).run()).resolves.toEqual({ reason: "ERROR" });
         expect(destroySpy).toHaveBeenCalledTimes(3);
     });
 });
@@ -189,7 +235,7 @@ describe("GameController.run", () => {
 describe("GameController.onIslandClicked", () => {
     beforeEach(async () => {
         connection.push("eventGameStart", { playerId: "me", tickInterval: 250 });
-        connection.push("eventGameTick", tickGame(TWO_ISLANDS()));
+        connection.push("eventGameSnapshot", snapshotOf(TWO_ISLANDS()));
         runResult = controller.run();
         await flush();
     });
@@ -220,12 +266,56 @@ describe("GameController.onIslandClicked", () => {
         expect(action.action).toBe("actionGameLaunch");
         expect(action.actionGameLaunch?.fromId).toBe("mine");
         expect(action.actionGameLaunch?.toId).toBe("theirs");
+        expect(action.actionGameLaunch?.seq).toBe(1);
 
         // The selection is consumed, and a local airplane takes half the strength.
         expect(model.islandById("mine")?.selected).toBe(false);
         expect(model.islandById("mine")?.strength).toBe(5);
         expect(model.airplanes).toHaveLength(1);
         expect(model.airplanes[0].strength).toBe(5);
+    });
+
+    it("numbers launches from 1", () => {
+        controller.onIslandClicked("mine");
+        controller.onIslandClicked("theirs");
+        controller.onIslandClicked("mine");
+        controller.onIslandClicked("free");
+        expect(connection.sentActions.map(a => a.actionGameLaunch?.seq)).toEqual([1, 2]);
+        expect(model.airplanes.map(a => a.launchSeq)).toEqual([1, 2]);
+    });
+
+    it("replaces the local airplane once the server processed the launch", async () => {
+        controller.onIslandClicked("mine");
+        controller.onIslandClicked("theirs");
+        connection.push("eventGameDelta", makeDelta(2, 333, {
+            players: [makePlayer("me", wire.msg.PlayerState.ALIVE, 1)],
+            islands: [{ id: "mine", army: { ownerId: "me", strength: 5 } }],
+            airplanesAdded: [makeAirplane("srv", 1.1, 1.1, "me", 5, Math.PI / 4, 0.001, { destinationId: "theirs", launchSeq: 1 })],
+        }));
+        await flush();
+        expect(model.airplanes.map(a => a.id)).toEqual(["srv"]);
+        expect(model.islandById("mine")?.strength).toBe(5);
+    });
+
+    it("does not launch from a selected island that was taken from us", async () => {
+        controller.onIslandClicked("mine");
+        connection.push("eventGameDelta", makeDelta(2, 333, {
+            islands: [{ id: "mine", army: { ownerId: "enemy", strength: 8 } }],
+        }));
+        await flush();
+        controller.onIslandClicked("theirs");
+        expect(connection.sentActions).toHaveLength(0);
+        expect(model.airplanes).toHaveLength(0);
+    });
+
+    it("numbers launches after the server's last seq", async () => {
+        connection.push("eventGameDelta", makeDelta(2, 333, {
+            players: [makePlayer("me", wire.msg.PlayerState.ALIVE, 41)],
+        }));
+        await flush();
+        controller.onIslandClicked("mine");
+        controller.onIslandClicked("theirs");
+        expect(connection.sentActions[0].actionGameLaunch?.seq).toBe(42);
     });
 
     it("can launch to a neutral island too", () => {
@@ -243,10 +333,9 @@ describe("GameController.onIslandClicked", () => {
     });
 
     it("does not launch from an island with less than 2 strength", async () => {
-        connection.push("eventGameTick", tickGame([
-            makeIsland("mine", 1, 1, "me", 1),
-            makeIsland("theirs", 3, 3, "enemy", 5),
-        ]));
+        connection.push("eventGameDelta", makeDelta(2, 333, {
+            islands: [{ id: "mine", army: { ownerId: "me", strength: 1 } }],
+        }));
         await flush();
         controller.onIslandClicked("mine");
         controller.onIslandClicked("theirs");

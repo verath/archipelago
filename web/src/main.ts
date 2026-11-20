@@ -16,7 +16,7 @@ declare global {
 /**
  * The version of the websocket protocol we expect.
  */
-const WS_VERSION = "4";
+const WS_VERSION = "5";
 
 /**
  * The host for the websocket endpoint in production.

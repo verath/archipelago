@@ -46,6 +46,10 @@ export default class BaseSprite<TModel extends BaseModel = BaseModel> extends Co
         this.once("added", this._onAdded.bind(this));
     }
 
+    get model(): TModel | null {
+        return this._model;
+    }
+
     set model(model: TModel | null) {
         this._model = model;
     }

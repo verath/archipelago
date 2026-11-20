@@ -10,6 +10,63 @@ export default class IslandModel extends OwnableModel<wire.msg.Island.$Propertie
 
     private _selected = false;
 
+    /**
+     * The strength taken by each of our launches from this island that the
+     * server hasn't processed yet, by launch seq.
+     */
+    private readonly _pendingLaunches = new Map<number, number>();
+
+    /**
+     * The strength to show: the server's, minus what our pending launches
+     * from the island took. Those only count while we own the island, as
+     * they won't happen if we lost it.
+     */
+    override get strength(): number {
+        let strength = this._strength;
+        if (this._pendingLaunches.size > 0 && this.owner?.isSelf()) {
+            for (const taken of this._pendingLaunches.values()) {
+                strength -= taken;
+            }
+        }
+        return strength;
+    }
+
+    /**
+     * Sets the server's strength.
+     */
+    override set strength(strength: number) {
+        if (this._strength !== strength) {
+            this._strength = strength;
+            this._emitChanged();
+        }
+    }
+
+    /**
+     * Records that our launch `seq` took `strength` from the island, until
+     * the server has processed it (see removePendingLaunches).
+     */
+    addPendingLaunch(seq: number, strength: number): void {
+        this._pendingLaunches.set(seq, strength);
+        this._emitChanged();
+    }
+
+    /**
+     * Forgets the pending launches with a seq <= upToSeq, i.e. those that
+     * the server has processed, so that the server's strength includes them.
+     */
+    removePendingLaunches(upToSeq: number): void {
+        let changed = false;
+        for (const seq of this._pendingLaunches.keys()) {
+            if (seq <= upToSeq) {
+                this._pendingLaunches.delete(seq);
+                changed = true;
+            }
+        }
+        if (changed) {
+            this._emitChanged();
+        }
+    }
+
     get position(): Coordinate {
         return this._position;
     }

@@ -50,12 +50,26 @@ export default class OwnableModel<TData extends OwnableData = OwnableData> exten
         }
     }
 
+    /**
+     * Updates only the army (owner and strength), as sent in a delta. A change
+     * event is emitted if it changed.
+     */
+    updateArmy(armyData: wire.msg.Army.$Properties | null | undefined): void {
+        if (this._applyArmy(armyData)) {
+            this._emitChanged();
+        }
+    }
+
     protected override _update(data: TData): boolean {
-        let changed = super._update(data);
-        const armyData = data.army;
+        const changed = super._update(data);
+        return this._applyArmy(data.army) || changed;
+    }
+
+    private _applyArmy(armyData: wire.msg.Army.$Properties | null | undefined): boolean {
         if (armyData == null) {
             throw new Error("OwnableModel: data has no army");
         }
+        let changed = false;
         const ownerId = armyData.ownerId ?? null;
         if (this._ownerId !== ownerId) {
             this._ownerId = ownerId;

@@ -3,6 +3,7 @@ import { Ticker } from "pixi.js";
 import type Connection from "../../network/Connection.ts";
 import type { ServerEvent } from "../../network/Connection.ts";
 import { wire } from "../../wire/proto_bundle.js";
+import { ProtocolError } from "../model/GameModel.ts";
 import type GameModel from "../model/GameModel.ts";
 import type IslandModel from "../model/IslandModel.ts";
 
@@ -32,6 +33,16 @@ export default class GameController {
 
     private _winnerId: string | null = null;
 
+    /**
+     * The seq of the last snapshot or delta, null before the first snapshot.
+     */
+    private _lastStateSeq: number | null = null;
+
+    /**
+     * The seq of our next launch, see ActionGameLaunch.seq.
+     */
+    private _nextLaunchSeq = 1;
+
     constructor(connection: Connection, gameModel: GameModel) {
         this._connection = connection;
         this._gameModel = gameModel;
@@ -43,19 +54,27 @@ export default class GameController {
             // Target cannot be the same as the origin
             return;
         }
+        if (!originIsland.owner?.isSelf()) {
+            // The island was taken from us after we selected it.
+            return;
+        }
         if (originIsland.strength < 2) {
             // Cannot send from island with less than 2 strength
             return;
         }
-        // Launch a local dummy airplane, which will be replaced
-        // once we hear back from the server.
-        this._gameModel.launchAirplane(originIsland, targetIsland);
+        // Launch a local airplane, which is replaced once the server has
+        // processed the launch.
+        // Continue after the server's count, see ActionGameLaunch.seq.
+        const seq = Math.max(this._nextLaunchSeq, this._gameModel.myLastLaunchSeq + 1);
+        this._nextLaunchSeq = seq + 1;
+        this._gameModel.launchAirplane(originIsland, targetIsland, seq);
 
         // Create and send the action as an ActionEnvelope
         const actEnvelope = new wire.msg.ActionEnvelope();
         actEnvelope.actionGameLaunch = new wire.msg.ActionGameLaunch({
             fromId: originIsland.id,
-            toId: targetIsland.id
+            toId: targetIsland.id,
+            seq,
         });
         this._connection.sendAction(actEnvelope);
     }
@@ -78,13 +97,22 @@ export default class GameController {
         this._gameModel.serverTickInterval = evtStart.tickInterval ?? 0;
     }
 
-    private _onTickEvent(evtTick: wire.msg.EventGameTick.$Properties): void {
-        // TODO: Network latency compensation?
-        this._lastUpdateMS = performance.now();
-        if (evtTick.game == null) {
-            throw new Error("GameController: eventGameTick has no game");
+    private _onSnapshotEvent(snapshot: wire.msg.EventGameSnapshot.$Properties): void {
+        asProtocolError(() => this._gameModel.applySnapshot(snapshot));
+        this._lastStateSeq = snapshot.seq ?? 0;
+    }
+
+    private _onDeltaEvent(delta: wire.msg.EventGameDelta.$Properties): void {
+        const seq = delta.seq ?? 0;
+        if (this._lastStateSeq === null) {
+            throw new ProtocolError("delta before snapshot");
         }
-        this._gameModel.update(evtTick.game);
+        if (seq !== this._lastStateSeq + 1) {
+            // We missed a message, our state is no longer the server's.
+            throw new ProtocolError(`delta seq ${seq}, expected ${this._lastStateSeq + 1}`);
+        }
+        asProtocolError(() => this._gameModel.applyDelta(delta));
+        this._lastStateSeq = seq;
     }
 
     private _onGameOverEvent(evtGameOver: wire.msg.EventGameOver.$Properties): void {
@@ -96,8 +124,11 @@ export default class GameController {
             case "eventGameStart":
                 this._onGameStartEvent(envelope.eventGameStart);
                 break;
-            case "eventGameTick":
-                this._onTickEvent(envelope.eventGameTick);
+            case "eventGameSnapshot":
+                this._onSnapshotEvent(envelope.eventGameSnapshot);
+                break;
+            case "eventGameDelta":
+                this._onDeltaEvent(envelope.eventGameDelta);
                 break;
             case "eventGameOver":
                 this._onGameOverEvent(envelope.eventGameOver);
@@ -151,7 +182,18 @@ export default class GameController {
                     gameResult = { reason: "GAME_OVER", winnerId: "" };
                     break;
                 }
-                this._onServerEvent(this._connection.getNext());
+                try {
+                    this._onServerEvent(this._connection.getNext());
+                } catch (err) {
+                    if (!(err instanceof ProtocolError)) {
+                        throw err;
+                    }
+                    // Our state is no longer the server's, so the game can't
+                    // go on.
+                    console.error("GameController:", err);
+                    gameResult = { reason: "ERROR" };
+                    break;
+                }
             }
         } finally {
             // Also stop interpolating if handling a server event throws.
@@ -159,5 +201,20 @@ export default class GameController {
         }
 
         return gameResult;
+    }
+}
+
+/**
+ * Runs apply, turning any error into a ProtocolError: a snapshot or delta
+ * the model can't apply (e.g. missing fields) leaves the state broken.
+ */
+function asProtocolError(apply: () => void): void {
+    try {
+        apply();
+    } catch (err) {
+        if (err instanceof ProtocolError) {
+            throw err;
+        }
+        throw new ProtocolError(`can't apply server state: ${String(err)}`);
     }
 }
