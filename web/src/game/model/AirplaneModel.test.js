@@ -2,9 +2,9 @@ import { describe, it, expect, vi } from "vitest";
 // GameModel must be imported first: AirplaneModel -> GameModel ->
 // LocalAirplaneModel -> AirplaneModel is a cycle that only resolves when
 // entered through GameModel (as the app does).
-import GameModel from "./GameModel.js";
-import AirplaneModel, { DEFAULT_AIRPLANE_SPEED } from "./AirplaneModel.js";
-import LocalAirplaneModel from "./LocalAirplaneModel.js";
+import GameModel from "./GameModel.ts";
+import AirplaneModel, { DEFAULT_AIRPLANE_SPEED } from "./AirplaneModel.ts";
+import LocalAirplaneModel from "./LocalAirplaneModel.ts";
 import { makeAirplane, makeGame, makeIsland, makePlayer } from "../../test/fixtures.js";
 
 function newGameWithTick(tickInterval) {

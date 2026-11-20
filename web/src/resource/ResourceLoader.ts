@@ -1,7 +1,7 @@
-import { Assets } from "pixi.js";
-import ResourceHolder from "./ResourceHolder.js";
+import { Assets, type Texture } from "pixi.js";
+import ResourceHolder from "./ResourceHolder.ts";
 
-import * as images from "../images";
+import * as images from "../images/index.ts";
 
 const TEXTURES = [
     images.TEXTURE_AIRPLANE,
@@ -17,10 +17,7 @@ const TEXTURES = [
 
 export default class ResourceLoader {
 
-    /**
-     * @returns {Promise<ResourceHolder>}
-     */
-    static async load() {
+    static async load(): Promise<ResourceHolder> {
         // Load images the classic way, with an <img> element on the main
         // thread, to stay within our CSP. By default Pixi decodes images in
         // a web worker created from a blob: URL (blocked by worker-src
@@ -28,11 +25,9 @@ export default class ResourceLoader {
         // for the small images Vite inlines as data: URLs).
         Assets.setPreferences({ preferWorkers: false, preferCreateImageBitmap: false });
 
-        /** @type {Record<string, import("pixi.js").Texture>} */
-        const loaded = await Assets.load(TEXTURES);
+        const loaded = await Assets.load<Texture>(TEXTURES);
 
-        /** @type {Map<string, import("pixi.js").Texture>} */
-        const textures = new Map();
+        const textures = new Map<string, Texture>();
         for (const textureId of TEXTURES) {
             const texture = loaded[textureId];
             if (!texture) {

@@ -25,8 +25,8 @@ vi.mock("./resource/ResourceLoader", () => ({
     default: { load: vi.fn(async () => ({ fake: "resources" })) },
 }));
 
-import { ArchipelagoView, GameResultView, LobbyScreen } from "./Archipelago.jsx";
-import GameModel from "./game/model/GameModel.js";
+import { ArchipelagoView, GameResultView, LobbyScreen } from "./Archipelago.tsx";
+import GameModel from "./game/model/GameModel.ts";
 
 afterEach(cleanup);
 

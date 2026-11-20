@@ -1,57 +1,29 @@
 export class PlayerColor {
-    /**
-     * 
-     * @param {number} fill
-     * @param {number} textStroke
-     * @param {number} textFill
-     */
-    constructor(fill, textStroke, textFill) {
-        /**
-         * @type {number}
-         * @private
-         */
+    private readonly _fill: number;
+    private readonly _textStroke: number;
+    private readonly _textFill: number;
+
+    constructor(fill: number, textStroke: number, textFill: number) {
         this._fill = fill;
-
-        /**
-         * @type {number}
-         * @private
-         */
         this._textStroke = textStroke;
-
-        /**
-         * @type {number}
-         * @private
-         */
         this._textFill = textFill;
     }
 
-    /**
-     * @returns {number}
-     */
-    get fill() {
+    get fill(): number {
         return this._fill;
     }
 
-    /**
-     * @returns {number}
-     */
-    get textStroke() {
+    get textStroke(): number {
         return this._textStroke;
     }
 
-    /**
-     * @returns {number}
-     */
-    get textFill() {
+    get textFill(): number {
         return this._textFill;
     }
 }
 
-/**
- * @type PlayerColor[]
- */
 // Generated via https://mokole.com/palette.html.
-export const PLAYER_COLORS = [
+export const PLAYER_COLORS: PlayerColor[] = [
     // darkslategray
     new PlayerColor(0x2f4f4f, 0x000000, 0xeeeeee),
     // forestgreen
@@ -79,9 +51,6 @@ export const PLAYER_COLORS = [
     new PlayerColor(0x8b0000, 0x8b0000, 0x000000),
 ];
 
-/** @type PlayerColor */
 export const PLAYER_COLOR_SELF = new PlayerColor(0x0000ff, 0x000000, 0xeeeeee);
-/** @type PlayerColor */
 export const PLAYER_COLOR_NEUTRAL = new PlayerColor(0xffffff, 0xeeeeee, 0x0000000);
-/** @type PlayerColor */
 export const PLAYER_COLOR_NOT_SET = new PlayerColor(0x0, 0x0, 0x0);

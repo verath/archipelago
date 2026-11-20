@@ -1,40 +1,39 @@
 import React, { useState, useEffect, useRef, useCallback, useSyncExternalStore } from "react";
-import { createRoot } from "react-dom/client";
+import { createRoot, type Root } from "react-dom/client";
 import EventEmitter from "eventemitter3";
-import { autoDetectRenderer } from "pixi.js";
+import { autoDetectRenderer, type Renderer } from "pixi.js";
 
-import Connection from "./network/Connection";
-import ResourceHolder from "./resource/ResourceHolder";
-import ResourceLoader from "./resource/ResourceLoader";
-import GameController from "./game/controller/GameController";
-import GameModel from "./game/model/GameModel";
-import GameView from "./game/view/GameView";
-import { installTestHook, setTestHookGameView } from "./testHook.js";
+import Connection from "./network/Connection.ts";
+import type ResourceHolder from "./resource/ResourceHolder.ts";
+import ResourceLoader from "./resource/ResourceLoader.ts";
+import GameController, { type GameResult } from "./game/controller/GameController.ts";
+import GameModel from "./game/model/GameModel.ts";
+import GameView from "./game/view/GameView.ts";
+import { installTestHook, setTestHookGameView } from "./testHook.ts";
 
 
-/**
- * @typedef {(UIActionGameStart | UIActionGameClickIsland)} UIAction
- * 
- * @typedef UIActionGameStart
- * @property {"game/start"} type
- * 
- * @typedef UIActionGameClickIsland
- * @property {"game/click-island"} type
- * @property {string} islandId
- */
+export interface UIActionGameStart {
+    type: "game/start";
+}
 
-/**
- * @typedef ArchipelagoModel
- * @property {ConnectionState} connectionState
- * @property {?GameModel} gameModel
- * @property {?GameResult} gameResult
- * 
- * @typedef {("CONNECTING" | "CONNECTED" | "DISCONNECTED")} ConnectionState
- * @typedef {import('./game/controller/GameController').GameResult} GameResult
- */
+export interface UIActionGameClickIsland {
+    type: "game/click-island";
+    islandId: string | null;
+}
 
-/** @type {ArchipelagoModel} */
-const INITIAL_MODEL = {
+export type UIAction = UIActionGameStart | UIActionGameClickIsland;
+
+export type ConnectionState = "CONNECTING" | "CONNECTED" | "DISCONNECTED";
+
+export interface ArchipelagoModel {
+    connectionState: ConnectionState;
+    gameModel: GameModel | null;
+    gameResult: GameResult | null;
+}
+
+export type ModelChangeListener = (model: ArchipelagoModel) => void;
+
+const INITIAL_MODEL: ArchipelagoModel = {
     connectionState: "CONNECTING",
     gameModel: null,
     gameResult: null,
@@ -44,50 +43,25 @@ const EVENT_MODEL_CHANGE = Symbol("EVENT_MODEL_CHANGE");
 
 
 export class Archipelago {
-    /**
-     * 
-     * @param {HTMLElement} rootElement 
-     * @param {string} wsURL 
-     */
-    constructor(rootElement, wsURL) {
-        /**
-         * @member {HTMLElement}
-         * @private
-         */
+
+    private readonly _rootElement: HTMLElement;
+
+    private _model: ArchipelagoModel = INITIAL_MODEL;
+
+    private readonly _eventEmitter = new EventEmitter<{ [EVENT_MODEL_CHANGE]: [model: ArchipelagoModel] }>();
+
+    private readonly _connection: Connection;
+
+    private _gameController: GameController | null = null;
+
+    private _reactRoot: Root | null = null;
+
+    constructor(rootElement: HTMLElement, wsURL: string) {
         this._rootElement = rootElement;
-
-        /**
-         * @member {ArchipelagoModel}
-         * @private
-         */
-        this._model = INITIAL_MODEL;
-
-        /**
-         * @member {EventEmitter}
-         * @private
-         */
-        this._eventEmitter = new EventEmitter();
-
-        /**
-         * @member {Connection}
-         * @private
-         */
         this._connection = new Connection(wsURL);
-
-        /**
-         * @member {GameController | null}
-         * @private
-         */
-        this._gameController = null;
-
-        /**
-         * @member {import("react-dom/client").Root | null}
-         * @private
-         */
-        this._reactRoot = null;
     }
 
-    init() {
+    init(): void {
         if (import.meta.env.MODE === "e2e") {
             installTestHook(() => this._model);
         }
@@ -105,30 +79,24 @@ export class Archipelago {
         this._reactRoot.render(archipelagoView);
     }
 
-    _addModelChangeListener(listener) {
+    private _addModelChangeListener(listener: ModelChangeListener): void {
         this._eventEmitter.on(EVENT_MODEL_CHANGE, listener, null);
     }
 
-    _removeModelChangeListener(listener) {
+    private _removeModelChangeListener(listener: ModelChangeListener): void {
         this._eventEmitter.off(EVENT_MODEL_CHANGE, listener, null);
     }
 
-    _emitModelChanged() {
+    private _emitModelChanged(): void {
         this._eventEmitter.emit(EVENT_MODEL_CHANGE, this._model);
     }
 
-    /**
-     * @param {ArchipelagoModel} model
-     */
-    _setModel(model) {
+    private _setModel(model: ArchipelagoModel): void {
         this._model = model;
         this._emitModelChanged();
     }
 
-    /**
-     * @param {UIAction} action 
-     */
-    _dispatch(action) {
+    private _dispatch(action: UIAction): void {
         switch (action.type) {
             case "game/start":
                 this._joinAndRunGame();
@@ -142,7 +110,7 @@ export class Archipelago {
         }
     }
 
-    _connectToServer() {
+    private _connectToServer(): void {
         this._connection.addDisconnectListener(() => {
             this._setModel({ ...this._model, connectionState: "DISCONNECTED" });
         });
@@ -152,24 +120,21 @@ export class Archipelago {
         this._connection.connect();
     }
 
-    _joinAndRunGame() {
+    private _joinAndRunGame(): void {
         (async () => {
             await this._joinGame();
             await this._runGame();
         })().catch(err => console.error(err));
     }
 
-    /**
-     * @param {string} islandId
-     */
-    _clickIsland(islandId) {
+    private _clickIsland(islandId: string | null): void {
         if (this._gameController == null) {
             throw new Error("this._gameController == null");
         }
         this._gameController.onIslandClicked(islandId);
     }
 
-    async _joinGame() {
+    private async _joinGame(): Promise<void> {
         // The server automatically assigns us to a game as we connect, so we
         // wait here until the game has started.
         while (!this._connection.hasNext() && await this._connection.waitNext()) {
@@ -178,15 +143,15 @@ export class Archipelago {
         if (!this._connection.hasNext()) {
             throw new Error("error awaiting eventGameStart");
         }
-        let evt = this._connection.peekNext();
+        const evt = this._connection.peekNext();
         if (evt.event !== "eventGameStart") {
             throw new Error(`unexpected server event '${evt.event}'`);
         }
     }
 
-    async _runGame() {
-        let gameModel = new GameModel();
-        let gameResult = null;
+    private async _runGame(): Promise<void> {
+        const gameModel = new GameModel();
+        let gameResult: GameResult | null = null;
         this._setModel({ ...this._model, gameModel, gameResult });
 
         this._gameController = new GameController(this._connection, gameModel);
@@ -195,18 +160,18 @@ export class Archipelago {
     }
 }
 
-/**
- * @param {Object} props Props
- * @param {function():ArchipelagoModel} props.getModel
- * @param {any} props.addModelChangeListener
- * @param {any} props.removeModelChangeListener
- * @param {function(UIAction):void} props.dispatch
- */
-export const ArchipelagoView = ({ getModel, addModelChangeListener, removeModelChangeListener, dispatch }) => {
+export interface ArchipelagoViewProps {
+    getModel: () => ArchipelagoModel;
+    addModelChangeListener: (listener: ModelChangeListener) => void;
+    removeModelChangeListener: (listener: ModelChangeListener) => void;
+    dispatch: (action: UIAction) => void;
+}
+
+export const ArchipelagoView = ({ getModel, addModelChangeListener, removeModelChangeListener, dispatch }: ArchipelagoViewProps): React.JSX.Element => {
     // Subscribe to "model changed" events. useSyncExternalStore re-reads the
     // model after subscribing, so a change made before the (deferred) first
     // render and subscription, e.g. the WebSocket connecting, is not lost.
-    const subscribe = useCallback((onChange) => {
+    const subscribe = useCallback((onChange: () => void) => {
         addModelChangeListener(onChange);
         return () => { removeModelChangeListener(onChange); };
     }, [addModelChangeListener, removeModelChangeListener]);
@@ -238,15 +203,12 @@ export const ArchipelagoView = ({ getModel, addModelChangeListener, removeModelC
     }
 };
 
-/**
- * @returns {ResourceHolder | null}
- */
-const useResourceHolder = () => {
-    const [resourceHolder, setResourceHolder] = useState(null);
+const useResourceHolder = (): ResourceHolder | null => {
+    const [resourceHolder, setResourceHolder] = useState<ResourceHolder | null>(null);
     useEffect(() => {
         let abort = false;
         (async () => {
-            let resourceHolder = await ResourceLoader.load();
+            const resourceHolder = await ResourceLoader.load();
             if (!abort) {
                 setResourceHolder(resourceHolder);
             }
@@ -256,11 +218,15 @@ const useResourceHolder = () => {
     return resourceHolder;
 };
 
-const CenterText = ({ children }) => (
+interface TextProps {
+    children?: React.ReactNode;
+}
+
+const CenterText = ({ children }: TextProps): React.JSX.Element => (
     <div className="center-text-wrap">{children}</div>
 );
 
-const LoadingText = ({ children }) => (
+const LoadingText = ({ children }: TextProps): React.JSX.Element => (
     <CenterText>
         <span className="progressText">{children}</span>
         <span className="progress-text-dot progress-text-dot1">.</span>
@@ -269,11 +235,11 @@ const LoadingText = ({ children }) => (
     </CenterText>
 );
 
-/**
- * @param {Object} props Props
- * @param {ConnectionState} props.connectionState
- */
-export const LobbyScreen = ({ connectionState }) => {
+export interface LobbyScreenProps {
+    connectionState: ConnectionState;
+}
+
+export const LobbyScreen = ({ connectionState }: LobbyScreenProps): React.JSX.Element => {
     if (connectionState === "CONNECTING") {
         return <LoadingText>Connecting</LoadingText>;
     } else if (connectionState === "CONNECTED") {
@@ -283,14 +249,14 @@ export const LobbyScreen = ({ connectionState }) => {
     }
 };
 
-/**
- * @param {Object} props Props
- * @param {GameModel} props.gameModel
- * @param {GameResult} props.gameResult
- * @param {ResourceHolder} props.resourceHolder
- * @param {function(UIAction):void} props.dispatch
- */
-const GameScreen = ({ gameModel, gameResult, resourceHolder, dispatch }) => (
+interface GameScreenProps {
+    gameModel: GameModel;
+    gameResult: GameResult | null;
+    resourceHolder: ResourceHolder;
+    dispatch: (action: UIAction) => void;
+}
+
+const GameScreen = ({ gameModel, gameResult, resourceHolder, dispatch }: GameScreenProps): React.JSX.Element => (
     <>
         <GameResultView
             gameModel={gameModel}
@@ -302,27 +268,25 @@ const GameScreen = ({ gameModel, gameResult, resourceHolder, dispatch }) => (
     </>
 );
 
-/**
- * @param {Object} props Props
- * @param {GameModel} props.gameModel
- * @param {ResourceHolder} props.resourceHolder
- * @param {function(UIAction):void} props.dispatch
- */
-const GameViewWrapper = ({ gameModel, resourceHolder, dispatch }) => {
-    /**@type {React.RefObject<HTMLDivElement>} */
-    let containerElement = useRef(null);
+interface GameViewWrapperProps {
+    gameModel: GameModel;
+    resourceHolder: ResourceHolder;
+    dispatch: (action: UIAction) => void;
+}
+
+const GameViewWrapper = ({ gameModel, resourceHolder, dispatch }: GameViewWrapperProps): React.JSX.Element => {
+    const containerElement = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
-        /**@type {(() => void)[]} */
-        let cleanup = [];
+        const cleanup: (() => void)[] = [];
         let aborted = false;
 
-        /**
-         * @param {import("pixi.js").Renderer} renderer
-         */
-        const setupGameView = (renderer) => {
+        const setupGameView = (renderer: Renderer) => {
             // Append the renderer's canvas to DOM.
             const parentElement = containerElement.current;
+            if (parentElement == null) {
+                throw new Error("containerElement.current == null");
+            }
             parentElement.appendChild(renderer.canvas);
             cleanup.unshift(() => {
                 parentElement.removeChild(renderer.canvas);
@@ -330,8 +294,8 @@ const GameViewWrapper = ({ gameModel, resourceHolder, dispatch }) => {
             });
 
             // Create the GameView and connect it to the GameModel.
-            let gameView = new GameView(resourceHolder, renderer, gameModel);
-            let modelChangeListener = gameView.onModelChanged.bind(gameView);
+            const gameView = new GameView(resourceHolder, renderer, gameModel);
+            const modelChangeListener = gameView.onModelChanged.bind(gameView);
             gameModel.addChangeListener(modelChangeListener);
             cleanup.unshift(() => {
                 gameModel.removeChangeListener(modelChangeListener);
@@ -345,7 +309,7 @@ const GameViewWrapper = ({ gameModel, resourceHolder, dispatch }) => {
             }
 
             // Listen and dispatch island click events from GameView.
-            let islandClickListener = (islandId) => {
+            const islandClickListener = (islandId: string | null) => {
                 dispatch({ type: "game/click-island", islandId });
             };
             gameView.addIslandClickListener(islandClickListener);
@@ -354,7 +318,7 @@ const GameViewWrapper = ({ gameModel, resourceHolder, dispatch }) => {
             });
 
             // Forward window resize events to GameView.
-            let resizeListener = gameView.resize.bind(gameView);
+            const resizeListener = gameView.resize.bind(gameView);
             window.addEventListener("resize", resizeListener);
             window.addEventListener("deviceOrientation", resizeListener);
             cleanup.unshift(() => {
@@ -363,8 +327,8 @@ const GameViewWrapper = ({ gameModel, resourceHolder, dispatch }) => {
             });
 
             // Start the GameView rendering loop.
-            let renderRequestId;
-            let render = (_timestamp) => {
+            let renderRequestId: number;
+            const render = (_timestamp: DOMHighResTimeStamp) => {
                 gameView.render();
                 renderRequestId = window.requestAnimationFrame(render);
             };
@@ -376,7 +340,7 @@ const GameViewWrapper = ({ gameModel, resourceHolder, dispatch }) => {
 
         // Creating a renderer is asynchronous in Pixi v8.
         (async () => {
-            let renderer = await autoDetectRenderer({
+            const renderer = await autoDetectRenderer({
                 width: 1,
                 height: 1,
                 backgroundAlpha: 0,
@@ -399,17 +363,17 @@ const GameViewWrapper = ({ gameModel, resourceHolder, dispatch }) => {
     return (<div ref={containerElement} />);
 };
 
-/**
- * @param {Object} props Props
- * @param {GameModel} props.gameModel
- * @param {?GameResult} props.gameResult
- */
-export const GameResultView = ({ gameModel, gameResult }) => {
+export interface GameResultViewProps {
+    gameModel: GameModel;
+    gameResult: GameResult | null;
+}
+
+export const GameResultView = ({ gameModel, gameResult }: GameResultViewProps): React.JSX.Element | null => {
     if (gameResult == null) {
         return null;
     }
 
-    let reasonMsg;
+    let reasonMsg: string;
     let wrapClassName = "game-over-wrap";
     switch (gameResult.reason) {
         case "GAME_OVER":

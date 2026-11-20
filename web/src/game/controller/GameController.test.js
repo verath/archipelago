@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { Ticker } from "pixi.js";
-import GameController from "./GameController.js";
-import GameModel from "../model/GameModel.js";
+import GameController from "./GameController.ts";
+import GameModel from "../model/GameModel.ts";
 import { wire } from "../../wire/proto_bundle.js";
 import {
     NEUTRAL_ID, makeGame, makeIsland, makePlayer, makeEventEnvelope,

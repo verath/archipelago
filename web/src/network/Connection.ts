@@ -5,45 +5,41 @@ const EVENT_SERVER_EVENT = Symbol("EVENT_SERVER_EVENT");
 const EVENT_CONNECTED = Symbol("EVENT_CONNECTED");
 const EVENT_DISCONNECT = Symbol("EVENT_DISCONNECT");
 
+/**
+ * An event received from the server, as decoded from the wire. Switching on
+ * its `event` narrows it to the event that is set.
+ */
+export type ServerEvent = wire.msg.EventEnvelope & wire.msg.EventEnvelope.$Shape;
+
+export type ConnectionListener = () => void;
+
 export default class Connection {
 
-    /**
-     * @param {string} url
-     */
-    constructor(url) {
-        /**
-         * @member {string}
-         * @private
-         */
+    private readonly _url: string;
+
+    private _conn: WebSocket | null;
+
+    private readonly _eventEmitter: EventEmitter<{
+        [EVENT_SERVER_EVENT]: [];
+        [EVENT_CONNECTED]: [];
+        [EVENT_DISCONNECT]: [];
+    }>;
+
+    private readonly _serverEvents: ServerEvent[];
+
+    constructor(url: string) {
         this._url = url;
-
-        /**
-         * @type {?WebSocket}
-         * @private
-         */
         this._conn = null;
-
-        /**
-         * @type {EventEmitter}
-         * @private
-         */
         this._eventEmitter = new EventEmitter();
-
-        /**
-         * @type {wire.msg.EventEnvelope[]}
-         * @private
-         */
         this._serverEvents = [];
     }
 
     /**
-     * @param {MessageEvent} msgEvent
-     * @private
+     * The socket's binaryType is "arraybuffer", so data is an ArrayBuffer.
      */
-    _onWSMessage(msgEvent) {
-        let data = new Uint8Array(msgEvent.data);
-        /** @type wire.msg.EventEnvelope */
-        let eventEnvelope;
+    private _onWSMessage(msgEvent: MessageEvent<ArrayBuffer>): void {
+        const data = new Uint8Array(msgEvent.data);
+        let eventEnvelope: ServerEvent;
         try {
             eventEnvelope = wire.msg.EventEnvelope.decode(data);
         } catch (err) {
@@ -54,44 +50,45 @@ export default class Connection {
         this._eventEmitter.emit(EVENT_SERVER_EVENT);
     }
 
-    _onWSError() {
-        this._conn.close();
+    private _onWSError(): void {
+        // The handler is only installed while connected, so _conn is set.
+        this._conn?.close();
         this._eventEmitter.emit(EVENT_DISCONNECT);
     }
 
-    _onWSClose() {
+    private _onWSClose(): void {
         this._eventEmitter.emit(EVENT_DISCONNECT);
     }
 
-    _onWSOpen() {
+    private _onWSOpen(): void {
         this._eventEmitter.emit(EVENT_CONNECTED);
     }
 
-    addServerEventListener(listener, context = null) {
+    addServerEventListener(listener: ConnectionListener, context: unknown = null): void {
         this._eventEmitter.on(EVENT_SERVER_EVENT, listener, context);
     }
 
-    removeServerEventListener(listener, context = null) {
+    removeServerEventListener(listener: ConnectionListener, context: unknown = null): void {
         this._eventEmitter.off(EVENT_SERVER_EVENT, listener, context);
     }
 
-    addDisconnectListener(listener, context = null) {
+    addDisconnectListener(listener: ConnectionListener, context: unknown = null): void {
         this._eventEmitter.on(EVENT_DISCONNECT, listener, context);
     }
 
-    removeDisconnectListener(listener, context = null) {
+    removeDisconnectListener(listener: ConnectionListener, context: unknown = null): void {
         this._eventEmitter.off(EVENT_DISCONNECT, listener, context);
     }
 
-    addConnectedListener(listener, context = null) {
+    addConnectedListener(listener: ConnectionListener, context: unknown = null): void {
         this._eventEmitter.on(EVENT_CONNECTED, listener, context);
     }
 
-    removeConnectedListener(listener, context = null) {
+    removeConnectedListener(listener: ConnectionListener, context: unknown = null): void {
         this._eventEmitter.off(EVENT_CONNECTED, listener, context);
     }
 
-    connect() {
+    connect(): void {
         if (this._conn !== null) {
             console.warn("connect called when Connection already connected");
             return;
@@ -104,7 +101,7 @@ export default class Connection {
         this._conn.onopen = this._onWSOpen.bind(this);
     }
 
-    disconnect() {
+    disconnect(): void {
         if (this._conn === null) {
             console.warn("disconnect called when Connection was not connected");
             return;
@@ -117,36 +114,30 @@ export default class Connection {
         this._conn = null;
     }
 
-    /**
-     * @return {boolean}
-     */
-    hasNext() {
+    hasNext(): boolean {
         return this._serverEvents.length > 0;
     }
 
-    /**
-     * @return {wire.msg.EventEnvelope}
-     */
-    getNext() {
+    getNext(): ServerEvent {
         if (!this.hasNext()) {
             throw new Error("!hasNextServerEvent");
         }
-        return this._serverEvents.shift();
+        // Not undefined: hasNext() checked that the queue is not empty.
+        return this._serverEvents.shift()!;
     }
 
-    /**
-     * @return {wire.msg.EventEnvelope}
-     */
-    peekNext() {
+    peekNext(): ServerEvent {
         if (!this.hasNext()) {
             throw new Error("!hasNextServerEvent");
         }
         return this._serverEvents[0];
     }
 
-    async waitNext() {
-        let serverEventListener, disconnectListener;
-        let nextPromise = new Promise((resolve, reject) => {
+    async waitNext(): Promise<boolean> {
+        // Definitely assigned: the Promise executor runs synchronously.
+        let serverEventListener!: () => void;
+        let disconnectListener!: () => void;
+        const nextPromise = new Promise<void>((resolve, reject) => {
             serverEventListener = () => { resolve(); };
             disconnectListener = () => { reject(new Error("disconnected")); };
             this._eventEmitter.on(EVENT_SERVER_EVENT, serverEventListener);
@@ -164,15 +155,16 @@ export default class Connection {
         }
     }
 
-    /**
-     * @param {wire.msg.ActionEnvelope} actionEnvelope
-     */
-    sendAction(actionEnvelope) {
+    sendAction(actionEnvelope: wire.msg.ActionEnvelope): void {
         if (this._conn === null) {
             console.warn("sendAction called when Connection was not connected");
             return;
         }
-        let buffer = wire.msg.ActionEnvelope.encode(actionEnvelope).finish();
+        // finish() is typed as returning a Uint8Array over any ArrayBufferLike,
+        // which WebSocket.send does not accept (it may be a SharedArrayBuffer).
+        // protobufjs allocates its buffers with new Uint8Array (or Node's
+        // Buffer), so this is always a plain ArrayBuffer.
+        const buffer = wire.msg.ActionEnvelope.encode(actionEnvelope).finish() as Uint8Array<ArrayBuffer>;
         this._conn.send(buffer);
     }
 }

@@ -2,14 +2,74 @@
 // built with `vite build --mode e2e`; the calls are guarded by
 // `import.meta.env.MODE === "e2e"`, so production builds drop this module.
 
-/** @type {?import("./game/view/GameView").default} */
-let currentGameView = null;
+import type { ArchipelagoModel, ConnectionState } from "./Archipelago.tsx";
+import type { GameResult } from "./game/controller/GameController.ts";
+import type OwnableModel from "./game/model/OwnableModel.ts";
+import type GameView from "./game/view/GameView.ts";
+
+/**
+ * A position, in tiles for model positions and in CSS pixels for screen
+ * positions.
+ */
+export interface TestHookPosition {
+    x: number;
+    y: number;
+}
+
+export interface TestHookIsland {
+    id: string | null;
+    ownerId: string | null;
+    /**
+     * Negative when the island is in fog of war.
+     */
+    strength: number;
+    size: number;
+    position: TestHookPosition;
+    selected: boolean;
+    /**
+     * The island's center in CSS pixels relative to the viewport, or null
+     * if it is not rendered.
+     */
+    screen: TestHookPosition | null;
+}
+
+export interface TestHookAirplane {
+    id: string | null;
+    ownerId: string | null;
+    strength: number;
+    /**
+     * True for airplanes created locally until the server confirms them.
+     */
+    local: boolean;
+}
+
+/**
+ * The shape of the read-only `window.__archipelagoTest` hook.
+ */
+export interface ArchipelagoTestHook {
+    readonly connectionState: () => ConnectionState;
+    readonly myPlayerId: () => string | null;
+    readonly neutralPlayerId: () => string | null;
+    readonly islands: () => TestHookIsland[];
+    readonly airplanes: () => TestHookAirplane[];
+    readonly gameResult: () => GameResult | null;
+}
+
+declare global {
+    interface Window {
+        /**
+         * Installed by installTestHook, in e2e builds only.
+         */
+        __archipelagoTest?: ArchipelagoTestHook;
+    }
+}
+
+let currentGameView: GameView | null = null;
 
 /**
  * Sets the GameView whose sprites the test hook reports positions for.
- * @param {?import("./game/view/GameView").default} gameView
  */
-export function setTestHookGameView(gameView) {
+export function setTestHookGameView(gameView: GameView | null): void {
     currentGameView = gameView;
 }
 
@@ -17,10 +77,8 @@ export function setTestHookGameView(gameView) {
  * Returns the center of an island in CSS pixels relative to the viewport (the
  * coordinates Playwright's page.mouse.click expects), or null if it is not
  * rendered.
- * @param {string} islandId
- * @returns {?{x: number, y: number}}
  */
-function islandScreenPosition(islandId) {
+function islandScreenPosition(islandId: string | null): TestHookPosition | null {
     const gameView = currentGameView;
     if (gameView == null) {
         return null;
@@ -40,27 +98,19 @@ function islandScreenPosition(islandId) {
     };
 }
 
-/**
- * @param {import("./game/model/OwnableModel").default} ownable
- * @returns {?string}
- */
-function ownerId(ownable) {
+function ownerId(ownable: OwnableModel): string | null {
     const owner = ownable.owner;
     return (owner != null) ? owner.id : null;
 }
 
 /**
  * Installs the read-only `window.__archipelagoTest` hook.
- * @param {function(): import("./Archipelago.jsx").ArchipelagoModel} getModel
  */
-export function installTestHook(getModel) {
+export function installTestHook(getModel: () => ArchipelagoModel): void {
     const gameModel = () => getModel().gameModel;
     window.__archipelagoTest = Object.freeze({
-        /** @returns {string} "CONNECTING", "CONNECTED" or "DISCONNECTED". */
         connectionState: () => getModel().connectionState,
-        /** @returns {?string} */
         myPlayerId: () => gameModel()?.myPlayerId ?? null,
-        /** @returns {?string} */
         neutralPlayerId: () => gameModel()?.playerNeutral.id ?? null,
         islands: () => (gameModel()?.islands ?? []).map(island => ({
             id: island.id,
@@ -77,12 +127,11 @@ export function installTestHook(getModel) {
             ownerId: ownerId(airplane),
             strength: airplane.strength,
             // Airplanes created locally until the server confirms them.
-            local: airplane.id.startsWith("local-"),
+            local: airplane.id?.startsWith("local-") ?? false,
         })),
-        /** @returns {?import("./Archipelago.jsx").GameResult} */
         gameResult: () => {
             const result = getModel().gameResult;
             return (result != null) ? { ...result } : null;
         },
-    });
+    } satisfies ArchipelagoTestHook);
 }
