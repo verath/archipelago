@@ -31,15 +31,17 @@ The game is over when there is only a single player controlling any islands or a
 
 ## Project Overview
 
-The project has two parts; A backend server written in go, and a frontend created in JavaScript. 
+The project has two parts; A backend server written in go, and a frontend written in TypeScript. 
 Communication between the backend and frontend is done over binary WebSockets messages, serialized
 using protocol buffers defined in the [proto](./proto) directory.
 
 ### Frontend
 
-The frontend project is found in the [web](./web) directory. It uses [Pixi.js](https://pixijs.com/) 8
-for WebGL rendering and [React](https://react.dev/) 19 for the UI around the game. Dependencies are
-managed with npm and the app is bundled with [Vite](https://vite.dev/).
+The frontend project is found in the [web](./web) directory. It is written in
+[TypeScript](https://www.typescriptlang.org/) and uses [Pixi.js](https://pixijs.com/) 8 for WebGL
+rendering and [React](https://react.dev/) 19 for the UI around the game. Dependencies are managed
+with npm and the app is bundled with [Vite](https://vite.dev/). Vite only strips the types;
+`npm run typecheck` in `web/` runs the TypeScript compiler (`tsc`) to check them.
 
 ### Backend
 
@@ -92,13 +94,13 @@ These run in CI ([.github/workflows/ci.yml](.github/workflows/ci.yml)) on every 
 ```
 go vet ./...
 go test -race ./...      # -race needs cgo, i.e. a C compiler
-cd web && npm run lint && npm test && npm run build
+cd web && npm run lint && npm run typecheck && npm test && npm run build
 cd web && npm run test:e2e
 ```
 
 * **Backend unit tests:** `go test ./...`.
 * **Frontend unit tests** ([Vitest](https://vitest.dev/)): `npm test` in `web/` (or
-  `npm run test:watch`). Tests live next to the code as `*.test.js(x)` and cover the game models,
+  `npm run test:watch`). Tests live next to the code as `*.test.ts(x)` and cover the game models,
   the WebSocket connection, the game controller, the React UI and the protobuf bundle.
 * **End-to-end tests** ([Playwright](https://playwright.dev/), Chromium): `npm run test:e2e` in
   `web/`. Before the first run, install the browser with `npx playwright install chromium`. The
