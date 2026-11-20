@@ -14,6 +14,7 @@ import (
 	"github.com/pkg/profile"
 	archipelago "github.com/verath/archipelago/lib"
 	"github.com/verath/archipelago/lib/game"
+	"github.com/verath/archipelago/lib/network/websocket"
 	"log/slog"
 )
 
@@ -26,6 +27,7 @@ func main() {
 	var (
 		debug             bool
 		skipWSOriginCheck bool
+		wsCompression     bool
 		httpAddr          string
 		profileMode       string
 		lobbyWait         time.Duration
@@ -33,6 +35,8 @@ func main() {
 	)
 	flag.BoolVar(&debug, "debug", false, "Set to true to log debug messages.")
 	flag.BoolVar(&skipWSOriginCheck, "skipWSOriginCheck", false, "")
+	flag.BoolVar(&wsCompression, "wsCompression", true,
+		"Negotiate permessage-deflate compression with websocket clients.")
 	flag.StringVar(&httpAddr, "addr", ":8080", "TCP address for the http server to listen on.")
 	flag.StringVar(&profileMode, "profile", "", "Enable profiling mode, one of [cpu, mem, mutex, block]")
 	flag.DurationVar(&lobbyWait, "lobbyWait", game.DefaultLobbyWait,
@@ -52,13 +56,17 @@ func main() {
 	if skipWSOriginCheck {
 		logger.Info("Skipping WebSocket origin check.")
 	}
+	if !wsCompression {
+		logger.Info("WebSocket compression disabled.")
+	}
 	logger.Info("HTTP server will listen", "addr", httpAddr)
 	if profileMode != "" {
 		defer startProfiling(profileMode)()
 	}
 	// Setup archipelago server instance.
 	coordinatorOpts := game.CoordinatorOptions{LobbyWait: lobbyWait, AIPlayers: aiPlayers}
-	archipelagoServer, err := archipelago.New(logger, skipWSOriginCheck, coordinatorOpts)
+	wsOpts := websocket.UpgraderOptions{SkipOriginCheck: skipWSOriginCheck, DisableCompression: !wsCompression}
+	archipelagoServer, err := archipelago.New(logger, wsOpts, coordinatorOpts)
 	if err != nil {
 		logger.Error("Error creating archipelago", "err", err)
 		os.Exit(1)

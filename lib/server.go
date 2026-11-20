@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net/http"
 	"sync"
+	"time"
 
 	"github.com/verath/archipelago/lib/common"
 	"github.com/verath/archipelago/lib/game"
@@ -36,15 +37,15 @@ type Server struct {
 }
 
 // New returns a new Server using the provided logger.
-// skipWSOriginCheck controls if websocket origin checking is disabled.
-// coordinatorOpts configures how games are created, see
+// wsOpts configures the websocket endpoint, its zero value is the production
+// configuration. coordinatorOpts configures how games are created, see
 // game.DefaultCoordinatorOptions for the production defaults.
-func New(logger *slog.Logger, skipWSOriginCheck bool, coordinatorOpts game.CoordinatorOptions) (*Server, error) {
+func New(logger *slog.Logger, wsOpts websocket.UpgraderOptions, coordinatorOpts game.CoordinatorOptions) (*Server, error) {
 	gameCoordinator, err := game.NewCoordinator(logger, coordinatorOpts)
 	if err != nil {
 		return nil, fmt.Errorf("error creating game coordinator: %w", err)
 	}
-	wsUpgrader, err := websocket.NewUpgrader(skipWSOriginCheck)
+	wsUpgrader, err := websocket.NewUpgrader(wsOpts)
 	if err != nil {
 		return nil, fmt.Errorf("error creating websocket upgrader: %w", err)
 	}
@@ -130,6 +131,7 @@ func (srv *Server) newWSClient(ctx context.Context, wsConn *websocket.WSConnecti
 	srv.clientsWG.Add(1)
 	go func() {
 		defer srv.clientsWG.Done()
+		start := time.Now()
 		err := client.Run(clientCtx)
 		if err != nil {
 			if errors.Is(err, context.Canceled) {
@@ -138,10 +140,36 @@ func (srv *Server) newWSClient(ctx context.Context, wsConn *websocket.WSConnecti
 				srv.logger.Info("client stopped with error", "err", err)
 			}
 		}
+		srv.logClientTraffic(time.Since(start), wsConn.Stats())
 	}()
 	if err := srv.gameCoordinator.AddClient(ctx, wireClient); err != nil {
 		client.Disconnect()
 		return fmt.Errorf("error adding client to game coordinator: %w", err)
 	}
 	return nil
+}
+
+// logClientTraffic logs the traffic of a websocket client over its lifetime,
+// one line per client, to be able to follow network usage in production.
+func (srv *Server) logClientTraffic(duration time.Duration, stats websocket.Stats) {
+	srv.logger.Info("client traffic",
+		"duration", duration.Round(time.Millisecond),
+		"msgsOut", stats.MessagesWritten,
+		"payloadBytesOut", stats.PayloadBytesWritten,
+		"wireBytesOut", stats.WireBytesWritten,
+		"wireBytesOutPerSec", perSecond(stats.WireBytesWritten, duration),
+		"compressionRatio", fmt.Sprintf("%.2f", stats.CompressionRatio()),
+		"msgsIn", stats.MessagesRead,
+		"payloadBytesIn", stats.PayloadBytesRead,
+		"wireBytesIn", stats.WireBytesRead,
+	)
+}
+
+// perSecond returns n per second over duration d, rounded down. Returns 0 if
+// d is less than a second.
+func perSecond(n int64, d time.Duration) int64 {
+	if d < time.Second {
+		return 0
+	}
+	return int64(float64(n) / d.Seconds())
 }
