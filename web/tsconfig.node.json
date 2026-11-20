@@ -1,0 +1,26 @@
+// Type checking for code run by Node: the Playwright e2e tests and the
+// tool config files. The browser app is in tsconfig.json.
+{
+    "compilerOptions": {
+        "target": "ES2023",
+        "lib": ["ES2023", "DOM"],
+        "module": "ESNext",
+        "moduleResolution": "bundler",
+        "allowImportingTsExtensions": true,
+        "verbatimModuleSyntax": true,
+        "isolatedModules": true,
+        "moduleDetection": "force",
+        "types": ["node"],
+        "noEmit": true,
+
+        "strict": true,
+        "noImplicitOverride": true,
+        "noFallthroughCasesInSwitch": true,
+        "skipLibCheck": true,
+
+        // Temporary, while the code base is migrated from JavaScript.
+        "allowJs": true,
+        "checkJs": false
+    },
+    "include": ["e2e", "*.config.ts", "*.config.js"]
+}
