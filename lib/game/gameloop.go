@@ -12,7 +12,11 @@ import (
 	"log/slog"
 )
 
-const defaultTickInterval time.Duration = time.Second / 3
+// defaultTickInterval is the time between ticks. Airplanes arrive and
+// launches take effect on a tick, so on top of the network a player waits up
+// to this long to see an arrival change an island (the client moves airplanes
+// itself between ticks, see GameClock in the frontend).
+const defaultTickInterval time.Duration = time.Second / 10
 
 var defaultEventHandler = eventHandlerFunc(func(event model.Event) error {
 	return nil

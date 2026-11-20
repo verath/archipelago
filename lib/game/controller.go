@@ -13,10 +13,10 @@ import (
 // eventQueueSize is the number of events queued for a player before the
 // player is considered too slow and disconnected. Queued ticks are coalesced
 // (see playerEventLoop), so the queue only fills up if writing a single event
-// blocks. 64 events is ~21 s of ticks, longer than the network write timeout,
-// so a client on a slow connection is disconnected by the write timeout
-// rather than by a full queue.
-const eventQueueSize = 64
+// blocks. 256 events is ~25 s of ticks (at defaultTickInterval), longer than
+// the network write timeout, so a client on a slow connection is disconnected
+// by the write timeout rather than by a full queue.
+const eventQueueSize = 256
 
 // playerError is a struct holding both an error and the playerProxy in which
 // the error occurred.
