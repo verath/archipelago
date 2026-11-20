@@ -112,7 +112,8 @@ cd web && npm run test:e2e
   * the remaining player wins when the other one leaves;
   * the UI copes with the backend going away;
   * the client uses protocol v5, with compression, and its traffic is small;
-  * airplanes move between server messages.
+  * airplanes move between server messages;
+  * the game resumes after the connection breaks, showing "Reconnecting" while the network is down.
 
   Specs are in [web/e2e](web/e2e). On failure, `npx playwright show-report` opens the report.
 
@@ -173,8 +174,17 @@ reports (`Player.last_launch_seq`) that it processed the launch.
 A v5 client whose connection breaks during a game (e.g. a phone switching from wifi to mobile
 data) can resume the game on a new connection: `EventGameStart` carries a `resume_token`, and
 connecting with `?v=5&resume=<token>` within `resume_timeout` (the backend's `-resumeGrace`)
-continues the game with a new snapshot. Until then the player stays in the game. A token that
-can't be resumed gets HTTP 410 Gone. The sessions are in [lib/session](lib/session).
+continues the game with a new snapshot. Until then the player stays in the game. A connection the
+client closes on purpose (a WebSocket close frame, e.g. when the tab is closed) is not a broken one:
+the player leaves right away. A token that can't be resumed gets HTTP 410 Gone. The sessions are in
+[lib/session](lib/session).
+
+The frontend's `GameController` retries with backoff until `resume_timeout` has passed and shows
+"Reconnecting" meanwhile. Launches it hadn't heard back about are dropped, as they may have been
+lost; the snapshot shows what happened.
+
+A player that is too slow to keep up gets only the latest tick of those queued for it (the backend
+coalesces them), so it doesn't fall further behind, or get disconnected for it.
 
 ## Deployment
 

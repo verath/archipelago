@@ -481,6 +481,21 @@ export default class GameModel extends BaseModel<wire.msg.Game.$Properties> {
     }
 
     /**
+     * Drops what we predicted for our launches that the server hasn't
+     * processed yet: their local airplanes, and the strength they took from
+     * islands. Used when reconnecting, as such launches may have been lost
+     * with the old connection; the snapshot then shows what happened.
+     */
+    dropLocalLaunches(): void {
+        const locals = this._airplanes.filter(a => a instanceof LocalAirplaneModel);
+        locals.forEach(local => this._removeAirplane(local));
+        this._islands.forEach(island => island.clearPendingLaunches());
+        if (locals.length > 0) {
+            this._emitChanged();
+        }
+    }
+
+    /**
      * Moves airplanes to where they are now.
      * @param delta [ms] Time since the previous call.
      */

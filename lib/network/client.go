@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/verath/archipelago/lib/common"
@@ -62,6 +63,10 @@ type Client struct {
 	// writeQueue is a queue of writes to be made to the connection.
 	writeQueue chan *writeRequest
 
+	// peerClosed is set when the peer closed the connection on purpose,
+	// see ErrPeerClosed.
+	peerClosed atomic.Bool
+
 	disconnectOnce sync.Once
 	// disconnectCh is a channel that is closed when the Client has started
 	// disconnecting. The Client should not be expected to sucessfully perform
@@ -84,6 +89,13 @@ func NewClient(logger *slog.Logger, conn Connection) (*Client, error) {
 // not block. After the first call Disconnect is a no-op.
 func (c *Client) Disconnect() {
 	c.disconnect()
+}
+
+// PeerClosed reports whether the client disconnected because the peer
+// closed the connection on purpose (see ErrPeerClosed). It is set before
+// DisconnectCh is closed.
+func (c *Client) PeerClosed() bool {
+	return c.peerClosed.Load()
 }
 
 // DisconnectCh is a channel closed when the client is disconnected.
@@ -119,12 +131,17 @@ func (c *Client) WriteMessage(ctx context.Context, msg []byte) error {
 }
 
 // ReadMessage reads a message from the client. This method blocks until
-// a message can be read, an error occurs, or the context is cancelled.
+// a message can be read, an error occurs, or the context is cancelled. The
+// error wraps ErrPeerClosed if the client disconnected because the peer
+// closed the connection on purpose.
 func (c *Client) ReadMessage(ctx context.Context) ([]byte, error) {
 	select {
 	case msg := <-c.readQueue:
 		return msg, nil
 	case <-c.disconnectCh:
+		if c.peerClosed.Load() {
+			return nil, fmt.Errorf("%w: %w", ErrClientDisconnected, ErrPeerClosed)
+		}
 		return nil, ErrClientDisconnected
 	case <-ctx.Done():
 		return nil, ctx.Err()
@@ -205,6 +222,10 @@ func (c *Client) readPump(ctx context.Context, readQueue chan<- []byte, disconne
 		}
 		msg, err := c.conn.ReadMessage(ctx)
 		if err != nil {
+			// Set before returning, i.e. before disconnectCh is closed.
+			if errors.Is(err, ErrPeerClosed) {
+				c.peerClosed.Store(true)
+			}
 			return fmt.Errorf("error reading from connection: %w", err)
 		}
 		select {

@@ -67,6 +67,16 @@ export default class IslandModel extends OwnableModel<wire.msg.Island.$Propertie
         }
     }
 
+    /**
+     * Forgets all pending launches.
+     */
+    clearPendingLaunches(): void {
+        if (this._pendingLaunches.size > 0) {
+            this._pendingLaunches.clear();
+            this._emitChanged();
+        }
+    }
+
     get position(): Coordinate {
         return this._position;
     }

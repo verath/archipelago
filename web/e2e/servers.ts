@@ -204,3 +204,72 @@ export async function startPreview(backend: Backend, outDir: string): Promise<Pr
     }
     throw lastErr;
 }
+
+/**
+ * A TCP proxy in front of the backend, whose connections a test can cut to
+ * simulate the network dropping (e.g. a phone switching from wifi to mobile
+ * data): both ends see their connection reset.
+ */
+export interface NetworkProxy {
+    port: number;
+    /**
+     * Resets all current connections. New connections work as before.
+     */
+    dropConnections: () => void;
+    /**
+     * While offline, current connections are reset and new ones refused.
+     */
+    setOffline: (offline: boolean) => void;
+    stop: () => Promise<void>;
+}
+
+export async function startNetworkProxy(targetPort: number): Promise<NetworkProxy> {
+    const sockets = new Set<net.Socket>();
+    let offline = false;
+    const server = net.createServer((client) => {
+        if (offline) {
+            client.resetAndDestroy();
+            return;
+        }
+        const upstream = net.connect(targetPort, HOST);
+        sockets.add(client);
+        sockets.add(upstream);
+        const close = () => {
+            sockets.delete(client);
+            sockets.delete(upstream);
+            client.destroy();
+            upstream.destroy();
+        };
+        for (const s of [client, upstream]) {
+            s.on("error", close);
+            s.on("close", close);
+        }
+        client.pipe(upstream);
+        upstream.pipe(client);
+    });
+    const port = await new Promise<number>((resolve, reject) => {
+        server.once("error", reject);
+        server.listen(0, HOST, () => resolve((server.address() as AddressInfo).port));
+    });
+    const dropConnections = () => {
+        for (const s of [...sockets]) {
+            s.resetAndDestroy();
+        }
+    };
+    return {
+        port,
+        dropConnections,
+        setOffline: (value) => {
+            offline = value;
+            if (offline) {
+                dropConnections();
+            }
+        },
+        stop: () => new Promise<void>((resolve) => {
+            for (const s of [...sockets]) {
+                s.destroy();
+            }
+            server.close(() => resolve());
+        }),
+    };
+}

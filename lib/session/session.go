@@ -16,6 +16,7 @@ import (
 
 	"github.com/verath/archipelago/lib/game"
 	"github.com/verath/archipelago/lib/game/model"
+	"github.com/verath/archipelago/lib/network"
 )
 
 // DefaultGrace is the default time a Session waits for a new connection
@@ -215,10 +216,31 @@ func (s *Session) ReadPlayerAction(ctx context.Context) (model.PlayerAction, err
 		if ctx.Err() != nil {
 			return nil, err
 		}
+		if errors.Is(err, network.ErrPeerClosed) {
+			// The client closed the connection on purpose (e.g. the tab
+			// was closed): it left, it won't resume.
+			if s.leave(att) {
+				return nil, fmt.Errorf("%w: %w", ErrEnded, err)
+			}
+			continue
+		}
 		// The connection broke (or sent something invalid), wait for the
 		// next one.
 		s.detach(att)
 	}
+}
+
+// leave ends the Session because the client of att closed its connection on
+// purpose, unless another connection was attached meanwhile. Reports
+// whether the Session has ended.
+func (s *Session) leave(att *attachment) bool {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	// att may already be detached, by the watcher of its DisconnectCh.
+	if s.cur == att || s.cur == nil {
+		s.endLocked()
+	}
+	return s.ended
 }
 
 // Attach makes client the connection of the Session, to resume the game on
@@ -308,6 +330,13 @@ func (s *Session) Resumable() bool {
 	return s.resumableLocked() == nil
 }
 
+// peerCloser is implemented by clients that can tell whether they were
+// disconnected because the peer closed the connection on purpose, see
+// network.ErrPeerClosed.
+type peerCloser interface {
+	PeerClosed() bool
+}
+
 // attachLocked makes client the current connection, and starts watching
 // for it to disconnect.
 func (s *Session) attachLocked(client game.Client) {
@@ -318,7 +347,14 @@ func (s *Session) attachLocked(client game.Client) {
 	go func() {
 		select {
 		case <-client.DisconnectCh():
-			s.detach(att)
+			// ReadPlayerAction may not see the read error that tells a
+			// closed from a broken connection, if it isn't reading now, so
+			// ask the client.
+			if pc, ok := client.(peerCloser); ok && pc.PeerClosed() {
+				s.leave(att)
+			} else {
+				s.detach(att)
+			}
 		case <-att.detachedCh:
 		}
 	}()

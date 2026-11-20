@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/gorilla/websocket"
+	"github.com/verath/archipelago/lib/network"
 )
 
 const (
@@ -101,6 +102,13 @@ func (c *WSConnection) Stats() Stats {
 func (c *WSConnection) ReadMessage(ctx context.Context) (msg []byte, err error) {
 	msgType, msg, err := c.readMessage(ctx)
 	if err != nil {
+		// A close frame from the peer, e.g. the browser tab was closed.
+		// gorilla reports a connection that just ended (EOF) as a close with
+		// code 1006, which is never sent in a close frame.
+		var closeErr *websocket.CloseError
+		if errors.As(err, &closeErr) && closeErr.Code != websocket.CloseAbnormalClosure {
+			return nil, fmt.Errorf("Failed reading message: %w: %w", network.ErrPeerClosed, err)
+		}
 		return nil, fmt.Errorf("Failed reading message: %w", err)
 	}
 	if msgType != websocket.BinaryMessage {

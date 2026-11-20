@@ -3,11 +3,13 @@ package session
 import (
 	"context"
 	"errors"
+	"fmt"
 	"sync"
 	"testing"
 	"time"
 
 	"github.com/verath/archipelago/lib/game/model"
+	"github.com/verath/archipelago/lib/network"
 )
 
 var errFakeDisconnected = errors.New("fakeConn disconnected")
@@ -21,6 +23,9 @@ type fakeConn struct {
 
 	written chan model.PlayerEvent
 	actions chan model.PlayerAction
+	// readErr, if set, is returned by reads once disconnected, instead of
+	// errFakeDisconnected.
+	readErr error
 
 	disconnectOnce sync.Once
 	disconnectCh   chan struct{}
@@ -68,10 +73,17 @@ func (c *fakeConn) ReadPlayerAction(ctx context.Context) (model.PlayerAction, er
 	case act := <-c.actions:
 		return act, nil
 	case <-c.disconnectCh:
+		if c.readErr != nil {
+			return nil, c.readErr
+		}
 		return nil, errFakeDisconnected
 	case <-ctx.Done():
 		return nil, ctx.Err()
 	}
+}
+
+func (c *fakeConn) PeerClosed() bool {
+	return c.isDisconnected() && errors.Is(c.readErr, network.ErrPeerClosed)
 }
 
 func (c *fakeConn) isDisconnected() bool {
@@ -526,6 +538,64 @@ func TestSession_ReadErrorAfterStart_Detaches(t *testing.T) {
 		}
 	case <-time.After(testTimeout):
 		t.Fatal("timeout waiting for ReadPlayerAction")
+	}
+}
+
+func TestSession_PeerClosedAfterStart_Ends(t *testing.T) {
+	conn := newFakeConn()
+	conn.readErr = fmt.Errorf("closed: %w", network.ErrPeerClosed)
+	s := New(conn, time.Minute)
+	t.Cleanup(s.Disconnect)
+	write(t, s, newStart())
+	expectStart(t, conn, s)
+
+	readErrCh := make(chan error, 1)
+	go func() {
+		_, err := s.ReadPlayerAction(context.Background())
+		readErrCh <- err
+	}()
+	// The client closed the connection on purpose, e.g. closed the tab.
+	conn.Disconnect()
+	waitClosed(t, s.DisconnectCh(), "DisconnectCh")
+	select {
+	case err := <-readErrCh:
+		if !errors.Is(err, ErrEnded) {
+			t.Errorf("ReadPlayerAction = %v, want ErrEnded", err)
+		}
+	case <-time.After(testTimeout):
+		t.Fatal("timeout waiting for ReadPlayerAction")
+	}
+	if s.Resumable() {
+		t.Error("Resumable() = true after the client closed the connection")
+	}
+}
+
+// The client closed the connection while no read was in progress: the
+// watcher of its DisconnectCh ends the Session.
+func TestSession_PeerClosedWhileNotReading_Ends(t *testing.T) {
+	conn := newFakeConn()
+	conn.readErr = fmt.Errorf("closed: %w", network.ErrPeerClosed)
+	s := New(conn, time.Minute)
+	t.Cleanup(s.Disconnect)
+	write(t, s, newStart())
+	expectStart(t, conn, s)
+	conn.Disconnect()
+	waitClosed(t, s.DisconnectCh(), "DisconnectCh")
+}
+
+func TestSession_PeerClosedOldConnection_DoesNotEndResumed(t *testing.T) {
+	s, conn1 := newStartedSession(t, time.Minute)
+	conn1.readErr = fmt.Errorf("closed: %w", network.ErrPeerClosed)
+	// Resume on conn2 first, then the old connection's close arrives.
+	conn2 := newFakeConn()
+	if err := s.Attach(context.Background(), conn2); err != nil {
+		t.Fatalf("Attach: %v", err)
+	}
+	expectStart(t, conn2, s)
+	if !s.leave(&attachment{client: conn1}) {
+		expectOpen(t, s.DisconnectCh(), "DisconnectCh")
+	} else {
+		t.Error("leave of an old connection ended the resumed session")
 	}
 }
 

@@ -27,7 +27,8 @@ test.describe("human vs human", () => {
 });
 
 test.describe("server gone", () => {
-    test.use({ backendArgs: ["-lobbyWait", "500ms"] });
+    // The client tries to resume the game for -resumeGrace before giving up.
+    test.use({ backendArgs: ["-lobbyWait", "500ms", "-resumeGrace", "2s"] });
 
     test("stopping the backend mid-game ends the game instead of hanging", async ({ page, backend }) => {
         await page.goto("/");

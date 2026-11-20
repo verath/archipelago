@@ -23,6 +23,22 @@ canvas {
     font-size: 10vmin;
 }
 
+.reconnecting-wrap {
+    box-sizing: border-box;
+    position: absolute;
+    padding-top: 10vmin;
+    width: 100%;
+    height: 100%;
+    text-align: center;
+    font-family: 'Droid Sans Mono', 'Courier New', monospace;
+    font-size: 6vmin;
+    color: #fff;
+    text-shadow: #000 0px 0px 2px, #000 0px 0px 6px;
+    background: rgba(0, 0, 0, 0.3);
+    /* Clicks on the game would be lost while disconnected anyway. */
+    pointer-events: auto;
+}
+
 .game-over-wrap {
     box-sizing: border-box;
     position: absolute;

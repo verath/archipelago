@@ -408,6 +408,21 @@ describe("GameModel.launchAirplane", () => {
     });
 });
 
+describe("GameModel.dropLocalLaunches", () => {
+    it("removes local airplanes and restores island strengths", () => {
+        const model = newGame({ airplanes: [makeAirplane("srv", 1, 1, "enemy", 2)] });
+        model.launchAirplane(defined(model.islandById("mine")), defined(model.islandById("theirs")), 1);
+        const listener = vi.fn();
+        model.addChangeListener(listener);
+
+        model.dropLocalLaunches();
+
+        expect(model.airplanes.map(a => a.id)).toEqual(["srv"]);
+        expect(model.islandById("mine")?.strength).toBe(10);
+        expect(listener).toHaveBeenCalled();
+    });
+});
+
 describe("GameModel.interpolate", () => {
     it("moves airplanes to the estimated game time", () => {
         let now = 0;

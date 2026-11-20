@@ -11,7 +11,7 @@ import {
 } from "../../test/fixtures.ts";
 
 /** The part of Connection that GameController uses. */
-type ServerEventQueue = Pick<Connection, "hasNext" | "getNext" | "peekNext" | "waitNext" | "sendAction">;
+type ServerEventQueue = Pick<Connection, "hasNext" | "getNext" | "peekNext" | "waitNext" | "sendAction" | "resume">;
 
 /**
  * A stand-in for Connection with the same queueing interface. Tests push
@@ -47,6 +47,19 @@ class FakeConnection implements ServerEventQueue {
             return Promise.resolve(false);
         }
         return new Promise(resolve => this._waiters.push(resolve));
+    }
+
+    /** What each resume() call resolves to, in order; false when empty. */
+    resumeResults: boolean[] = [];
+    readonly resumeTokens: string[] = [];
+
+    resume(token: string): Promise<boolean> {
+        this.resumeTokens.push(token);
+        const ok = this.resumeResults.shift() ?? false;
+        if (ok) {
+            this.ended = false;
+        }
+        return Promise.resolve(ok);
     }
 
     sendAction(action: wire.msg.ActionEnvelope): void {
@@ -150,6 +163,59 @@ describe("GameController.run", () => {
         connection.end();
         await expect(result).resolves.toEqual({ reason: "GAME_OVER", winnerId: "" });
         expect(model.myPlayerId).toBe("me");
+    });
+
+    it("does not try to resume without a resume token", async () => {
+        connection.push("eventGameStart", { playerId: "me", tickInterval: 250 });
+        connection.end();
+        await expect(controller.run()).resolves.toEqual({ reason: "GAME_OVER", winnerId: "" });
+        expect(connection.resumeTokens).toEqual([]);
+    });
+
+    it("resumes the game on a new connection when the connection breaks", async () => {
+        const result = controller.run();
+        connection.push("eventGameStart", { playerId: "me", tickInterval: 250, resumeToken: "tok", resumeTimeout: 5000 });
+        connection.push("eventGameSnapshot", snapshotOf(TWO_ISLANDS(), 1));
+        connection.push("eventGameDelta", makeDelta(2, 333));
+        await flush();
+        controller.onIslandClicked("mine");
+        controller.onIslandClicked("theirs");
+        expect(model.airplanes).toHaveLength(1);
+
+        // The first attempt fails (network still down), the second works.
+        connection.resumeResults = [false, true];
+        connection.end();
+        await vi.waitFor(() => expect(connection.resumeTokens).toEqual(["tok", "tok"]), { timeout: 2000 });
+        // The launch may have been lost with the old connection.
+        expect(model.airplanes).toHaveLength(0);
+        expect(model.islandById("mine")?.strength).toBe(10);
+
+        // The server starts over: game start, a snapshot (seq 1), deltas.
+        connection.push("eventGameStart", { playerId: "me", tickInterval: 250, resumeToken: "tok", resumeTimeout: 5000 });
+        connection.push("eventGameSnapshot", snapshotOf([makeIsland("mine", 1, 1, "me", 12)], 1));
+        connection.push("eventGameDelta", makeDelta(2, 5000));
+        await flush();
+        expect(model.islandById("mine")?.strength).toBe(12);
+
+        // Launch seqs go on.
+        controller.onIslandClicked("mine");
+        controller.onIslandClicked("mine");
+        connection.push("eventGameOver", { winnerId: "me" });
+        await expect(result).resolves.toEqual({ reason: "GAME_OVER", winnerId: "me" });
+    });
+
+    it("gives up resuming after the resume timeout", async () => {
+        const result = controller.run();
+        connection.push("eventGameStart", { playerId: "me", tickInterval: 250, resumeToken: "tok", resumeTimeout: 600 });
+        await flush();
+        const start = performance.now();
+        connection.end();
+        await expect(result).resolves.toEqual({ reason: "GAME_OVER", winnerId: "" });
+        const elapsed = performance.now() - start;
+        expect(elapsed).toBeGreaterThanOrEqual(550);
+        expect(elapsed).toBeLessThan(1500);
+        // At 0, 250 and 750 (capped to 600) ms.
+        expect(connection.resumeTokens.length).toBeGreaterThanOrEqual(2);
     });
 
     it("still handles events queued before the connection ended", async () => {

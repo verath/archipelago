@@ -1,7 +1,7 @@
 import { test as base, expect, type BrowserContext, type Page } from "@playwright/test";
 
 import { DIST_DIR, DIST_E2E_DIR } from "./paths.ts";
-import { startBackend, startPreview, type Backend } from "./servers.ts";
+import { startBackend, startNetworkProxy, startPreview, type Backend, type NetworkProxy } from "./servers.ts";
 
 /**
  * Test fixtures. Every test gets its own Go backend, so games never mix
@@ -13,6 +13,8 @@ import { startBackend, startPreview, type Backend } from "./servers.ts";
  *
  * Fixtures:
  * - backend: the running backend (see servers.ts), e.g. backend.stop().
+ * - network: the TCP proxy between the frontend's /app/ws proxy and the
+ *   backend, e.g. network.dropConnections() to cut all websockets.
  * - baseURL: the frontend URL, so page.goto("/") opens the game.
  * - newPlayerPage({navigate = true}): a page for another player, in a new
  *   browser context; opens the game unless navigate is false.
@@ -24,6 +26,7 @@ export interface TestOptions {
 
 export interface TestFixtures {
     backend: Backend;
+    network: NetworkProxy;
     newPlayerPage: (options?: { navigate?: boolean }) => Promise<Page>;
 }
 
@@ -43,8 +46,19 @@ export const test = base.extend<TestOptions & TestFixtures>({
         }
     },
 
-    baseURL: async ({ backend, frontend }, use) => {
-        const previewServer = await startPreview(backend, frontend === "e2e" ? DIST_E2E_DIR : DIST_DIR);
+    network: async ({ backend }, use) => {
+        const proxy = await startNetworkProxy(backend.port);
+        try {
+            await use(proxy);
+        } finally {
+            await proxy.stop();
+        }
+    },
+
+    baseURL: async ({ backend, network, frontend }, use) => {
+        // The frontend reaches the backend's websocket through the network
+        // proxy, so that tests can cut the connection.
+        const previewServer = await startPreview({ ...backend, port: network.port }, frontend === "e2e" ? DIST_E2E_DIR : DIST_DIR);
         try {
             await use(previewServer.url);
         } finally {
