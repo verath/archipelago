@@ -104,18 +104,7 @@ describe("EventEnvelope", () => {
         expect(decoded.eventGameStart?.resumeTimeout).toBe(20000);
     });
 
-    it("carries EventGameTick with a full game", () => {
-        const decoded = msg.EventEnvelope.decode(msg.EventEnvelope.encode({
-            eventGameTick: { game },
-        }).finish());
-        expect(decoded.event).toBe("eventGameTick");
-        // decode() makes nested messages instances of their class, but the
-        // generated types only promise the properties.
-        const decodedGame = decoded.eventGameTick?.game as wire.msg.Game;
-        expect(msg.Game.toObject(decodedGame, OPTS)).toEqual(expected(msg.Game, game));
-    });
-
-    it("carries EventGameSnapshot (v5)", () => {
+    it("carries EventGameSnapshot", () => {
         const decoded = msg.EventEnvelope.decode(msg.EventEnvelope.encode({
             eventGameSnapshot: { seq: 1, gameTime: 1234, game },
         }).finish());
@@ -126,7 +115,7 @@ describe("EventEnvelope", () => {
         expect(msg.Game.toObject(decodedGame, OPTS)).toEqual(expected(msg.Game, game));
     });
 
-    it("carries EventGameDelta (v5)", () => {
+    it("carries EventGameDelta", () => {
         const delta = {
             seq: 2,
             gameTime: 1567,
@@ -142,7 +131,7 @@ describe("EventEnvelope", () => {
         expect(msg.EventGameDelta.toObject(decodedDelta, OPTS)).toEqual(expected(msg.EventGameDelta, delta));
     });
 
-    it("decodes the bytes the server sends for a delta (v5)", () => {
+    it("decodes the bytes the server sends for a delta", () => {
         // From the Go encoder: EventEnvelope{event_game_delta(5){seq=2,
         // game_time=300, islands=[{id="i", army={owner_id="o"}}],
         // airplanes_removed=["a"]}}. Strength 0 is not on the wire.
@@ -203,7 +192,7 @@ describe("ActionEnvelope", () => {
         expect(Array.from(bytes)).toEqual([0x12, 0x06, 0x0a, 0x01, 0x61, 0x12, 0x01, 0x62]);
     });
 
-    it("encodes ActionGameLaunch with a seq (v5) to the bytes the server expects", () => {
+    it("encodes ActionGameLaunch with a seq to the bytes the server expects", () => {
         // ActionEnvelope{action_game_launch(2){from_id(1)="a", to_id(2)="b", seq(3)=3}}
         const bytes = msg.ActionEnvelope.encode({
             actionGameLaunch: { fromId: "a", toId: "b", seq: 3 },

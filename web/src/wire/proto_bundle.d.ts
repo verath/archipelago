@@ -981,9 +981,6 @@ export namespace wire {
             /** EventEnvelope eventGameOver. */
             eventGameOver?: (wire.msg.EventGameOver.$Properties|null);
 
-            /** EventEnvelope eventGameTick. */
-            eventGameTick?: (wire.msg.EventGameTick.$Properties|null);
-
             /** EventEnvelope eventGameSnapshot. */
             eventGameSnapshot?: (wire.msg.EventGameSnapshot.$Properties|null);
 
@@ -991,7 +988,7 @@ export namespace wire {
             eventGameDelta?: (wire.msg.EventGameDelta.$Properties|null);
 
             /** EventEnvelope event. */
-            event?: ("eventGameStart"|"eventGameOver"|"eventGameTick"|"eventGameSnapshot"|"eventGameDelta");
+            event?: ("eventGameStart"|"eventGameOver"|"eventGameSnapshot"|"eventGameDelta");
 
             /**
              * Creates a new EventEnvelope instance using the specified properties.
@@ -1083,9 +1080,6 @@ export namespace wire {
                 /** EventEnvelope eventGameOver */
                 eventGameOver?: (wire.msg.EventGameOver.$Properties|null);
 
-                /** EventEnvelope eventGameTick */
-                eventGameTick?: (wire.msg.EventGameTick.$Properties|null);
-
                 /** EventEnvelope eventGameSnapshot */
                 eventGameSnapshot?: (wire.msg.EventGameSnapshot.$Properties|null);
 
@@ -1093,7 +1087,7 @@ export namespace wire {
                 eventGameDelta?: (wire.msg.EventGameDelta.$Properties|null);
 
                 /** EventEnvelope event */
-                event?: ("eventGameStart"|"eventGameOver"|"eventGameTick"|"eventGameSnapshot"|"eventGameDelta");
+                event?: ("eventGameStart"|"eventGameOver"|"eventGameSnapshot"|"eventGameDelta");
 
                 /** Unknown fields preserved while decoding when enabled */
                 $unknowns?: Uint8Array[];
@@ -1103,12 +1097,11 @@ export namespace wire {
             type $Shape = {
               eventGameStart?: wire.msg.EventGameStart.$Shape|null;
               eventGameOver?: wire.msg.EventGameOver.$Shape|null;
-              eventGameTick?: wire.msg.EventGameTick.$Shape|null;
               eventGameSnapshot?: wire.msg.EventGameSnapshot.$Shape|null;
               eventGameDelta?: wire.msg.EventGameDelta.$Shape|null;
               $unknowns?: Uint8Array[];
             } & (
-              ({ event?: undefined; eventGameStart?: null; eventGameOver?: null; eventGameTick?: null; eventGameSnapshot?: null; eventGameDelta?: null }|{ event?: "eventGameStart"; eventGameStart: wire.msg.EventGameStart.$Shape; eventGameOver?: null; eventGameTick?: null; eventGameSnapshot?: null; eventGameDelta?: null }|{ event?: "eventGameOver"; eventGameStart?: null; eventGameOver: wire.msg.EventGameOver.$Shape; eventGameTick?: null; eventGameSnapshot?: null; eventGameDelta?: null }|{ event?: "eventGameTick"; eventGameStart?: null; eventGameOver?: null; eventGameTick: wire.msg.EventGameTick.$Shape; eventGameSnapshot?: null; eventGameDelta?: null }|{ event?: "eventGameSnapshot"; eventGameStart?: null; eventGameOver?: null; eventGameTick?: null; eventGameSnapshot: wire.msg.EventGameSnapshot.$Shape; eventGameDelta?: null }|{ event?: "eventGameDelta"; eventGameStart?: null; eventGameOver?: null; eventGameTick?: null; eventGameSnapshot?: null; eventGameDelta: wire.msg.EventGameDelta.$Shape })
+              ({ event?: undefined; eventGameStart?: null; eventGameOver?: null; eventGameSnapshot?: null; eventGameDelta?: null }|{ event?: "eventGameStart"; eventGameStart: wire.msg.EventGameStart.$Shape; eventGameOver?: null; eventGameSnapshot?: null; eventGameDelta?: null }|{ event?: "eventGameOver"; eventGameStart?: null; eventGameOver: wire.msg.EventGameOver.$Shape; eventGameSnapshot?: null; eventGameDelta?: null }|{ event?: "eventGameSnapshot"; eventGameStart?: null; eventGameOver?: null; eventGameSnapshot: wire.msg.EventGameSnapshot.$Shape; eventGameDelta?: null }|{ event?: "eventGameDelta"; eventGameStart?: null; eventGameOver?: null; eventGameSnapshot?: null; eventGameDelta: wire.msg.EventGameDelta.$Shape })
             );
         }
 
@@ -1362,123 +1355,6 @@ export namespace wire {
 
             /** Shape of an EventGameOver. */
             type $Shape = wire.msg.EventGameOver.$Properties;
-        }
-
-        /**
-         * Properties of an EventGameTick.
-         * @deprecated Use wire.msg.EventGameTick.$Properties instead.
-         */
-        interface IEventGameTick extends wire.msg.EventGameTick.$Properties {
-        }
-
-        /** Represents an EventGameTick. */
-        class EventGameTick {
-
-            /**
-             * Constructs a new EventGameTick.
-             * @param [properties] Properties to set
-             */
-            constructor(properties?: wire.msg.EventGameTick.$Properties);
-
-            /** Unknown fields preserved while decoding when enabled */
-            $unknowns?: Uint8Array[];
-
-            /** EventGameTick game. */
-            game?: (wire.msg.Game.$Properties|null);
-
-            /**
-             * Creates a new EventGameTick instance using the specified properties.
-             * @param [properties] Properties to set
-             * @returns EventGameTick instance
-             */
-            static create(properties: wire.msg.EventGameTick.$Shape): wire.msg.EventGameTick & wire.msg.EventGameTick.$Shape;
-            static create(properties?: wire.msg.EventGameTick.$Properties): wire.msg.EventGameTick;
-
-            /**
-             * Encodes the specified EventGameTick message. Does not implicitly {@link wire.msg.EventGameTick.verify|verify} messages.
-             * @param message EventGameTick message or plain object to encode
-             * @param [writer] Writer to encode to
-             * @returns Writer
-             */
-            static encode(message: wire.msg.EventGameTick.$Properties, writer?: $protobuf.Writer): $protobuf.Writer;
-
-            /**
-             * Encodes the specified EventGameTick message, length delimited. Does not implicitly {@link wire.msg.EventGameTick.verify|verify} messages.
-             * @param message EventGameTick message or plain object to encode
-             * @param [writer] Writer to encode to
-             * @returns Writer
-             */
-            static encodeDelimited(message: wire.msg.EventGameTick.$Properties, writer?: $protobuf.Writer): $protobuf.Writer;
-
-            /**
-             * Decodes an EventGameTick message from the specified reader or buffer.
-             * @param reader Reader or buffer to decode from
-             * @param [length] Message length if known beforehand
-             * @returns {wire.msg.EventGameTick & wire.msg.EventGameTick.$Shape} EventGameTick
-             * @throws {Error} If the payload is not a reader or valid buffer
-             * @throws {$protobuf.util.ProtocolError} If required fields are missing
-             */
-            static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): wire.msg.EventGameTick & wire.msg.EventGameTick.$Shape;
-
-            /**
-             * Decodes an EventGameTick message from the specified reader or buffer, length delimited.
-             * @param reader Reader or buffer to decode from
-             * @returns {wire.msg.EventGameTick & wire.msg.EventGameTick.$Shape} EventGameTick
-             * @throws {Error} If the payload is not a reader or valid buffer
-             * @throws {$protobuf.util.ProtocolError} If required fields are missing
-             */
-            static decodeDelimited(reader: ($protobuf.Reader|Uint8Array)): wire.msg.EventGameTick & wire.msg.EventGameTick.$Shape;
-
-            /**
-             * Verifies an EventGameTick message.
-             * @param message Plain object to verify
-             * @returns `null` if valid, otherwise the reason why it is not
-             */
-            static verify(message: { [k: string]: any }): (string|null);
-
-            /**
-             * Creates an EventGameTick message from a plain object. Also converts values to their respective internal types.
-             * @param object Plain object
-             * @returns EventGameTick
-             */
-            static fromObject(object: { [k: string]: any }): wire.msg.EventGameTick;
-
-            /**
-             * Creates a plain object from an EventGameTick message. Also converts values to other types if specified.
-             * @param message EventGameTick
-             * @param [options] Conversion options
-             * @returns Plain object
-             */
-            static toObject(message: wire.msg.EventGameTick, options?: $protobuf.IConversionOptions): { [k: string]: any };
-
-            /**
-             * Converts this EventGameTick to JSON.
-             * @returns JSON object
-             */
-            toJSON(): { [k: string]: any };
-
-            /**
-             * Gets the type url for EventGameTick
-             * @param [prefix] Custom type url prefix, defaults to `"type.googleapis.com"`
-             * @returns The type url
-             */
-            static getTypeUrl(prefix?: string): string;
-        }
-
-        namespace EventGameTick {
-
-            /** Properties of an EventGameTick. */
-            interface $Properties {
-
-                /** EventGameTick game */
-                game?: (wire.msg.Game.$Properties|null);
-
-                /** Unknown fields preserved while decoding when enabled */
-                $unknowns?: Uint8Array[];
-            }
-
-            /** Shape of an EventGameTick. */
-            type $Shape = wire.msg.EventGameTick.$Properties;
         }
 
         /**

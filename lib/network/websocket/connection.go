@@ -46,9 +46,6 @@ type WSConnection struct {
 	// is required as our read spawns an internal ping-writing goroutine.
 	writeMu sync.Mutex
 
-	// version is the protocol version the client requested.
-	version string
-
 	// netConn is the connection wsConn reads and writes on, used for
 	// counting wire bytes. May be nil, then no wire bytes are counted.
 	netConn *countingConn
@@ -60,23 +57,15 @@ type WSConnection struct {
 }
 
 // newWSConnection creates a new WSConnection, wrapping the provided gorilla
-// wsConn. netConn should be the connection wsConn uses, or nil. version is
-// the protocol version requested by the client.
-func newWSConnection(wsConn *websocket.Conn, netConn *countingConn, version string) (*WSConnection, error) {
+// wsConn. netConn should be the connection wsConn uses, or nil.
+func newWSConnection(wsConn *websocket.Conn, netConn *countingConn) (*WSConnection, error) {
 	if wsConn == nil {
 		return nil, errors.New("wsConn cannot be nil")
 	}
 	return &WSConnection{
 		wsConn:  wsConn,
 		netConn: netConn,
-		version: version,
 	}, nil
-}
-
-// Version returns the protocol version requested by the client, one of the
-// versions the Upgrader supports.
-func (c *WSConnection) Version() string {
-	return c.version
 }
 
 // Stats returns the traffic counters of the connection. Safe to call

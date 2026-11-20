@@ -14,15 +14,10 @@ import (
 	"github.com/verath/archipelago/lib/network"
 )
 
-// wsVersion is the version the tests connect with by default.
-const wsVersion = "5"
-
 // startServer starts an HTTP server upgrading requests with an Upgrader
-// created from opts, supporting versions 4 and 5. Upgraded connections are
-// sent on the returned channel.
+// created from opts. Upgraded connections are sent on the returned channel.
 func startServer(t *testing.T, opts UpgraderOptions) (string, <-chan *WSConnection) {
 	t.Helper()
-	opts.Versions = []string{"4", wsVersion}
 	upgrader, err := NewUpgrader(opts)
 	if err != nil {
 		t.Fatalf("NewUpgrader: %v", err)
@@ -36,7 +31,7 @@ func startServer(t *testing.T, opts UpgraderOptions) (string, <-chan *WSConnecti
 		connCh <- wsConn
 	}))
 	t.Cleanup(srv.Close)
-	return "ws" + strings.TrimPrefix(srv.URL, "http") + "/?v=" + wsVersion, connCh
+	return "ws" + strings.TrimPrefix(srv.URL, "http") + "/?v=" + Version, connCh
 }
 
 // dial connects a gorilla client to url, offering compression if compress.
@@ -160,25 +155,10 @@ func TestUpgrade_ClientWithoutCompression(t *testing.T) {
 	}
 }
 
-func TestUpgrade_Versions(t *testing.T) {
-	url, connCh := startServer(t, UpgraderOptions{SkipOriginCheck: true})
-	for _, v := range []string{"4", "5"} {
-		dial(t, strings.Replace(url, "v="+wsVersion, "v="+v, 1), true)
-		if got := nextConn(t, connCh).Version(); got != v {
-			t.Errorf("Version() = %q, want %q", got, v)
-		}
-	}
-}
-
-func TestNewUpgrader_NoVersions(t *testing.T) {
-	if _, err := NewUpgrader(UpgraderOptions{}); err == nil {
-		t.Error("NewUpgrader without versions succeeded, want error")
-	}
-}
-
 func TestUpgrade_VersionMismatch(t *testing.T) {
 	url, _ := startServer(t, UpgraderOptions{SkipOriginCheck: true})
-	url = strings.Replace(url, "v="+wsVersion, "v=0", 1)
+	// E.g. a frontend for protocol version 4, cached by a browser.
+	url = strings.Replace(url, "v="+Version, "v=4", 1)
 	_, resp, err := websocket.DefaultDialer.Dial(url, nil)
 	if err == nil {
 		t.Fatal("Dial succeeded, want error")

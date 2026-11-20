@@ -64,7 +64,6 @@ export function makeGame({ size = { x: 5, y: 5 }, players = [], islands = [], ai
 export interface EventPayloads {
     eventGameStart: wire.msg.EventGameStart.$Shape;
     eventGameOver: wire.msg.EventGameOver.$Shape;
-    eventGameTick: wire.msg.EventGameTick.$Shape;
     eventGameSnapshot: wire.msg.EventGameSnapshot.$Shape;
     eventGameDelta: wire.msg.EventGameDelta.$Shape;
 }
@@ -99,8 +98,6 @@ export function makeEventEnvelope(...[eventName, payload]: EventArgs): ServerEve
             return wire.msg.EventEnvelope.create({ eventGameStart: payload });
         case "eventGameOver":
             return wire.msg.EventEnvelope.create({ eventGameOver: payload });
-        case "eventGameTick":
-            return wire.msg.EventEnvelope.create({ eventGameTick: payload });
         case "eventGameSnapshot":
             return wire.msg.EventEnvelope.create({ eventGameSnapshot: payload });
         case "eventGameDelta":

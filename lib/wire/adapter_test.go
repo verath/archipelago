@@ -24,7 +24,7 @@ func protoMarshalOrPanic(pb proto.Message) []byte {
 }
 
 func newPBClientAdapterOrFail(tb testing.TB, client wire.Client) *wire.PBClientAdapter {
-	pbClient, err := wire.NewPBClientAdapter(client, wire.ProtocolV4)
+	pbClient, err := wire.NewPBClientAdapter(client)
 	if err != nil {
 		tb.Fatalf("Error creating NewPBClientAdapter: %v", err)
 	}
@@ -172,9 +172,13 @@ var (
 	eventGameTick = (&model.EventTick{
 		Game: emptyGame,
 	}).ToPlayerEvent("PlayerIdTest").(*model.PlayerEventTick)
+	// The first tick written is a snapshot.
 	eventGameTickExpected = &msg.EventEnvelope{
-		Event: &msg.EventEnvelope_EventGameTick{
-			EventGameTick: msg.EncodeEventGameTick(eventGameTick),
+		Event: &msg.EventEnvelope_EventGameSnapshot{
+			EventGameSnapshot: &msg.EventGameSnapshot{
+				Seq:  1,
+				Game: msg.EncodeGame(eventGameTick.Game, eventGameTick.PlayerID),
+			},
 		},
 	}
 
@@ -258,51 +262,25 @@ func TestPBClientAdapter_WritePlayerEvent(t *testing.T) {
 	}
 }
 
-// Test that the resume token and timeout are only sent to v5 clients.
+// Test that the resume token and timeout are sent in the game start.
 func TestPBClientAdapter_WritePlayerEvent_ResumeToken(t *testing.T) {
 	evt := *eventGameStart
 	evt.ResumeToken = "token"
 	evt.ResumeTimeout = 20 * time.Second
-	for version, want := range map[wire.ProtocolVersion]*msg.EventGameStart{
-		wire.ProtocolV4: {PlayerId: "playerIDTest", TickInterval: 1000},
-		wire.ProtocolV5: {PlayerId: "playerIDTest", TickInterval: 1000, ResumeToken: "token", ResumeTimeout: 20000},
-	} {
-		var got *msg.EventEnvelope
-		mockClient := &wire.MockClient{
-			WriteMessageFunc: func(_ context.Context, b []byte) error {
-				got = &msg.EventEnvelope{}
-				return proto.Unmarshal(b, got)
-			},
-		}
-		pbClient, err := wire.NewPBClientAdapter(mockClient, version)
-		if err != nil {
-			t.Fatalf("NewPBClientAdapter: %v", err)
-		}
-		if err := pbClient.WritePlayerEvent(context.Background(), &evt); err != nil {
-			t.Fatalf("v%d: WritePlayerEvent: %v", version, err)
-		}
-		if !proto.Equal(got.GetEventGameStart(), want) {
-			t.Errorf("v%d: game start = %v, want %v", version, got, want)
-		}
+	var got *msg.EventEnvelope
+	mockClient := &wire.MockClient{
+		WriteMessageFunc: func(_ context.Context, b []byte) error {
+			got = &msg.EventEnvelope{}
+			return proto.Unmarshal(b, got)
+		},
 	}
-}
-
-func TestParseProtocolVersion(t *testing.T) {
-	for s, want := range map[string]wire.ProtocolVersion{"4": wire.ProtocolV4, "5": wire.ProtocolV5} {
-		if got, err := wire.ParseProtocolVersion(s); err != nil || got != want {
-			t.Errorf("ParseProtocolVersion(%q) = %v, %v; want %v, nil", s, got, err, want)
-		}
+	pbClient := newPBClientAdapterOrFail(t, mockClient)
+	if err := pbClient.WritePlayerEvent(context.Background(), &evt); err != nil {
+		t.Fatalf("WritePlayerEvent: %v", err)
 	}
-	for _, s := range []string{"", "3", "6", "v5"} {
-		if _, err := wire.ParseProtocolVersion(s); err == nil {
-			t.Errorf("ParseProtocolVersion(%q) succeeded, want error", s)
-		}
-	}
-}
-
-func TestNewPBClientAdapter_UnsupportedVersion(t *testing.T) {
-	if _, err := wire.NewPBClientAdapter(&wire.MockClient{}, 3); err == nil {
-		t.Error("NewPBClientAdapter with version 3 succeeded, want error")
+	want := &msg.EventGameStart{PlayerId: "playerIDTest", TickInterval: 1000, ResumeToken: "token", ResumeTimeout: 20000}
+	if !proto.Equal(got.GetEventGameStart(), want) {
+		t.Errorf("game start = %v, want %v", got, want)
 	}
 }
 
@@ -316,7 +294,7 @@ func TestPBClientAdapter_ReadPlayerAction_LaunchSeq(t *testing.T) {
 			}), nil
 		},
 	}
-	pbClient, err := wire.NewPBClientAdapter(mockClient, wire.ProtocolV5)
+	pbClient, err := wire.NewPBClientAdapter(mockClient)
 	if err != nil {
 		t.Fatalf("NewPBClientAdapter: %v", err)
 	}
@@ -330,9 +308,9 @@ func TestPBClientAdapter_ReadPlayerAction_LaunchSeq(t *testing.T) {
 	}
 }
 
-// TestPBClientAdapter_WritePlayerEvent_V5 checks the sequence of messages a
-// v5 client gets: game start, a snapshot, deltas, game over.
-func TestPBClientAdapter_WritePlayerEvent_V5(t *testing.T) {
+// TestPBClientAdapter_WritePlayerEvent_Sequence checks the sequence of
+// messages a client gets: game start, a snapshot, deltas, game over.
+func TestPBClientAdapter_WritePlayerEvent_Sequence(t *testing.T) {
 	var written []*msg.EventEnvelope
 	mockClient := &wire.MockClient{
 		WriteMessageFunc: func(_ context.Context, b []byte) error {
@@ -344,7 +322,7 @@ func TestPBClientAdapter_WritePlayerEvent_V5(t *testing.T) {
 			return nil
 		},
 	}
-	pbClient, err := wire.NewPBClientAdapter(mockClient, wire.ProtocolV5)
+	pbClient, err := wire.NewPBClientAdapter(mockClient)
 	if err != nil {
 		t.Fatalf("NewPBClientAdapter: %v", err)
 	}

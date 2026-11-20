@@ -17,7 +17,7 @@ test.describe("websocket traffic", () => {
     // proxying as in the smoke test.
     test.use({ frontend: "production", backendArgs: ["-lobbyWait", "0s"] });
 
-    test("uses protocol v5 with permessage-deflate, and is small", async ({ page, backend }) => {
+    test("uses protocol version 5 with permessage-deflate, and is small", async ({ page, backend }) => {
         // The websocket handshake response headers are only visible via CDP.
         const cdp = await page.context().newCDPSession(page);
         await cdp.send("Network.enable");
@@ -48,9 +48,8 @@ test.describe("websocket traffic", () => {
         const wireBytes = Number(traffic.wireBytesOut);
         // Game start, snapshot and ~3 deltas a second.
         expect(messages).toBeGreaterThan(5);
-        // A v4 tick of this game (4 players) is ~1.5 KB, ~0.8 KB compressed.
-        // v5: one ~1 KB snapshot (~0.6 KB compressed), then deltas of mostly
-        // < 128 B. Incl. the upgrade response, that averages well below
+        // The full state of this game (4 players) is ~1 KB, sent once as a
+        // snapshot (~0.6 KB compressed), then deltas of mostly < 128 B. Incl. the upgrade response, that averages well below
         // 300 B per message over a few seconds.
         expect(wireBytes / messages).toBeLessThan(300);
     });

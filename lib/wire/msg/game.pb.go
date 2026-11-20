@@ -186,7 +186,7 @@ type Player struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	Id    string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
 	State PlayerState            `protobuf:"varint,2,opt,name=state,proto3,enum=wire.msg.PlayerState" json:"state,omitempty"`
-	// v5: Only set for the receiving player: the highest ActionGameLaunch.seq
+	// Only set for the receiving player: the highest ActionGameLaunch.seq
 	// the server has processed, whether the launch succeeded or not.
 	LastLaunchSeq uint32 `protobuf:"varint,3,opt,name=last_launch_seq,json=lastLaunchSeq,proto3" json:"last_launch_seq,omitempty"`
 	unknownFields protoimpl.UnknownFields
@@ -302,13 +302,13 @@ type Airplane struct {
 	Army      *Army                  `protobuf:"bytes,2,opt,name=army,proto3" json:"army,omitempty"`
 	Position  *FloatCoordinate       `protobuf:"bytes,3,opt,name=position,proto3" json:"position,omitempty"`
 	Direction float32                `protobuf:"fixed32,4,opt,name=direction,proto3" json:"direction,omitempty"`
-	// Speed of the Airplane [tiles/ms]. v4: Not set if default speed
-	// (1/3000 tiles/ms, i.e. 1 tile per 3 s). v5: Always set.
+	// Speed of the Airplane [tiles/ms]. The default is 1/3000 tiles/ms, i.e.
+	// 1 tile per 3 s.
 	Speed float32 `protobuf:"fixed32,5,opt,name=speed,proto3" json:"speed,omitempty"`
-	// v5: Only set for the receiving player's own airplanes: id of the
-	// island the airplane is flying to.
+	// Only set for the receiving player's own airplanes: id of the island
+	// the airplane is flying to.
 	DestinationId string `protobuf:"bytes,6,opt,name=destination_id,json=destinationId,proto3" json:"destination_id,omitempty"`
-	// v5: Only set for the receiving player's own airplanes: the
+	// Only set for the receiving player's own airplanes: the
 	// ActionGameLaunch.seq of the launch that created the airplane. Not set
 	// for airplanes not created by a launch (e.g. when revived).
 	LaunchSeq     uint32 `protobuf:"varint,7,opt,name=launch_seq,json=launchSeq,proto3" json:"launch_seq,omitempty"`
@@ -547,23 +547,20 @@ func (x *Game) GetAirplanes() []*Airplane {
 	return nil
 }
 
-// Protocol versions (the "v" query parameter of the websocket URL):
-//   - v4: The server sends EventGameStart, then an EventGameTick with the full
-//     game state every tick, then EventGameOver.
-//   - v5: The server sends EventGameStart, then an EventGameSnapshot with the
-//     full game state, then an EventGameDelta with the changes since the
-//     previous snapshot/delta every tick, then EventGameOver. The server
-//     may send another EventGameSnapshot instead of a delta at any time.
-//     The client sets ActionGameLaunch.seq. A client whose connection
-//     broke during the game can resume it on a new connection, see
-//     EventGameStart.resume_token.
+// The protocol (version 5, the "v" query parameter of the websocket URL):
+// The server sends EventGameStart, then an EventGameSnapshot with the full
+// game state, then an EventGameDelta with the changes since the previous
+// snapshot/delta every tick, then EventGameOver. The server may send another
+// EventGameSnapshot instead of a delta at any time. The client sends
+// actions, setting ActionGameLaunch.seq. A client whose connection broke
+// during the game can resume it on a new connection, see
+// EventGameStart.resume_token.
 type EventEnvelope struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	// Types that are valid to be assigned to Event:
 	//
 	//	*EventEnvelope_EventGameStart
 	//	*EventEnvelope_EventGameOver
-	//	*EventEnvelope_EventGameTick
 	//	*EventEnvelope_EventGameSnapshot
 	//	*EventEnvelope_EventGameDelta
 	Event         isEventEnvelope_Event `protobuf_oneof:"event"`
@@ -626,15 +623,6 @@ func (x *EventEnvelope) GetEventGameOver() *EventGameOver {
 	return nil
 }
 
-func (x *EventEnvelope) GetEventGameTick() *EventGameTick {
-	if x != nil {
-		if x, ok := x.Event.(*EventEnvelope_EventGameTick); ok {
-			return x.EventGameTick
-		}
-	}
-	return nil
-}
-
 func (x *EventEnvelope) GetEventGameSnapshot() *EventGameSnapshot {
 	if x != nil {
 		if x, ok := x.Event.(*EventEnvelope_EventGameSnapshot); ok {
@@ -665,26 +653,17 @@ type EventEnvelope_EventGameOver struct {
 	EventGameOver *EventGameOver `protobuf:"bytes,2,opt,name=event_game_over,json=eventGameOver,proto3,oneof"`
 }
 
-type EventEnvelope_EventGameTick struct {
-	// v4 only.
-	EventGameTick *EventGameTick `protobuf:"bytes,3,opt,name=event_game_tick,json=eventGameTick,proto3,oneof"`
-}
-
 type EventEnvelope_EventGameSnapshot struct {
-	// v5 only.
 	EventGameSnapshot *EventGameSnapshot `protobuf:"bytes,4,opt,name=event_game_snapshot,json=eventGameSnapshot,proto3,oneof"`
 }
 
 type EventEnvelope_EventGameDelta struct {
-	// v5 only.
 	EventGameDelta *EventGameDelta `protobuf:"bytes,5,opt,name=event_game_delta,json=eventGameDelta,proto3,oneof"`
 }
 
 func (*EventEnvelope_EventGameStart) isEventEnvelope_Event() {}
 
 func (*EventEnvelope_EventGameOver) isEventEnvelope_Event() {}
-
-func (*EventEnvelope_EventGameTick) isEventEnvelope_Event() {}
 
 func (*EventEnvelope_EventGameSnapshot) isEventEnvelope_Event() {}
 
@@ -695,7 +674,7 @@ type EventGameStart struct {
 	PlayerId string                 `protobuf:"bytes,1,opt,name=player_id,json=playerId,proto3" json:"player_id,omitempty"`
 	// Aprox. time between ticks [ms].
 	TickInterval uint32 `protobuf:"varint,2,opt,name=tick_interval,json=tickInterval,proto3" json:"tick_interval,omitempty"`
-	// v5: Token for resuming the game after the connection broke. To resume,
+	// Token for resuming the game after the connection broke. To resume,
 	// connect to the websocket URL with the query parameters
 	// "v=5&resume=<token>" within resume_timeout of the server noticing the
 	// old connection broke (a server notices within ~10 s, or right away when
@@ -707,10 +686,10 @@ type EventGameStart struct {
 	// be resumed (unknown or expired token, or the game is over and its
 	// EventGameOver was delivered), the server responds with HTTP 410 Gone
 	// instead of upgrading to a websocket. ActionGameLaunch.seq continues
-	// across reconnects. Not set for v4.
+	// across reconnects.
 	ResumeToken string `protobuf:"bytes,3,opt,name=resume_token,json=resumeToken,proto3" json:"resume_token,omitempty"`
-	// v5: How long after the connection broke the client may resume [ms],
-	// see resume_token. Not set for v4.
+	// How long after the connection broke the client may resume [ms], see
+	// resume_token.
 	ResumeTimeout uint32 `protobuf:"varint,4,opt,name=resume_timeout,json=resumeTimeout,proto3" json:"resume_timeout,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -818,50 +797,6 @@ func (x *EventGameOver) GetWinnerId() string {
 	return ""
 }
 
-type EventGameTick struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Game          *Game                  `protobuf:"bytes,1,opt,name=game,proto3" json:"game,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *EventGameTick) Reset() {
-	*x = EventGameTick{}
-	mi := &file_wire_msg_game_proto_msgTypes[10]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *EventGameTick) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*EventGameTick) ProtoMessage() {}
-
-func (x *EventGameTick) ProtoReflect() protoreflect.Message {
-	mi := &file_wire_msg_game_proto_msgTypes[10]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use EventGameTick.ProtoReflect.Descriptor instead.
-func (*EventGameTick) Descriptor() ([]byte, []int) {
-	return file_wire_msg_game_proto_rawDescGZIP(), []int{10}
-}
-
-func (x *EventGameTick) GetGame() *Game {
-	if x != nil {
-		return x.Game
-	}
-	return nil
-}
-
 // EventGameSnapshot is the full game state, as seen by the receiving player.
 // It replaces any state the client has.
 type EventGameSnapshot struct {
@@ -885,7 +820,7 @@ type EventGameSnapshot struct {
 
 func (x *EventGameSnapshot) Reset() {
 	*x = EventGameSnapshot{}
-	mi := &file_wire_msg_game_proto_msgTypes[11]
+	mi := &file_wire_msg_game_proto_msgTypes[10]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -897,7 +832,7 @@ func (x *EventGameSnapshot) String() string {
 func (*EventGameSnapshot) ProtoMessage() {}
 
 func (x *EventGameSnapshot) ProtoReflect() protoreflect.Message {
-	mi := &file_wire_msg_game_proto_msgTypes[11]
+	mi := &file_wire_msg_game_proto_msgTypes[10]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -910,7 +845,7 @@ func (x *EventGameSnapshot) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use EventGameSnapshot.ProtoReflect.Descriptor instead.
 func (*EventGameSnapshot) Descriptor() ([]byte, []int) {
-	return file_wire_msg_game_proto_rawDescGZIP(), []int{11}
+	return file_wire_msg_game_proto_rawDescGZIP(), []int{10}
 }
 
 func (x *EventGameSnapshot) GetSeq() uint32 {
@@ -970,7 +905,7 @@ type EventGameDelta struct {
 
 func (x *EventGameDelta) Reset() {
 	*x = EventGameDelta{}
-	mi := &file_wire_msg_game_proto_msgTypes[12]
+	mi := &file_wire_msg_game_proto_msgTypes[11]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -982,7 +917,7 @@ func (x *EventGameDelta) String() string {
 func (*EventGameDelta) ProtoMessage() {}
 
 func (x *EventGameDelta) ProtoReflect() protoreflect.Message {
-	mi := &file_wire_msg_game_proto_msgTypes[12]
+	mi := &file_wire_msg_game_proto_msgTypes[11]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -995,7 +930,7 @@ func (x *EventGameDelta) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use EventGameDelta.ProtoReflect.Descriptor instead.
 func (*EventGameDelta) Descriptor() ([]byte, []int) {
-	return file_wire_msg_game_proto_rawDescGZIP(), []int{12}
+	return file_wire_msg_game_proto_rawDescGZIP(), []int{11}
 }
 
 func (x *EventGameDelta) GetSeq() uint32 {
@@ -1058,7 +993,7 @@ type IslandUpdate struct {
 
 func (x *IslandUpdate) Reset() {
 	*x = IslandUpdate{}
-	mi := &file_wire_msg_game_proto_msgTypes[13]
+	mi := &file_wire_msg_game_proto_msgTypes[12]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1070,7 +1005,7 @@ func (x *IslandUpdate) String() string {
 func (*IslandUpdate) ProtoMessage() {}
 
 func (x *IslandUpdate) ProtoReflect() protoreflect.Message {
-	mi := &file_wire_msg_game_proto_msgTypes[13]
+	mi := &file_wire_msg_game_proto_msgTypes[12]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1083,7 +1018,7 @@ func (x *IslandUpdate) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use IslandUpdate.ProtoReflect.Descriptor instead.
 func (*IslandUpdate) Descriptor() ([]byte, []int) {
-	return file_wire_msg_game_proto_rawDescGZIP(), []int{13}
+	return file_wire_msg_game_proto_rawDescGZIP(), []int{12}
 }
 
 func (x *IslandUpdate) GetId() string {
@@ -1111,7 +1046,7 @@ type AirplaneUpdate struct {
 
 func (x *AirplaneUpdate) Reset() {
 	*x = AirplaneUpdate{}
-	mi := &file_wire_msg_game_proto_msgTypes[14]
+	mi := &file_wire_msg_game_proto_msgTypes[13]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1123,7 +1058,7 @@ func (x *AirplaneUpdate) String() string {
 func (*AirplaneUpdate) ProtoMessage() {}
 
 func (x *AirplaneUpdate) ProtoReflect() protoreflect.Message {
-	mi := &file_wire_msg_game_proto_msgTypes[14]
+	mi := &file_wire_msg_game_proto_msgTypes[13]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1136,7 +1071,7 @@ func (x *AirplaneUpdate) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AirplaneUpdate.ProtoReflect.Descriptor instead.
 func (*AirplaneUpdate) Descriptor() ([]byte, []int) {
-	return file_wire_msg_game_proto_rawDescGZIP(), []int{14}
+	return file_wire_msg_game_proto_rawDescGZIP(), []int{13}
 }
 
 func (x *AirplaneUpdate) GetId() string {
@@ -1166,7 +1101,7 @@ type ActionEnvelope struct {
 
 func (x *ActionEnvelope) Reset() {
 	*x = ActionEnvelope{}
-	mi := &file_wire_msg_game_proto_msgTypes[15]
+	mi := &file_wire_msg_game_proto_msgTypes[14]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1178,7 +1113,7 @@ func (x *ActionEnvelope) String() string {
 func (*ActionEnvelope) ProtoMessage() {}
 
 func (x *ActionEnvelope) ProtoReflect() protoreflect.Message {
-	mi := &file_wire_msg_game_proto_msgTypes[15]
+	mi := &file_wire_msg_game_proto_msgTypes[14]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1191,7 +1126,7 @@ func (x *ActionEnvelope) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ActionEnvelope.ProtoReflect.Descriptor instead.
 func (*ActionEnvelope) Descriptor() ([]byte, []int) {
-	return file_wire_msg_game_proto_rawDescGZIP(), []int{15}
+	return file_wire_msg_game_proto_rawDescGZIP(), []int{14}
 }
 
 func (x *ActionEnvelope) GetAction() isActionEnvelope_Action {
@@ -1243,7 +1178,7 @@ type ActionGameLeave struct {
 
 func (x *ActionGameLeave) Reset() {
 	*x = ActionGameLeave{}
-	mi := &file_wire_msg_game_proto_msgTypes[16]
+	mi := &file_wire_msg_game_proto_msgTypes[15]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1255,7 +1190,7 @@ func (x *ActionGameLeave) String() string {
 func (*ActionGameLeave) ProtoMessage() {}
 
 func (x *ActionGameLeave) ProtoReflect() protoreflect.Message {
-	mi := &file_wire_msg_game_proto_msgTypes[16]
+	mi := &file_wire_msg_game_proto_msgTypes[15]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1268,14 +1203,14 @@ func (x *ActionGameLeave) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ActionGameLeave.ProtoReflect.Descriptor instead.
 func (*ActionGameLeave) Descriptor() ([]byte, []int) {
-	return file_wire_msg_game_proto_rawDescGZIP(), []int{16}
+	return file_wire_msg_game_proto_rawDescGZIP(), []int{15}
 }
 
 type ActionGameLaunch struct {
 	state  protoimpl.MessageState `protogen:"open.v1"`
 	FromId string                 `protobuf:"bytes,1,opt,name=from_id,json=fromId,proto3" json:"from_id,omitempty"`
 	ToId   string                 `protobuf:"bytes,2,opt,name=to_id,json=toId,proto3" json:"to_id,omitempty"`
-	// v5: Sequence number chosen by the client, starting at 1 and increasing
+	// Sequence number chosen by the client, starting at 1 and increasing
 	// with each launch during the game, also across reconnects (a client
 	// that lost count continues after the Player.last_launch_seq it gets).
 	// Echoed in Player.last_launch_seq and Airplane.launch_seq.
@@ -1286,7 +1221,7 @@ type ActionGameLaunch struct {
 
 func (x *ActionGameLaunch) Reset() {
 	*x = ActionGameLaunch{}
-	mi := &file_wire_msg_game_proto_msgTypes[17]
+	mi := &file_wire_msg_game_proto_msgTypes[16]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1298,7 +1233,7 @@ func (x *ActionGameLaunch) String() string {
 func (*ActionGameLaunch) ProtoMessage() {}
 
 func (x *ActionGameLaunch) ProtoReflect() protoreflect.Message {
-	mi := &file_wire_msg_game_proto_msgTypes[17]
+	mi := &file_wire_msg_game_proto_msgTypes[16]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1311,7 +1246,7 @@ func (x *ActionGameLaunch) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ActionGameLaunch.ProtoReflect.Descriptor instead.
 func (*ActionGameLaunch) Descriptor() ([]byte, []int) {
-	return file_wire_msg_game_proto_rawDescGZIP(), []int{17}
+	return file_wire_msg_game_proto_rawDescGZIP(), []int{16}
 }
 
 func (x *ActionGameLaunch) GetFromId() string {
@@ -1374,23 +1309,20 @@ const file_wire_msg_game_proto_rawDesc = "" +
 	"\x0eplayer_neutral\x18\x03 \x01(\v2\x10.wire.msg.PlayerR\rplayerNeutral\x12*\n" +
 	"\aplayers\x18\x04 \x03(\v2\x10.wire.msg.PlayerR\aplayers\x12*\n" +
 	"\aislands\x18\x05 \x03(\v2\x10.wire.msg.IslandR\aislands\x120\n" +
-	"\tairplanes\x18\x06 \x03(\v2\x12.wire.msg.AirplaneR\tairplanes\"\xf9\x02\n" +
+	"\tairplanes\x18\x06 \x03(\v2\x12.wire.msg.AirplaneR\tairplanes\"\xcd\x02\n" +
 	"\rEventEnvelope\x12D\n" +
 	"\x10event_game_start\x18\x01 \x01(\v2\x18.wire.msg.EventGameStartH\x00R\x0eeventGameStart\x12A\n" +
-	"\x0fevent_game_over\x18\x02 \x01(\v2\x17.wire.msg.EventGameOverH\x00R\reventGameOver\x12A\n" +
-	"\x0fevent_game_tick\x18\x03 \x01(\v2\x17.wire.msg.EventGameTickH\x00R\reventGameTick\x12M\n" +
+	"\x0fevent_game_over\x18\x02 \x01(\v2\x17.wire.msg.EventGameOverH\x00R\reventGameOver\x12M\n" +
 	"\x13event_game_snapshot\x18\x04 \x01(\v2\x1b.wire.msg.EventGameSnapshotH\x00R\x11eventGameSnapshot\x12D\n" +
 	"\x10event_game_delta\x18\x05 \x01(\v2\x18.wire.msg.EventGameDeltaH\x00R\x0eeventGameDeltaB\a\n" +
-	"\x05event\"\x9c\x01\n" +
+	"\x05eventJ\x04\b\x03\x10\x04R\x0fevent_game_tick\"\x9c\x01\n" +
 	"\x0eEventGameStart\x12\x1b\n" +
 	"\tplayer_id\x18\x01 \x01(\tR\bplayerId\x12#\n" +
 	"\rtick_interval\x18\x02 \x01(\rR\ftickInterval\x12!\n" +
 	"\fresume_token\x18\x03 \x01(\tR\vresumeToken\x12%\n" +
 	"\x0eresume_timeout\x18\x04 \x01(\rR\rresumeTimeout\",\n" +
 	"\rEventGameOver\x12\x1b\n" +
-	"\twinner_id\x18\x01 \x01(\tR\bwinnerId\"3\n" +
-	"\rEventGameTick\x12\"\n" +
-	"\x04game\x18\x01 \x01(\v2\x0e.wire.msg.GameR\x04game\"f\n" +
+	"\twinner_id\x18\x01 \x01(\tR\bwinnerId\"f\n" +
 	"\x11EventGameSnapshot\x12\x10\n" +
 	"\x03seq\x18\x01 \x01(\rR\x03seq\x12\x1b\n" +
 	"\tgame_time\x18\x02 \x01(\rR\bgameTime\x12\"\n" +
@@ -1437,7 +1369,7 @@ func file_wire_msg_game_proto_rawDescGZIP() []byte {
 }
 
 var file_wire_msg_game_proto_enumTypes = make([]protoimpl.EnumInfo, 1)
-var file_wire_msg_game_proto_msgTypes = make([]protoimpl.MessageInfo, 18)
+var file_wire_msg_game_proto_msgTypes = make([]protoimpl.MessageInfo, 17)
 var file_wire_msg_game_proto_goTypes = []any{
 	(PlayerState)(0),          // 0: wire.msg.PlayerState
 	(*Coordinate)(nil),        // 1: wire.msg.Coordinate
@@ -1450,14 +1382,13 @@ var file_wire_msg_game_proto_goTypes = []any{
 	(*EventEnvelope)(nil),     // 8: wire.msg.EventEnvelope
 	(*EventGameStart)(nil),    // 9: wire.msg.EventGameStart
 	(*EventGameOver)(nil),     // 10: wire.msg.EventGameOver
-	(*EventGameTick)(nil),     // 11: wire.msg.EventGameTick
-	(*EventGameSnapshot)(nil), // 12: wire.msg.EventGameSnapshot
-	(*EventGameDelta)(nil),    // 13: wire.msg.EventGameDelta
-	(*IslandUpdate)(nil),      // 14: wire.msg.IslandUpdate
-	(*AirplaneUpdate)(nil),    // 15: wire.msg.AirplaneUpdate
-	(*ActionEnvelope)(nil),    // 16: wire.msg.ActionEnvelope
-	(*ActionGameLeave)(nil),   // 17: wire.msg.ActionGameLeave
-	(*ActionGameLaunch)(nil),  // 18: wire.msg.ActionGameLaunch
+	(*EventGameSnapshot)(nil), // 11: wire.msg.EventGameSnapshot
+	(*EventGameDelta)(nil),    // 12: wire.msg.EventGameDelta
+	(*IslandUpdate)(nil),      // 13: wire.msg.IslandUpdate
+	(*AirplaneUpdate)(nil),    // 14: wire.msg.AirplaneUpdate
+	(*ActionEnvelope)(nil),    // 15: wire.msg.ActionEnvelope
+	(*ActionGameLeave)(nil),   // 16: wire.msg.ActionGameLeave
+	(*ActionGameLaunch)(nil),  // 17: wire.msg.ActionGameLaunch
 }
 var file_wire_msg_game_proto_depIdxs = []int32{
 	0,  // 0: wire.msg.Player.state:type_name -> wire.msg.PlayerState
@@ -1472,24 +1403,22 @@ var file_wire_msg_game_proto_depIdxs = []int32{
 	5,  // 9: wire.msg.Game.airplanes:type_name -> wire.msg.Airplane
 	9,  // 10: wire.msg.EventEnvelope.event_game_start:type_name -> wire.msg.EventGameStart
 	10, // 11: wire.msg.EventEnvelope.event_game_over:type_name -> wire.msg.EventGameOver
-	11, // 12: wire.msg.EventEnvelope.event_game_tick:type_name -> wire.msg.EventGameTick
-	12, // 13: wire.msg.EventEnvelope.event_game_snapshot:type_name -> wire.msg.EventGameSnapshot
-	13, // 14: wire.msg.EventEnvelope.event_game_delta:type_name -> wire.msg.EventGameDelta
-	7,  // 15: wire.msg.EventGameTick.game:type_name -> wire.msg.Game
-	7,  // 16: wire.msg.EventGameSnapshot.game:type_name -> wire.msg.Game
-	3,  // 17: wire.msg.EventGameDelta.players:type_name -> wire.msg.Player
-	14, // 18: wire.msg.EventGameDelta.islands:type_name -> wire.msg.IslandUpdate
-	5,  // 19: wire.msg.EventGameDelta.airplanes_added:type_name -> wire.msg.Airplane
-	15, // 20: wire.msg.EventGameDelta.airplanes_updated:type_name -> wire.msg.AirplaneUpdate
-	4,  // 21: wire.msg.IslandUpdate.army:type_name -> wire.msg.Army
-	4,  // 22: wire.msg.AirplaneUpdate.army:type_name -> wire.msg.Army
-	17, // 23: wire.msg.ActionEnvelope.action_game_leave:type_name -> wire.msg.ActionGameLeave
-	18, // 24: wire.msg.ActionEnvelope.action_game_launch:type_name -> wire.msg.ActionGameLaunch
-	25, // [25:25] is the sub-list for method output_type
-	25, // [25:25] is the sub-list for method input_type
-	25, // [25:25] is the sub-list for extension type_name
-	25, // [25:25] is the sub-list for extension extendee
-	0,  // [0:25] is the sub-list for field type_name
+	11, // 12: wire.msg.EventEnvelope.event_game_snapshot:type_name -> wire.msg.EventGameSnapshot
+	12, // 13: wire.msg.EventEnvelope.event_game_delta:type_name -> wire.msg.EventGameDelta
+	7,  // 14: wire.msg.EventGameSnapshot.game:type_name -> wire.msg.Game
+	3,  // 15: wire.msg.EventGameDelta.players:type_name -> wire.msg.Player
+	13, // 16: wire.msg.EventGameDelta.islands:type_name -> wire.msg.IslandUpdate
+	5,  // 17: wire.msg.EventGameDelta.airplanes_added:type_name -> wire.msg.Airplane
+	14, // 18: wire.msg.EventGameDelta.airplanes_updated:type_name -> wire.msg.AirplaneUpdate
+	4,  // 19: wire.msg.IslandUpdate.army:type_name -> wire.msg.Army
+	4,  // 20: wire.msg.AirplaneUpdate.army:type_name -> wire.msg.Army
+	16, // 21: wire.msg.ActionEnvelope.action_game_leave:type_name -> wire.msg.ActionGameLeave
+	17, // 22: wire.msg.ActionEnvelope.action_game_launch:type_name -> wire.msg.ActionGameLaunch
+	23, // [23:23] is the sub-list for method output_type
+	23, // [23:23] is the sub-list for method input_type
+	23, // [23:23] is the sub-list for extension type_name
+	23, // [23:23] is the sub-list for extension extendee
+	0,  // [0:23] is the sub-list for field type_name
 }
 
 func init() { file_wire_msg_game_proto_init() }
@@ -1500,11 +1429,10 @@ func file_wire_msg_game_proto_init() {
 	file_wire_msg_game_proto_msgTypes[7].OneofWrappers = []any{
 		(*EventEnvelope_EventGameStart)(nil),
 		(*EventEnvelope_EventGameOver)(nil),
-		(*EventEnvelope_EventGameTick)(nil),
 		(*EventEnvelope_EventGameSnapshot)(nil),
 		(*EventEnvelope_EventGameDelta)(nil),
 	}
-	file_wire_msg_game_proto_msgTypes[15].OneofWrappers = []any{
+	file_wire_msg_game_proto_msgTypes[14].OneofWrappers = []any{
 		(*ActionEnvelope_ActionGameLeave)(nil),
 		(*ActionEnvelope_ActionGameLaunch)(nil),
 	}
@@ -1514,7 +1442,7 @@ func file_wire_msg_game_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_wire_msg_game_proto_rawDesc), len(file_wire_msg_game_proto_rawDesc)),
 			NumEnums:      1,
-			NumMessages:   18,
+			NumMessages:   17,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

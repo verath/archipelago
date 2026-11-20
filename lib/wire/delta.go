@@ -6,7 +6,7 @@ import (
 	"google.golang.org/protobuf/proto"
 )
 
-// deltaEncoder encodes game ticks for a single client as v5 messages: an
+// deltaEncoder encodes game ticks for a single client: an
 // EventGameSnapshot with the full state first, then an EventGameDelta with
 // only what changed since the previous message.
 //
@@ -31,7 +31,7 @@ type deltaEncoder struct {
 // it is the first state (or a delta can't describe the change), otherwise as
 // a delta.
 func (e *deltaEncoder) encodeTick(evt *model.PlayerEventTick) *msg.EventEnvelope {
-	cur := msg.EncodeGameV5(evt.Game, evt.PlayerID)
+	cur := msg.EncodeGame(evt.Game, evt.PlayerID)
 	gameTime := msg.EncodeGameTime(evt.Game.Time())
 	e.seq++
 	prev := e.prev

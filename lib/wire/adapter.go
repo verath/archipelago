@@ -9,59 +9,23 @@ import (
 	"google.golang.org/protobuf/proto"
 )
 
-// ProtocolVersion is a version of the wire protocol, see EventEnvelope in
-// game.proto for how they differ.
-type ProtocolVersion int
-
-const (
-	// ProtocolV4 sends the full game state every tick.
-	ProtocolV4 ProtocolVersion = 4
-	// ProtocolV5 sends a snapshot of the game state, then deltas.
-	ProtocolV5 ProtocolVersion = 5
-)
-
-// SupportedProtocolVersions returns the protocol versions ParseProtocolVersion
-// accepts, as given in the "v" query parameter of the websocket URL.
-func SupportedProtocolVersions() []string {
-	return []string{"4", "5"}
-}
-
-// ParseProtocolVersion parses a protocol version, as given in the "v" query
-// parameter of the websocket URL.
-func ParseProtocolVersion(s string) (ProtocolVersion, error) {
-	switch s {
-	case "4":
-		return ProtocolV4, nil
-	case "5":
-		return ProtocolV5, nil
-	default:
-		return 0, fmt.Errorf("unsupported protocol version %q", s)
-	}
-}
-
 // PBClientAdapter is an adapter for a client that reads and writes byte slices,
-// providing higher level abstractions. The encoding/decoding is based on protobuf.
+// providing higher level abstractions. The encoding/decoding is based on protobuf,
+// see game.proto for the protocol.
 //
-// WritePlayerEvent must not be called concurrently, as the v5 encoding
-// depends on the previously written events.
+// WritePlayerEvent must not be called concurrently, as the encoding of ticks
+// depends on the previously written ones.
 type PBClientAdapter struct {
-	client  Client
-	version ProtocolVersion
-	// deltaEncoder encodes ticks for ProtocolV5.
+	client Client
+	// deltaEncoder encodes ticks as a snapshot, then deltas.
 	deltaEncoder deltaEncoder
 }
 
 // NewPBClientAdapter creates a new PBClientAdapter wrapping the provided
-// client, encoding events with the given protocol version.
-func NewPBClientAdapter(client Client, version ProtocolVersion) (*PBClientAdapter, error) {
-	switch version {
-	case ProtocolV4, ProtocolV5:
-	default:
-		return nil, fmt.Errorf("unsupported protocol version %d", version)
-	}
+// client.
+func NewPBClientAdapter(client Client) (*PBClientAdapter, error) {
 	return &PBClientAdapter{
-		client:  client,
-		version: version,
+		client: client,
 	}, nil
 }
 
@@ -92,19 +56,9 @@ func (ca *PBClientAdapter) WritePlayerEvent(ctx context.Context, playerEvent mod
 	switch evt := playerEvent.(type) {
 	case *model.PlayerEventGameStart:
 		evtStart := msg.EncodeEventGameStart(evt)
-		if ca.version == ProtocolV4 {
-			// v4 clients can't resume.
-			evtStart.ResumeToken = ""
-			evtStart.ResumeTimeout = 0
-		}
 		pbMsg.Event = &msg.EventEnvelope_EventGameStart{EventGameStart: evtStart}
 	case *model.PlayerEventTick:
-		if ca.version == ProtocolV5 {
-			pbMsg = ca.deltaEncoder.encodeTick(evt)
-		} else {
-			evtTick := msg.EncodeEventGameTick(evt)
-			pbMsg.Event = &msg.EventEnvelope_EventGameTick{EventGameTick: evtTick}
-		}
+		pbMsg = ca.deltaEncoder.encodeTick(evt)
 	case *model.PlayerEventGameOver:
 		evtOver := msg.EncodeEventGameOver(evt)
 		pbMsg.Event = &msg.EventEnvelope_EventGameOver{EventGameOver: evtOver}

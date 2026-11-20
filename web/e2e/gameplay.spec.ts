@@ -85,7 +85,7 @@ test.describe("launching an airplane", () => {
         expect(afterLaunch.strength).toBeLessThan(before);
         expect(afterLaunch.strength).toBeLessThanOrEqual(Math.ceil(before / 2) + 2);
 
-        // The client moves the airplane itself (protocol v5): sampled on
+        // The client moves the airplane itself: sampled on
         // every animation frame for 400 ms (at most 2 server messages), it
         // gets closer to the target on each frame, not only when a message
         // arrives. Sampled in the page, as a gameState() round trip can take

@@ -2612,10 +2612,9 @@ export const wire = $root.wire = (() => {
              * @typedef {Object} wire.msg.EventEnvelope.$Properties
              * @property {wire.msg.EventGameStart.$Properties|null} [eventGameStart] EventEnvelope eventGameStart
              * @property {wire.msg.EventGameOver.$Properties|null} [eventGameOver] EventEnvelope eventGameOver
-             * @property {wire.msg.EventGameTick.$Properties|null} [eventGameTick] EventEnvelope eventGameTick
              * @property {wire.msg.EventGameSnapshot.$Properties|null} [eventGameSnapshot] EventEnvelope eventGameSnapshot
              * @property {wire.msg.EventGameDelta.$Properties|null} [eventGameDelta] EventEnvelope eventGameDelta
-             * @property {"eventGameStart"|"eventGameOver"|"eventGameTick"|"eventGameSnapshot"|"eventGameDelta"} [event] EventEnvelope event
+             * @property {"eventGameStart"|"eventGameOver"|"eventGameSnapshot"|"eventGameDelta"} [event] EventEnvelope event
              * @property {Array.<Uint8Array>} [$unknowns] Unknown fields preserved while decoding when enabled
              */
 
@@ -2632,12 +2631,11 @@ export const wire = $root.wire = (() => {
              * @typedef {{
              *   eventGameStart?: wire.msg.EventGameStart.$Shape|null;
              *   eventGameOver?: wire.msg.EventGameOver.$Shape|null;
-             *   eventGameTick?: wire.msg.EventGameTick.$Shape|null;
              *   eventGameSnapshot?: wire.msg.EventGameSnapshot.$Shape|null;
              *   eventGameDelta?: wire.msg.EventGameDelta.$Shape|null;
              *   $unknowns?: Array.<Uint8Array>;
              * } & (
-             *   ({ event?: undefined; eventGameStart?: null; eventGameOver?: null; eventGameTick?: null; eventGameSnapshot?: null; eventGameDelta?: null }|{ event?: "eventGameStart"; eventGameStart: wire.msg.EventGameStart.$Shape; eventGameOver?: null; eventGameTick?: null; eventGameSnapshot?: null; eventGameDelta?: null }|{ event?: "eventGameOver"; eventGameStart?: null; eventGameOver: wire.msg.EventGameOver.$Shape; eventGameTick?: null; eventGameSnapshot?: null; eventGameDelta?: null }|{ event?: "eventGameTick"; eventGameStart?: null; eventGameOver?: null; eventGameTick: wire.msg.EventGameTick.$Shape; eventGameSnapshot?: null; eventGameDelta?: null }|{ event?: "eventGameSnapshot"; eventGameStart?: null; eventGameOver?: null; eventGameTick?: null; eventGameSnapshot: wire.msg.EventGameSnapshot.$Shape; eventGameDelta?: null }|{ event?: "eventGameDelta"; eventGameStart?: null; eventGameOver?: null; eventGameTick?: null; eventGameSnapshot?: null; eventGameDelta: wire.msg.EventGameDelta.$Shape })
+             *   ({ event?: undefined; eventGameStart?: null; eventGameOver?: null; eventGameSnapshot?: null; eventGameDelta?: null }|{ event?: "eventGameStart"; eventGameStart: wire.msg.EventGameStart.$Shape; eventGameOver?: null; eventGameSnapshot?: null; eventGameDelta?: null }|{ event?: "eventGameOver"; eventGameStart?: null; eventGameOver: wire.msg.EventGameOver.$Shape; eventGameSnapshot?: null; eventGameDelta?: null }|{ event?: "eventGameSnapshot"; eventGameStart?: null; eventGameOver?: null; eventGameSnapshot: wire.msg.EventGameSnapshot.$Shape; eventGameDelta?: null }|{ event?: "eventGameDelta"; eventGameStart?: null; eventGameOver?: null; eventGameSnapshot?: null; eventGameDelta: wire.msg.EventGameDelta.$Shape })
              * )} wire.msg.EventEnvelope.$Shape
              */
 
@@ -2673,14 +2671,6 @@ export const wire = $root.wire = (() => {
             EventEnvelope.prototype.eventGameOver = null;
 
             /**
-             * EventEnvelope eventGameTick.
-             * @member {wire.msg.EventGameTick.$Properties|null|undefined} eventGameTick
-             * @memberof wire.msg.EventEnvelope
-             * @instance
-             */
-            EventEnvelope.prototype.eventGameTick = null;
-
-            /**
              * EventEnvelope eventGameSnapshot.
              * @member {wire.msg.EventGameSnapshot.$Properties|null|undefined} eventGameSnapshot
              * @memberof wire.msg.EventEnvelope
@@ -2701,12 +2691,12 @@ export const wire = $root.wire = (() => {
 
             /**
              * EventEnvelope event.
-             * @member {"eventGameStart"|"eventGameOver"|"eventGameTick"|"eventGameSnapshot"|"eventGameDelta"|undefined} event
+             * @member {"eventGameStart"|"eventGameOver"|"eventGameSnapshot"|"eventGameDelta"|undefined} event
              * @memberof wire.msg.EventEnvelope
              * @instance
              */
             $Object.defineProperty(EventEnvelope.prototype, "event", {
-                get: $util.oneOfGetter($oneOfFields = ["eventGameStart", "eventGameOver", "eventGameTick", "eventGameSnapshot", "eventGameDelta"]),
+                get: $util.oneOfGetter($oneOfFields = ["eventGameStart", "eventGameOver", "eventGameSnapshot", "eventGameDelta"]),
                 set: $util.oneOfSetter($oneOfFields)
             });
 
@@ -2746,8 +2736,6 @@ export const wire = $root.wire = (() => {
                     $root.wire.msg.EventGameStart.encode(message.eventGameStart, writer.uint32(/* id 1, wireType 2 =*/10).fork(), _depth + 1).ldelim();
                 if (message.eventGameOver != null && $Object.hasOwnProperty.call(message, "eventGameOver"))
                     $root.wire.msg.EventGameOver.encode(message.eventGameOver, writer.uint32(/* id 2, wireType 2 =*/18).fork(), _depth + 1).ldelim();
-                if (message.eventGameTick != null && $Object.hasOwnProperty.call(message, "eventGameTick"))
-                    $root.wire.msg.EventGameTick.encode(message.eventGameTick, writer.uint32(/* id 3, wireType 2 =*/26).fork(), _depth + 1).ldelim();
                 if (message.eventGameSnapshot != null && $Object.hasOwnProperty.call(message, "eventGameSnapshot"))
                     $root.wire.msg.EventGameSnapshot.encode(message.eventGameSnapshot, writer.uint32(/* id 4, wireType 2 =*/34).fork(), _depth + 1).ldelim();
                 if (message.eventGameDelta != null && $Object.hasOwnProperty.call(message, "eventGameDelta"))
@@ -2821,13 +2809,6 @@ export const wire = $root.wire = (() => {
                                 break;
                             message.eventGameOver = $root.wire.msg.EventGameOver.decode(reader, reader.size(), $undefined, _depth + 1, message.eventGameOver);
                             message.event = "eventGameOver";
-                            continue;
-                        }
-                    case 3: {
-                            if (wireType !== 2)
-                                break;
-                            message.eventGameTick = $root.wire.msg.EventGameTick.decode(reader, reader.size(), $undefined, _depth + 1, message.eventGameTick);
-                            message.event = "eventGameTick";
                             continue;
                         }
                     case 4: {
@@ -2911,16 +2892,6 @@ export const wire = $root.wire = (() => {
                             return "eventGameOver." + error;
                     }
                 }
-                if (message.eventGameTick != null && $Object.hasOwnProperty.call(message, "eventGameTick")) {
-                    if (properties.event === 1)
-                        return "event: multiple values";
-                    properties.event = 1;
-                    {
-                        let error = $root.wire.msg.EventGameTick.verify(message.eventGameTick, _depth + 1);
-                        if (error)
-                            return "eventGameTick." + error;
-                    }
-                }
                 if (message.eventGameSnapshot != null && $Object.hasOwnProperty.call(message, "eventGameSnapshot")) {
                     if (properties.event === 1)
                         return "event: multiple values";
@@ -2972,11 +2943,6 @@ export const wire = $root.wire = (() => {
                         throw $TypeError(".wire.msg.EventEnvelope.eventGameOver: object expected");
                     message.eventGameOver = $root.wire.msg.EventGameOver.fromObject(object.eventGameOver, _depth + 1);
                 }
-                if (object.eventGameTick != null) {
-                    if (!$util.isObject(object.eventGameTick))
-                        throw $TypeError(".wire.msg.EventEnvelope.eventGameTick: object expected");
-                    message.eventGameTick = $root.wire.msg.EventGameTick.fromObject(object.eventGameTick, _depth + 1);
-                }
                 if (object.eventGameSnapshot != null) {
                     if (!$util.isObject(object.eventGameSnapshot))
                         throw $TypeError(".wire.msg.EventEnvelope.eventGameSnapshot: object expected");
@@ -3016,11 +2982,6 @@ export const wire = $root.wire = (() => {
                     object.eventGameOver = $root.wire.msg.EventGameOver.toObject(message.eventGameOver, options, _depth + 1);
                     if (options.oneofs)
                         object.event = "eventGameOver";
-                }
-                if (message.eventGameTick != null && $Object.hasOwnProperty.call(message, "eventGameTick")) {
-                    object.eventGameTick = $root.wire.msg.EventGameTick.toObject(message.eventGameTick, options, _depth + 1);
-                    if (options.oneofs)
-                        object.event = "eventGameTick";
                 }
                 if (message.eventGameSnapshot != null && $Object.hasOwnProperty.call(message, "eventGameSnapshot")) {
                     object.eventGameSnapshot = $root.wire.msg.EventGameSnapshot.toObject(message.eventGameSnapshot, options, _depth + 1);
@@ -3699,282 +3660,6 @@ export const wire = $root.wire = (() => {
             };
 
             return EventGameOver;
-        })();
-
-        msg.EventGameTick = (function() {
-
-            /**
-             * Properties of an EventGameTick.
-             * @typedef {Object} wire.msg.EventGameTick.$Properties
-             * @property {wire.msg.Game.$Properties|null} [game] EventGameTick game
-             * @property {Array.<Uint8Array>} [$unknowns] Unknown fields preserved while decoding when enabled
-             */
-
-            /**
-             * Properties of an EventGameTick.
-             * @memberof wire.msg
-             * @interface IEventGameTick
-             * @augments wire.msg.EventGameTick.$Properties
-             * @deprecated Use wire.msg.EventGameTick.$Properties instead.
-             */
-
-            /**
-             * Shape of an EventGameTick.
-             * @typedef {wire.msg.EventGameTick.$Properties} wire.msg.EventGameTick.$Shape
-             */
-
-            /**
-             * Constructs a new EventGameTick.
-             * @memberof wire.msg
-             * @classdesc Represents an EventGameTick.
-             * @constructor
-             * @param {wire.msg.EventGameTick.$Properties=} [properties] Properties to set
-             * @property {Array.<Uint8Array>} [$unknowns] Unknown fields preserved while decoding when enabled
-             */
-            const EventGameTick = function (properties) {
-                if (properties)
-                    for (let keys = $Object.keys(properties), i = 0; i < keys.length; ++i)
-                        if (properties[keys[i]] != null && keys[i] !== "__proto__")
-                            this[keys[i]] = properties[keys[i]];
-            };
-
-            /**
-             * EventGameTick game.
-             * @member {wire.msg.Game.$Properties|null|undefined} game
-             * @memberof wire.msg.EventGameTick
-             * @instance
-             */
-            EventGameTick.prototype.game = null;
-
-            /**
-             * Creates a new EventGameTick instance using the specified properties.
-             * @function create
-             * @memberof wire.msg.EventGameTick
-             * @static
-             * @param {wire.msg.EventGameTick.$Properties=} [properties] Properties to set
-             * @returns {wire.msg.EventGameTick} EventGameTick instance
-             * @type {{
-             *   (properties: wire.msg.EventGameTick.$Shape): wire.msg.EventGameTick & wire.msg.EventGameTick.$Shape;
-             *   (properties?: wire.msg.EventGameTick.$Properties): wire.msg.EventGameTick;
-             * }}
-             */
-            EventGameTick.create = function(properties) {
-                return new EventGameTick(properties);
-            };
-
-            /**
-             * Encodes the specified EventGameTick message. Does not implicitly {@link wire.msg.EventGameTick.verify|verify} messages.
-             * @function encode
-             * @memberof wire.msg.EventGameTick
-             * @static
-             * @param {wire.msg.EventGameTick.$Properties} message EventGameTick message or plain object to encode
-             * @param {$protobuf.Writer} [writer] Writer to encode to
-             * @returns {$protobuf.Writer} Writer
-             */
-            EventGameTick.encode = function (message, writer, _depth) {
-                if (!writer)
-                    writer = $Writer.create();
-                if (_depth === $undefined)
-                    _depth = 0;
-                if (_depth > $util.recursionLimit)
-                    throw $Error("max depth exceeded");
-                if (message.game != null && $Object.hasOwnProperty.call(message, "game"))
-                    $root.wire.msg.Game.encode(message.game, writer.uint32(/* id 1, wireType 2 =*/10).fork(), _depth + 1).ldelim();
-                if (message.$unknowns != null && $Object.hasOwnProperty.call(message, "$unknowns"))
-                    for (let i = 0; i < message.$unknowns.length; ++i)
-                        writer.raw(message.$unknowns[i]);
-                return writer;
-            };
-
-            /**
-             * Encodes the specified EventGameTick message, length delimited. Does not implicitly {@link wire.msg.EventGameTick.verify|verify} messages.
-             * @function encodeDelimited
-             * @memberof wire.msg.EventGameTick
-             * @static
-             * @param {wire.msg.EventGameTick.$Properties} message EventGameTick message or plain object to encode
-             * @param {$protobuf.Writer} [writer] Writer to encode to
-             * @returns {$protobuf.Writer} Writer
-             */
-            EventGameTick.encodeDelimited = function(message, writer) {
-                return this.encode(message, (writer || $Writer.create()).fork()).ldelim();
-            };
-
-            /**
-             * Decodes an EventGameTick message from the specified reader or buffer.
-             * @function decode
-             * @memberof wire.msg.EventGameTick
-             * @static
-             * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
-             * @param {number} [length] Message length if known beforehand
-             * @returns {wire.msg.EventGameTick & wire.msg.EventGameTick.$Shape} EventGameTick
-             * @throws {Error} If the payload is not a reader or valid buffer
-             * @throws {$protobuf.util.ProtocolError} If required fields are missing
-             */
-            EventGameTick.decode = function (reader, length, _end, _depth, _target) {
-                if (!(reader instanceof $Reader))
-                    reader = $Reader.create(reader);
-                if (_depth === $undefined)
-                    _depth = 0;
-                if (_depth > $Reader.recursionLimit)
-                    throw $Error("max depth exceeded");
-                let end, message, value;
-                if (length === $undefined)
-                    end = reader.len;
-                else {
-                    end = reader.pos + length;
-                    if (end > reader.len)
-                        throw $RangeError("index out of range");
-                    length = reader.len;
-                    reader.len = end;
-                }
-                message = _target || new $root.wire.msg.EventGameTick();
-                while (reader.pos < end) {
-                    let start = reader.pos;
-                    let tag = reader.tag();
-                    if (tag === _end) {
-                        _end = $undefined;
-                        break;
-                    }
-                    let wireType = tag & 7;
-                    switch (tag >>>= 3) {
-                    case 1: {
-                            if (wireType !== 2)
-                                break;
-                            message.game = $root.wire.msg.Game.decode(reader, reader.size(), $undefined, _depth + 1, message.game);
-                            continue;
-                        }
-                    }
-                    reader.skipType(wireType, _depth, tag);
-                    if (!reader.discardUnknown) {
-                        $util.makeProp(message, "$unknowns", false);
-                        (message.$unknowns || (message.$unknowns = [])).push(reader.raw(start, reader.pos));
-                    }
-                }
-                if (length !== $undefined) {
-                    if (reader.pos !== end)
-                        throw $RangeError("index out of range");
-                    reader.len = length;
-                }
-                if (_end !== $undefined)
-                    throw $Error("missing end group");
-                return message;
-            };
-
-            /**
-             * Decodes an EventGameTick message from the specified reader or buffer, length delimited.
-             * @function decodeDelimited
-             * @memberof wire.msg.EventGameTick
-             * @static
-             * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
-             * @returns {wire.msg.EventGameTick & wire.msg.EventGameTick.$Shape} EventGameTick
-             * @throws {Error} If the payload is not a reader or valid buffer
-             * @throws {$protobuf.util.ProtocolError} If required fields are missing
-             */
-            EventGameTick.decodeDelimited = function(reader) {
-                if (!(reader instanceof $Reader))
-                    reader = new $Reader(reader);
-                return this.decode(reader, reader.size());
-            };
-
-            /**
-             * Verifies an EventGameTick message.
-             * @function verify
-             * @memberof wire.msg.EventGameTick
-             * @static
-             * @param {Object.<string,*>} message Plain object to verify
-             * @returns {string|null} `null` if valid, otherwise the reason why it is not
-             */
-            EventGameTick.verify = function (message, _depth) {
-                if (typeof message !== "object" || message === null)
-                    return "object expected";
-                if (_depth === $undefined)
-                    _depth = 0;
-                if (_depth > $util.recursionLimit)
-                    return "max depth exceeded";
-                if (message.game != null && $Object.hasOwnProperty.call(message, "game")) {
-                    let error = $root.wire.msg.Game.verify(message.game, _depth + 1);
-                    if (error)
-                        return "game." + error;
-                }
-                return null;
-            };
-
-            /**
-             * Creates an EventGameTick message from a plain object. Also converts values to their respective internal types.
-             * @function fromObject
-             * @memberof wire.msg.EventGameTick
-             * @static
-             * @param {Object.<string,*>} object Plain object
-             * @returns {wire.msg.EventGameTick} EventGameTick
-             */
-            EventGameTick.fromObject = function (object, _depth) {
-                if (object instanceof $root.wire.msg.EventGameTick)
-                    return object;
-                if (!$util.isObject(object))
-                    throw $TypeError(".wire.msg.EventGameTick: object expected");
-                if (_depth === $undefined)
-                    _depth = 0;
-                if (_depth > $util.recursionLimit)
-                    throw $Error("max depth exceeded");
-                let message = new $root.wire.msg.EventGameTick();
-                if (object.game != null) {
-                    if (!$util.isObject(object.game))
-                        throw $TypeError(".wire.msg.EventGameTick.game: object expected");
-                    message.game = $root.wire.msg.Game.fromObject(object.game, _depth + 1);
-                }
-                return message;
-            };
-
-            /**
-             * Creates a plain object from an EventGameTick message. Also converts values to other types if specified.
-             * @function toObject
-             * @memberof wire.msg.EventGameTick
-             * @static
-             * @param {wire.msg.EventGameTick} message EventGameTick
-             * @param {$protobuf.IConversionOptions} [options] Conversion options
-             * @returns {Object.<string,*>} Plain object
-             */
-            EventGameTick.toObject = function (message, options, _depth) {
-                if (!options)
-                    options = {};
-                if (_depth === $undefined)
-                    _depth = 0;
-                if (_depth > $util.recursionLimit)
-                    throw $Error("max depth exceeded");
-                let object = {};
-                if (options.defaults)
-                    object.game = null;
-                if (message.game != null && $Object.hasOwnProperty.call(message, "game"))
-                    object.game = $root.wire.msg.Game.toObject(message.game, options, _depth + 1);
-                return object;
-            };
-
-            /**
-             * Converts this EventGameTick to JSON.
-             * @function toJSON
-             * @memberof wire.msg.EventGameTick
-             * @instance
-             * @returns {Object.<string,*>} JSON object
-             */
-            EventGameTick.prototype.toJSON = function() {
-                return EventGameTick.toObject(this, $protobuf.util.toJSONOptions);
-            };
-
-            /**
-             * Gets the type url for EventGameTick
-             * @function getTypeUrl
-             * @memberof wire.msg.EventGameTick
-             * @static
-             * @param {string} [prefix] Custom type url prefix, defaults to `"type.googleapis.com"`
-             * @returns {string} The type url
-             */
-            EventGameTick.getTypeUrl = function(prefix) {
-                if (prefix === $undefined)
-                    prefix = "type.googleapis.com";
-                return prefix + "/wire.msg.EventGameTick";
-            };
-
-            return EventGameTick;
         })();
 
         msg.EventGameSnapshot = (function() {
