@@ -232,10 +232,8 @@ export default class GameController {
                     gameResult = { reason: "GAME_OVER", winnerId: this._winnerId };
                     break;
                 }
-                while (!this._connection.hasNext() && await this._connection.waitNext()) {
-                    //
-                }
-                if (!this._connection.hasNext()) {
+                const event = await this._connection.next();
+                if (event === null) {
                     // The connection broke. Resume the game on a new one if
                     // we can, otherwise the game is over for us.
                     if (await this._resume()) {
@@ -245,7 +243,7 @@ export default class GameController {
                     break;
                 }
                 try {
-                    this._onServerEvent(this._connection.getNext());
+                    this._onServerEvent(event);
                 } catch (err) {
                     if (!(err instanceof ProtocolError)) {
                         throw err;
