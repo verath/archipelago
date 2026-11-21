@@ -18,15 +18,23 @@ import (
 // by the write timeout rather than by a full queue.
 const eventQueueSize = 256
 
-// playerError is a struct holding both an error and the playerProxy in which
+// A player is a player of the game, and the Client playing it.
+type player struct {
+	id     model.PlayerID
+	client Client
+}
+
+// playerError is a struct holding both an error and the player for which
 // the error occurred.
 type playerError struct {
 	error  error
-	player *playerProxy
+	player *player
 }
 
 // The game controller represents a single game. It starts and handles
-// communication between the game loop and the player proxies.
+// communication between the game loop and the players' clients: it writes
+// the game's events to each client, as its player sees them, and reads the
+// player's actions from it.
 type controller struct {
 	logger *slog.Logger
 
@@ -34,11 +42,11 @@ type controller struct {
 
 	// players is a list of players that the controller reads actions
 	// from, and sends event to.
-	players []*playerProxy
+	players []*player
 }
 
 // newController creates a new game controller.
-func newController(logger *slog.Logger, gameLoop *gameLoop, players []*playerProxy) (*controller, error) {
+func newController(logger *slog.Logger, gameLoop *gameLoop, players []*player) (*controller, error) {
 	logger = common.ModuleLogEntryWithID(logger, "game/controller")
 	if len(players) == 0 {
 		return nil, errors.New("there must be at least one player")
@@ -124,7 +132,7 @@ func (ctrl *controller) gameLoopEventHandler(eventCh chan<- model.Event) eventHa
 // (the client gets a delta computed against what was last sent to it, so
 // skipping ticks is fine). Other events are never skipped and keep their
 // order relative to the ticks.
-func (ctrl *controller) playerEventLoop(ctx context.Context, player *playerProxy, eventCh <-chan model.Event) error {
+func (ctrl *controller) playerEventLoop(ctx context.Context, p *player, eventCh <-chan model.Event) error {
 	// next is an event taken from eventCh while coalescing ticks, to be
 	// written next.
 	var next model.Event
@@ -146,8 +154,8 @@ func (ctrl *controller) playerEventLoop(ctx context.Context, player *playerProxy
 		if _, isTick := evt.(*model.EventTick); isTick {
 			evt, next = latestQueuedTick(evt, eventCh)
 		}
-		if err := player.WriteEvent(ctx, evt); err != nil {
-			return err
+		if err := p.client.WritePlayerEvent(ctx, evt.ToPlayerEvent(p.id)); err != nil {
+			return fmt.Errorf("error writing PlayerEvent to Client: %w", err)
 		}
 	}
 }
@@ -179,14 +187,14 @@ func latestQueuedTick(tick model.Event, eventCh <-chan model.Event) (latest, nex
 // canceled.
 func (ctrl *controller) eventLoop(ctx context.Context, eventCh <-chan model.Event) error {
 	playerErrCh := make(chan playerError)
-	playerEventChs := make(map[*playerProxy]chan model.Event, len(ctrl.players))
-	for _, player := range ctrl.players {
-		playerEventChs[player] = make(chan model.Event, eventQueueSize)
-
-		go func(player *playerProxy, playerEventCh <-chan model.Event) {
-			err := ctrl.playerEventLoop(ctx, player, playerEventCh)
-			playerErrCh <- playerError{err, player}
-		}(player, playerEventChs[player])
+	playerEventChs := make(map[*player]chan model.Event, len(ctrl.players))
+	for _, p := range ctrl.players {
+		playerEventCh := make(chan model.Event, eventQueueSize)
+		playerEventChs[p] = playerEventCh
+		go func() {
+			err := ctrl.playerEventLoop(ctx, p, playerEventCh)
+			playerErrCh <- playerError{err, p}
+		}()
 	}
 
 	var err error
@@ -194,7 +202,7 @@ func (ctrl *controller) eventLoop(ctx context.Context, eventCh <-chan model.Even
 	for !eventChClosed && err == nil {
 		select {
 		case playerErr := <-playerErrCh:
-			playerErr.player.Disconnect()
+			playerErr.player.client.Disconnect()
 			delete(playerEventChs, playerErr.player)
 			ctrl.playerErrorLogger(playerErr).Debug("player event loop error")
 			if len(playerEventChs) == 0 {
@@ -206,13 +214,13 @@ func (ctrl *controller) eventLoop(ctx context.Context, eventCh <-chan model.Even
 				eventChClosed = true
 				break
 			}
-			for player, ch := range playerEventChs {
+			for p, ch := range playerEventChs {
 				select {
 				case ch <- evt:
 				default:
 					// Player event ch full (player too slow), force disconnect.
-					player.Disconnect()
-					ctrl.logger.Debug("player eventCh full", "playerID", player.playerID)
+					p.client.Disconnect()
+					ctrl.logger.Debug("player eventCh full", "playerID", p.id)
 				}
 			}
 		case <-ctx.Done():
@@ -231,14 +239,14 @@ func (ctrl *controller) eventLoop(ctx context.Context, eventCh <-chan model.Even
 
 // playerActionLoop reads actions from player and posts them to actionCh.
 // Blocks until an error occurs or the context is canceled.
-func (ctrl *controller) playerActionLoop(ctx context.Context, player *playerProxy, actionCh chan<- model.Action) error {
+func (ctrl *controller) playerActionLoop(ctx context.Context, p *player, actionCh chan<- model.Action) error {
 	for {
-		act, err := player.ReadAction(ctx)
+		act, err := p.client.ReadPlayerAction(ctx)
 		if err != nil {
 			return fmt.Errorf("could not read action from player: %w", err)
 		}
 		select {
-		case actionCh <- act:
+		case actionCh <- act.ToAction(p.id):
 		case <-ctx.Done():
 			return ctx.Err()
 		}
@@ -255,11 +263,11 @@ func (ctrl *controller) actionLoop(ctx context.Context, quitCh <-chan struct{}) 
 
 	// Spawn an action reading loop for each player, each broadcasting
 	// new actions to a shared actionCh channel.
-	for _, player := range ctrl.players {
-		go func(player *playerProxy) {
-			err := ctrl.playerActionLoop(ctxPlayerLoops, player, actionCh)
-			playerErrCh <- playerError{err, player}
-		}(player)
+	for _, p := range ctrl.players {
+		go func() {
+			err := ctrl.playerActionLoop(ctxPlayerLoops, p, actionCh)
+			playerErrCh <- playerError{err, p}
+		}()
 	}
 
 	// Read actions from the actionCh channel and forward them to the gameLoop.
@@ -271,10 +279,10 @@ func (ctrl *controller) actionLoop(ctx context.Context, quitCh <-chan struct{}) 
 		case act := <-actionCh:
 			ctrl.gameLoop.AddAction(act)
 		case playerErr := <-playerErrCh:
-			playerErr.player.Disconnect()
+			playerErr.player.client.Disconnect()
 			// "Translate" read error into a player leave action.
 			leavePlayerAct := &model.PlayerActionLeave{}
-			leaveAct := leavePlayerAct.ToAction(playerErr.player.playerID)
+			leaveAct := leavePlayerAct.ToAction(playerErr.player.id)
 			ctrl.gameLoop.AddAction(leaveAct)
 			ctrl.playerErrorLogger(playerErr).Debug("player action loop error")
 			remainingPlayers--
@@ -302,6 +310,6 @@ func (ctrl *controller) actionLoop(ctx context.Context, quitCh <-chan struct{}) 
 func (ctrl *controller) playerErrorLogger(playerErr playerError) *slog.Logger {
 	return ctrl.logger.With(
 		"err", playerErr.error,
-		"PlayerID", playerErr.player.playerID,
+		"PlayerID", playerErr.player.id,
 	)
 }
