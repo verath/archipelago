@@ -21,7 +21,18 @@ export interface UIActionGameClickIsland {
     islandId: string | null;
 }
 
-export type UIAction = UIActionGameStart | UIActionGameClickIsland;
+/**
+ * Dispatched every frame, right before the game view renders.
+ */
+export interface UIActionGameFrame {
+    type: "game/frame";
+    /**
+     * [ms] Time since the previous frame.
+     */
+    delta: number;
+}
+
+export type UIAction = UIActionGameStart | UIActionGameClickIsland | UIActionGameFrame;
 
 /**
  * RECONNECTING is while trying to resume a game after the connection broke.
@@ -106,6 +117,9 @@ export class Archipelago {
                 break;
             case "game/click-island":
                 this._clickIsland(action.islandId);
+                break;
+            case "game/frame":
+                this._gameController?.onFrame(action.delta);
                 break;
             default:
                 console.error("Unknown action", action);
@@ -341,9 +355,15 @@ const GameViewWrapper = ({ gameModel, resourceHolder, dispatch }: GameViewWrappe
                 window.removeEventListener("deviceOrientation", resizeListener);
             });
 
-            // Start the GameView rendering loop.
+            // Start the GameView rendering loop. Each frame first lets the
+            // game controller move the airplanes, so that they don't lag a
+            // frame behind.
             let renderRequestId: number;
-            const render = (_timestamp: DOMHighResTimeStamp) => {
+            let lastTimestamp: DOMHighResTimeStamp | null = null;
+            const render = (timestamp: DOMHighResTimeStamp) => {
+                const delta = (lastTimestamp === null) ? 0 : timestamp - lastTimestamp;
+                lastTimestamp = timestamp;
+                dispatch({ type: "game/frame", delta });
                 gameView.render();
                 renderRequestId = window.requestAnimationFrame(render);
             };

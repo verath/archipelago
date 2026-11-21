@@ -1,5 +1,4 @@
 import { describe, it, expect, vi, beforeEach, afterEach, type MockInstance } from "vitest";
-import { Ticker } from "pixi.js";
 import GameController, { type GameResult } from "./GameController.ts";
 import GameModel from "../model/GameModel.ts";
 import type Connection from "../../network/Connection.ts";
@@ -91,7 +90,6 @@ const TWO_ISLANDS = () => [
 let connection: FakeConnection;
 let model: GameModel;
 let controller: GameController;
-let destroySpy: MockInstance<Ticker["destroy"]>;
 /** The result of the run() started by the onIslandClicked tests. */
 let runResult: Promise<GameResult>;
 
@@ -99,10 +97,6 @@ let runResult: Promise<GameResult>;
 const flush = (): Promise<void> => new Promise(resolve => setTimeout(resolve, 0));
 
 beforeEach(() => {
-    // Pixi's Ticker schedules itself with requestAnimationFrame, which node lacks.
-    vi.stubGlobal("requestAnimationFrame", (cb: FrameRequestCallback) => setTimeout(() => cb(performance.now()), 16));
-    vi.stubGlobal("cancelAnimationFrame", (id: number) => clearTimeout(id));
-    destroySpy = vi.spyOn(Ticker.prototype, "destroy");
     connection = new FakeConnection();
     model = new GameModel();
     controller = newController(connection, model);
@@ -238,7 +232,6 @@ describe("GameController.run", () => {
         connection.push("eventGameDelta", makeDelta(6, 333));
         connection.push("eventGameDelta", makeDelta(8, 999));
         await expect(controller.run()).resolves.toEqual({ reason: "ERROR" });
-        expect(destroySpy).toHaveBeenCalledTimes(1);
     });
 
     it("ends the game with an error on a delta before any snapshot", async () => {
@@ -277,23 +270,45 @@ describe("GameController.run", () => {
         await expect(result).resolves.toEqual({ reason: "GAME_OVER", winnerId: "me" });
     });
 
-    it("destroys its ticker on game over, connection end, and errors", async () => {
+    it("interpolates the model on each frame while it runs", async () => {
+        const interpolate = vi.spyOn(model, "interpolate");
+        controller.onFrame(16);
+        expect(interpolate).not.toHaveBeenCalled();
+
+        const result = controller.run();
+        controller.onFrame(16);
+        expect(interpolate).toHaveBeenCalledExactlyOnceWith(16);
         connection.push("eventGameOver", { winnerId: "me" });
-        await controller.run();
-        expect(destroySpy).toHaveBeenCalledTimes(1);
+        await result;
+        controller.onFrame(16);
+        expect(interpolate).toHaveBeenCalledTimes(1);
+    });
+
+    it("stops interpolating on game over, connection end, and errors", async () => {
+        const runThenFrame = async (conn: FakeConnection): Promise<GameResult> => {
+            const m = new GameModel();
+            const interpolate = vi.spyOn(m, "interpolate");
+            const ctrl = newController(conn, m);
+            const result = await ctrl.run();
+            ctrl.onFrame(16);
+            expect(interpolate).not.toHaveBeenCalled();
+            return result;
+        };
+
+        const c1 = new FakeConnection();
+        c1.push("eventGameOver", { winnerId: "me" });
+        await expect(runThenFrame(c1)).resolves.toEqual({ reason: "GAME_OVER", winnerId: "me" });
 
         const c2 = new FakeConnection();
         c2.end();
-        await newController(c2, new GameModel()).run();
-        expect(destroySpy).toHaveBeenCalledTimes(2);
+        await expect(runThenFrame(c2)).resolves.toEqual({ reason: "GAME_OVER", winnerId: "" });
 
         // A snapshot of a game our player is not in makes the model throw.
         vi.spyOn(console, "error").mockImplementation(() => { });
         const c3 = new FakeConnection();
         c3.push("eventGameStart", { playerId: "nobody", tickInterval: 100 });
         c3.push("eventGameSnapshot", snapshotOf(TWO_ISLANDS()));
-        await expect(newController(c3, new GameModel()).run()).resolves.toEqual({ reason: "ERROR" });
-        expect(destroySpy).toHaveBeenCalledTimes(3);
+        await expect(runThenFrame(c3)).resolves.toEqual({ reason: "ERROR" });
     });
 });
 
