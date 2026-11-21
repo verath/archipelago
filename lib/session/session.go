@@ -2,8 +2,8 @@
 // connection broke, e.g. when a phone switches from wifi to mobile data.
 //
 // A Session is the game.Client the game sees for a player. It wraps the
-// player's current connection, which can be replaced by a new one with
-// Attach. Sessions are created and found by token with a Registry.
+// player's current connection, a Client, which can be replaced by a new one
+// with Attach. Sessions are created and found by token with a Registry.
 package session
 
 import (
@@ -31,9 +31,20 @@ var (
 	ErrNotStarted = errors.New("game has not started for session")
 )
 
+// A Client is a connection a Session can be attached to: a game.Client that
+// can tell whether it was disconnected because the peer closed the
+// connection on purpose, see network.ErrPeerClosed.
+type Client interface {
+	game.Client
+	// PeerClosed reports whether the Client disconnected because the peer
+	// closed the connection on purpose. It is set before DisconnectCh is
+	// closed.
+	PeerClosed() bool
+}
+
 // attachment is a connection attached to a Session.
 type attachment struct {
-	client game.Client
+	client Client
 	// detachedCh is closed when the client is detached from the Session.
 	detachedCh chan struct{}
 	// attaches is Session.attaches when the client was attached.
@@ -42,7 +53,7 @@ type attachment struct {
 
 // A Session is a game.Client for a player that can survive the player's
 // connection breaking. It forwards events and actions to and from its
-// current connection, itself a game.Client.
+// current connection, a Client.
 //
 // Before the game has started for the player (until a PlayerEventGameStart
 // has been written), the Session ends when its connection is disconnected,
@@ -93,7 +104,7 @@ var _ game.Client = (*Session)(nil)
 // New creates a new Session on the connection client, with a new random
 // token. grace is how long the Session waits for a new connection after
 // the connection broke, before it ends.
-func New(client game.Client, grace time.Duration) *Session {
+func New(client Client, grace time.Duration) *Session {
 	s := &Session{
 		// 26 base32 characters, 130 random bits.
 		token:    rand.Text(),
@@ -257,7 +268,7 @@ func (s *Session) leave(att *attachment) bool {
 // the context is canceled. Fails with ErrNotStarted if the game has not
 // started for the Session, and ErrEnded if it has ended. On error, client
 // is disconnected.
-func (s *Session) Attach(ctx context.Context, client game.Client) (err error) {
+func (s *Session) Attach(ctx context.Context, client Client) (err error) {
 	defer func() {
 		if err != nil {
 			client.Disconnect()
@@ -337,16 +348,9 @@ func (s *Session) Resumable() bool {
 	return s.resumableLocked() == nil
 }
 
-// peerCloser is implemented by clients that can tell whether they were
-// disconnected because the peer closed the connection on purpose, see
-// network.ErrPeerClosed.
-type peerCloser interface {
-	PeerClosed() bool
-}
-
 // attachLocked makes client the current connection, and starts watching
 // for it to disconnect.
-func (s *Session) attachLocked(client game.Client) {
+func (s *Session) attachLocked(client Client) {
 	att := &attachment{client: client, detachedCh: make(chan struct{}), attaches: s.attaches}
 	s.cur = att
 	close(s.attachCh)
@@ -357,7 +361,7 @@ func (s *Session) attachLocked(client game.Client) {
 			// ReadPlayerAction may not see the read error that tells a
 			// closed from a broken connection, if it isn't reading now, so
 			// ask the client.
-			if pc, ok := client.(peerCloser); ok && pc.PeerClosed() {
+			if client.PeerClosed() {
 				s.leave(att)
 			} else {
 				s.detach(att)

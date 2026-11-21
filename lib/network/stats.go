@@ -1,4 +1,4 @@
-package websocket
+package network
 
 import (
 	"bufio"
@@ -8,7 +8,7 @@ import (
 	"sync/atomic"
 )
 
-// Stats are traffic counters for a WSConnection.
+// Stats are traffic counters for a Client.
 type Stats struct {
 	// MessagesRead and MessagesWritten count data (binary) messages.
 	// Control frames (ping, pong, close) are not counted.
