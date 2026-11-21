@@ -19,8 +19,8 @@ func TestController_Run_BroadcastsGameStart(t *testing.T) {
 	gameLoop.perTickActionsFunc = func(time.Duration) []model.Action { return nil }
 	gameLoop.tickInterval = 1 * time.Nanosecond
 
-	// Setup a mock player proxy, testing if the first event received
-	// is a game start event
+	// Setup a mock client, testing if the first event received is a game
+	// start event
 	readForeverFunc := func(ctx context.Context) (model.PlayerAction, error) {
 		<-ctx.Done()
 		return nil, ctx.Err()
@@ -36,10 +36,10 @@ func TestController_Run_BroadcastsGameStart(t *testing.T) {
 			return ctx.Err()
 		},
 	}
-	player := newPlayerProxy(p1.ID(), client)
+	p := &player{id: p1.ID(), client: client}
 
 	// Setup, run controller
-	ctrl, err := newController(testutil.DiscardLogger, gameLoop, []*playerProxy{player})
+	ctrl, err := newController(testutil.DiscardLogger, gameLoop, []*player{p})
 	if err != nil {
 		t.Fatalf("Expected no error, got: %+v", err)
 	}
@@ -95,12 +95,12 @@ func TestController_PlayerEventLoop_CoalescesTicks(t *testing.T) {
 			return nil
 		},
 	}
-	player := newPlayerProxy(game.Players()[0].ID(), client)
+	p := &player{id: game.Players()[0].ID(), client: client}
 	ctrl := &controller{logger: testutil.DiscardLogger}
 
 	eventCh := make(chan model.Event, eventQueueSize)
 	errCh := make(chan error)
-	go func() { errCh <- ctrl.playerEventLoop(context.Background(), player, eventCh) }()
+	go func() { errCh <- ctrl.playerEventLoop(context.Background(), p, eventCh) }()
 	eventCh <- tick(0)
 	<-writingCh
 	for _, evt := range []model.Event{tick(1), tick(2), gameOver, tick(3), tick(4)} {
