@@ -24,14 +24,4 @@ describe("Coordinate", () => {
         c.set({ x: 3 });
         expect([c.x, c.y]).toEqual([3, 0]);
     });
-
-    it("equals() compares by value and treats missing values as 0", () => {
-        const c = new Coordinate(2, 0);
-        expect(c.equals({ x: 2, y: 0 })).toBe(true);
-        expect(c.equals({ x: 2 })).toBe(true);
-        expect(c.equals(new Coordinate(2, 0))).toBe(true);
-        expect(c.equals({ x: 2, y: 1 })).toBe(false);
-        expect(c.equals(null)).toBe(false);
-        expect(c.equals(undefined)).toBe(false);
-    });
 });

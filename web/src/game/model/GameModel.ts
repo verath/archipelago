@@ -1,4 +1,3 @@
-import BaseModel from "./BaseModel.ts";
 import AirplaneModel from "./AirplaneModel.ts";
 import Coordinate from "./Coordinate.ts";
 import GameClock from "./GameClock.ts";
@@ -30,7 +29,7 @@ export class ProtocolError extends Error {
  * last_launch_seq. Then the local airplane is replaced by the server's (or
  * removed, if the launch failed) and the island shows the server's strength.
  */
-export default class GameModel extends BaseModel<wire.msg.Game.$Properties> {
+export default class GameModel {
 
     private readonly _size = new Coordinate(0, 0);
 
@@ -82,35 +81,21 @@ export default class GameModel extends BaseModel<wire.msg.Game.$Properties> {
      * @param now Returns the local time [ms], performance.now() by default.
      */
     constructor(now: () => number = () => performance.now()) {
-        super();
         this._now = now;
     }
 
-    private _updatePlayers(players: wire.msg.Player.$Properties[]): boolean {
-        let changed = false;
-        const numPlayers = this._players.length;
-
+    private _updatePlayers(players: wire.msg.Player.$Properties[]): void {
         // Update each player, create new ones if necessary.
         this._players = players.map((playerData, index) => {
-            let player = this.playerById(playerData.id ?? null);
-            if (!player) {
-                player = new PlayerModel(this);
-                // A player was added.
-                changed = true;
-            }
+            const player = this.playerById(playerData.id ?? null) ?? new PlayerModel(this);
             const color = PLAYER_COLORS[index % PLAYER_COLORS.length];
             const playerDataWithColor = { color, ...playerData };
             player.update(playerDataWithColor);
             this._onPlayerData(playerData);
             return player;
         });
-        if (numPlayers !== this._players.length) {
-            // A player was removed.
-            changed = true;
-        }
         this._playersById.clear();
         this._players.forEach(p => this._playersById.set(p.id, p));
-        return changed;
     }
 
     /**
@@ -122,54 +107,28 @@ export default class GameModel extends BaseModel<wire.msg.Game.$Properties> {
         }
     }
 
-    private _updateAirplanes(airplanes: wire.msg.Airplane.$Properties[]): boolean {
-        let changed = false;
-        const numAirplanes = this._airplanes.length;
-
+    private _updateAirplanes(airplanes: wire.msg.Airplane.$Properties[]): void {
         // Update each airplane, and create new ones if necessary.
         const updated: AirplaneModel[] = airplanes.map(airplaneData => {
-            let airplane = this.airplaneById(airplaneData.id ?? null);
-            if (!airplane) {
-                airplane = new AirplaneModel(this);
-                // An airplane was added
-                changed = true;
-            }
+            const airplane = this.airplaneById(airplaneData.id ?? null) ?? new AirplaneModel(this);
             airplane.update({ ...airplaneData, gameTime: this._stateGameTime });
             return airplane;
         });
         // Keep our local airplanes, see _reconcileLaunches.
         this._airplanes = [...updated, ...this._airplanes.filter(a => a instanceof LocalAirplaneModel)];
-        if (numAirplanes !== this._airplanes.length) {
-            // An airplane was removed
-            changed = true;
-        }
         this._airplanesById.clear();
         this._airplanes.forEach(a => this._airplanesById.set(a.id, a));
-        return changed;
     }
 
-    private _updateIslands(islands: wire.msg.Island.$Properties[]): boolean {
-        let changed = false;
-        const numIslands = this._islands.length;
-
+    private _updateIslands(islands: wire.msg.Island.$Properties[]): void {
         // Update each island, and create new ones if necessary
         this._islands = islands.map(islandData => {
-            let island = this.islandById(islandData.id ?? null);
-            if (!island) {
-                island = new IslandModel(this);
-                // An island was added
-                changed = true;
-            }
+            const island = this.islandById(islandData.id ?? null) ?? new IslandModel(this);
             island.update(islandData);
             return island;
         });
-        if (numIslands !== this._islands.length) {
-            // An island was removed
-            changed = true;
-        }
         this._islandsById.clear();
         this._islands.forEach(i => this._islandsById.set(i.id, i));
-        return changed;
     }
 
     private _addAirplane(airplane: AirplaneModel): void {
@@ -187,9 +146,8 @@ export default class GameModel extends BaseModel<wire.msg.Game.$Properties> {
      * a local airplane is replaced by the server's airplane for the launch
      * (which takes over smoothly from where the local one is), or removed if
      * there is none (the launch failed, or the airplane already arrived).
-     * @returns True if an airplane was removed.
      */
-    private _reconcileLaunches(): boolean {
+    private _reconcileLaunches(): void {
         const lastSeq = this._myLastLaunchSeq;
         const processed = this._airplanes.filter(
             (a): a is LocalAirplaneModel => a instanceof LocalAirplaneModel && a.launchSeq <= lastSeq);
@@ -203,54 +161,32 @@ export default class GameModel extends BaseModel<wire.msg.Game.$Properties> {
             }
         }
         this._islands.forEach(island => island.removePendingLaunches(lastSeq));
-        return processed.length > 0;
     }
 
-    private _updateMyFogOfWar(): boolean {
-        let changed = false;
-        if (this._myFogOfWar.length !== (this._size.x * this._size.y)) {
-            this._myFogOfWar = Array<boolean>(this._size.x * this._size.y).fill(false);
-            changed = true;
-        }
+    private _updateMyFogOfWar(): void {
         const myPlayer = this._players.find(p => p.id === this._myPlayerId);
         if (myPlayer === undefined) {
             throw new Error("GameModel: our player is not in the game");
         }
+        const numTiles = this._size.x * this._size.y;
         switch (myPlayer.state) {
             case "ALIVE": {
                 const myIslands = this._islands.filter(island => island.owner?.id === this._myPlayerId);
                 const myAirplanes = this._airplanes.filter(airplane => airplane.owner?.id === this._myPlayerId);
-                const fogOfWar = generateFogOfWar(this._size, myIslands, myAirplanes);
-                for (let i = 0; i < fogOfWar.length; i++) {
-                    if (this._myFogOfWar[i] !== fogOfWar[i]) {
-                        this._myFogOfWar[i] = fogOfWar[i];
-                        changed = true;
-                    }
-                }
+                this._myFogOfWar = generateFogOfWar(this._size, myIslands, myAirplanes);
                 break;
             }
-            case "PENDING_REVIVAL": {
+            case "PENDING_REVIVAL":
                 // Pending revival has no vision.
-                const anyFalse = (this._myFogOfWar.find(v => !v) !== undefined);
-                if (anyFalse) {
-                    this._myFogOfWar.fill(true);
-                    changed = true;
-                }
+                this._myFogOfWar = Array<boolean>(numTiles).fill(true);
                 break;
-            }
             case "DEAD": // Fallthrough.
             case "LEFT_GAME": // Fallthrough.
-            default: {
+            default:
                 // Dead has full vision.
-                const anyTrue = (this._myFogOfWar.find(v => v) !== undefined);
-                if (anyTrue) {
-                    this._myFogOfWar.fill(false);
-                    changed = true;
-                }
+                this._myFogOfWar = Array<boolean>(numTiles).fill(false);
                 break;
-            }
         }
-        return changed;
     }
 
     /**
@@ -258,36 +194,21 @@ export default class GameModel extends BaseModel<wire.msg.Game.$Properties> {
      * positions are at the game time of the snapshot being applied (0 if
      * none), see applySnapshot.
      */
-    protected override _update(gameData: wire.msg.Game.$Properties): boolean {
-        let changed = super._update(gameData);
-        if (!this._size.equals(gameData.size)) {
-            if (gameData.size == null) {
-                throw new Error("GameModel: data has no size");
-            }
-            this._size.set(gameData.size);
-            changed = true;
+    update(gameData: wire.msg.Game.$Properties): void {
+        if (gameData.size == null) {
+            throw new Error("GameModel: data has no size");
         }
+        this._size.set(gameData.size);
         const playerNeutralData = gameData.playerNeutral;
         const playerNeutralDataWithColor = { color: PLAYER_COLOR_NEUTRAL, ...playerNeutralData };
         this._playerNeutral.update(playerNeutralDataWithColor);
         // Missing repeated fields are empty, as in a decoded protobuf message.
-        if (this._updatePlayers(gameData.players ?? [])) {
-            changed = true;
-        }
+        this._updatePlayers(gameData.players ?? []);
         // Islands before airplanes, which stop at their destination island.
-        if (this._updateIslands(gameData.islands ?? [])) {
-            changed = true;
-        }
-        if (this._updateAirplanes(gameData.airplanes ?? [])) {
-            changed = true;
-        }
-        if (this._reconcileLaunches()) {
-            changed = true;
-        }
-        if (this._updateMyFogOfWar()) {
-            changed = true;
-        }
-        return changed;
+        this._updateIslands(gameData.islands ?? []);
+        this._updateAirplanes(gameData.airplanes ?? []);
+        this._reconcileLaunches();
+        this._updateMyFogOfWar();
     }
 
     /**
@@ -317,7 +238,6 @@ export default class GameModel extends BaseModel<wire.msg.Game.$Properties> {
      */
     applyDelta(delta: wire.msg.EventGameDelta.$Properties): void {
         this._onServerTime(delta.gameTime);
-        let changed = false;
         for (const playerData of delta.players ?? []) {
             const player = this._playersById.get(playerData.id ?? null);
             if (player == null) {
@@ -340,7 +260,6 @@ export default class GameModel extends BaseModel<wire.msg.Game.$Properties> {
                 throw new ProtocolError(`delta removes unknown airplane ${id}`);
             }
             this._removeAirplane(airplane);
-            changed = true;
         }
         for (const airplaneData of delta.airplanesAdded ?? []) {
             if (this._airplanesById.has(airplaneData.id ?? null)) {
@@ -349,7 +268,6 @@ export default class GameModel extends BaseModel<wire.msg.Game.$Properties> {
             const airplane = new AirplaneModel(this);
             airplane.update({ ...airplaneData, gameTime: this._stateGameTime });
             this._addAirplane(airplane);
-            changed = true;
         }
         for (const airplaneData of delta.airplanesUpdated ?? []) {
             const airplane = this._airplanesById.get(airplaneData.id ?? null);
@@ -358,15 +276,8 @@ export default class GameModel extends BaseModel<wire.msg.Game.$Properties> {
             }
             airplane.updateArmy(airplaneData.army);
         }
-        if (this._reconcileLaunches()) {
-            changed = true;
-        }
-        if (this._updateMyFogOfWar()) {
-            changed = true;
-        }
-        if (changed) {
-            this._emitChanged();
-        }
+        this._reconcileLaunches();
+        this._updateMyFogOfWar();
     }
 
     get size(): Coordinate {
@@ -397,10 +308,7 @@ export default class GameModel extends BaseModel<wire.msg.Game.$Properties> {
     }
 
     set myPlayerId(playerId: string | null) {
-        if (this._myPlayerId !== playerId) {
-            this._myPlayerId = playerId;
-            this._emitChanged();
-        }
+        this._myPlayerId = playerId;
     }
 
     /**
@@ -451,10 +359,6 @@ export default class GameModel extends BaseModel<wire.msg.Game.$Properties> {
 
         const airplane = new LocalAirplaneModel(this, origin, target, airplaneStrength, seq, this.gameTime);
         this._addAirplane(airplane);
-
-        // Since we changed the airplane array, we notify
-        // our change listeners
-        this._emitChanged();
     }
 
     /**
@@ -467,9 +371,6 @@ export default class GameModel extends BaseModel<wire.msg.Game.$Properties> {
         const locals = this._airplanes.filter(a => a instanceof LocalAirplaneModel);
         locals.forEach(local => this._removeAirplane(local));
         this._islands.forEach(island => island.clearPendingLaunches());
-        if (locals.length > 0) {
-            this._emitChanged();
-        }
     }
 
     /**

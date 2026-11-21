@@ -94,8 +94,8 @@ export default class AirplaneModel extends OwnableModel<AirplaneData> {
         return this._launchSeq;
     }
 
-    protected override _update(airplaneData: AirplaneData): boolean {
-        super._update(airplaneData);
+    override update(airplaneData: AirplaneData): void {
+        super.update(airplaneData);
         if (airplaneData.position == null) {
             throw new Error("AirplaneModel: data has no position");
         }
@@ -110,7 +110,6 @@ export default class AirplaneModel extends OwnableModel<AirplaneData> {
         this._position.set(this._startPosition);
         this._correction.x = this._correction.y = 0;
         this._toDestination = undefined;
-        return true;
     }
 
     /**
@@ -154,7 +153,6 @@ export default class AirplaneModel extends OwnableModel<AirplaneData> {
         const distance = this._distanceAt(gameTime);
         this._position.x = this._startPosition.x + distance * Math.cos(this._direction) + this._correction.x;
         this._position.y = this._startPosition.y + distance * Math.sin(this._direction) + this._correction.y;
-        this._emitChanged();
     }
 
     /**
@@ -168,6 +166,5 @@ export default class AirplaneModel extends OwnableModel<AirplaneData> {
         this._correction.y = from.y - position.y;
         this._position.x = from.x;
         this._position.y = from.y;
-        this._emitChanged();
     }
 }

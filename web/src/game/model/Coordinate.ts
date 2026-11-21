@@ -49,13 +49,4 @@ export default class Coordinate {
         this.x = newX || 0;
         this.y = newY || 0;
     }
-
-    equals(other: CoordinateLike | null | undefined): boolean {
-        if (!other) {
-            return false;
-        }
-        const otherX = other.x || 0;
-        const otherY = other.y || 0;
-        return (this._x === otherX && this._y === otherY);
-    }
 }
