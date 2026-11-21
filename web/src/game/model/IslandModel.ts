@@ -35,10 +35,7 @@ export default class IslandModel extends OwnableModel<wire.msg.Island.$Propertie
      * Sets the server's strength.
      */
     override set strength(strength: number) {
-        if (this._strength !== strength) {
-            this._strength = strength;
-            this._emitChanged();
-        }
+        this._strength = strength;
     }
 
     /**
@@ -47,7 +44,6 @@ export default class IslandModel extends OwnableModel<wire.msg.Island.$Propertie
      */
     addPendingLaunch(seq: number, strength: number): void {
         this._pendingLaunches.set(seq, strength);
-        this._emitChanged();
     }
 
     /**
@@ -55,15 +51,10 @@ export default class IslandModel extends OwnableModel<wire.msg.Island.$Propertie
      * the server has processed, so that the server's strength includes them.
      */
     removePendingLaunches(upToSeq: number): void {
-        let changed = false;
         for (const seq of this._pendingLaunches.keys()) {
             if (seq <= upToSeq) {
                 this._pendingLaunches.delete(seq);
-                changed = true;
             }
-        }
-        if (changed) {
-            this._emitChanged();
         }
     }
 
@@ -71,10 +62,7 @@ export default class IslandModel extends OwnableModel<wire.msg.Island.$Propertie
      * Forgets all pending launches.
      */
     clearPendingLaunches(): void {
-        if (this._pendingLaunches.size > 0) {
-            this._pendingLaunches.clear();
-            this._emitChanged();
-        }
+        this._pendingLaunches.clear();
     }
 
     get position(): Coordinate {
@@ -90,26 +78,15 @@ export default class IslandModel extends OwnableModel<wire.msg.Island.$Propertie
     }
 
     set selected(isSelected: boolean) {
-        if (this._selected !== isSelected) {
-            this._selected = isSelected;
-            this._emitChanged();
-        }
+        this._selected = isSelected;
     }
 
-    protected override _update(islandData: wire.msg.Island.$Properties): boolean {
-        let changed = super._update(islandData);
-        if (!this._position.equals(islandData.position)) {
-            if (islandData.position == null) {
-                throw new Error("IslandModel: data has no position");
-            }
-            this._position.set(islandData.position);
-            changed = true;
+    override update(islandData: wire.msg.Island.$Properties): void {
+        super.update(islandData);
+        if (islandData.position == null) {
+            throw new Error("IslandModel: data has no position");
         }
-        const size = islandData.size || 0;
-        if (this._size !== size) {
-            this._size = size;
-            changed = true;
-        }
-        return changed;
+        this._position.set(islandData.position);
+        this._size = islandData.size || 0;
     }
 }
