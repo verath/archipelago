@@ -2,7 +2,6 @@ package websocket
 
 import (
 	"compress/flate"
-	"errors"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -37,7 +36,7 @@ func strictOriginCheck(req *http.Request) bool {
 
 // Version is the version of the protocol the server implements (see
 // game.proto), which the client asks for with the "v" query parameter of the
-// URL. Clients asking for another version are rejected.
+// URL. Upgrade does not check it, the caller must reject other versions.
 const Version = "5"
 
 // UpgraderOptions configures an Upgrader. The zero value is the production
@@ -79,13 +78,6 @@ func NewUpgrader(opts UpgraderOptions) *Upgrader {
 // Upgrade upgrades the HTTP connection to WebSocket protocol.
 // Upgrade replies with an error to the client on error.
 func (h *Upgrader) Upgrade(w http.ResponseWriter, r *http.Request) (*WSConnection, error) {
-	// Verify client wanted version is current version.
-	clientWSVersion := r.URL.Query().Get("v")
-	if clientWSVersion != Version {
-		err := errors.New("version missmatch")
-		http.Error(w, http.StatusText(http.StatusBadRequest)+" (version missmatch)", http.StatusBadRequest)
-		return nil, err
-	}
 	// Upgrade to a gorilla WS connection, counting the bytes sent and
 	// received on the hijacked connection.
 	cw := &countingResponseWriter{ResponseWriter: w}

@@ -6,16 +6,13 @@ import (
 	"flag"
 	"fmt"
 	"net/http"
+	"net/http/pprof"
 	"os"
 	"os/signal"
 	"syscall"
 	"time"
 
-	"github.com/pkg/profile"
 	archipelago "github.com/verath/archipelago/lib"
-	"github.com/verath/archipelago/lib/game"
-	"github.com/verath/archipelago/lib/network/websocket"
-	"github.com/verath/archipelago/lib/session"
 	"log/slog"
 )
 
@@ -26,29 +23,28 @@ const (
 
 func main() {
 	var (
-		debug             bool
-		skipWSOriginCheck bool
-		wsCompression     bool
-		httpAddr          string
-		profileMode       string
-		lobbyWait         time.Duration
-		aiPlayers         int
-		resumeGrace       time.Duration
+		debug         bool
+		wsCompression bool
+		httpAddr      string
+		pprofAddr     string
 	)
+	opts := archipelago.DefaultOptions()
 	flag.BoolVar(&debug, "debug", false, "Set to true to log debug messages.")
-	flag.BoolVar(&skipWSOriginCheck, "skipWSOriginCheck", false, "")
+	flag.BoolVar(&opts.SkipWSOriginCheck, "skipWSOriginCheck", false, "")
 	flag.BoolVar(&wsCompression, "wsCompression", true,
 		"Negotiate permessage-deflate compression with websocket clients.")
 	flag.StringVar(&httpAddr, "addr", ":8080", "TCP address for the http server to listen on.")
-	flag.StringVar(&profileMode, "profile", "", "Enable profiling mode, one of [cpu, mem, mutex, block]")
-	flag.DurationVar(&lobbyWait, "lobbyWait", game.DefaultLobbyWait,
+	flag.StringVar(&pprofAddr, "pprofAddr", "",
+		"TCP address to serve net/http/pprof on, e.g. localhost:6060. Empty (the default) disables it.")
+	flag.DurationVar(&opts.LobbyWait, "lobbyWait", opts.LobbyWait,
 		"Time to wait for more players once enough players to start a game have joined.")
-	flag.IntVar(&aiPlayers, "aiPlayers", game.AIPlayersAuto,
+	flag.IntVar(&opts.AIPlayers, "aiPlayers", opts.AIPlayers,
 		"AI players per game: -1 fills each game up to 4 players with at least 1 AI; "+
 			"0 adds none, so a game needs at least 2 human players; n > 0 adds exactly n (at most 10).")
-	flag.DurationVar(&resumeGrace, "resumeGrace", session.DefaultGrace,
+	flag.DurationVar(&opts.ResumeGrace, "resumeGrace", opts.ResumeGrace,
 		"Time a client whose connection broke during a game has to resume it on a new connection.")
 	flag.Parse()
+	opts.DisableWSCompression = !wsCompression
 	logLevel := slog.LevelInfo
 	if debug {
 		logLevel = slog.LevelDebug
@@ -57,38 +53,35 @@ func main() {
 	if debug {
 		logger.Info("Debug logging enabled")
 	}
-	if skipWSOriginCheck {
+	if opts.SkipWSOriginCheck {
 		logger.Info("Skipping WebSocket origin check.")
 	}
 	if !wsCompression {
 		logger.Info("WebSocket compression disabled.")
 	}
 	logger.Info("HTTP server will listen", "addr", httpAddr)
-	if profileMode != "" {
-		defer startProfiling(profileMode)()
+	if pprofAddr != "" {
+		startPprofServer(logger, pprofAddr)
 	}
 	// Setup archipelago server instance.
-	coordinatorOpts := game.CoordinatorOptions{LobbyWait: lobbyWait, AIPlayers: aiPlayers}
-	wsOpts := websocket.UpgraderOptions{SkipOriginCheck: skipWSOriginCheck, DisableCompression: !wsCompression}
-	if resumeGrace <= 0 {
-		logger.Error("resumeGrace must be positive", "resumeGrace", resumeGrace)
-		os.Exit(1)
-	}
-	srvOpts := archipelago.Options{ResumeGrace: resumeGrace}
-	archipelagoServer, err := archipelago.New(logger, wsOpts, coordinatorOpts, srvOpts)
+	archipelagoServer, err := archipelago.New(logger, opts)
 	if err != nil {
 		logger.Error("Error creating archipelago", "err", err)
 		os.Exit(1)
 	}
+	// Use a mux of our own, as importing net/http/pprof registers its
+	// endpoints on http.DefaultServeMux, which must not be public.
+	mux := http.NewServeMux()
 	// Register archipelago HTTP rooted at "app/".
-	http.Handle("/app/", http.StripPrefix("/app", archipelagoServer))
+	mux.Handle("/app/", http.StripPrefix("/app", archipelagoServer))
 	// HTTP util routes.
-	http.HandleFunc("/healthcheck", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/healthcheck", func(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("OK"))
 	})
 	// Setup toplevel HTTP server.
 	httpServer := &http.Server{
 		Addr:         httpAddr,
+		Handler:      mux,
 		ReadTimeout:  httpReadTimeout,
 		WriteTimeout: httpWriteTimeout,
 	}
@@ -103,45 +96,41 @@ func main() {
 	logger.Info("Archipelago backend stopped.")
 }
 
-// startProfiling starts profiling for the given profileMode. See
-// pkg/profile. Returns a function that should be called when profiling
-// should be stopped.
-func startProfiling(profileMode string) func() {
-	switch profileMode {
-	case "cpu":
-		return profile.Start(profile.NoShutdownHook, profile.ProfilePath("."), profile.CPUProfile).Stop
-	case "mem":
-		return profile.Start(profile.NoShutdownHook, profile.ProfilePath("."), profile.MemProfile).Stop
-	case "mutex":
-		return profile.Start(profile.NoShutdownHook, profile.ProfilePath("."), profile.MutexProfile).Stop
-	case "block":
-		return profile.Start(profile.NoShutdownHook, profile.ProfilePath("."), profile.BlockProfile).Stop
-	default:
-		return func() {}
-	}
-}
-
-// lifetimeContext returns a context that is cancelled on the first SIGINT or
-// SIGTERM signal received. The application is force closed if more than one
-// signal is received.
-func lifetimeContext(logger *slog.Logger) context.Context {
-	ctx, cancel := context.WithCancel(context.Background())
-	stopSigs := []os.Signal{os.Interrupt, syscall.SIGTERM}
-	stopCh := make(chan os.Signal, len(stopSigs))
-	signal.Notify(stopCh, stopSigs...)
+// startPprofServer serves net/http/pprof on addr, on a listener of its own
+// so that the profiling endpoints are never served on the public one.
+func startPprofServer(logger *slog.Logger, addr string) {
+	mux := http.NewServeMux()
+	mux.HandleFunc("/debug/pprof/", pprof.Index)
+	mux.HandleFunc("/debug/pprof/cmdline", pprof.Cmdline)
+	mux.HandleFunc("/debug/pprof/profile", pprof.Profile)
+	mux.HandleFunc("/debug/pprof/symbol", pprof.Symbol)
+	mux.HandleFunc("/debug/pprof/trace", pprof.Trace)
+	logger.Info("pprof server will listen", "addr", addr)
 	go func() {
-		<-stopCh
-		logger.Info("Caught interrupt, shutting down")
-		cancel()
-		<-stopCh
-		logger.Error("Caught second interrupt, force closing")
-		os.Exit(1)
+		// Profiling is optional, so a failure should not take the game down.
+		err := http.ListenAndServe(addr, mux)
+		logger.Error("pprof server stopped", "err", err)
 	}()
-	return ctx
 }
 
 func runBackend(logger *slog.Logger, archipelagoServer *archipelago.Server, httpServer *http.Server) error {
-	ctx, cancel := context.WithCancel(lifetimeContext(logger))
+	// sigCtx is canceled on the first SIGINT or SIGTERM.
+	sigCtx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+	defer stop()
+	ctx, cancel := context.WithCancel(sigCtx)
+	defer cancel()
+	sigDone := make(chan struct{})
+	go func() {
+		defer close(sigDone)
+		<-ctx.Done()
+		if sigCtx.Err() == nil {
+			return
+		}
+		logger.Info("Caught interrupt, shutting down")
+		// Restore the default signal handling, so that a second signal
+		// kills the process if the shutdown hangs.
+		stop()
+	}()
 	errCh := make(chan error)
 	go func() {
 		err := archipelagoServer.Run(ctx)
@@ -161,6 +150,7 @@ func runBackend(logger *slog.Logger, archipelagoServer *archipelago.Server, http
 	err := <-errCh
 	cancel()
 	<-errCh
+	<-sigDone
 	return err
 }
 
