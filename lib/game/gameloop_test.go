@@ -75,12 +75,10 @@ func TestGameLoop_GameOverEvent(t *testing.T) {
 	game := &model.Game{}
 	gl := newGameLoop(testutil.DiscardLogger, game)
 	// GIVEN a gameLoop that add no actions per tick, tick as fast as possible
-	// and an event handler that always return no error.
+	// and an event handler that does nothing.
 	gl.perTickActionsFunc = func(time.Duration) []model.Action { return nil }
 	gl.tickInterval = 1 * time.Nanosecond
-	gl.onEvent = func(event model.Event) error {
-		return nil
-	}
+	gl.onEvent = func(event model.Event) {}
 
 	// WHEN The only action added is an action that forces game over.
 	gl.AddAction(&model.ActionForceGameOver{})
@@ -131,9 +129,8 @@ func TestGameLoop_Tick_IllegalActionAndGameOver(t *testing.T) {
 	gl := newGameLoop(testutil.DiscardLogger, game)
 	gl.perTickActionsFunc = func(time.Duration) []model.Action { return nil }
 	var handled []model.Event
-	gl.onEvent = func(event model.Event) error {
+	gl.onEvent = func(event model.Event) {
 		handled = append(handled, event)
-		return nil
 	}
 	tick := &model.EventTick{}
 	gameOver := &model.EventGameOver{}
