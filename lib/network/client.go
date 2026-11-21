@@ -75,14 +75,14 @@ type Client struct {
 }
 
 // NewClient creates a new Client, communicating on the provided connection.
-func NewClient(logger *slog.Logger, conn Connection) (*Client, error) {
+func NewClient(logger *slog.Logger, conn Connection) *Client {
 	return &Client{
 		logger:       common.ModuleLogEntryWithID(logger, "network/client"),
 		conn:         conn,
 		readQueue:    make(chan []byte, clientReadBufferSize),
 		writeQueue:   make(chan *writeRequest, clientWriteBufferSize),
 		disconnectCh: make(chan struct{}),
-	}, nil
+	}
 }
 
 // Disconnect requests that the Client disconnects. Disconnect does

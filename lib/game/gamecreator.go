@@ -1,29 +1,22 @@
 package game
 
 import (
-	"fmt"
 	"math/rand"
 	"time"
 
 	"github.com/verath/archipelago/lib/game/model"
 )
 
-func createPlayers(numPlayers int) ([]*model.Player, *model.Player, error) {
-	playerNeutral, err := model.NewPlayer()
-	if err != nil {
-		return nil, nil, fmt.Errorf("error creating playerNeutral: %w", err)
-	}
+func createPlayers(numPlayers int) ([]*model.Player, *model.Player) {
+	playerNeutral := model.NewPlayer()
 	players := make([]*model.Player, numPlayers)
 	for i := 0; i < numPlayers; i++ {
-		players[i], err = model.NewPlayer()
-		if err != nil {
-			return nil, nil, fmt.Errorf("error creating player: %w", err)
-		}
+		players[i] = model.NewPlayer()
 	}
-	return players, playerNeutral, nil
+	return players, playerNeutral
 }
 
-func createIslands(players []*model.Player, playerNeutral *model.Player, size model.Coordinate, gameRand *rand.Rand) ([]*model.Island, error) {
+func createIslands(players []*model.Player, playerNeutral *model.Player, size model.Coordinate, gameRand *rand.Rand) []*model.Island {
 	type islandData struct {
 		Size            model.IslandSize
 		Strength        int64
@@ -57,14 +50,11 @@ func createIslands(players []*model.Player, playerNeutral *model.Player, size mo
 	// Transform the map to a slice of islands.
 	var islands []*model.Island
 	for pos, data := range islandMap {
-		island, err := model.NewIsland(pos, data.Size, data.Strength, data.Player)
-		if err != nil {
-			return nil, fmt.Errorf("Error creating island (data: %v): %w", data, err)
-		}
+		island := model.NewIsland(pos, data.Size, data.Strength, data.Player)
 		island.SetGrowthRemainder(data.GrowthRemainder)
 		islands = append(islands, island)
 	}
-	return islands, nil
+	return islands
 }
 
 // createBasicGame creates a new instance of a Game model with numPlayers
@@ -75,16 +65,10 @@ func createBasicGame(numPlayers int) (*model.Game, error) {
 		size.X += 2
 		size.Y += 2
 	}
-	players, playerNeutral, err := createPlayers(numPlayers)
-	if err != nil {
-		return nil, fmt.Errorf("error creating players: %w", err)
-	}
+	players, playerNeutral := createPlayers(numPlayers)
 	seed := time.Now().UnixNano()
 	gameRand := rand.New(rand.NewSource(seed))
-	islands, err := createIslands(players, playerNeutral, size, gameRand)
-	if err != nil {
-		return nil, fmt.Errorf("Error creating islands: %w", err)
-	}
+	islands := createIslands(players, playerNeutral, size, gameRand)
 	gameBuilder := model.NewGameBuilder(size, playerNeutral)
 	for _, player := range players {
 		gameBuilder.AddPlayer(player)

@@ -151,11 +151,11 @@ func normalize(g *msg.Game) *msg.Game {
 // newRandomGame creates a game like the real game creator does: a board
 // with ~45% neutral islands and one large island per player.
 func newRandomGame(rng *rand.Rand, numPlayers int, size model.Coordinate) *model.Game {
-	pn, _ := model.NewPlayer()
+	pn := model.NewPlayer()
 	gb := model.NewGameBuilder(size, pn)
 	players := make([]*model.Player, numPlayers)
 	for i := range players {
-		players[i], _ = model.NewPlayer()
+		players[i] = model.NewPlayer()
 		gb.AddPlayer(players[i])
 	}
 	perm := rng.Perm(size.X * size.Y)
@@ -164,10 +164,10 @@ func newRandomGame(rng *rand.Rand, numPlayers int, size model.Coordinate) *model
 		pos := model.Coordinate{X: tile % size.X, Y: tile / size.X}
 		var island *model.Island
 		if i < numPlayers {
-			island, _ = model.NewIsland(pos, model.IslandSizeLarge, 20, players[i])
+			island = model.NewIsland(pos, model.IslandSizeLarge, 20, players[i])
 		} else if rng.Intn(100) < 45 {
 			s := sizes[rng.Intn(len(sizes))]
-			island, _ = model.NewIsland(pos, s, rng.Int63n(int64(s*model.IslandGrowthCap))+10, pn)
+			island = model.NewIsland(pos, s, rng.Int63n(int64(s*model.IslandGrowthCap))+10, pn)
 		} else {
 			continue
 		}

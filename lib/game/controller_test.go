@@ -15,10 +15,7 @@ import (
 func TestController_Run_BroadcastsGameStart(t *testing.T) {
 	game := model.CreateDummyGameEmpty()
 	p1, _ := game.Players()[0], game.Players()[1]
-	gameLoop, err := newGameLoop(testutil.DiscardLogger, game)
-	if err != nil {
-		t.Fatalf("expected no error creating game loop, got: %+v", err)
-	}
+	gameLoop := newGameLoop(testutil.DiscardLogger, game)
 	gameLoop.perTickActionsFunc = func(time.Duration) []model.Action { return nil }
 	gameLoop.tickInterval = 1 * time.Nanosecond
 
@@ -39,10 +36,7 @@ func TestController_Run_BroadcastsGameStart(t *testing.T) {
 			return ctx.Err()
 		},
 	}
-	player, err := newPlayerProxy(p1, client)
-	if err != nil {
-		t.Fatalf("expected no error creating player proxy, got: %+v", err)
-	}
+	player := newPlayerProxy(p1.ID(), client)
 
 	// Setup, run controller
 	ctrl, err := newController(testutil.DiscardLogger, gameLoop, []*playerProxy{player})
@@ -101,10 +95,7 @@ func TestController_PlayerEventLoop_CoalescesTicks(t *testing.T) {
 			return nil
 		},
 	}
-	player, err := newPlayerProxy(game.Players()[0], client)
-	if err != nil {
-		t.Fatalf("expected no error creating player proxy, got: %+v", err)
-	}
+	player := newPlayerProxy(game.Players()[0].ID(), client)
 	ctrl := &controller{logger: testutil.DiscardLogger}
 
 	eventCh := make(chan model.Event, eventQueueSize)

@@ -64,10 +64,7 @@ func New(logger *slog.Logger, wsOpts websocket.UpgraderOptions, coordinatorOpts 
 	if err != nil {
 		return nil, fmt.Errorf("error creating game coordinator: %w", err)
 	}
-	wsUpgrader, err := websocket.NewUpgrader(wsOpts)
-	if err != nil {
-		return nil, fmt.Errorf("error creating websocket upgrader: %w", err)
-	}
+	wsUpgrader := websocket.NewUpgrader(wsOpts)
 	srv := &Server{
 		logger:          common.ModuleLogEntry(logger, "server"),
 		gameCoordinator: gameCoordinator,
@@ -157,14 +154,8 @@ func (srv *Server) handleWSConnect() http.HandlerFunc {
 // If resume is not nil, the client is attached to that session, otherwise
 // it is added to the game coordinator to join a new game.
 func (srv *Server) newWSClient(ctx context.Context, wsConn *websocket.WSConnection, resume *session.Session) error {
-	client, err := network.NewClient(srv.logger, wsConn)
-	if err != nil {
-		return fmt.Errorf("error creating new Client from ws connection: %w", err)
-	}
-	wireClient, err := wire.NewPBClientAdapter(client)
-	if err != nil {
-		return fmt.Errorf("error creating client wire adapter: %w", err)
-	}
+	client := network.NewClient(srv.logger, wsConn)
+	wireClient := wire.NewPBClientAdapter(client)
 	// Get client context. Note that it is not tied to the request context.
 	srv.clientContextMu.RLock()
 	clientCtx := srv.clientContext()
