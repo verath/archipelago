@@ -29,16 +29,25 @@ export default class IslandSprite extends BaseSprite<IslandModel> {
     private readonly _strengthText: Text;
 
     /**
+     * The strength shown by the strength text, null before the first update.
+     */
+    private _shownStrength: number | null = null;
+
+    /**
      * The player color currently applied to the strength text.
      */
-    private _strengthTextColor: PlayerColor | null;
+    private _strengthTextColor: PlayerColor | null = null;
 
     private readonly _selectedIndicator: Sprite;
 
-    constructor(resourceHolder: ResourceHolder) {
+    /**
+     * Islands don't move or change size, so the sprite is placed and scaled
+     * here, once.
+     */
+    constructor(resourceHolder: ResourceHolder, island: IslandModel) {
         const textureIdx = Math.floor(Math.random() * ISLAND_TEXTURES.length);
         const textureId = ISLAND_TEXTURES[textureIdx];
-        super(resourceHolder, textureId);
+        super(resourceHolder, textureId, island);
 
         // Center our anchor to the middle of the tile
         this.pivot.set(TILE_WIDTH / 2, TILE_HEIGHT / 2);
@@ -46,11 +55,27 @@ export default class IslandSprite extends BaseSprite<IslandModel> {
         this._strengthText = IslandSprite._createStrengthText();
         this.addChild(this._strengthText);
 
-        this._strengthTextColor = null;
-
         this._selectedIndicator = IslandSprite._createSelectedIndicator(resourceHolder);
         this._selectedIndicator.alpha = 0;
         this.addChild(this._selectedIndicator);
+
+        // Set scale depending on the island size. Island size is 0-1,
+        // we scale that to make sure they are not too small.
+        const scale = (island.size * 0.8 + 0.2);
+        this.scale.set(scale, scale);
+        // Undo scale for selected indicator, implicitly use it as a larger
+        // touch target.
+        this._selectedIndicator.scale.set(1 / scale, 1 / scale);
+
+        // Update our position, account for anchor being in the center
+        const x = island.position.x * TILE_WIDTH + TILE_WIDTH / 2;
+        const y = island.position.y * TILE_HEIGHT + TILE_HEIGHT / 2;
+        this.position.set(x, y);
+
+        // Apply a random 90deg step rotation to sprite, to simulate variety.
+        const rotations = [0, Math.PI * 1 / 2, Math.PI, Math.PI * 3 / 2];
+        this.rotation = rotations[Math.floor(Math.random() * rotations.length)];
+        this._strengthText.rotation -= this.rotation;
 
         // Listen for clicks (pointer events cover both mouse and touch)
         this.eventMode = "static";
@@ -83,49 +108,12 @@ export default class IslandSprite extends BaseSprite<IslandModel> {
         return selectedIndicator;
     }
 
-    protected override _onAdded(): void {
-        super._onAdded();
-        const island = this._model;
-        if (island == null) {
-            throw new Error("this._model == null");
-        }
-
-        // Set scale depending on the island size. Island size is 0-1,
-        // we scale that to make sure they are not too small.
-        const scale = (island.size * 0.8 + 0.2);
-        this.scale.set(scale, scale);
-        // Undo scale for selected indicator, implicitly use it as a larger
-        // touch target.
-        this._selectedIndicator.scale.set(1 / scale, 1 / scale);
-
-        // Update our position, account for anchor being in the center
-        const x = island.position.x * TILE_WIDTH + TILE_WIDTH / 2;
-        const y = island.position.y * TILE_HEIGHT + TILE_HEIGHT / 2;
-        this.position.set(x, y);
-
-        this._sprite.tint = ownerColor(island).fill;
-        this._updateStrengthText(island);
-
-        // Apply a random 90deg step rotation to sprite, to simulate variety.
-        const rotations = [0, Math.PI * 1 / 2, Math.PI, Math.PI * 3 / 2];
-        this.rotation = rotations[Math.floor(Math.random() * rotations.length)];
-        this._strengthText.rotation -= this.rotation;
-    }
-
-    protected override _onModelChanged(): void {
-        const island = this._model;
-        if (island == null) {
-            throw new Error("this._model == null");
-        }
-
+    update(): void {
+        const island = this.model;
         this._sprite.tint = ownerColor(island).fill;
         this._updateStrengthText(island);
         // Show island selected indicator
-        if (island.selected) {
-            this._selectedIndicator.alpha = 1;
-        } else {
-            this._selectedIndicator.alpha = 0;
-        }
+        this._selectedIndicator.alpha = island.selected ? 1 : 0;
     }
 
     /**
@@ -133,11 +121,12 @@ export default class IslandSprite extends BaseSprite<IslandModel> {
      * on who owns the island
      */
     private _updateStrengthText(island: IslandModel): void {
-        if (island.strength >= 0) {
-            this._strengthText.text = "" + island.strength;
-        } else {
+        // Only set the text when it changes, as Pixi re-renders it then.
+        const strength = island.strength;
+        if (this._shownStrength !== strength) {
+            this._shownStrength = strength;
             // Negative strength => in FoW.
-            this._strengthText.text = "";
+            this._strengthText.text = (strength >= 0) ? "" + strength : "";
         }
         // Only touch the style when the color changes, as any style change
         // makes Pixi re-render the text.
@@ -150,8 +139,7 @@ export default class IslandSprite extends BaseSprite<IslandModel> {
     }
 
     private _onClicked(): void {
-        const island = this._model;
-        this.emit(EVENT_CLICK, island);
+        this.emit(EVENT_CLICK, this.model);
     }
 
     addClickListener(listener: IslandClickListener, context: unknown = null): void {
