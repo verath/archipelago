@@ -161,13 +161,11 @@ export class Archipelago {
     private async _joinGame(): Promise<void> {
         // The server automatically assigns us to a game as we connect, so we
         // wait here until the game has started.
-        while (!this._connection.hasNext() && await this._connection.waitNext()) {
-            //
-        }
-        if (!this._connection.hasNext()) {
+        // Peek, so that GameController consumes the game start.
+        const evt = await this._connection.peek();
+        if (evt === null) {
             throw new Error("error awaiting eventGameStart");
         }
-        const evt = this._connection.peekNext();
         if (evt.event !== "eventGameStart") {
             throw new Error(`unexpected server event '${evt.event}'`);
         }

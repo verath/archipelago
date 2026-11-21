@@ -10,7 +10,7 @@ import {
 } from "../../test/fixtures.ts";
 
 /** The part of Connection that GameController uses. */
-type ServerEventQueue = Pick<Connection, "hasNext" | "getNext" | "peekNext" | "waitNext" | "sendAction" | "resume">;
+type ServerEventQueue = Pick<Connection, "next" | "peek" | "sendAction" | "resume">;
 
 /**
  * A stand-in for Connection with the same queueing interface. Tests push
@@ -20,32 +20,38 @@ class FakeConnection implements ServerEventQueue {
     readonly events: ServerEvent[] = [];
     readonly sentActions: wire.msg.ActionEnvelope[] = [];
     ended = false;
-    private readonly _waiters: ((hasNext: boolean) => void)[] = [];
+    private readonly _waiters: (() => void)[] = [];
 
     push(...args: EventArgs): void {
         this.events.push(makeEventEnvelope(...args));
-        this._wake(true);
+        this._wake();
     }
 
     end(): void {
         this.ended = true;
-        this._wake(false);
+        this._wake();
     }
 
-    private _wake(value: boolean): void {
-        this._waiters.splice(0).forEach(resolve => resolve(value));
+    private _wake(): void {
+        this._waiters.splice(0).forEach(resolve => resolve());
     }
 
-    hasNext(): boolean { return this.events.length > 0; }
-    // Like Connection, throw rather than return undefined when empty.
-    getNext(): ServerEvent { return defined(this.events.shift()); }
-    peekNext(): ServerEvent { return defined(this.events[0]); }
-
-    waitNext(): Promise<boolean> {
-        if (this.ended) {
-            return Promise.resolve(false);
+    async next(): Promise<ServerEvent | null> {
+        const event = await this.peek();
+        if (event !== null) {
+            this.events.shift();
         }
-        return new Promise(resolve => this._waiters.push(resolve));
+        return event;
+    }
+
+    async peek(): Promise<ServerEvent | null> {
+        while (this.events.length === 0) {
+            if (this.ended) {
+                return null;
+            }
+            await new Promise<void>(resolve => this._waiters.push(resolve));
+        }
+        return this.events[0];
     }
 
     /** What each resume() call resolves to, in order; false when empty. */
@@ -146,7 +152,7 @@ describe("GameController.run", () => {
         connection.push("eventGameSnapshot", snapshotOf(TWO_ISLANDS()));
         await controller.run();
         expect(model.islands).toHaveLength(0);
-        expect(connection.hasNext()).toBe(true);
+        expect(connection.events).toHaveLength(1);
     });
 
     it("resolves as game over with an empty winner when the connection ends", async () => {
