@@ -438,4 +438,21 @@ describe("GameModel.interpolate", () => {
         expect(plane.position.x).toBeCloseTo(1.495);
         expect(plane.position.y).toBeCloseTo(1);
     });
+
+    it("does nothing once stopped", () => {
+        let now = 0;
+        const model = new GameModel(() => now);
+        model.myPlayerId = "me";
+        model.applySnapshot(makeSnapshot(makeGame({
+            players: [makePlayer("me"), makePlayer("enemy")],
+            islands: [makeIsland("mine", 2, 2, "me", 10)],
+            airplanes: [makeAirplane("a1", 1, 1, "me", 3, 0, 0.001)],
+        }), 1, 0));
+        const plane = defined(model.airplaneById("a1"));
+
+        model.stop();
+        now = 500;
+        model.interpolate(500);
+        expect(plane.position.x).toBe(1);
+    });
 });

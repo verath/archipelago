@@ -1,5 +1,3 @@
-import { Ticker } from "pixi.js";
-
 import type Connection from "../../network/Connection.ts";
 import type { ServerEvent } from "../../network/Connection.ts";
 import { wire } from "../../wire/proto_bundle.js";
@@ -34,8 +32,6 @@ export default class GameController {
     private readonly _connection: Connection;
 
     private readonly _gameModel: GameModel;
-
-    private _lastUpdateMS = 0;
 
     private _isGameOver = false;
 
@@ -102,13 +98,6 @@ export default class GameController {
             seq,
         });
         this._connection.sendAction(actEnvelope);
-    }
-
-    private _interpolate(): void {
-        const now = performance.now();
-        const delta = now - (this._lastUpdateMS || now);
-        this._lastUpdateMS = now;
-        this._gameModel.interpolate(delta);
     }
 
     private _onGameOver(winnerId: string | null): void {
@@ -218,11 +207,7 @@ export default class GameController {
     }
 
     async run(): Promise<GameResult> {
-        const ticker = new Ticker();
-        ticker.add(this._interpolate, this);
-
         let gameResult: GameResult;
-        ticker.start();
         try {
             for (; ;) {
                 if (this._isGameOver) {
@@ -256,7 +241,7 @@ export default class GameController {
             }
         } finally {
             // Also stop interpolating if handling a server event throws.
-            ticker.destroy();
+            this._gameModel.stop();
         }
 
         return gameResult;

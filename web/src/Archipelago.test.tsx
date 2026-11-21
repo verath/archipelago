@@ -10,7 +10,6 @@ vi.mock("pixi.js", () => ({
         canvas: document.createElement("canvas"),
         destroy: vi.fn(),
     })),
-    Ticker: class { add() { } start() { } destroy() { } },
 }));
 vi.mock("./game/view/GameView.ts", () => ({
     default: class {

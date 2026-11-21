@@ -342,8 +342,13 @@ const GameViewWrapper = ({ gameModel, resourceHolder, dispatch }: GameViewWrappe
             });
 
             // Start the GameView rendering loop.
+            // Interpolating right before rendering keeps the airplanes from
+            // lagging a frame behind.
             let renderRequestId: number;
-            const render = (_timestamp: DOMHighResTimeStamp) => {
+            let lastTimestamp: DOMHighResTimeStamp | null = null;
+            const render = (timestamp: DOMHighResTimeStamp) => {
+                gameModel.interpolate(lastTimestamp === null ? 0 : timestamp - lastTimestamp);
+                lastTimestamp = timestamp;
                 gameView.render();
                 renderRequestId = window.requestAnimationFrame(render);
             };
