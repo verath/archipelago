@@ -18,10 +18,7 @@ import (
 // created from opts. Upgraded connections are sent on the returned channel.
 func startServer(t *testing.T, opts UpgraderOptions) (string, <-chan *WSConnection) {
 	t.Helper()
-	upgrader, err := NewUpgrader(opts)
-	if err != nil {
-		t.Fatalf("NewUpgrader: %v", err)
-	}
+	upgrader := NewUpgrader(opts)
 	connCh := make(chan *WSConnection, 1)
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		wsConn, err := upgrader.Upgrade(w, r)

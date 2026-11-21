@@ -156,7 +156,7 @@ func (g *Game) Copy() *Game {
 
 // newGame constructs a new game from the given parameters. Use GameBuilder to
 // perform validation on the parameters before creation.
-func newGame(size Coordinate, playerNeutral *Player, players []*Player, islands []*Island, airplanes []*Airplane) (*Game, error) {
+func newGame(size Coordinate, playerNeutral *Player, players []*Player, islands []*Island, airplanes []*Airplane) *Game {
 	id := GameID(NextModelID())
 	return &Game{
 		id:            id,
@@ -165,7 +165,7 @@ func newGame(size Coordinate, playerNeutral *Player, players []*Player, islands 
 		players:       players,
 		islands:       islands,
 		airplanes:     airplanes,
-	}, nil
+	}
 }
 
 // GameBuilder implements a builder patter for creating a new Game instance.
@@ -249,7 +249,7 @@ func (gb *GameBuilder) Build() (*Game, error) {
 			return nil, errors.New("island owner did not exist")
 		}
 	}
-	return newGame(gb.size, gb.playerNeutral, gb.players, gb.islands, gb.airplanes)
+	return newGame(gb.size, gb.playerNeutral, gb.players, gb.islands, gb.airplanes), nil
 }
 
 // BuildOrPanic calls Build and panics if Build returns an error.

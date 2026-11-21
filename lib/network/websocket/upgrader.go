@@ -59,7 +59,7 @@ type Upgrader struct {
 }
 
 // NewUpgrader creates a new Upgrader.
-func NewUpgrader(opts UpgraderOptions) (*Upgrader, error) {
+func NewUpgrader(opts UpgraderOptions) *Upgrader {
 	checkOriginFunc := strictOriginCheck
 	if opts.SkipOriginCheck {
 		checkOriginFunc = noOriginCheck
@@ -73,7 +73,7 @@ func NewUpgrader(opts UpgraderOptions) (*Upgrader, error) {
 			// takeover, i.e. each message is compressed on its own.
 			EnableCompression: !opts.DisableCompression,
 		},
-	}, nil
+	}
 }
 
 // Upgrade upgrades the HTTP connection to WebSocket protocol.
@@ -101,11 +101,5 @@ func (h *Upgrader) Upgrade(w http.ResponseWriter, r *http.Request) (*WSConnectio
 		return nil, fmt.Errorf("setting compression level failed: %w", err)
 	}
 	// Wrap in our WSConnection.
-	wsConn, err := newWSConnection(gorillaWSConn, cw.conn)
-	if err != nil {
-		// The connection is hijacked, an HTTP error can no longer be sent.
-		gorillaWSConn.Close()
-		return nil, fmt.Errorf("failed creating WSConnection: %w", err)
-	}
-	return wsConn, nil
+	return newWSConnection(gorillaWSConn, cw.conn), nil
 }

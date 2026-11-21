@@ -23,10 +23,10 @@ type PBClientAdapter struct {
 
 // NewPBClientAdapter creates a new PBClientAdapter wrapping the provided
 // client.
-func NewPBClientAdapter(client Client) (*PBClientAdapter, error) {
+func NewPBClientAdapter(client Client) *PBClientAdapter {
 	return &PBClientAdapter{
 		client: client,
-	}, nil
+	}
 }
 
 // Disconnect disconnects underlying client.

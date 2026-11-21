@@ -43,19 +43,19 @@ type Island struct {
 
 // NewIsland creates a new Island from the provided values, automatically
 // choosing an ID.
-func NewIsland(position Coordinate, size IslandSize, strength int64, owner *Player) (*Island, error) {
+func NewIsland(position Coordinate, size IslandSize, strength int64, owner *Player) *Island {
 	id := IslandID(NextModelID())
 	return NewIslandWithID(id, position, size, strength, owner)
 }
 
 // NewIslandWithID creats a new Island from the provided values.
-func NewIslandWithID(id IslandID, position Coordinate, size IslandSize, strength int64, owner *Player) (*Island, error) {
+func NewIslandWithID(id IslandID, position Coordinate, size IslandSize, strength int64, owner *Player) *Island {
 	return &Island{
 		Army:     NewArmy(owner, strength),
 		id:       id,
 		position: position,
 		size:     size,
-	}, nil
+	}
 }
 
 // ID returns the IslandID of the Island.

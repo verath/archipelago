@@ -58,14 +58,11 @@ type WSConnection struct {
 
 // newWSConnection creates a new WSConnection, wrapping the provided gorilla
 // wsConn. netConn should be the connection wsConn uses, or nil.
-func newWSConnection(wsConn *websocket.Conn, netConn *countingConn) (*WSConnection, error) {
-	if wsConn == nil {
-		return nil, errors.New("wsConn cannot be nil")
-	}
+func newWSConnection(wsConn *websocket.Conn, netConn *countingConn) *WSConnection {
 	return &WSConnection{
 		wsConn:  wsConn,
 		netConn: netConn,
-	}, nil
+	}
 }
 
 // Stats returns the traffic counters of the connection. Safe to call
