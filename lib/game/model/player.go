@@ -92,12 +92,6 @@ func (p *Player) SetLastLaunchSeq(seq uint32) {
 	p.lastLaunchSeq = seq
 }
 
-// Equals compares two players for equality. Equality is determined
-// by the ID of each player. Always returns false if other is nil.
-func (p *Player) Equals(other *Player) bool {
-	return other != nil && p.id == other.id
-}
-
 // Copy performs a deep copy of the Player, returning the copy.
 func (p *Player) Copy() *Player {
 	fogOfWar := make(map[Coordinate]struct{}, len(p.fogOfWar))

@@ -164,10 +164,10 @@ func newRandomGame(rng *rand.Rand, numPlayers int, size model.Coordinate) *model
 		pos := model.Coordinate{X: tile % size.X, Y: tile / size.X}
 		var island *model.Island
 		if i < numPlayers {
-			island = model.NewIsland(pos, model.IslandSizeLarge, 20, players[i])
+			island = model.NewIsland(pos, model.IslandSizeLarge, 20, players[i].ID())
 		} else if rng.Intn(100) < 45 {
 			s := sizes[rng.Intn(len(sizes))]
-			island = model.NewIsland(pos, s, rng.Int63n(int64(s*model.IslandGrowthCap))+10, pn)
+			island = model.NewIsland(pos, s, rng.Int63n(int64(s*model.IslandGrowthCap))+10, pn.ID())
 		} else {
 			continue
 		}
@@ -187,7 +187,7 @@ func simulate(rng *rand.Rand, game *model.Game, ticks int, onTick func(tick int,
 			}
 			var mine []*model.Island
 			for _, island := range game.Islands() {
-				if island.IsOwnedBy(p) {
+				if island.IsOwnedBy(p.ID()) {
 					mine = append(mine, island)
 				}
 			}
@@ -354,7 +354,7 @@ func TestDeltaEncoder_Islands(t *testing.T) {
 	// An island taken over by the neutral player, with strength 0, which
 	// proto3 leaves out of the encoding.
 	island := game.Island("p1")
-	island.SetOwner(game.PlayerNeutral())
+	island.SetOwner(game.PlayerNeutral().ID())
 	island.SetStrength(0)
 	d := mustDelta(t, e.encodeTick(tick(game)))
 	want := []*msg.IslandUpdate{{Id: "p1", Army: &msg.Army{OwnerId: string(game.PlayerNeutral().ID()), Strength: 0}}}

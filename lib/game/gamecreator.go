@@ -50,7 +50,7 @@ func createIslands(players []*model.Player, playerNeutral *model.Player, size mo
 	// Transform the map to a slice of islands.
 	var islands []*model.Island
 	for pos, data := range islandMap {
-		island := model.NewIsland(pos, data.Size, data.Strength, data.Player)
+		island := model.NewIsland(pos, data.Size, data.Strength, data.Player.ID())
 		island.SetGrowthRemainder(data.GrowthRemainder)
 		islands = append(islands, island)
 	}

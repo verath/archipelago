@@ -55,7 +55,7 @@ func (*ActionTick) updateAirplanes(g *Game, delta time.Duration) {
 		airplaneStr := airplane.Strength()
 		targetStr := target.Strength()
 
-		if target.IsOwnedBy(airplane.Owner()) {
+		if target.Owner() == airplane.Owner() {
 			target.SetStrength(targetStr + airplaneStr)
 		} else {
 			if targetStr > airplaneStr {
@@ -72,7 +72,7 @@ func (*ActionTick) updateAirplanes(g *Game, delta time.Duration) {
 				// If they are equal, the owner is set to the neutral player
 				target.SetStrength(0)
 				target.SetGrowthRemainder(0)
-				target.SetOwner(g.PlayerNeutral())
+				target.SetOwner(g.PlayerNeutral().ID())
 			}
 		}
 
@@ -85,7 +85,7 @@ func (*ActionTick) updateIslands(g *Game, delta time.Duration) {
 		size := float64(island.Size())
 		// Determine change for delta, based on island size.
 		var change time.Duration
-		if island.Owner().Equals(g.PlayerNeutral()) {
+		if island.IsOwnedBy(g.PlayerNeutral().ID()) {
 			// Armies on neutral islands decrease over time, scaled inversely
 			// by island size.
 			change = -1 * time.Duration((1-size)*float64(delta))
@@ -118,12 +118,12 @@ func (*ActionTick) updateIslands(g *Game, delta time.Duration) {
 // player has control of at least one island or airplane.
 func (*ActionTick) isPlayerAlive(g *Game, p *Player) bool {
 	for _, island := range g.Islands() {
-		if island.Owner().Equals(p) {
+		if island.IsOwnedBy(p.ID()) {
 			return true
 		}
 	}
 	for _, airplane := range g.Airplanes() {
-		if airplane.Owner().Equals(p) {
+		if airplane.IsOwnedBy(p.ID()) {
 			return true
 		}
 	}
@@ -137,7 +137,7 @@ func (*ActionTick) isPlayerAlive(g *Game, p *Player) bool {
 func (*ActionTick) revivePlayer(g *Game, player *Player) bool {
 	neutralIslands := make([]*Island, 0)
 	for _, island := range g.Islands() {
-		if island.Owner().Equals(g.PlayerNeutral()) && island.Strength() > 0 {
+		if island.IsOwnedBy(g.PlayerNeutral().ID()) && island.Strength() > 0 {
 			neutralIslands = append(neutralIslands, island)
 		}
 	}
@@ -155,7 +155,7 @@ func (*ActionTick) revivePlayer(g *Game, player *Player) bool {
 	if island.Position().Y > g.Size().Y/2 {
 		origin = Coordinate{X: island.Position().X, Y: g.Size().Y}
 	}
-	airplane := NewAirplane(origin, island, player, strength)
+	airplane := NewAirplane(origin, island, player.ID(), strength)
 	airplane.SetSpeed(AirplaneDefaultSpeed * 2)
 	g.AddAirplane(airplane)
 	g.SetReviveCount(reviveCount + 1)

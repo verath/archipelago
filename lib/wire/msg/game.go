@@ -73,7 +73,7 @@ func EncodePlayerState(playerState model.PlayerState) PlayerState {
 func EncodeArmy(army *model.Army) *Army {
 	return &Army{
 		Strength: int32(army.Strength()),
-		OwnerId:  string(army.Owner().ID()),
+		OwnerId:  string(army.Owner()),
 	}
 }
 
@@ -82,13 +82,13 @@ func EncodeArmy(army *model.Army) *Army {
 func EncodeAirplane(airplane *model.Airplane, viewer model.PlayerID) *Airplane {
 	wireAirplane := &Airplane{
 		Id:        string(airplane.ID()),
-		Army:      EncodeArmy(airplane.Army),
+		Army:      EncodeArmy(&airplane.Army),
 		Position:  EncodeFloatCoordinate(airplane.Position()),
 		Direction: float32(airplane.Direction()),
 		Speed:     float32(airplane.Speed() * float64(time.Millisecond)),
 		LaunchSeq: airplane.LaunchSeq(),
 	}
-	if airplane.Owner().ID() == viewer {
+	if airplane.Owner() == viewer {
 		wireAirplane.DestinationId = string(airplane.Destination())
 	}
 	return wireAirplane
@@ -98,7 +98,7 @@ func EncodeAirplane(airplane *model.Airplane, viewer model.PlayerID) *Airplane {
 func EncodeIsland(island *model.Island) *Island {
 	return &Island{
 		Id:       string(island.ID()),
-		Army:     EncodeArmy(island.Army),
+		Army:     EncodeArmy(&island.Army),
 		Position: EncodeCoordinate(island.Position()),
 		Size:     float32(island.Size()),
 	}
