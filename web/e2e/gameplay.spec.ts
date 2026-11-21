@@ -54,11 +54,13 @@ test.describe("launching an airplane", () => {
         const me = state.myPlayerId;
         const origin = myIsland(state)!;
 
-        // Target the nearest neutral island in sight (strength >= 0).
+        // Target the farthest neutral island in sight (strength >= 0; a
+        // large island sees 2 tiles around it), so that the airplane flies
+        // for several seconds (1 tile per 3s) while we sample it below.
         const dist = (i: TestHookIsland) => Math.hypot(i.position.x - origin.position.x, i.position.y - origin.position.y);
         const targets = state.islands
             .filter((i) => i.ownerId === state.neutralPlayerId && i.strength >= 0)
-            .sort((a, b) => dist(a) - dist(b));
+            .sort((a, b) => dist(b) - dist(a));
         expect(targets.length, "a neutral island in sight").toBeGreaterThan(0);
         const target = targets[0];
 
@@ -85,21 +87,31 @@ test.describe("launching an airplane", () => {
         expect(afterLaunch.strength).toBeLessThan(before);
         expect(afterLaunch.strength).toBeLessThanOrEqual(Math.ceil(before / 2) + 2);
 
-        // The client moves the airplane itself: sampled on
-        // every animation frame for 400 ms (at most 2 server messages), it
-        // gets closer to the target on each frame, not only when a message
-        // arrives. Sampled in the page, as a gameState() round trip can take
-        // longer than a frame in CI.
+        // The client moves the airplane itself: the server sends an airplane
+        // once (later deltas only update its army), so any movement between
+        // frames is the client's. Sampled on a number of animation frames,
+        // not for a fixed time: headless Chromium renders WebGL in software,
+        // and on a busy CI runner frames can be 100-500 ms apart. Sampled in
+        // the page, as a gameState() round trip can take longer than a frame.
+        //
+        // First let the correction from the replaced local airplane fade
+        // (time constant 150 ms, see AirplaneModel), as it can briefly move
+        // the airplane back when the local one was ahead.
         const distances = await page.evaluate(({ id, target }) => new Promise<number[]>((resolve) => {
+            const FRAMES = 8;
             const samples: number[] = [];
-            const end = performance.now() + 400;
+            const start = performance.now() + 500;
+            const end = start + 5_000;
             const sample = () => {
+                const now = performance.now();
                 const a = window.__archipelagoTest!.airplanes().find((p) => p.id === id);
-                if (a == null || performance.now() > end) {
+                if (a == null || samples.length >= FRAMES || now > end) {
                     resolve(samples); // Done, or arrived already.
                     return;
                 }
-                samples.push(Math.hypot(a.position.x - target.x, a.position.y - target.y));
+                if (now >= start) {
+                    samples.push(Math.hypot(a.position.x - target.x, a.position.y - target.y));
+                }
                 requestAnimationFrame(sample);
             };
             requestAnimationFrame(sample);

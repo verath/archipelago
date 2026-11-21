@@ -36,6 +36,8 @@ type attachment struct {
 	client game.Client
 	// detachedCh is closed when the client is detached from the Session.
 	detachedCh chan struct{}
+	// attaches is Session.attaches when the client was attached.
+	attaches uint64
 }
 
 // A Session is a game.Client for a player that can survive the player's
@@ -65,6 +67,8 @@ type Session struct {
 	mu sync.Mutex
 	// cur is the attached connection, nil while detached.
 	cur *attachment
+	// attaches counts the calls to Attach, see leave.
+	attaches uint64
 	// started is set once a PlayerEventGameStart was written to a
 	// connection, i.e. the client knows the token.
 	started bool
@@ -231,13 +235,15 @@ func (s *Session) ReadPlayerAction(ctx context.Context) (model.PlayerAction, err
 }
 
 // leave ends the Session because the client of att closed its connection on
-// purpose, unless another connection was attached meanwhile. Reports
-// whether the Session has ended.
+// purpose, unless another connection was attached, or is being attached by
+// Attach, meanwhile. Reports whether the Session has ended.
 func (s *Session) leave(att *attachment) bool {
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	// att may already be detached, by the watcher of its DisconnectCh.
-	if s.cur == att || s.cur == nil {
+	// att may already be detached, by the watcher of its DisconnectCh, but
+	// not replaced: if an Attach started since att was attached, a newer
+	// connection is (being) attached, and the Session goes on with it.
+	if s.cur == att || (s.cur == nil && att.attaches == s.attaches) {
 		s.endLocked()
 	}
 	return s.ended
@@ -264,6 +270,7 @@ func (s *Session) Attach(ctx context.Context, client game.Client) (err error) {
 		s.mu.Unlock()
 		return err
 	}
+	s.attaches++
 	s.dropLocked()
 	s.stopGraceLocked()
 	s.mu.Unlock()
@@ -340,7 +347,7 @@ type peerCloser interface {
 // attachLocked makes client the current connection, and starts watching
 // for it to disconnect.
 func (s *Session) attachLocked(client game.Client) {
-	att := &attachment{client: client, detachedCh: make(chan struct{})}
+	att := &attachment{client: client, detachedCh: make(chan struct{}), attaches: s.attaches}
 	s.cur = att
 	close(s.attachCh)
 	s.attachCh = make(chan struct{})
