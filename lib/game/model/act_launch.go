@@ -53,7 +53,7 @@ func (act *actionLaunch) Apply(game *Game) ([]Event, error) {
 	if fromIsland.ID() == toIsland.ID() {
 		return nil, NewIllegalActionError(errors.New("fromIsland == toIsland"))
 	}
-	if !fromIsland.IsOwnedBy(owningPlayer) {
+	if !fromIsland.IsOwnedBy(owningPlayer.ID()) {
 		return nil, NewIllegalActionError(errors.New("fromIsland is not owned by sending player"))
 	}
 	if fromIsland.Strength() < 2 {
@@ -63,7 +63,7 @@ func (act *actionLaunch) Apply(game *Game) ([]Event, error) {
 	islandStr := fromIsland.Strength()
 	airplaneStr := islandStr / 2
 	fromIsland.SetStrength(islandStr - airplaneStr)
-	airplane := NewAirplane(fromIsland.Position(), toIsland, owningPlayer, airplaneStr)
+	airplane := NewAirplane(fromIsland.Position(), toIsland, owningPlayer.ID(), airplaneStr)
 	airplane.SetLaunchSeq(act.Seq)
 	game.AddAirplane(airplane)
 	return nil, nil

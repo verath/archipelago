@@ -27,7 +27,7 @@ const IslandGrowthCap = 100.0
 // Island represents an Island in the game. An Island has a fixed position
 // and an army controlled by some player.
 type Island struct {
-	*Army
+	Army
 
 	id       IslandID
 	position Coordinate
@@ -43,13 +43,13 @@ type Island struct {
 
 // NewIsland creates a new Island from the provided values, automatically
 // choosing an ID.
-func NewIsland(position Coordinate, size IslandSize, strength int64, owner *Player) *Island {
+func NewIsland(position Coordinate, size IslandSize, strength int64, owner PlayerID) *Island {
 	id := IslandID(NextModelID())
 	return NewIslandWithID(id, position, size, strength, owner)
 }
 
 // NewIslandWithID creats a new Island from the provided values.
-func NewIslandWithID(id IslandID, position Coordinate, size IslandSize, strength int64, owner *Player) *Island {
+func NewIslandWithID(id IslandID, position Coordinate, size IslandSize, strength int64, owner PlayerID) *Island {
 	return &Island{
 		Army:     NewArmy(owner, strength),
 		id:       id,
@@ -89,7 +89,7 @@ func (i *Island) SetGrowthRemainder(growthRemainder time.Duration) {
 // Copy performs a deep copy of the Island, returning the copy.
 func (i *Island) Copy() *Island {
 	return &Island{
-		Army:            i.Army.Copy(),
+		Army:            i.Army,
 		id:              i.id,
 		position:        i.position,
 		size:            i.size,

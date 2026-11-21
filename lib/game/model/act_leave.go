@@ -33,14 +33,14 @@ func (a *actionLeave) Apply(game *Game) ([]Event, error) {
 	}
 	// Set ownership of leaving player's islands to neutral player
 	for _, island := range game.Islands() {
-		if island.IsOwnedBy(leavingPlayer) {
-			island.SetOwner(neutralPlayer)
+		if island.IsOwnedBy(leavingPlayer.ID()) {
+			island.SetOwner(neutralPlayer.ID())
 		}
 	}
 	// Set ownership of leaving player's airplanes to neutral player
 	for _, airplane := range game.Airplanes() {
-		if airplane.IsOwnedBy(leavingPlayer) {
-			airplane.SetOwner(neutralPlayer)
+		if airplane.IsOwnedBy(leavingPlayer.ID()) {
+			airplane.SetOwner(neutralPlayer.ID())
 		}
 	}
 	leavingPlayer.SetState(LeftGame)

@@ -245,7 +245,7 @@ func (gb *GameBuilder) Build() (*Game, error) {
 				return nil, fmt.Errorf("Islands has same position (coord: %v)", island.position)
 			}
 		}
-		if _, ok := playerIDs[island.Owner().ID()]; !ok {
+		if _, ok := playerIDs[island.Owner()]; !ok {
 			return nil, errors.New("island owner did not exist")
 		}
 	}
