@@ -1,4 +1,3 @@
-import BaseModel from "./BaseModel.ts";
 import type GameModel from "./GameModel.ts";
 import { type PlayerColor, PLAYER_COLOR_NOT_SET, PLAYER_COLOR_SELF, PLAYER_COLOR_NEUTRAL } from "./PlayerColors.ts";
 import { wire } from "../../wire/proto_bundle.js";
@@ -13,9 +12,11 @@ export interface PlayerData extends wire.msg.Player.$Properties {
     color: PlayerColor;
 }
 
-export default class PlayerModel extends BaseModel<PlayerData> {
+export default class PlayerModel {
 
     private readonly _gameModel: GameModel;
+
+    private _id: string | null = null;
 
     /**
      * The color of this player.
@@ -25,8 +26,11 @@ export default class PlayerModel extends BaseModel<PlayerData> {
     private _state: PlayerState = "ALIVE";
 
     constructor(gameModel: GameModel) {
-        super();
         this._gameModel = gameModel;
+    }
+
+    get id(): string | null {
+        return this._id;
     }
 
     /**
@@ -64,29 +68,19 @@ export default class PlayerModel extends BaseModel<PlayerData> {
     }
 
     /**
-     * Updates only the state, as sent in a delta. A change event is emitted
-     * if it changed.
+     * Updates only the state, as sent in a delta.
      */
     updateState(state: wire.msg.PlayerState | null | undefined): void {
-        const playerState = decodePlayerState(state);
-        if (this._state !== playerState) {
-            this._state = playerState;
-            this._emitChanged();
-        }
+        this._state = decodePlayerState(state);
     }
 
-    protected override _update(playerData: PlayerData): boolean {
-        let changed = super._update(playerData);
-        if (this._color !== playerData.color) {
-            this._color = playerData.color;
-            changed = true;
-        }
-        const playerState = decodePlayerState(playerData.state);
-        if (this._state !== playerState) {
-            this._state = playerState;
-            changed = true;
-        }
-        return changed;
+    /**
+     * Updates the player from the given data.
+     */
+    update(playerData: PlayerData): void {
+        this._id = playerData.id ?? null;
+        this._color = playerData.color;
+        this._state = decodePlayerState(playerData.state);
     }
 }
 

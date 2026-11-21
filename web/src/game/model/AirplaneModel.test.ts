@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from "vitest";
+import { describe, it, expect } from "vitest";
 // GameModel must be imported first: AirplaneModel -> GameModel ->
 // LocalAirplaneModel -> AirplaneModel is a cycle that only resolves when
 // entered through GameModel (as the app does).
@@ -60,14 +60,11 @@ describe("AirplaneModel", () => {
     it("advances its displayed position to the game time", () => {
         const plane = new AirplaneModel(newGame());
         plane.update({ ...makeAirplane("a", 0, 0, "me", 5, Math.PI / 2, 0.002), gameTime: 0 });
-        const listener = vi.fn();
-        plane.addChangeListener(listener);
 
         plane.advance(100, 16);
 
         expect(plane.position.x).toBeCloseTo(0);
         expect(plane.position.y).toBeCloseTo(0.2);
-        expect(listener).toHaveBeenCalledTimes(1);
     });
 
     it("smoothly corrects from another position", () => {
