@@ -27,7 +27,7 @@ func generateFogOfWar(g *Game, player *Player) map[Coordinate]struct{} {
 	}
 	// Clear FoW from tiles around islands.
 	for _, island := range g.Islands() {
-		if island.IsOwnedBy(player) {
+		if island.IsOwnedBy(player.ID()) {
 			if island.Size() == IslandSizeLarge {
 				clearArea(island.Position(), 2)
 			} else {
@@ -37,7 +37,7 @@ func generateFogOfWar(g *Game, player *Player) map[Coordinate]struct{} {
 	}
 	// Clear FoW from tiles around airplanes.
 	for _, airplane := range g.Airplanes() {
-		if airplane.IsOwnedBy(player) {
+		if airplane.IsOwnedBy(player.ID()) {
 			clearArea(airplane.Position().ToCoordinate(), 1)
 		}
 	}

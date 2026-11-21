@@ -68,11 +68,11 @@ func TestEventTick_ToPlayerEvent_HidesOtherPlayersLaunchSeqs(t *testing.T) {
 	}
 	for _, airplane := range evt.Game.Airplanes() {
 		want := uint32(0)
-		if airplane.IsOwnedBy(p1) {
+		if airplane.IsOwnedBy(p1.ID()) {
 			want = 1
 		}
 		if got := airplane.LaunchSeq(); got != want {
-			t.Errorf("airplane owned by %s: LaunchSeq() = %d, want %d", airplane.Owner().ID(), got, want)
+			t.Errorf("airplane owned by %s: LaunchSeq() = %d, want %d", airplane.Owner(), got, want)
 		}
 	}
 	// The original game is not modified.

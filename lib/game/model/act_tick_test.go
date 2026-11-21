@@ -39,7 +39,7 @@ func TestTickAction_Apply_Airplanes(t *testing.T) {
 	toIsland := game.Island("bottom-left")
 
 	// Add an airplane from 0,0 -> 0,8, moving at a speed of one coordinate/sec
-	airplane := NewAirplane(fromIsland.Position(), toIsland, p1, 10)
+	airplane := NewAirplane(fromIsland.Position(), toIsland, p1.ID(), 10)
 	airplane.SetSpeed(1 / float64(time.Second))
 	game.AddAirplane(airplane)
 
@@ -63,7 +63,7 @@ func TestTickAction_Apply_Airplane_Arrival(t *testing.T) {
 	toIsland := game.Island("bottom-left")
 
 	// Add an airplane from 0,0 -> 0,8, moving at a speed of one coordinate/sec
-	airplane := NewAirplane(fromIsland.Position(), toIsland, p1, 10)
+	airplane := NewAirplane(fromIsland.Position(), toIsland, p1.ID(), 10)
 	airplane.SetSpeed(1 / float64(time.Second))
 	game.AddAirplane(airplane)
 
@@ -138,7 +138,7 @@ func TestTickAction_Apply_Player_Revive(t *testing.T) {
 	// the neutral player.
 	game := CreateDummyGameSimple()
 	p1, p2 := game.Players()[0], game.Players()[1]
-	game.Island("p1").SetOwner(p2)
+	game.Island("p1").SetOwner(p2.ID())
 
 	// WHEN applied twice (Alive-[1]->PendingRevival-[2]->Alive)
 	ta := ActionTick{1 * time.Second}
@@ -154,7 +154,7 @@ func TestTickAction_Apply_Player_Revive(t *testing.T) {
 	}
 	p1HasAirplane := false
 	for _, airplane := range game.Airplanes() {
-		if airplane.Owner().Equals(p1) {
+		if airplane.IsOwnedBy(p1.ID()) {
 			p1HasAirplane = true
 			break
 		}
@@ -170,8 +170,8 @@ func TestTickAction_Apply_Player_Revive_Unique_Island(t *testing.T) {
 	game := CreateDummyGameSimple()
 	p1, p2 := game.Players()[0], game.Players()[1]
 	pn := game.PlayerNeutral()
-	game.Island("p1").SetOwner(pn)
-	game.Island("p2").SetOwner(pn)
+	game.Island("p1").SetOwner(pn.ID())
+	game.Island("p2").SetOwner(pn.ID())
 
 	// WHEN applied twice (Alive-[1]->PendingRevival-[2]->Alive)
 	ta := ActionTick{1 * time.Second}
@@ -186,9 +186,9 @@ func TestTickAction_Apply_Player_Revive_Unique_Island(t *testing.T) {
 	var p1AirplaneTarget *Island
 	var p2AirplaneTarget *Island
 	for _, airplane := range game.Airplanes() {
-		if airplane.Owner().Equals(p1) {
+		if airplane.IsOwnedBy(p1.ID()) {
 			p1AirplaneTarget = game.Island(airplane.Destination())
-		} else if airplane.Owner().Equals(p2) {
+		} else if airplane.IsOwnedBy(p2.ID()) {
 			p2AirplaneTarget = game.Island(airplane.Destination())
 		}
 	}
@@ -202,7 +202,7 @@ func TestTickAction_Apply_Player_Die(t *testing.T) {
 	game := CreateDummyGameSimple()
 	p1, p2 := game.Players()[0], game.Players()[1]
 	for _, island := range game.Islands() {
-		island.SetOwner(p2)
+		island.SetOwner(p2.ID())
 	}
 	// WHEN tick applied twice (Alive-[1]->PendingRevival-[2]->Dead).
 	ta := ActionTick{1 * time.Second}

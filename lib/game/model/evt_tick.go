@@ -37,13 +37,13 @@ func (*EventTick) applyFogOfWar(g *Game, player *Player) {
 	// Clear fog of war data and launch seqs of other players, they are only
 	// meaningful to the player itself.
 	for _, p := range g.Players() {
-		if !p.Equals(player) {
+		if p != player {
 			p.SetFogOfWar(nil)
 			p.SetLastLaunchSeq(0)
 		}
 	}
 	for _, airplane := range g.Airplanes() {
-		if !airplane.IsOwnedBy(player) {
+		if !airplane.IsOwnedBy(player.ID()) {
 			airplane.SetLaunchSeq(0)
 		}
 	}

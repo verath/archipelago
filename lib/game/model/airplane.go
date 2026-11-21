@@ -12,7 +12,7 @@ const AirplaneDefaultSpeed = 1 / float64(3*time.Second)
 // is sent from one island to another, transporting an army to
 // the destination.
 type Airplane struct {
-	*Army
+	Army
 
 	id AirplaneID
 	// destination is the target island of the airplane.
@@ -32,7 +32,7 @@ type Airplane struct {
 // NewAirplane creates a new Airplane, starting at origin, targeting the
 // destination Island. The Army contained on the Airplane is set to the
 // provided strength, owned by the owner.
-func NewAirplane(origin Coordinate, destination *Island, owner *Player, strength int64) *Airplane {
+func NewAirplane(origin Coordinate, destination *Island, owner PlayerID, strength int64) *Airplane {
 	id := AirplaneID(NextModelID())
 	// Calculate the bearing of the airplane
 	originPos := origin.ToFloatCoordinate()
@@ -103,7 +103,7 @@ func (a *Airplane) SetLaunchSeq(seq uint32) {
 // Copy performs a deep copy of the airplane.
 func (a *Airplane) Copy() *Airplane {
 	return &Airplane{
-		Army:        a.Army.Copy(),
+		Army:        a.Army,
 		id:          a.id,
 		destination: a.destination,
 		position:    a.position,
