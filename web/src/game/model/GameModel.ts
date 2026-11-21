@@ -68,12 +68,6 @@ export default class GameModel extends BaseModel<wire.msg.Game.$Properties> {
      */
     private _myLastLaunchSeq = 0;
 
-    /**
-     * The approximate tick interval (i.e. time between ticks)
-     * of the server, in milliseconds.
-     */
-    private _serverTickInterval = 1;
-
     private readonly _clock = new GameClock();
 
     private readonly _now: () => number;
@@ -417,23 +411,6 @@ export default class GameModel extends BaseModel<wire.msg.Game.$Properties> {
     }
 
     /**
-     * @param tickInterval [ms]
-     */
-    set serverTickInterval(tickInterval: number) {
-        if (this._serverTickInterval !== tickInterval) {
-            this._serverTickInterval = tickInterval;
-            this._emitChanged();
-        }
-    }
-
-    /**
-     * @returns [ms]
-     */
-    get serverTickInterval(): number {
-        return this._serverTickInterval;
-    }
-
-    /**
      * The estimated game time [ms] now, see GameClock.
      */
     get gameTime(): number {
@@ -499,7 +476,7 @@ export default class GameModel extends BaseModel<wire.msg.Game.$Properties> {
      * Moves airplanes to where they are now.
      * @param delta [ms] Time since the previous call.
      */
-    override interpolate(delta: number): void {
+    interpolate(delta: number): void {
         const gameTime = this.gameTime;
         this._airplanes.forEach(airplane => airplane.advance(gameTime, delta));
     }

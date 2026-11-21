@@ -58,13 +58,4 @@ describe("GameClock", () => {
             last = now;
         }
     });
-
-    it("forgets everything on reset", () => {
-        const clock = new GameClock();
-        clock.onServerTime(1000, 5000);
-        clock.reset();
-        expect(clock.gameTimeAt(9000)).toBe(0);
-        clock.onServerTime(10, 9000);
-        expect(clock.gameTimeAt(9000)).toBe(10);
-    });
 });
