@@ -1,5 +1,4 @@
 import TEXTURE_AIRPLANE from "./airplane.png";
-import TEXTURE_DUMMY from "./dummy.png";
 import TEXTURE_ISLAND1 from "./island1.png";
 import TEXTURE_ISLAND2 from "./island2.png";
 import TEXTURE_ISLAND3 from "./island3.png";
@@ -11,7 +10,6 @@ import TEXTURE_FOG from "./fog.png";
 
 export {
     TEXTURE_AIRPLANE,
-    TEXTURE_DUMMY,
     TEXTURE_ISLAND1,
     TEXTURE_ISLAND2,
     TEXTURE_ISLAND3,

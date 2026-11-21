@@ -119,7 +119,6 @@ export default class GameController {
     private _onGameStartEvent(evtStart: wire.msg.EventGameStart.$Properties): void {
         // Missing scalars are their defaults, as in a decoded protobuf message.
         this._gameModel.myPlayerId = evtStart.playerId ?? null;
-        this._gameModel.serverTickInterval = evtStart.tickInterval ?? 0;
         this._resumeToken = evtStart.resumeToken || null;
         this._resumeTimeout = evtStart.resumeTimeout ?? 0;
         // The server sends the game start again when we resumed.

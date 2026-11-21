@@ -60,11 +60,4 @@ export default class BaseModel<TData extends ModelData = ModelData> {
             this._emitChanged();
         }
     }
-
-    /**
-     * Tells the model to interpolate movement over time delta
-     * @param delta [ms]
-     */
-    interpolate(delta: number): void {
-    }
 }

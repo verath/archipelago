@@ -44,13 +44,6 @@ export default class PlayerModel extends BaseModel<PlayerData> {
     }
 
     /**
-     * Returns true if the player is the enemy player
-     */
-    isEnemy(): boolean {
-        return !(this.isSelf() || this.isNeutral());
-    }
-
-    /**
      * Returns PlayerColor for the player.
      */
     get color(): PlayerColor {

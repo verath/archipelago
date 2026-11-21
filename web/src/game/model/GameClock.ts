@@ -61,12 +61,4 @@ export default class GameClock {
         const offset = this._offsetAt(localTime);
         return (offset === null) ? 0 : localTime - offset;
     }
-
-    /**
-     * Forgets all server messages, e.g. when reconnecting.
-     */
-    reset(): void {
-        this._offset = null;
-        this._offsetTime = 0;
-    }
 }
