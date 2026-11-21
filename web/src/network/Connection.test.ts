@@ -154,32 +154,27 @@ describe("Connection.disconnect", () => {
 });
 
 describe("Connection receiving events", () => {
-    it("decodes EventEnvelopes and queues them in order", () => {
+    it("decodes EventEnvelopes and queues them in order", async () => {
         const { conn, ws } = connected();
-        expect(conn.hasNext()).toBe(false);
 
         ws.receive(encodeEvent("eventGameStart", { playerId: "p1", tickInterval: 250 }));
         ws.receive(encodeEvent("eventGameOver", { winnerId: "p2" }));
 
-        expect(conn.hasNext()).toBe(true);
-        const first = conn.peekNext();
+        const first = defined(await conn.peek());
         expect(first).toBeInstanceOf(wire.msg.EventEnvelope);
         expect(first.event).toBe("eventGameStart");
         expect(first.eventGameStart?.playerId).toBe("p1");
         expect(first.eventGameStart?.tickInterval).toBe(250);
 
         // peek does not consume.
-        expect(conn.getNext()).toBe(first);
-        const second = conn.getNext();
+        expect(await conn.next()).toBe(first);
+        const second = defined(await conn.next());
         expect(second.event).toBe("eventGameOver");
         expect(second.eventGameOver?.winnerId).toBe("p2");
-        expect(conn.hasNext()).toBe(false);
-    });
-
-    it("throws when reading from an empty queue", () => {
-        const { conn } = connected();
-        expect(() => conn.getNext()).toThrow();
-        expect(() => conn.peekNext()).toThrow();
+        // The queue is empty now.
+        const pending = conn.next();
+        ws.drop();
+        await expect(pending).resolves.toBeNull();
     });
 
     it("emits a server event notification per message", () => {
@@ -190,39 +185,40 @@ describe("Connection receiving events", () => {
         expect(onEvent).toHaveBeenCalledTimes(1);
     });
 
-    it("drops undecodable messages with a warning", () => {
+    it("drops undecodable messages with a warning", async () => {
         const { conn, ws } = connected();
         const onEvent = vi.fn();
         conn.addServerEventListener(onEvent);
         // Field 1 with wire type 2 (length-delimited) claiming 50 bytes, but none follow.
         ws.receive(new Uint8Array([0x0a, 0x32]).buffer);
-        expect(conn.hasNext()).toBe(false);
+        const pending = conn.next();
+        ws.drop();
+        await expect(pending).resolves.toBeNull();
         expect(onEvent).not.toHaveBeenCalled();
         expect(console.warn).toHaveBeenCalled();
     });
 });
 
-describe("Connection.waitNext", () => {
-    it("resolves true when an event arrives", async () => {
+describe("Connection.next", () => {
+    it("resolves with the event when it arrives", async () => {
         const { conn, ws } = connected();
-        const pending = conn.waitNext();
+        const pending = conn.next();
         ws.receive(encodeEvent("eventGameOver", { winnerId: "x" }));
-        await expect(pending).resolves.toBe(true);
-        expect(conn.hasNext()).toBe(true);
+        await expect(pending).resolves.toMatchObject({ event: "eventGameOver" });
     });
 
-    it("resolves false when the connection drops", async () => {
+    it("resolves with null when the connection drops", async () => {
         const { conn, ws } = connected();
-        const pending = conn.waitNext();
+        const pending = conn.next();
         ws.drop();
-        await expect(pending).resolves.toBe(false);
+        await expect(pending).resolves.toBeNull();
     });
 
-    it("resolves false when the socket errors", async () => {
+    it("resolves with null when the socket errors", async () => {
         const { conn, ws } = connected();
-        const pending = conn.waitNext();
+        const pending = conn.next();
         ws.fail();
-        await expect(pending).resolves.toBe(false);
+        await expect(pending).resolves.toBeNull();
     });
 
     it("does not leak listeners", async () => {
@@ -231,7 +227,7 @@ describe("Connection.waitNext", () => {
         const emitter = conn["_eventEmitter"];
         const before = emitter.eventNames().map(n => emitter.listenerCount(n));
 
-        const pending = conn.waitNext();
+        const pending = conn.next();
         ws.receive(encodeEvent("eventGameOver", { winnerId: "x" }));
         await pending;
 
@@ -242,8 +238,25 @@ describe("Connection.waitNext", () => {
         const { conn, ws } = connected();
         ws.receive(encodeEvent("eventGameOver", { winnerId: "x" }));
         ws.drop();
-        expect(conn.hasNext()).toBe(true);
-        expect(conn.getNext().eventGameOver?.winnerId).toBe("x");
+        expect((await conn.next())?.eventGameOver?.winnerId).toBe("x");
+    });
+});
+
+describe("Connection.peek", () => {
+    it("waits for an event without consuming it", async () => {
+        const { conn, ws } = connected();
+        const pending = conn.peek();
+        ws.receive(encodeEvent("eventGameOver", { winnerId: "x" }));
+        const peeked = await pending;
+        expect(peeked?.eventGameOver?.winnerId).toBe("x");
+        expect(await conn.next()).toBe(peeked);
+    });
+
+    it("resolves with null when the connection drops", async () => {
+        const { conn, ws } = connected();
+        const pending = conn.peek();
+        ws.drop();
+        await expect(pending).resolves.toBeNull();
     });
 });
 
@@ -318,7 +331,13 @@ describe("Connection.resume", () => {
         const { conn, ws } = connected();
         ws.receive(encodeEvent("eventGameOver", { winnerId: "w" }));
         ws.drop();
-        conn.resume("t");
-        expect(conn.hasNext()).toBe(true);
+        const resumed = conn.resume("t");
+        lastSocket().open();
+        await resumed;
+        expect((await conn.next())?.eventGameOver?.winnerId).toBe("w");
+        // Then it waits for the new connection's events.
+        const pending = conn.next();
+        lastSocket().receive(encodeEvent("eventGameOver", { winnerId: "w2" }));
+        expect((await pending)?.eventGameOver?.winnerId).toBe("w2");
     });
 });

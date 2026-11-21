@@ -158,26 +158,36 @@ export default class Connection {
         this._conn = null;
     }
 
-    hasNext(): boolean {
-        return this._serverEvents.length > 0;
-    }
-
-    getNext(): ServerEvent {
-        if (!this.hasNext()) {
-            throw new Error("!hasNextServerEvent");
+    /**
+     * Resolves with the next server event, consuming it, waiting for one if
+     * none is queued. Resolves with null if the connection disconnects while
+     * waiting.
+     */
+    async next(): Promise<ServerEvent | null> {
+        const event = await this.peek();
+        if (event !== null) {
+            this._serverEvents.shift();
         }
-        // Not undefined: hasNext() checked that the queue is not empty.
-        return this._serverEvents.shift()!;
+        return event;
     }
 
-    peekNext(): ServerEvent {
-        if (!this.hasNext()) {
-            throw new Error("!hasNextServerEvent");
+    /**
+     * Like next(), but leaves the event queued.
+     */
+    async peek(): Promise<ServerEvent | null> {
+        while (this._serverEvents.length === 0) {
+            if (!await this._waitForEvent()) {
+                return null;
+            }
         }
         return this._serverEvents[0];
     }
 
-    async waitNext(): Promise<boolean> {
+    /**
+     * Resolves to true once a server event arrived, false if the connection
+     * disconnected first.
+     */
+    private async _waitForEvent(): Promise<boolean> {
         // Definitely assigned: the Promise executor runs synchronously.
         let serverEventListener!: () => void;
         let disconnectListener!: () => void;

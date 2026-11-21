@@ -1,5 +1,4 @@
 import { describe, it, expect, vi, beforeEach, afterEach, type MockInstance } from "vitest";
-import { Ticker } from "pixi.js";
 import GameController, { type GameResult } from "./GameController.ts";
 import GameModel from "../model/GameModel.ts";
 import type Connection from "../../network/Connection.ts";
@@ -11,7 +10,7 @@ import {
 } from "../../test/fixtures.ts";
 
 /** The part of Connection that GameController uses. */
-type ServerEventQueue = Pick<Connection, "hasNext" | "getNext" | "peekNext" | "waitNext" | "sendAction" | "resume">;
+type ServerEventQueue = Pick<Connection, "next" | "peek" | "sendAction" | "resume">;
 
 /**
  * A stand-in for Connection with the same queueing interface. Tests push
@@ -21,32 +20,38 @@ class FakeConnection implements ServerEventQueue {
     readonly events: ServerEvent[] = [];
     readonly sentActions: wire.msg.ActionEnvelope[] = [];
     ended = false;
-    private readonly _waiters: ((hasNext: boolean) => void)[] = [];
+    private readonly _waiters: (() => void)[] = [];
 
     push(...args: EventArgs): void {
         this.events.push(makeEventEnvelope(...args));
-        this._wake(true);
+        this._wake();
     }
 
     end(): void {
         this.ended = true;
-        this._wake(false);
+        this._wake();
     }
 
-    private _wake(value: boolean): void {
-        this._waiters.splice(0).forEach(resolve => resolve(value));
+    private _wake(): void {
+        this._waiters.splice(0).forEach(resolve => resolve());
     }
 
-    hasNext(): boolean { return this.events.length > 0; }
-    // Like Connection, throw rather than return undefined when empty.
-    getNext(): ServerEvent { return defined(this.events.shift()); }
-    peekNext(): ServerEvent { return defined(this.events[0]); }
-
-    waitNext(): Promise<boolean> {
-        if (this.ended) {
-            return Promise.resolve(false);
+    async next(): Promise<ServerEvent | null> {
+        const event = await this.peek();
+        if (event !== null) {
+            this.events.shift();
         }
-        return new Promise(resolve => this._waiters.push(resolve));
+        return event;
+    }
+
+    async peek(): Promise<ServerEvent | null> {
+        while (this.events.length === 0) {
+            if (this.ended) {
+                return null;
+            }
+            await new Promise<void>(resolve => this._waiters.push(resolve));
+        }
+        return this.events[0];
     }
 
     /** What each resume() call resolves to, in order; false when empty. */
@@ -91,7 +96,6 @@ const TWO_ISLANDS = () => [
 let connection: FakeConnection;
 let model: GameModel;
 let controller: GameController;
-let destroySpy: MockInstance<Ticker["destroy"]>;
 /** The result of the run() started by the onIslandClicked tests. */
 let runResult: Promise<GameResult>;
 
@@ -99,10 +103,6 @@ let runResult: Promise<GameResult>;
 const flush = (): Promise<void> => new Promise(resolve => setTimeout(resolve, 0));
 
 beforeEach(() => {
-    // Pixi's Ticker schedules itself with requestAnimationFrame, which node lacks.
-    vi.stubGlobal("requestAnimationFrame", (cb: FrameRequestCallback) => setTimeout(() => cb(performance.now()), 16));
-    vi.stubGlobal("cancelAnimationFrame", (id: number) => clearTimeout(id));
-    destroySpy = vi.spyOn(Ticker.prototype, "destroy");
     connection = new FakeConnection();
     model = new GameModel();
     controller = newController(connection, model);
@@ -152,7 +152,7 @@ describe("GameController.run", () => {
         connection.push("eventGameSnapshot", snapshotOf(TWO_ISLANDS()));
         await controller.run();
         expect(model.islands).toHaveLength(0);
-        expect(connection.hasNext()).toBe(true);
+        expect(connection.events).toHaveLength(1);
     });
 
     it("resolves as game over with an empty winner when the connection ends", async () => {
@@ -238,7 +238,6 @@ describe("GameController.run", () => {
         connection.push("eventGameDelta", makeDelta(6, 333));
         connection.push("eventGameDelta", makeDelta(8, 999));
         await expect(controller.run()).resolves.toEqual({ reason: "ERROR" });
-        expect(destroySpy).toHaveBeenCalledTimes(1);
     });
 
     it("ends the game with an error on a delta before any snapshot", async () => {
@@ -277,23 +276,28 @@ describe("GameController.run", () => {
         await expect(result).resolves.toEqual({ reason: "GAME_OVER", winnerId: "me" });
     });
 
-    it("destroys its ticker on game over, connection end, and errors", async () => {
+    it("stops its model on game over, connection end, and errors", async () => {
+        const stop = vi.spyOn(model, "stop");
         connection.push("eventGameOver", { winnerId: "me" });
         await controller.run();
-        expect(destroySpy).toHaveBeenCalledTimes(1);
+        expect(stop).toHaveBeenCalledTimes(1);
 
         const c2 = new FakeConnection();
         c2.end();
-        await newController(c2, new GameModel()).run();
-        expect(destroySpy).toHaveBeenCalledTimes(2);
+        const m2 = new GameModel();
+        const stop2 = vi.spyOn(m2, "stop");
+        await newController(c2, m2).run();
+        expect(stop2).toHaveBeenCalledTimes(1);
 
         // A snapshot of a game our player is not in makes the model throw.
         vi.spyOn(console, "error").mockImplementation(() => { });
         const c3 = new FakeConnection();
         c3.push("eventGameStart", { playerId: "nobody", tickInterval: 100 });
         c3.push("eventGameSnapshot", snapshotOf(TWO_ISLANDS()));
-        await expect(newController(c3, new GameModel()).run()).resolves.toEqual({ reason: "ERROR" });
-        expect(destroySpy).toHaveBeenCalledTimes(3);
+        const m3 = new GameModel();
+        const stop3 = vi.spyOn(m3, "stop");
+        await expect(newController(c3, m3).run()).resolves.toEqual({ reason: "ERROR" });
+        expect(stop3).toHaveBeenCalledTimes(1);
     });
 });
 

@@ -68,6 +68,11 @@ export default class GameModel extends BaseModel<wire.msg.Game.$Properties> {
      */
     private _myLastLaunchSeq = 0;
 
+    /**
+     * Whether the game ended for us, after which airplanes stay where they are.
+     */
+    private _stopped = false;
+
     private readonly _clock = new GameClock();
 
     private readonly _now: () => number;
@@ -473,10 +478,20 @@ export default class GameModel extends BaseModel<wire.msg.Game.$Properties> {
     }
 
     /**
-     * Moves airplanes to where they are now.
+     * Stops moving airplanes, see interpolate.
+     */
+    stop(): void {
+        this._stopped = true;
+    }
+
+    /**
+     * Moves airplanes to where they are now, unless the game was stopped.
      * @param delta [ms] Time since the previous call.
      */
     interpolate(delta: number): void {
+        if (this._stopped) {
+            return;
+        }
         const gameTime = this.gameTime;
         this._airplanes.forEach(airplane => airplane.advance(gameTime, delta));
     }

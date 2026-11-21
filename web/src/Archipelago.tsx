@@ -147,13 +147,11 @@ export class Archipelago {
     private async _joinGame(): Promise<void> {
         // The server automatically assigns us to a game as we connect, so we
         // wait here until the game has started.
-        while (!this._connection.hasNext() && await this._connection.waitNext()) {
-            //
-        }
-        if (!this._connection.hasNext()) {
+        // Peek, so that GameController consumes the game start.
+        const evt = await this._connection.peek();
+        if (evt === null) {
             throw new Error("error awaiting eventGameStart");
         }
-        const evt = this._connection.peekNext();
         if (evt.event !== "eventGameStart") {
             throw new Error(`unexpected server event '${evt.event}'`);
         }
@@ -342,8 +340,13 @@ const GameViewWrapper = ({ gameModel, resourceHolder, dispatch }: GameViewWrappe
             });
 
             // Start the GameView rendering loop.
+            // Interpolating right before rendering keeps the airplanes from
+            // lagging a frame behind.
             let renderRequestId: number;
-            const render = (_timestamp: DOMHighResTimeStamp) => {
+            let lastTimestamp: DOMHighResTimeStamp | null = null;
+            const render = (timestamp: DOMHighResTimeStamp) => {
+                gameModel.interpolate(lastTimestamp === null ? 0 : timestamp - lastTimestamp);
+                lastTimestamp = timestamp;
                 gameView.render();
                 renderRequestId = window.requestAnimationFrame(render);
             };

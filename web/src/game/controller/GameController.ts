@@ -1,5 +1,3 @@
-import { Ticker } from "pixi.js";
-
 import type Connection from "../../network/Connection.ts";
 import type { ServerEvent } from "../../network/Connection.ts";
 import { wire } from "../../wire/proto_bundle.js";
@@ -34,8 +32,6 @@ export default class GameController {
     private readonly _connection: Connection;
 
     private readonly _gameModel: GameModel;
-
-    private _lastUpdateMS = 0;
 
     private _isGameOver = false;
 
@@ -102,13 +98,6 @@ export default class GameController {
             seq,
         });
         this._connection.sendAction(actEnvelope);
-    }
-
-    private _interpolate(): void {
-        const now = performance.now();
-        const delta = now - (this._lastUpdateMS || now);
-        this._lastUpdateMS = now;
-        this._gameModel.interpolate(delta);
     }
 
     private _onGameOver(winnerId: string | null): void {
@@ -218,21 +207,15 @@ export default class GameController {
     }
 
     async run(): Promise<GameResult> {
-        const ticker = new Ticker();
-        ticker.add(this._interpolate, this);
-
         let gameResult: GameResult;
-        ticker.start();
         try {
             for (; ;) {
                 if (this._isGameOver) {
                     gameResult = { reason: "GAME_OVER", winnerId: this._winnerId };
                     break;
                 }
-                while (!this._connection.hasNext() && await this._connection.waitNext()) {
-                    //
-                }
-                if (!this._connection.hasNext()) {
+                const event = await this._connection.next();
+                if (event === null) {
                     // The connection broke. Resume the game on a new one if
                     // we can, otherwise the game is over for us.
                     if (await this._resume()) {
@@ -242,7 +225,7 @@ export default class GameController {
                     break;
                 }
                 try {
-                    this._onServerEvent(this._connection.getNext());
+                    this._onServerEvent(event);
                 } catch (err) {
                     if (!(err instanceof ProtocolError)) {
                         throw err;
@@ -256,7 +239,7 @@ export default class GameController {
             }
         } finally {
             // Also stop interpolating if handling a server event throws.
-            ticker.destroy();
+            this._gameModel.stop();
         }
 
         return gameResult;
