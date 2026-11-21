@@ -50,6 +50,20 @@ func TestPBClientAdapter_DisconnectCh(t *testing.T) {
 	}
 }
 
+func TestPBClientAdapter_PeerClosed(t *testing.T) {
+	for _, peerClosed := range []bool{false, true} {
+		mockClient := &wire.MockClient{
+			PeerClosedFunc: func() bool {
+				return peerClosed
+			},
+		}
+		pbClient := wire.NewPBClientAdapter(mockClient)
+		if got := pbClient.PeerClosed(); got != peerClosed {
+			t.Errorf("PeerClosed() = %v, want the underlying client's %v", got, peerClosed)
+		}
+	}
+}
+
 var (
 	actionLeaveExpected = &model.PlayerActionLeave{}
 	actionLeave         = &msg.ActionEnvelope{

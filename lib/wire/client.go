@@ -13,6 +13,10 @@ type Client interface {
 	// DisconnectCh returns a channel that is closed when the Client
 	// is disconnected.
 	DisconnectCh() <-chan struct{}
+	// PeerClosed reports whether the Client disconnected because the peer
+	// closed the connection on purpose (see network.ErrPeerClosed). It is
+	// set before DisconnectCh is closed.
+	PeerClosed() bool
 	// WriteMessage writes a message represented by a byte slice to the Client.
 	// WriteMessage should block until the message has been written, or the
 	// context is cancelled.
