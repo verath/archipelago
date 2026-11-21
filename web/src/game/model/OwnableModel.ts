@@ -1,26 +1,31 @@
 import type { wire } from "../../wire/proto_bundle.js";
-import BaseModel, { type ModelData } from "./BaseModel.ts";
 import type GameModel from "./GameModel.ts";
 import type PlayerModel from "./PlayerModel.ts";
 
 /**
  * The data an OwnableModel is updated from.
  */
-export interface OwnableData extends ModelData {
+export interface OwnableData {
+    id?: string | null;
     army?: wire.msg.Army.$Properties | null;
 }
 
-export default class OwnableModel<TData extends OwnableData = OwnableData> extends BaseModel<TData> {
+export default class OwnableModel<TData extends OwnableData = OwnableData> {
 
     protected _gameModel: GameModel;
+
+    protected _id: string | null = null;
 
     protected _ownerId: string | null = null;
 
     protected _strength = 0;
 
     constructor(gameModel: GameModel) {
-        super();
         this._gameModel = gameModel;
+    }
+
+    get id(): string | null {
+        return this._id;
     }
 
     get owner(): PlayerModel | null {
@@ -32,11 +37,7 @@ export default class OwnableModel<TData extends OwnableData = OwnableData> exten
     }
 
     set owner(owner: PlayerModel | null) {
-        const newOwnerId = (owner != null) ? owner.id : null;
-        if (this._ownerId !== newOwnerId) {
-            this._ownerId = newOwnerId;
-            this._emitChanged();
-        }
+        this._ownerId = (owner != null) ? owner.id : null;
     }
 
     get strength(): number {
@@ -44,43 +45,25 @@ export default class OwnableModel<TData extends OwnableData = OwnableData> exten
     }
 
     set strength(strength: number) {
-        if (this._strength !== strength) {
-            this._strength = strength;
-            this._emitChanged();
-        }
+        this._strength = strength;
     }
 
     /**
-     * Updates only the army (owner and strength), as sent in a delta. A change
-     * event is emitted if it changed.
+     * Updates the model from the given data.
+     */
+    update(data: TData): void {
+        this._id = data.id ?? null;
+        this.updateArmy(data.army);
+    }
+
+    /**
+     * Updates only the army (owner and strength), as sent in a delta.
      */
     updateArmy(armyData: wire.msg.Army.$Properties | null | undefined): void {
-        if (this._applyArmy(armyData)) {
-            this._emitChanged();
-        }
-    }
-
-    protected override _update(data: TData): boolean {
-        const changed = super._update(data);
-        return this._applyArmy(data.army) || changed;
-    }
-
-    private _applyArmy(armyData: wire.msg.Army.$Properties | null | undefined): boolean {
         if (armyData == null) {
             throw new Error("OwnableModel: data has no army");
         }
-        let changed = false;
-        const ownerId = armyData.ownerId ?? null;
-        if (this._ownerId !== ownerId) {
-            this._ownerId = ownerId;
-            changed = true;
-        }
-        const strength = armyData.strength || 0;
-        if (this._strength !== strength) {
-            this._strength = strength;
-            changed = true;
-        }
-        return changed;
+        this._ownerId = armyData.ownerId ?? null;
+        this._strength = armyData.strength || 0;
     }
-
 }

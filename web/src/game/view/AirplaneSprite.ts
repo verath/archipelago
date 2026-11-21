@@ -12,8 +12,13 @@ export default class AirplaneSprite extends BaseSprite<AirplaneModel> {
 
     private readonly _strengthText: Text;
 
-    constructor(resourceHolder: ResourceHolder) {
-        super(resourceHolder, TEXTURE_AIRPLANE);
+    /**
+     * The strength shown by the strength text, null before the first update.
+     */
+    private _shownStrength: number | null = null;
+
+    constructor(resourceHolder: ResourceHolder, model: AirplaneModel) {
+        super(resourceHolder, TEXTURE_AIRPLANE, model);
         // Center our position anchor to the middle of the tile
         this.pivot.set(TILE_WIDTH / 2, TILE_HEIGHT / 2);
 
@@ -38,11 +43,8 @@ export default class AirplaneSprite extends BaseSprite<AirplaneModel> {
         return strengthText;
     }
 
-    protected override _onModelChanged(): void {
-        const airplane = this._model;
-        if (airplane == null) {
-            throw new Error("this._model == null");
-        }
+    update(): void {
+        const airplane = this.model;
         // Update fill color.
         this._sprite.tint = ownerColor(airplane).fill;
         // Update our position, account for anchor being in the center
@@ -57,18 +59,17 @@ export default class AirplaneSprite extends BaseSprite<AirplaneModel> {
     }
 
     private _updateStrengthText(airplane: AirplaneModel): void {
-        if (airplane.strength >= 0) {
-            this._strengthText.text = "" + airplane.strength;
-        } else {
+        // Only set the text when it changes, as Pixi re-renders it then.
+        if (this._shownStrength !== airplane.strength) {
+            this._shownStrength = airplane.strength;
             // Negative strength => in FoW.
-            this._strengthText.text = "";
+            this._strengthText.text = (airplane.strength >= 0) ? "" + airplane.strength : "";
         }
         // Negate for the text so that it is displayed non-rotated
         this._strengthText.rotation = -airplane.direction;
     }
 
     private _updateScale(airplane: AirplaneModel): void {
-        const strength = Math.max(airplane.strength, 1);
         // Ratio by strength capped at strengthMax.
         const strengthMax = 100;
         const ratio = Math.min(airplane.strength, strengthMax) / strengthMax;

@@ -1,7 +1,6 @@
 import { Container, Sprite } from "pixi.js";
 
 import type ResourceHolder from "../../resource/ResourceHolder.ts";
-import type BaseModel from "../model/BaseModel.ts";
 import type OwnableModel from "../model/OwnableModel.ts";
 import type { PlayerColor } from "../model/PlayerColors.ts";
 
@@ -10,7 +9,7 @@ import type { PlayerColor } from "../model/PlayerColors.ts";
  * which subclasses can add more children (e.g. text). Sprites cannot have
  * children in Pixi v8, hence the wrapping Container.
  */
-export default class BaseSprite<TModel extends BaseModel = BaseModel> extends Container {
+export default abstract class BaseSprite<TModel extends OwnableModel> extends Container {
 
     /**
      * The image sprite. Tint is applied to this sprite only, so that
@@ -18,48 +17,20 @@ export default class BaseSprite<TModel extends BaseModel = BaseModel> extends Co
      */
     protected readonly _sprite: Sprite;
 
-    protected _model: TModel | null = null;
+    readonly model: TModel;
 
-    constructor(resourceHolder: ResourceHolder, textureId: string) {
+    constructor(resourceHolder: ResourceHolder, textureId: string, model: TModel) {
         super();
-
+        this.model = model;
         this._sprite = new Sprite(resourceHolder.getTexture(textureId));
         this.addChild(this._sprite);
-
-        this.once("added", this._onAdded.bind(this));
-    }
-
-    protected _onAdded(): void {
-        if (this._model == null) {
-            throw new Error("this._model == null");
-        }
-        this._model.addChangeListener(this._onModelChanged, this);
-        this.once("removed", this._onRemoved.bind(this));
-        this._onModelChanged();
-    }
-
-    protected _onRemoved(): void {
-        if (this._model == null) {
-            throw new Error("this._model == null");
-        }
-        this._model.removeChangeListener(this._onModelChanged, this);
-        this.once("added", this._onAdded.bind(this));
-    }
-
-    get model(): TModel | null {
-        return this._model;
-    }
-
-    set model(model: TModel | null) {
-        this._model = model;
     }
 
     /**
-     * Method called when the model that is attached to the view
-     * has its properties changed.
+     * Updates the sprite from its model. Called every frame, before
+     * rendering.
      */
-    protected _onModelChanged(): void {
-    }
+    abstract update(): void;
 }
 
 /**

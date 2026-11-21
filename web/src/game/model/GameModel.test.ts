@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from "vitest";
+import { describe, it, expect } from "vitest";
 import GameModel, { ProtocolError } from "./GameModel.ts";
 import { PLAYER_COLORS, PLAYER_COLOR_SELF, PLAYER_COLOR_NEUTRAL } from "./PlayerColors.ts";
 import { wire } from "../../wire/proto_bundle.js";
@@ -43,7 +43,6 @@ describe("GameModel.update", () => {
             airplanes: [makeAirplane("a1", 1, 1, "enemy", 4)],
         });
         expect([model.size.x, model.size.y]).toEqual([5, 5]);
-        expect(model.id).toBe("game-1");
         expect(model.playerNeutral.id).toBe(NEUTRAL_ID);
         expect(model.playerById("me")).not.toBeNull();
         expect(model.islands.map(i => i.id)).toEqual(["mine", "theirs", "free"]);
@@ -89,8 +88,6 @@ describe("GameModel.update", () => {
     it("updates island ownership and strength in place on later ticks", () => {
         const model = newGame();
         const island = defined(model.islandById("free"));
-        const islandListener = vi.fn();
-        island.addChangeListener(islandListener);
 
         model.update(makeGame({
             players: [makePlayer("me"), makePlayer("enemy")],
@@ -105,13 +102,10 @@ describe("GameModel.update", () => {
         expect(island.owner).toBe(model.playerById("me"));
         expect(island.strength).toBe(2);
         expect(model.islandById("mine")?.strength).toBe(11);
-        expect(islandListener).toHaveBeenCalledTimes(1);
     });
 
-    it("notifies listeners when islands or airplanes are added or removed", () => {
+    it("adds and removes islands and airplanes", () => {
         const model = newGame();
-        const listener = vi.fn();
-        model.addChangeListener(listener);
         const players = [makePlayer("me"), makePlayer("enemy")];
 
         model.update(makeGame({
@@ -119,40 +113,16 @@ describe("GameModel.update", () => {
             islands: [makeIsland("mine", 2, 2, "me", 10)],
             airplanes: [makeAirplane("a1", 1, 1, "me")],
         }));
-        expect(listener).toHaveBeenCalledTimes(1);
         expect(model.islands).toHaveLength(1);
+        expect(model.islandById("theirs")).toBeNull();
         expect(model.airplanes).toHaveLength(1);
 
         model.update(makeGame({
             players,
             islands: [makeIsland("mine", 2, 2, "me", 10)],
         }));
-        expect(listener).toHaveBeenCalledTimes(2);
         expect(model.airplanes).toHaveLength(0);
-    });
-
-    it("does not notify when a tick changes nothing structural", () => {
-        const model = newGame();
-        const listener = vi.fn();
-        model.addChangeListener(listener);
-        model.update(makeGame({
-            players: [makePlayer("me"), makePlayer("enemy")],
-            islands: [
-                makeIsland("mine", 2, 2, "me", 12),
-                makeIsland("theirs", 4, 4, "enemy", 7),
-                makeIsland("free", 0, 0, NEUTRAL_ID, 3),
-            ],
-        }));
-        expect(listener).not.toHaveBeenCalled();
-    });
-
-    it("emits a change when myPlayerId changes", () => {
-        const model = new GameModel();
-        const listener = vi.fn();
-        model.addChangeListener(listener);
-        model.myPlayerId = "me";
-        model.myPlayerId = "me";
-        expect(listener).toHaveBeenCalledTimes(1);
+        expect(model.airplaneById("a1")).toBeNull();
     });
 });
 
@@ -207,15 +177,12 @@ describe("GameModel fog of war", () => {
         expect(countClear(model)).toBe(25);
     });
 
-    it("reports a change when the fog changes", () => {
+    it("updates the fog when our islands change", () => {
         const model = newGame();
-        const listener = vi.fn();
-        model.addChangeListener(listener);
         model.update(makeGame({
             players: [makePlayer("me"), makePlayer("enemy")],
             islands: [makeIsland("mine", 0, 0, "me", 10)],
         }));
-        expect(listener).toHaveBeenCalled();
         expect(countClear(model)).toBe(4);
     });
 });
@@ -248,8 +215,6 @@ describe("GameModel.applySnapshot", () => {
 describe("GameModel.applyDelta", () => {
     it("updates players, islands and airplanes", () => {
         const model = newGame({ airplanes: [makeAirplane("a1", 1, 1, "enemy", 4), makeAirplane("a2", 3, 3, "enemy", 2)] });
-        const listener = vi.fn();
-        model.addChangeListener(listener);
 
         model.applyDelta(makeDelta(2, 333, {
             players: [makePlayer("enemy", PlayerState.DEAD)],
@@ -266,8 +231,6 @@ describe("GameModel.applyDelta", () => {
         expect(model.airplaneById("a1")).toBeNull();
         expect(model.airplaneById("a2")?.strength).toBe(-1);
         expect(model.airplaneById("a3")?.strength).toBe(6);
-        // Airplanes were added and removed.
-        expect(listener).toHaveBeenCalled();
     });
 
     it("positions added airplanes at the delta's game time", () => {
@@ -315,8 +278,6 @@ describe("GameModel.applyDelta", () => {
 describe("GameModel.launchAirplane", () => {
     it("takes half the strength (rounded down) into a local airplane", () => {
         const model = newGame();
-        const listener = vi.fn();
-        model.addChangeListener(listener);
         const origin = defined(model.islandById("mine"));
         origin.strength = 11;
 
@@ -332,7 +293,6 @@ describe("GameModel.launchAirplane", () => {
         expect([plane.position.x, plane.position.y]).toEqual([2, 2]);
         // Heading down-right towards (4, 4).
         expect(plane.direction).toBeCloseTo(Math.PI / 4);
-        expect(listener).toHaveBeenCalled();
     });
 
     it("keeps the island's predicted strength while the server's changes", () => {
@@ -352,8 +312,6 @@ describe("GameModel.launchAirplane", () => {
         const origin = defined(model.islandById("mine"));
         model.launchAirplane(origin, defined(model.islandById("theirs")), 1);
         const local = model.airplanes[0];
-        const listener = vi.fn();
-        model.addChangeListener(listener);
 
         model.applyDelta(makeDelta(2, 333, {
             players: [makePlayer("me", PlayerState.ALIVE, 1)],
@@ -367,7 +325,6 @@ describe("GameModel.launchAirplane", () => {
         // The server's airplane takes over from where the local one was shown.
         const real = defined(model.airplaneById("srv-1"));
         expect([real.position.x, real.position.y]).toEqual([local.position.x, local.position.y]);
-        expect(listener).toHaveBeenCalled();
     });
 
     it("removes the local airplane and restores the island when the launch failed", () => {
@@ -408,14 +365,11 @@ describe("GameModel.dropLocalLaunches", () => {
     it("removes local airplanes and restores island strengths", () => {
         const model = newGame({ airplanes: [makeAirplane("srv", 1, 1, "enemy", 2)] });
         model.launchAirplane(defined(model.islandById("mine")), defined(model.islandById("theirs")), 1);
-        const listener = vi.fn();
-        model.addChangeListener(listener);
 
         model.dropLocalLaunches();
 
         expect(model.airplanes.map(a => a.id)).toEqual(["srv"]);
         expect(model.islandById("mine")?.strength).toBe(10);
-        expect(listener).toHaveBeenCalled();
     });
 });
 
