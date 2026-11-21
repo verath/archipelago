@@ -67,8 +67,14 @@ func (ctrl *controller) run(ctx context.Context) error {
 
 	// Setup forwarding of events produced by the game loop to eventCh.
 	eventCh := make(chan model.Event, eventQueueSize)
-	ctrl.gameLoop.SetEventHandler(ctrl.gameLoopEventHandler(eventCh))
-	defer ctrl.gameLoop.SetEventHandler(nil)
+	ctrl.gameLoop.onEvent = func(evt model.Event) error {
+		select {
+		case eventCh <- evt:
+			return nil
+		default:
+			return errors.New("eventCh was full")
+		}
+	}
 
 	// Queue a GameStart event as the first event to be forwarded to all players.
 	eventCh <- &model.EventGameStart{TickInterval: ctrl.gameLoop.tickInterval}
@@ -108,19 +114,6 @@ func (ctrl *controller) run(ctx context.Context) error {
 	<-errCh
 	<-errCh
 	return err
-}
-
-// gameLoopEventHandler creates a new gameLoop eventHandler that forwards received
-// events to the provided eventCh.
-func (ctrl *controller) gameLoopEventHandler(eventCh chan<- model.Event) eventHandler {
-	return eventHandlerFunc(func(evt model.Event) error {
-		select {
-		case eventCh <- evt:
-			return nil
-		default:
-			return errors.New("eventCh was full")
-		}
-	})
 }
 
 // playerEventLoop forwards events published on eventCh to a player. Blocks
