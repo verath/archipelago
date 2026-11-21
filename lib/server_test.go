@@ -11,8 +11,6 @@ import (
 	"time"
 
 	gorilla "github.com/gorilla/websocket"
-	"github.com/verath/archipelago/lib/game"
-	"github.com/verath/archipelago/lib/network/websocket"
 	"github.com/verath/archipelago/lib/session"
 	"github.com/verath/archipelago/lib/wire/msg"
 	"google.golang.org/protobuf/proto"
@@ -23,8 +21,11 @@ import (
 func startTestServer(t *testing.T) string {
 	t.Helper()
 	logger := slog.New(slog.NewTextHandler(io.Discard, nil))
-	srv, err := New(logger, websocket.UpgraderOptions{SkipOriginCheck: true},
-		game.CoordinatorOptions{LobbyWait: 0, AIPlayers: 1}, Options{})
+	opts := DefaultOptions()
+	opts.SkipWSOriginCheck = true
+	opts.LobbyWait = 0
+	opts.AIPlayers = 1
+	srv, err := New(logger, opts)
 	if err != nil {
 		t.Fatalf("New: %v", err)
 	}
@@ -98,6 +99,18 @@ func TestServer_Protocol(t *testing.T) {
 	})
 }
 
+// Test that New rejects a ResumeGrace that is not positive.
+func TestNew_ResumeGrace(t *testing.T) {
+	logger := slog.New(slog.NewTextHandler(io.Discard, nil))
+	for _, grace := range []time.Duration{0, -time.Second} {
+		opts := DefaultOptions()
+		opts.ResumeGrace = grace
+		if _, err := New(logger, opts); err == nil {
+			t.Errorf("New with ResumeGrace %v succeeded, want error", grace)
+		}
+	}
+}
+
 // Test that a client can resume a game after its connection broke.
 func TestServer_Resume(t *testing.T) {
 	url := startTestServer(t)
@@ -145,6 +158,7 @@ func TestServer_Resume_Fails(t *testing.T) {
 		"?v=5&resume=bogus": http.StatusGone,
 		"?v=5&resume=":      http.StatusGone,
 		"?v=4&resume=bogus": http.StatusBadRequest,
+		"?resume=bogus":     http.StatusBadRequest,
 	} {
 		conn, resp, err := gorilla.DefaultDialer.Dial(url+query, nil)
 		if err == nil {

@@ -57,14 +57,6 @@ type CoordinatorOptions struct {
 	AIPlayers int
 }
 
-// DefaultCoordinatorOptions returns the CoordinatorOptions used in production.
-func DefaultCoordinatorOptions() CoordinatorOptions {
-	return CoordinatorOptions{
-		LobbyWait: DefaultLobbyWait,
-		AIPlayers: AIPlayersAuto,
-	}
-}
-
 // validate returns an error if the options are invalid.
 func (opts CoordinatorOptions) validate() error {
 	if opts.LobbyWait < 0 {

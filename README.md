@@ -129,6 +129,9 @@ use backend flags that make test games fast and predictable:
 * `-resumeGrace <duration>`: how long a client whose connection broke during a game has to
   resume it on a new connection (default `20s`, see "Reconnecting" below).
 
+To profile the backend, run it with `-pprofAddr localhost:6060`: it then serves Go's
+`net/http/pprof` endpoints on that address, on a listener separate from the game's (default: off).
+
 ### Network traffic
 
 WebSocket messages are compressed with `permessage-deflate`, which all browsers negotiate on their

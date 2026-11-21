@@ -152,19 +152,6 @@ func TestUpgrade_ClientWithoutCompression(t *testing.T) {
 	}
 }
 
-func TestUpgrade_VersionMismatch(t *testing.T) {
-	url, _ := startServer(t, UpgraderOptions{SkipOriginCheck: true})
-	// E.g. a frontend for protocol version 4, cached by a browser.
-	url = strings.Replace(url, "v="+Version, "v=4", 1)
-	_, resp, err := websocket.DefaultDialer.Dial(url, nil)
-	if err == nil {
-		t.Fatal("Dial succeeded, want error")
-	}
-	if resp == nil || resp.StatusCode != http.StatusBadRequest {
-		t.Fatalf("resp = %v, want 400", resp)
-	}
-}
-
 func TestReadMessage_CountsMessages(t *testing.T) {
 	url, connCh := startServer(t, UpgraderOptions{SkipOriginCheck: true})
 	client, _ := dial(t, url, true)
