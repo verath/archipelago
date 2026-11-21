@@ -8,23 +8,13 @@ import (
 	"github.com/verath/archipelago/lib/game/testutil"
 )
 
-func TestDefaultCoordinatorOptions(t *testing.T) {
-	opts := DefaultCoordinatorOptions()
-	if opts.LobbyWait != 8*time.Second {
-		t.Errorf("expected LobbyWait 8s, got %v", opts.LobbyWait)
-	}
-	if opts.AIPlayers != AIPlayersAuto {
-		t.Errorf("expected AIPlayers %d, got %d", AIPlayersAuto, opts.AIPlayers)
-	}
-}
-
 func TestNewCoordinator_ValidatesOptions(t *testing.T) {
 	tests := []struct {
 		name    string
 		opts    CoordinatorOptions
 		wantErr bool
 	}{
-		{"defaults", DefaultCoordinatorOptions(), false},
+		{"defaults", CoordinatorOptions{LobbyWait: DefaultLobbyWait, AIPlayers: AIPlayersAuto}, false},
 		{"zero lobby wait", CoordinatorOptions{LobbyWait: 0, AIPlayers: 0}, false},
 		{"exact ai players", CoordinatorOptions{LobbyWait: time.Second, AIPlayers: 3}, false},
 		{"negative lobby wait", CoordinatorOptions{LobbyWait: -time.Second, AIPlayers: AIPlayersAuto}, true},

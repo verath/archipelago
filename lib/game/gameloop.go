@@ -77,7 +77,7 @@ func (f eventHandlerFunc) handleEvent(event model.Event) error {
 	return f(event)
 }
 
-func newGameLoop(logger *slog.Logger, game *model.Game) (*gameLoop, error) {
+func newGameLoop(logger *slog.Logger, game *model.Game) *gameLoop {
 	logger = common.ModuleLogEntryWithID(logger, "gameLoop")
 	return &gameLoop{
 		logger:             logger,
@@ -86,7 +86,7 @@ func newGameLoop(logger *slog.Logger, game *model.Game) (*gameLoop, error) {
 		actions:            make([]model.Action, 0),
 		perTickActionsFunc: defaultPerTickActionsFunc,
 		eventHandler:       defaultEventHandler,
-	}, nil
+	}
 }
 
 // SetEventHandler sets the handler for game events. Must not be called

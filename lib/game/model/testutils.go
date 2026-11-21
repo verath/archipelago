@@ -2,9 +2,9 @@ package model
 
 // CreateDummyGameEmpty creates an empty 9x9 board
 func CreateDummyGameEmpty() *Game {
-	p1, _ := NewPlayer()
-	p2, _ := NewPlayer()
-	pn, _ := NewPlayer()
+	p1 := NewPlayer()
+	p2 := NewPlayer()
+	pn := NewPlayer()
 	return NewGameBuilder(Coordinate{9, 9}, pn).
 		AddPlayer(p1).
 		AddPlayer(p2).
@@ -19,13 +19,13 @@ func CreateDummyGameEmpty() *Game {
 //
 // All starting with a strength of 10 and a growth interval of 1/second
 func CreateDummyGameSimple() *Game {
-	p1, _ := NewPlayer()
-	p2, _ := NewPlayer()
-	pn, _ := NewPlayer()
-	p1Island, _ := NewIslandWithID(IslandID("p1"), Coordinate{0, 0}, IslandSizeMedium, 10, p1)
-	p2Island, _ := NewIslandWithID(IslandID("p2"), Coordinate{8, 8}, IslandSizeMedium, 10, p2)
-	neIsland, _ := NewIslandWithID(IslandID("pn"), Coordinate{4, 4}, IslandSizeMedium, 10, pn)
-	ne2Island, _ := NewIslandWithID(IslandID("bottom-left"), Coordinate{0, 8}, IslandSizeMedium, 10, pn)
+	p1 := NewPlayer()
+	p2 := NewPlayer()
+	pn := NewPlayer()
+	p1Island := NewIslandWithID(IslandID("p1"), Coordinate{0, 0}, IslandSizeMedium, 10, p1)
+	p2Island := NewIslandWithID(IslandID("p2"), Coordinate{8, 8}, IslandSizeMedium, 10, p2)
+	neIsland := NewIslandWithID(IslandID("pn"), Coordinate{4, 4}, IslandSizeMedium, 10, pn)
+	ne2Island := NewIslandWithID(IslandID("bottom-left"), Coordinate{0, 8}, IslandSizeMedium, 10, pn)
 
 	return NewGameBuilder(Coordinate{9, 9}, pn).
 		AddPlayer(p1).

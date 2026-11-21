@@ -32,13 +32,13 @@ type Player struct {
 }
 
 // NewPlayer creates a new Player with a new generated ID.
-func NewPlayer() (*Player, error) {
+func NewPlayer() *Player {
 	id := PlayerID(NextModelID())
 	return &Player{
 		id:       id,
 		state:    Alive,
 		fogOfWar: nil,
-	}, nil
+	}
 }
 
 // ID returns the PlayerID of the Player.

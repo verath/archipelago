@@ -18,10 +18,7 @@ func (f actionFunc) Apply(g *model.Game) ([]model.Event, error) {
 
 func TestGameLoop_Start_Stop(t *testing.T) {
 	game := &model.Game{}
-	gl, err := newGameLoop(testutil.DiscardLogger, game)
-	if err != nil {
-		t.Fatalf("expected no error, got: %v", err)
-	}
+	gl := newGameLoop(testutil.DiscardLogger, game)
 	// Override per tick actions, add no additional actions.
 	gl.perTickActionsFunc = func(time.Duration) []model.Action { return nil }
 
@@ -36,10 +33,7 @@ func TestGameLoop_Start_Stop(t *testing.T) {
 
 func TestGameLoop_AddAction(t *testing.T) {
 	game := &model.Game{}
-	gl, err := newGameLoop(testutil.DiscardLogger, game)
-	if err != nil {
-		t.Fatalf("expected no error, got: %v", err)
-	}
+	gl := newGameLoop(testutil.DiscardLogger, game)
 	// Override per tick actions, add no additional actions.
 	gl.perTickActionsFunc = func(time.Duration) []model.Action { return nil }
 
@@ -77,10 +71,7 @@ func TestGameLoop_AddAction(t *testing.T) {
 // is sent.
 func TestGameLoop_GameOverEvent(t *testing.T) {
 	game := &model.Game{}
-	gl, err := newGameLoop(testutil.DiscardLogger, game)
-	if err != nil {
-		t.Fatalf("expected no error, got: %v", err)
-	}
+	gl := newGameLoop(testutil.DiscardLogger, game)
 	// GIVEN a gameLoop that add no actions per tick, tick as fast as possible
 	// and an eventHandler that always return no error.
 	gl.perTickActionsFunc = func(time.Duration) []model.Action { return nil }
@@ -102,10 +93,7 @@ func TestGameLoop_GameOverEvent(t *testing.T) {
 // milliseconds and keeps up with the wall clock.
 func TestGameLoop_TickStepsSumToWholeMilliseconds(t *testing.T) {
 	game := &model.Game{}
-	gl, err := newGameLoop(testutil.DiscardLogger, game)
-	if err != nil {
-		t.Fatalf("expected no error, got: %v", err)
-	}
+	gl := newGameLoop(testutil.DiscardLogger, game)
 	gl.tickInterval = 3*time.Millisecond + 300*time.Microsecond
 	var steps []time.Duration
 	// Called on the game loop goroutine; read after Run returned.

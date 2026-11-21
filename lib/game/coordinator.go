@@ -57,14 +57,6 @@ type CoordinatorOptions struct {
 	AIPlayers int
 }
 
-// DefaultCoordinatorOptions returns the CoordinatorOptions used in production.
-func DefaultCoordinatorOptions() CoordinatorOptions {
-	return CoordinatorOptions{
-		LobbyWait: DefaultLobbyWait,
-		AIPlayers: AIPlayersAuto,
-	}
-}
-
 // validate returns an error if the options are invalid.
 func (opts CoordinatorOptions) validate() error {
 	if opts.LobbyWait < 0 {
@@ -252,16 +244,10 @@ func (c *Coordinator) startGame(ctx context.Context, clients []Client) error {
 	if err != nil {
 		return fmt.Errorf("Error creating game: %w", err)
 	}
-	gameLoop, err := newGameLoop(c.logger, game)
-	if err != nil {
-		return fmt.Errorf("Error creating gameLoop: %w", err)
-	}
+	gameLoop := newGameLoop(c.logger, game)
 	playerProxies := make([]*playerProxy, numClients)
 	for i, player := range game.Players() {
-		playerProxies[i], err = newPlayerProxy(player, clients[i])
-		if err != nil {
-			return fmt.Errorf("error creating player proxy: %w", err)
-		}
+		playerProxies[i] = newPlayerProxy(player.ID(), clients[i])
 	}
 	ctrl, err := newController(c.logger, gameLoop, playerProxies)
 	if err != nil {

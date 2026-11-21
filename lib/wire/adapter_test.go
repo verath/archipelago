@@ -23,14 +23,6 @@ func protoMarshalOrPanic(pb proto.Message) []byte {
 	return msg
 }
 
-func newPBClientAdapterOrFail(tb testing.TB, client wire.Client) *wire.PBClientAdapter {
-	pbClient, err := wire.NewPBClientAdapter(client)
-	if err != nil {
-		tb.Fatalf("Error creating NewPBClientAdapter: %v", err)
-	}
-	return pbClient
-}
-
 func TestPBClientAdapter_Disconnect(t *testing.T) {
 	disconnectCalled := false
 	mockClient := &wire.MockClient{
@@ -38,7 +30,7 @@ func TestPBClientAdapter_Disconnect(t *testing.T) {
 			disconnectCalled = true
 		},
 	}
-	pbClient := newPBClientAdapterOrFail(t, mockClient)
+	pbClient := wire.NewPBClientAdapter(mockClient)
 	pbClient.Disconnect()
 	if !disconnectCalled {
 		t.Error("Disconnect should call Disconnect on underlying client")
@@ -52,7 +44,7 @@ func TestPBClientAdapter_DisconnectCh(t *testing.T) {
 			return ch
 		},
 	}
-	pbClient := newPBClientAdapterOrFail(t, mockClient)
+	pbClient := wire.NewPBClientAdapter(mockClient)
 	if pbClient.DisconnectCh() != ch {
 		t.Error("DisconnectCh should return the underlying client disconnectCh")
 	}
@@ -123,7 +115,7 @@ var readTests = []struct {
 
 func TestPBClientAdapter_ReadPlayerAction(t *testing.T) {
 	mockClient := &wire.MockClient{}
-	pbClient := newPBClientAdapterOrFail(t, mockClient)
+	pbClient := wire.NewPBClientAdapter(mockClient)
 	for _, tt := range readTests {
 		mockClient.ReadMessageFunc = func(context.Context) ([]byte, error) {
 			return tt.readMsg, tt.readErr
@@ -161,9 +153,9 @@ var (
 	}
 
 	emptyGame = (func() *model.Game {
-		p1, _ := model.NewPlayer()
-		p2, _ := model.NewPlayer()
-		pn, _ := model.NewPlayer()
+		p1 := model.NewPlayer()
+		p2 := model.NewPlayer()
+		pn := model.NewPlayer()
 		gb := model.NewGameBuilder(model.Coordinate{X: 9, Y: 9}, pn)
 		gb.AddPlayer(p1)
 		gb.AddPlayer(p2)
@@ -236,7 +228,7 @@ var writeTests = []struct {
 
 func TestPBClientAdapter_WritePlayerEvent(t *testing.T) {
 	mockClient := &wire.MockClient{}
-	pbClient := newPBClientAdapterOrFail(t, mockClient)
+	pbClient := wire.NewPBClientAdapter(mockClient)
 	for _, tt := range writeTests {
 		var actualMsg []byte
 		mockClient.WriteMessageFunc = func(_ context.Context, msg []byte) error {
@@ -274,7 +266,7 @@ func TestPBClientAdapter_WritePlayerEvent_ResumeToken(t *testing.T) {
 			return proto.Unmarshal(b, got)
 		},
 	}
-	pbClient := newPBClientAdapterOrFail(t, mockClient)
+	pbClient := wire.NewPBClientAdapter(mockClient)
 	if err := pbClient.WritePlayerEvent(context.Background(), &evt); err != nil {
 		t.Fatalf("WritePlayerEvent: %v", err)
 	}
@@ -294,10 +286,7 @@ func TestPBClientAdapter_ReadPlayerAction_LaunchSeq(t *testing.T) {
 			}), nil
 		},
 	}
-	pbClient, err := wire.NewPBClientAdapter(mockClient)
-	if err != nil {
-		t.Fatalf("NewPBClientAdapter: %v", err)
-	}
+	pbClient := wire.NewPBClientAdapter(mockClient)
 	act, err := pbClient.ReadPlayerAction(context.Background())
 	if err != nil {
 		t.Fatalf("ReadPlayerAction: %v", err)
@@ -322,10 +311,7 @@ func TestPBClientAdapter_WritePlayerEvent_Sequence(t *testing.T) {
 			return nil
 		},
 	}
-	pbClient, err := wire.NewPBClientAdapter(mockClient)
-	if err != nil {
-		t.Fatalf("NewPBClientAdapter: %v", err)
-	}
+	pbClient := wire.NewPBClientAdapter(mockClient)
 	game := model.CreateDummyGameSimple()
 	tick := func() model.PlayerEvent {
 		return (&model.EventTick{Game: game.Copy()}).ToPlayerEvent(game.Players()[0].ID())

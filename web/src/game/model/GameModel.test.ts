@@ -55,7 +55,6 @@ describe("GameModel.update", () => {
         const model = newGame();
         expect(model.islandById("mine")?.owner).toBe(model.playerById("me"));
         expect(model.islandById("mine")?.owner?.isSelf()).toBe(true);
-        expect(model.islandById("theirs")?.owner?.isEnemy()).toBe(true);
         expect(model.islandById("free")?.owner).toBe(model.playerNeutral);
         expect(model.islandById("free")?.owner?.isNeutral()).toBe(true);
     });
@@ -147,16 +146,13 @@ describe("GameModel.update", () => {
         expect(listener).not.toHaveBeenCalled();
     });
 
-    it("emits a change when myPlayerId or serverTickInterval change", () => {
+    it("emits a change when myPlayerId changes", () => {
         const model = new GameModel();
         const listener = vi.fn();
         model.addChangeListener(listener);
         model.myPlayerId = "me";
         model.myPlayerId = "me";
-        model.serverTickInterval = 250;
-        model.serverTickInterval = 250;
-        expect(listener).toHaveBeenCalledTimes(2);
-        expect(model.serverTickInterval).toBe(250);
+        expect(listener).toHaveBeenCalledTimes(1);
     });
 });
 

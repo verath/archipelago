@@ -2,7 +2,6 @@ package game
 
 import (
 	"context"
-	"errors"
 	"fmt"
 
 	"github.com/verath/archipelago/lib/game/model"
@@ -17,16 +16,13 @@ type playerProxy struct {
 	client   Client
 }
 
-// newPlayerProxy creates a new player proxy representing the provided player
-// model, writing/reading on the provided Client.
-func newPlayerProxy(player *model.Player, client Client) (*playerProxy, error) {
-	if player == nil {
-		return nil, errors.New("player cannot be nil")
-	}
+// newPlayerProxy creates a new player proxy representing the provided player,
+// writing/reading on the provided Client.
+func newPlayerProxy(playerID model.PlayerID, client Client) *playerProxy {
 	return &playerProxy{
-		playerID: player.ID(),
+		playerID: playerID,
 		client:   client,
-	}, nil
+	}
 }
 
 // WriteEvent takes an event, transforms it into a player event for the proxy's player

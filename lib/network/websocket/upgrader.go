@@ -2,7 +2,6 @@ package websocket
 
 import (
 	"compress/flate"
-	"errors"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -37,7 +36,7 @@ func strictOriginCheck(req *http.Request) bool {
 
 // Version is the version of the protocol the server implements (see
 // game.proto), which the client asks for with the "v" query parameter of the
-// URL. Clients asking for another version are rejected.
+// URL. Upgrade does not check it, the caller must reject other versions.
 const Version = "5"
 
 // UpgraderOptions configures an Upgrader. The zero value is the production
@@ -59,7 +58,7 @@ type Upgrader struct {
 }
 
 // NewUpgrader creates a new Upgrader.
-func NewUpgrader(opts UpgraderOptions) (*Upgrader, error) {
+func NewUpgrader(opts UpgraderOptions) *Upgrader {
 	checkOriginFunc := strictOriginCheck
 	if opts.SkipOriginCheck {
 		checkOriginFunc = noOriginCheck
@@ -73,19 +72,12 @@ func NewUpgrader(opts UpgraderOptions) (*Upgrader, error) {
 			// takeover, i.e. each message is compressed on its own.
 			EnableCompression: !opts.DisableCompression,
 		},
-	}, nil
+	}
 }
 
 // Upgrade upgrades the HTTP connection to WebSocket protocol.
 // Upgrade replies with an error to the client on error.
 func (h *Upgrader) Upgrade(w http.ResponseWriter, r *http.Request) (*WSConnection, error) {
-	// Verify client wanted version is current version.
-	clientWSVersion := r.URL.Query().Get("v")
-	if clientWSVersion != Version {
-		err := errors.New("version missmatch")
-		http.Error(w, http.StatusText(http.StatusBadRequest)+" (version missmatch)", http.StatusBadRequest)
-		return nil, err
-	}
 	// Upgrade to a gorilla WS connection, counting the bytes sent and
 	// received on the hijacked connection.
 	cw := &countingResponseWriter{ResponseWriter: w}
@@ -101,11 +93,5 @@ func (h *Upgrader) Upgrade(w http.ResponseWriter, r *http.Request) (*WSConnectio
 		return nil, fmt.Errorf("setting compression level failed: %w", err)
 	}
 	// Wrap in our WSConnection.
-	wsConn, err := newWSConnection(gorillaWSConn, cw.conn)
-	if err != nil {
-		// The connection is hijacked, an HTTP error can no longer be sent.
-		gorillaWSConn.Close()
-		return nil, fmt.Errorf("failed creating WSConnection: %w", err)
-	}
-	return wsConn, nil
+	return newWSConnection(gorillaWSConn, cw.conn), nil
 }

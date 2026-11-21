@@ -17,21 +17,40 @@ import (
 	"log/slog"
 )
 
-// canceledClientContext is a canceled context used by default for new clients
-// until the Server is running, and after the Server has quit.
+// canceledClientContext is a canceled context used for new clients until the
+// Server is running, and after the Server has quit.
 var canceledClientContext context.Context = func() context.Context {
 	ctx, cancel := context.WithCancel(context.Background())
 	cancel()
 	return ctx
 }()
 
-// Options configures a Server. The zero value is the production
+// Options configures a Server. Use DefaultOptions for the production
 // configuration.
 type Options struct {
+	// SkipWSOriginCheck disables checking the Origin of websocket requests.
+	SkipWSOriginCheck bool
+	// DisableWSCompression disables negotiating permessage-deflate
+	// compression with websocket clients.
+	DisableWSCompression bool
+	// LobbyWait is the time to wait for additional clients once enough
+	// clients to start a game have connected (see game.CoordinatorOptions).
+	LobbyWait time.Duration
+	// AIPlayers is the number of AI players added to each game, or
+	// game.AIPlayersAuto (see game.CoordinatorOptions).
+	AIPlayers int
 	// ResumeGrace is how long a client whose connection broke during a game
-	// has to resume the game on a new connection. Zero means
-	// session.DefaultGrace.
+	// has to resume the game on a new connection. Must be positive.
 	ResumeGrace time.Duration
+}
+
+// DefaultOptions returns the Options used in production.
+func DefaultOptions() Options {
+	return Options{
+		LobbyWait:   game.DefaultLobbyWait,
+		AIPlayers:   game.AIPlayersAuto,
+		ResumeGrace: session.DefaultGrace,
+	}
 }
 
 // Server is the main entry point to the game server.
@@ -43,41 +62,39 @@ type Server struct {
 	// sessions holds the sessions of remote clients, which can resume.
 	sessions *session.Registry
 
-	clientContextMu sync.RWMutex
-	clientContext   func() context.Context
-	clientsWG       sync.WaitGroup
+	// clientCtx is the context that clients run with, guarded by clientCtxMu.
+	// It is canceled unless the Server is running.
+	clientCtxMu sync.RWMutex
+	clientCtx   context.Context
+	clientsWG   sync.WaitGroup
 }
 
-// New returns a new Server using the provided logger.
-// wsOpts configures the websocket endpoint, its zero value is the production
-// configuration. coordinatorOpts configures how games are created, see
-// game.DefaultCoordinatorOptions for the production defaults. opts
-// configures the rest.
-func New(logger *slog.Logger, wsOpts websocket.UpgraderOptions, coordinatorOpts game.CoordinatorOptions, opts Options) (*Server, error) {
-	if opts.ResumeGrace < 0 {
-		return nil, fmt.Errorf("ResumeGrace must not be negative, got %v", opts.ResumeGrace)
+// New returns a new Server using the provided logger and options, see
+// DefaultOptions for the production configuration.
+func New(logger *slog.Logger, opts Options) (*Server, error) {
+	if opts.ResumeGrace <= 0 {
+		return nil, fmt.Errorf("ResumeGrace must be positive, got %v", opts.ResumeGrace)
 	}
-	if opts.ResumeGrace == 0 {
-		opts.ResumeGrace = session.DefaultGrace
-	}
-	gameCoordinator, err := game.NewCoordinator(logger, coordinatorOpts)
+	gameCoordinator, err := game.NewCoordinator(logger, game.CoordinatorOptions{
+		LobbyWait: opts.LobbyWait,
+		AIPlayers: opts.AIPlayers,
+	})
 	if err != nil {
 		return nil, fmt.Errorf("error creating game coordinator: %w", err)
 	}
-	wsUpgrader, err := websocket.NewUpgrader(wsOpts)
-	if err != nil {
-		return nil, fmt.Errorf("error creating websocket upgrader: %w", err)
-	}
+	wsUpgrader := websocket.NewUpgrader(websocket.UpgraderOptions{
+		SkipOriginCheck:    opts.SkipWSOriginCheck,
+		DisableCompression: opts.DisableWSCompression,
+	})
 	srv := &Server{
 		logger:          common.ModuleLogEntry(logger, "server"),
 		gameCoordinator: gameCoordinator,
 		router:          http.NewServeMux(),
 		wsUpgrader:      wsUpgrader,
 		sessions:        session.NewRegistry(opts.ResumeGrace),
-
-		clientContext: func() context.Context { return canceledClientContext },
+		clientCtx:       canceledClientContext,
 	}
-	srv.routes()
+	srv.router.HandleFunc("/ws", srv.handleWSConnect())
 	return srv, nil
 }
 
@@ -106,13 +123,11 @@ func (srv *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	srv.router.ServeHTTP(w, r)
 }
 
-// setClientContext modifies clientContext func to return the given clientCtx.
+// setClientContext sets the context that new clients run with.
 func (srv *Server) setClientContext(clientCtx context.Context) {
-	srv.clientContextMu.Lock()
-	defer srv.clientContextMu.Unlock()
-	srv.clientContext = func() context.Context {
-		return clientCtx
-	}
+	srv.clientCtxMu.Lock()
+	defer srv.clientCtxMu.Unlock()
+	srv.clientCtx = clientCtx
 }
 
 // handleWSConnect returns an HTTP handler that handles new websocket
@@ -123,16 +138,17 @@ func (srv *Server) setClientContext(clientCtx context.Context) {
 func (srv *Server) handleWSConnect() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
+		query := r.URL.Query()
+		// Check the version first, so that a wrong one never looks like a
+		// game that can't be resumed.
+		if query.Get("v") != websocket.Version {
+			http.Error(w, http.StatusText(http.StatusBadRequest)+" (version mismatch)", http.StatusBadRequest)
+			return
+		}
 		var resume *session.Session
-		if query := r.URL.Query(); query.Has("resume") {
+		if query.Has("resume") {
 			// Fail before upgrading, so that the client can tell a game it
 			// can't resume from a network error.
-			// A wrong version fails the upgrade too, but should not
-			// look like a game that can't be resumed.
-			if query.Get("v") != websocket.Version {
-				http.Error(w, http.StatusText(http.StatusBadRequest)+" (version missmatch)", http.StatusBadRequest)
-				return
-			}
 			resume = srv.sessions.Resumable(query.Get("resume"))
 			if resume == nil {
 				srv.logger.Debug("Can't resume, unknown or ended session")
@@ -157,18 +173,12 @@ func (srv *Server) handleWSConnect() http.HandlerFunc {
 // If resume is not nil, the client is attached to that session, otherwise
 // it is added to the game coordinator to join a new game.
 func (srv *Server) newWSClient(ctx context.Context, wsConn *websocket.WSConnection, resume *session.Session) error {
-	client, err := network.NewClient(srv.logger, wsConn)
-	if err != nil {
-		return fmt.Errorf("error creating new Client from ws connection: %w", err)
-	}
-	wireClient, err := wire.NewPBClientAdapter(client)
-	if err != nil {
-		return fmt.Errorf("error creating client wire adapter: %w", err)
-	}
+	client := network.NewClient(srv.logger, wsConn)
+	wireClient := wire.NewPBClientAdapter(client)
 	// Get client context. Note that it is not tied to the request context.
-	srv.clientContextMu.RLock()
-	clientCtx := srv.clientContext()
-	srv.clientContextMu.RUnlock()
+	srv.clientCtxMu.RLock()
+	clientCtx := srv.clientCtx
+	srv.clientCtxMu.RUnlock()
 	// Start the client.
 	srv.clientsWG.Add(1)
 	go func() {

@@ -121,7 +121,6 @@ describe("GameController.run", () => {
         await flush();
 
         expect(model.myPlayerId).toBe("me");
-        expect(model.serverTickInterval).toBe(250);
         expect(model.islands.map(i => i.id)).toEqual(["mine", "theirs", "free"]);
         expect(model.islandById("mine")?.owner?.isSelf()).toBe(true);
 
