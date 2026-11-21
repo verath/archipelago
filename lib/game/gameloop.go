@@ -49,9 +49,9 @@ type gameLoop struct {
 
 	// onEvent handles the events produced when applying actions to the
 	// game. It is called on the game loop goroutine and must return quickly,
-	// so as not to hold up the game. An error stops the game loop. Must be
-	// set before Run if any action produces events.
-	onEvent func(event model.Event) error
+	// so as not to hold up the game. Must be set before Run if any action
+	// produces events.
+	onEvent func(event model.Event)
 
 	actionsMu sync.Mutex
 	// A slice of actions to be applied on the next tick
@@ -139,9 +139,7 @@ func (gl *gameLoop) tick(elapsed time.Duration) error {
 			return fmt.Errorf("error applying action: %+v (%T): %w", action, action, err)
 		}
 		for _, event := range events {
-			if err := gl.onEvent(event); err != nil {
-				return fmt.Errorf("error handling event: %+v (%T): %w", event, event, err)
-			}
+			gl.onEvent(event)
 			if model.IsGameOverEvent(event) {
 				gl.logger.Debug("gameOver set")
 				gl.gameOver.Store(true)
