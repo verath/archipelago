@@ -57,7 +57,7 @@ func (s *randomStrategy) NextAction(state clientState, game *model.Game) (model.
 	}
 	// Select random owned island with at least minOriginStrength.
 	myIslands := filterIslands(game.Islands(), func(island *model.Island) bool {
-		return island.IsOwnedBy(myPlayer) && island.Strength() >= s.minOriginStrength
+		return island.IsOwnedBy(myPlayer.ID()) && island.Strength() >= s.minOriginStrength
 	})
 	if len(myIslands) == 0 {
 		return nil, nil
@@ -95,7 +95,7 @@ func (s *opportunisticStrategy) NextAction(state clientState, game *model.Game) 
 
 	// Select one of our islands.
 	myIslands := filterIslands(game.Islands(), func(island *model.Island) bool {
-		return island.IsOwnedBy(myPlayer) && island.Strength() >= 2
+		return island.IsOwnedBy(myPlayer.ID()) && island.Strength() >= 2
 	})
 	ownedRatio := float64(len(myIslands)) / float64(len(game.Islands()))
 	if len(myIslands) == 0 {
@@ -120,10 +120,10 @@ func (s *opportunisticStrategy) NextAction(state clientState, game *model.Game) 
 			islandStrength = model.IslandGrowthCap
 		}
 		// Punish by owner.
-		if island.IsOwnedBy(game.PlayerNeutral()) {
+		if island.IsOwnedBy(game.PlayerNeutral().ID()) {
 			// Punish attacking neutral islands.
 			islandStrength *= 2
-		} else if island.IsOwnedBy(myPlayer) {
+		} else if island.IsOwnedBy(myPlayer.ID()) {
 			// Punish reinforcing own islands.
 			islandStrength *= 4
 		}
@@ -164,6 +164,6 @@ func filterIslands(islands []*model.Island, pred func(*model.Island) bool) []*mo
 
 func islandsNotOwnedBy(game *model.Game, player *model.Player) []*model.Island {
 	return filterIslands(game.Islands(), func(island *model.Island) bool {
-		return !island.IsOwnedBy(player)
+		return !island.IsOwnedBy(player.ID())
 	})
 }
