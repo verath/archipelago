@@ -1,5 +1,3 @@
-import { Ticker } from "pixi.js";
-
 import type Connection from "../../network/Connection.ts";
 import type { ServerEvent } from "../../network/Connection.ts";
 import { wire } from "../../wire/proto_bundle.js";
@@ -35,9 +33,12 @@ export default class GameController {
 
     private readonly _gameModel: GameModel;
 
-    private _lastUpdateMS = 0;
-
     private _isGameOver = false;
+
+    /**
+     * Whether run() is running, see onFrame.
+     */
+    private _running = false;
 
     private _winnerId: string | null = null;
 
@@ -102,13 +103,6 @@ export default class GameController {
             seq,
         });
         this._connection.sendAction(actEnvelope);
-    }
-
-    private _interpolate(): void {
-        const now = performance.now();
-        const delta = now - (this._lastUpdateMS || now);
-        this._lastUpdateMS = now;
-        this._gameModel.interpolate(delta);
     }
 
     private _onGameOver(winnerId: string | null): void {
@@ -217,12 +211,21 @@ export default class GameController {
         }
     }
 
-    async run(): Promise<GameResult> {
-        const ticker = new Ticker();
-        ticker.add(this._interpolate, this);
+    /**
+     * Moves the model's airplanes to where they are now. Called every frame,
+     * right before rendering. Does nothing unless run() is running, so that
+     * airplanes stay where they are once the game has ended for us.
+     * @param delta [ms] Time since the previous frame.
+     */
+    onFrame(delta: number): void {
+        if (this._running) {
+            this._gameModel.interpolate(delta);
+        }
+    }
 
+    async run(): Promise<GameResult> {
         let gameResult: GameResult;
-        ticker.start();
+        this._running = true;
         try {
             for (; ;) {
                 if (this._isGameOver) {
@@ -256,7 +259,7 @@ export default class GameController {
             }
         } finally {
             // Also stop interpolating if handling a server event throws.
-            ticker.destroy();
+            this._running = false;
         }
 
         return gameResult;
