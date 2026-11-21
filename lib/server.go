@@ -11,7 +11,6 @@ import (
 	"github.com/verath/archipelago/lib/common"
 	"github.com/verath/archipelago/lib/game"
 	"github.com/verath/archipelago/lib/network"
-	"github.com/verath/archipelago/lib/network/websocket"
 	"github.com/verath/archipelago/lib/session"
 	"github.com/verath/archipelago/lib/wire"
 	"log/slog"
@@ -57,7 +56,7 @@ func DefaultOptions() Options {
 type Server struct {
 	logger          *slog.Logger
 	gameCoordinator *game.Coordinator
-	wsUpgrader      *websocket.Upgrader
+	wsUpgrader      *network.Upgrader
 	router          *http.ServeMux
 	// sessions holds the sessions of remote clients, which can resume.
 	sessions *session.Registry
@@ -82,7 +81,7 @@ func New(logger *slog.Logger, opts Options) (*Server, error) {
 	if err != nil {
 		return nil, fmt.Errorf("error creating game coordinator: %w", err)
 	}
-	wsUpgrader := websocket.NewUpgrader(websocket.UpgraderOptions{
+	wsUpgrader := network.NewUpgrader(network.UpgraderOptions{
 		SkipOriginCheck:    opts.SkipWSOriginCheck,
 		DisableCompression: opts.DisableWSCompression,
 	})
@@ -141,7 +140,7 @@ func (srv *Server) handleWSConnect() http.HandlerFunc {
 		query := r.URL.Query()
 		// Check the version first, so that a wrong one never looks like a
 		// game that can't be resumed.
-		if query.Get("v") != websocket.Version {
+		if query.Get("v") != network.Version {
 			http.Error(w, http.StatusText(http.StatusBadRequest)+" (version mismatch)", http.StatusBadRequest)
 			return
 		}
@@ -156,24 +155,22 @@ func (srv *Server) handleWSConnect() http.HandlerFunc {
 				return
 			}
 		}
-		wsConn, err := srv.wsUpgrader.Upgrade(w, r)
+		client, err := srv.wsUpgrader.Upgrade(w, r)
 		if err != nil {
 			// Note upgrader has already written error response.
 			srv.logger.Debug("Failed upgrading to ws", "err", err)
 			return
 		}
-		if err := srv.newWSClient(ctx, wsConn, resume); err != nil {
+		if err := srv.newWSClient(ctx, client, resume); err != nil {
 			srv.logger.Debug("Error handling new ws connection", "err", err)
-			wsConn.Close()
 		}
 	}
 }
 
-// newWSClient starts a new websocket client for the provided ws connection.
-// If resume is not nil, the client is attached to that session, otherwise
-// it is added to the game coordinator to join a new game.
-func (srv *Server) newWSClient(ctx context.Context, wsConn *websocket.WSConnection, resume *session.Session) error {
-	client := network.NewClient(srv.logger, wsConn)
+// newWSClient runs the new websocket client. If resume is not nil, the
+// client is attached to that session, otherwise it is added to the game
+// coordinator to join a new game. On error, the client is disconnected.
+func (srv *Server) newWSClient(ctx context.Context, client *network.Client, resume *session.Session) error {
 	wireClient := wire.NewPBClientAdapter(client)
 	// Get client context. Note that it is not tied to the request context.
 	srv.clientCtxMu.RLock()
@@ -193,7 +190,7 @@ func (srv *Server) newWSClient(ctx context.Context, wsConn *websocket.WSConnecti
 				srv.logger.Info("client stopped with error", "err", err)
 			}
 		}
-		srv.logClientTraffic(time.Since(start), wsConn.Stats())
+		srv.logClientTraffic(time.Since(start), client.Stats())
 	}()
 	if resume != nil {
 		// Attach disconnects the client on error.
@@ -213,7 +210,7 @@ func (srv *Server) newWSClient(ctx context.Context, wsConn *websocket.WSConnecti
 
 // logClientTraffic logs the traffic of a websocket client over its lifetime,
 // one line per client, to be able to follow network usage in production.
-func (srv *Server) logClientTraffic(duration time.Duration, stats websocket.Stats) {
+func (srv *Server) logClientTraffic(duration time.Duration, stats network.Stats) {
 	srv.logger.Info("client traffic",
 		"duration", duration.Round(time.Millisecond),
 		"msgsOut", stats.MessagesWritten,

@@ -1,4 +1,4 @@
-package websocket
+package network
 
 import (
 	"compress/flate"
@@ -75,9 +75,10 @@ func NewUpgrader(opts UpgraderOptions) *Upgrader {
 	}
 }
 
-// Upgrade upgrades the HTTP connection to WebSocket protocol.
-// Upgrade replies with an error to the client on error.
-func (h *Upgrader) Upgrade(w http.ResponseWriter, r *http.Request) (*WSConnection, error) {
+// Upgrade upgrades the HTTP connection to WebSocket protocol, and returns a
+// Client for it, to be run with Run. Upgrade replies with an error to the
+// client on error.
+func (h *Upgrader) Upgrade(w http.ResponseWriter, r *http.Request) (*Client, error) {
 	// Upgrade to a gorilla WS connection, counting the bytes sent and
 	// received on the hijacked connection.
 	cw := &countingResponseWriter{ResponseWriter: w}
@@ -92,6 +93,5 @@ func (h *Upgrader) Upgrade(w http.ResponseWriter, r *http.Request) (*WSConnectio
 		gorillaWSConn.Close()
 		return nil, fmt.Errorf("setting compression level failed: %w", err)
 	}
-	// Wrap in our WSConnection.
-	return newWSConnection(gorillaWSConn, cw.conn), nil
+	return newClient(gorillaWSConn, cw.conn), nil
 }

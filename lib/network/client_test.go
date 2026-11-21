@@ -1,15 +1,14 @@
-package websocket
+package network
 
 import (
 	"bytes"
 	"context"
+	"crypto/rand"
 	"errors"
-	"log/slog"
 	"testing"
 	"time"
 
 	"github.com/gorilla/websocket"
-	"github.com/verath/archipelago/lib/network"
 )
 
 // These tests pin the behaviour of a server-side connection as the rest of
@@ -21,11 +20,17 @@ const testTimeout = 5 * time.Second
 // startClient connects a peer to a new server-side client and runs the
 // client with ctx until the test ends. awaitRun waits for Run to return
 // and returns its error.
-func startClient(t *testing.T, ctx context.Context) (peer *websocket.Conn, client *network.Client, awaitRun func() error) {
+func startClient(t *testing.T, ctx context.Context) (peer *websocket.Conn, client *Client, awaitRun func() error) {
 	t.Helper()
 	url, connCh := startServer(t, UpgraderOptions{})
 	peer, _ = dial(t, url, true)
-	client = network.NewClient(slog.New(slog.DiscardHandler), nextConn(t, connCh))
+	client = nextConn(t, connCh)
+	return peer, client, runClient(t, ctx, client)
+}
+
+// runClient runs client with ctx until the test ends. The returned awaitRun
+// waits for Run to return and returns its error.
+func runClient(t *testing.T, ctx context.Context, client *Client) (awaitRun func() error) {
 	ctx, cancel := context.WithCancel(ctx)
 	runDone := make(chan struct{})
 	var runErr error
@@ -47,11 +52,11 @@ func startClient(t *testing.T, ctx context.Context) (peer *websocket.Conn, clien
 		cancel()
 		awaitRun()
 	})
-	return peer, client, awaitRun
+	return awaitRun
 }
 
 // awaitDisconnect fails the test if client doesn't disconnect in time.
-func awaitDisconnect(t *testing.T, client *network.Client) {
+func awaitDisconnect(t *testing.T, client *Client) {
 	t.Helper()
 	select {
 	case <-client.DisconnectCh():
@@ -92,7 +97,7 @@ func TestClient_PeerClosed(t *testing.T) {
 	if err := peer.WriteControl(websocket.CloseMessage, msg, time.Now().Add(time.Second)); err != nil {
 		t.Fatalf("WriteControl: %v", err)
 	}
-	if _, err := client.ReadMessage(ctxWithTimeout(t)); !errors.Is(err, network.ErrPeerClosed) {
+	if _, err := client.ReadMessage(ctxWithTimeout(t)); !errors.Is(err, ErrPeerClosed) {
 		t.Errorf("ReadMessage err = %v, want ErrPeerClosed", err)
 	}
 	awaitDisconnect(t, client)
@@ -107,7 +112,7 @@ func TestClient_ConnectionBroken_NotPeerClosed(t *testing.T) {
 	// No close frame, like a network that went away.
 	peer.NetConn().Close()
 	_, err := client.ReadMessage(ctxWithTimeout(t))
-	if err == nil || errors.Is(err, network.ErrPeerClosed) {
+	if err == nil || errors.Is(err, ErrPeerClosed) {
 		t.Errorf("ReadMessage err = %v, want an error that is not ErrPeerClosed", err)
 	}
 	awaitDisconnect(t, client)
@@ -193,7 +198,7 @@ func TestClient_DisconnectsMisbehavingPeer(t *testing.T) {
 			return nil
 		},
 		"message too big": func(peer *websocket.Conn) error {
-			return peer.WriteMessage(websocket.BinaryMessage, make([]byte, connMaxMessageSize+1))
+			return peer.WriteMessage(websocket.BinaryMessage, make([]byte, maxMessageSize+1))
 		},
 		"message inflating past limit": func(peer *websocket.Conn) error {
 			return peer.WriteMessage(websocket.BinaryMessage, make([]byte, 1<<20))
@@ -212,5 +217,44 @@ func TestClient_DisconnectsMisbehavingPeer(t *testing.T) {
 				t.Error("PeerClosed() = true, want false")
 			}
 		})
+	}
+}
+
+// Test that Disconnect makes a write blocked on a peer that doesn't read
+// fail at once, rather than at its deadline.
+func TestClient_DisconnectUnblocksWrite(t *testing.T) {
+	_, client, _ := startClient(t, context.Background())
+
+	// Random bytes don't compress, so the writes soon fill the TCP buffers
+	// of the peer, which doesn't read.
+	msg := make([]byte, 64<<10)
+	rand.Read(msg)
+	writing := make(chan struct{}, 1)
+	writeErrCh := make(chan error, 1)
+	go func() {
+		for {
+			writing <- struct{}{}
+			if err := client.WriteMessage(context.Background(), msg); err != nil {
+				writeErrCh <- err
+				return
+			}
+		}
+	}()
+	// Wait until a write has been blocked for a while.
+	timeout := time.After(testTimeout)
+	for blocked := false; !blocked; {
+		select {
+		case <-writing:
+		case <-time.After(200 * time.Millisecond):
+			blocked = true
+		case <-timeout:
+			t.Fatal("timeout waiting for a write to block")
+		}
+	}
+	client.Disconnect()
+	select {
+	case <-writeErrCh:
+	case <-time.After(writeTimeout / 2):
+		t.Fatal("WriteMessage still blocked after Disconnect")
 	}
 }

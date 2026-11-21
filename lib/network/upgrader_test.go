@@ -1,4 +1,4 @@
-package websocket
+package network
 
 import (
 	"bytes"
@@ -11,15 +11,14 @@ import (
 	"time"
 
 	"github.com/gorilla/websocket"
-	"github.com/verath/archipelago/lib/network"
 )
 
 // startServer starts an HTTP server upgrading requests with an Upgrader
 // created from opts. Upgraded connections are sent on the returned channel.
-func startServer(t *testing.T, opts UpgraderOptions) (string, <-chan *WSConnection) {
+func startServer(t *testing.T, opts UpgraderOptions) (string, <-chan *Client) {
 	t.Helper()
 	upgrader := NewUpgrader(opts)
-	connCh := make(chan *WSConnection, 1)
+	connCh := make(chan *Client, 1)
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		wsConn, err := upgrader.Upgrade(w, r)
 		if err != nil {
@@ -43,11 +42,13 @@ func dial(t *testing.T, url string, compress bool) (*websocket.Conn, *http.Respo
 	return conn, resp
 }
 
-func nextConn(t *testing.T, connCh <-chan *WSConnection) *WSConnection {
+// nextConn returns the next client upgraded by the server.
+func nextConn(t *testing.T, connCh <-chan *Client) *Client {
 	t.Helper()
 	select {
 	case c := <-connCh:
-		t.Cleanup(func() { c.Close() })
+		// Run closes the connection, but not all tests run the client.
+		t.Cleanup(func() { c.ws.Close() })
 		return c
 	case <-time.After(5 * time.Second):
 		t.Fatal("timeout waiting for server connection")
@@ -153,11 +154,9 @@ func TestUpgrade_ClientWithoutCompression(t *testing.T) {
 }
 
 func TestReadMessage_CountsMessages(t *testing.T) {
-	url, connCh := startServer(t, UpgraderOptions{SkipOriginCheck: true})
-	client, _ := dial(t, url, true)
-	server := nextConn(t, connCh)
+	client, server, _ := startClient(t, context.Background())
 
-	msg := bytes.Repeat([]byte{1}, connMaxMessageSize)
+	msg := bytes.Repeat([]byte{1}, maxMessageSize)
 	if err := client.WriteMessage(websocket.BinaryMessage, msg); err != nil {
 		t.Fatalf("client WriteMessage: %v", err)
 	}
@@ -178,46 +177,15 @@ func TestReadMessage_CountsMessages(t *testing.T) {
 }
 
 func TestReadMessage_RejectsMessageInflatingPastLimit(t *testing.T) {
-	url, connCh := startServer(t, UpgraderOptions{SkipOriginCheck: true})
-	client, _ := dial(t, url, true)
-	server := nextConn(t, connCh)
+	client, _, awaitRun := startClient(t, context.Background())
 
 	// 1MiB of zeros deflates to ~1KiB, under the frame size limit, but must
 	// still be rejected.
 	if err := client.WriteMessage(websocket.BinaryMessage, make([]byte, 1<<20)); err != nil {
 		t.Fatalf("client WriteMessage: %v", err)
 	}
-	_, err := server.ReadMessage(ctxWithTimeout(t))
-	if !errors.Is(err, errMessageTooBig) {
-		t.Fatalf("ReadMessage err = %v, want %v", err, errMessageTooBig)
-	}
-}
-
-func TestReadMessage_PeerClosed(t *testing.T) {
-	url, connCh := startServer(t, UpgraderOptions{})
-	client, _ := dial(t, url, true)
-	server := nextConn(t, connCh)
-
-	// A close frame, as a browser sends when the tab is closed.
-	msg := websocket.FormatCloseMessage(websocket.CloseGoingAway, "")
-	if err := client.WriteControl(websocket.CloseMessage, msg, time.Now().Add(time.Second)); err != nil {
-		t.Fatalf("WriteControl: %v", err)
-	}
-	if _, err := server.ReadMessage(ctxWithTimeout(t)); !errors.Is(err, network.ErrPeerClosed) {
-		t.Errorf("ReadMessage err = %v, want ErrPeerClosed", err)
-	}
-}
-
-func TestReadMessage_ConnectionBroken_NotPeerClosed(t *testing.T) {
-	url, connCh := startServer(t, UpgraderOptions{})
-	client, _ := dial(t, url, true)
-	server := nextConn(t, connCh)
-
-	// No close frame, like a network that went away.
-	client.NetConn().Close()
-	_, err := server.ReadMessage(ctxWithTimeout(t))
-	if err == nil || errors.Is(err, network.ErrPeerClosed) {
-		t.Errorf("ReadMessage err = %v, want an error that is not ErrPeerClosed", err)
+	if err := awaitRun(); !errors.Is(err, errMessageTooBig) {
+		t.Fatalf("Run err = %v, want %v", err, errMessageTooBig)
 	}
 }
 
@@ -225,11 +193,12 @@ func TestReadMessage_RejectsFrameOverLimit(t *testing.T) {
 	url, connCh := startServer(t, UpgraderOptions{SkipOriginCheck: true, DisableCompression: true})
 	client, _ := dial(t, url, false)
 	server := nextConn(t, connCh)
+	awaitRun := runClient(t, context.Background(), server)
 
-	if err := client.WriteMessage(websocket.BinaryMessage, make([]byte, connMaxMessageSize+1)); err != nil {
+	if err := client.WriteMessage(websocket.BinaryMessage, make([]byte, maxMessageSize+1)); err != nil {
 		t.Fatalf("client WriteMessage: %v", err)
 	}
-	if _, err := server.ReadMessage(ctxWithTimeout(t)); err == nil {
-		t.Fatal("ReadMessage succeeded, want error")
+	if err := awaitRun(); !errors.Is(err, websocket.ErrReadLimit) {
+		t.Fatalf("Run err = %v, want %v", err, websocket.ErrReadLimit)
 	}
 }
