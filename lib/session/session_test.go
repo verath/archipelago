@@ -599,6 +599,44 @@ func TestSession_PeerClosedOldConnection_DoesNotEndResumed(t *testing.T) {
 	}
 }
 
+// The old connection's close arrives while Attach writes to the new one,
+// i.e. after the old connection was dropped but before the new one is
+// attached: the Session goes on with the new connection.
+func TestSession_PeerClosedOldConnectionDuringAttach_DoesNotEnd(t *testing.T) {
+	s, conn1 := newStartedSession(t, time.Minute)
+	s.mu.Lock()
+	att1 := s.cur
+	s.mu.Unlock()
+	conn1.readErr = fmt.Errorf("closed: %w", network.ErrPeerClosed)
+	conn2 := newFakeConn()
+	// Unbuffered: Attach blocks in its first write until we receive.
+	conn2.writingCh = make(chan struct{})
+	attachErrCh := make(chan error, 1)
+	go func() {
+		attachErrCh <- s.Attach(context.Background(), conn2)
+	}()
+	// Attach drops conn1 before it writes to conn2.
+	waitClosed(t, conn1.DisconnectCh(), "conn1.DisconnectCh")
+	if s.leave(att1) {
+		t.Error("leave of the old connection ended the session during Attach")
+	}
+	go func() {
+		for range conn2.writingCh {
+		}
+	}()
+	select {
+	case err := <-attachErrCh:
+		if err != nil {
+			t.Fatalf("Attach: %v", err)
+		}
+	case <-time.After(testTimeout):
+		t.Fatal("timeout waiting for Attach")
+	}
+	close(conn2.writingCh)
+	expectStart(t, conn2, s)
+	expectOpen(t, s.DisconnectCh(), "DisconnectCh")
+}
+
 func TestRegistry(t *testing.T) {
 	r := NewRegistry(time.Minute)
 	conn := newFakeConn()
