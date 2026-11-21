@@ -2,10 +2,8 @@ import EventEmitter from "eventemitter3";
 import { Container, type Renderer } from "pixi.js";
 
 import type ResourceHolder from "../../resource/ResourceHolder.ts";
-import type AirplaneModel from "../model/AirplaneModel.ts";
 import type GameModel from "../model/GameModel.ts";
 import type IslandModel from "../model/IslandModel.ts";
-import AirplanePool from "./AirplanePool.ts";
 import AirplaneSprite from "./AirplaneSprite.ts";
 import IslandSprite from "./IslandSprite.ts";
 import FogOfWarSprite from "./FogOfWarSprite.ts";
@@ -54,8 +52,6 @@ export default class GameView {
 
     private readonly _eventEmitter: EventEmitter<{ [EVENT_ISLAND_CLICKED]: [islandId: string | null] }>;
 
-    private readonly _airplanePool: AirplanePool;
-
     /**
      * A map between island id and the island sprite representing it.
      *
@@ -80,7 +76,6 @@ export default class GameView {
         this._layerAirplanes = new Container();
         this._layerFogOfWar = new Container();
         this._eventEmitter = new EventEmitter();
-        this._airplanePool = new AirplanePool(10, () => new AirplaneSprite(resourceHolder));
         this._islands = new Map();
         this._airplanes = new Map();
 
@@ -94,66 +89,57 @@ export default class GameView {
         this._eventEmitter.emit(EVENT_ISLAND_CLICKED, islandModel.id);
     }
 
-    private _addAirplane(airplaneModel: AirplaneModel): void {
-        const airplane = this._airplanePool.get();
-        airplane.model = airplaneModel;
-        this._layerAirplanes.addChild(airplane);
-        this._airplanes.set(airplaneModel.id, airplane);
-    }
-
-    private _removeAirplane(id: string | null): void {
-        const airplane = this._airplanes.get(id);
-        if (airplane === undefined) {
-            return;
-        }
-        this._layerAirplanes.removeChild(airplane);
-        this._airplanes.delete(id);
-        this._airplanePool.put(airplane);
-    }
-
     private _addIsland(islandModel: IslandModel): void {
-        const island = new IslandSprite(this._resourceHolder);
-        island.model = islandModel;
+        const island = new IslandSprite(this._resourceHolder, islandModel);
         island.addClickListener(this._onIslandClicked, this);
         this._layerIslands.addChild(island);
         this._islands.set(islandModel.id, island);
     }
 
-    onModelChanged(): void {
+    /**
+     * Brings the sprites in line with the model.
+     */
+    private _sync(): void {
+        const gameModel = this._gameModel;
         // Create island and airplane sprites for any islands or airplanes
         // that has not been added already.
-        this._gameModel.islands
-            .filter(islandModel => !this._islands.has(islandModel.id))
-            .forEach(islandModel => this._addIsland(islandModel));
+        for (const islandModel of gameModel.islands) {
+            if (!this._islands.has(islandModel.id)) {
+                this._addIsland(islandModel);
+            }
+        }
         // Remove sprites of airplanes that are no longer part of the model,
         // also when a new airplane model replaced one with the same id (a
         // delta may remove and re-add an airplane).
-        const idsToRemove: (string | null)[] = [];
         for (const [id, sprite] of this._airplanes) {
-            if (sprite.model !== this._gameModel.airplaneById(id)) {
-                idsToRemove.push(id);
+            if (sprite.model !== gameModel.airplaneById(id)) {
+                sprite.destroy({ children: true });
+                this._airplanes.delete(id);
             }
         }
-        idsToRemove.forEach(id => this._removeAirplane(id));
-        this._gameModel.airplanes
-            .filter(airplaneModel => !this._airplanes.has(airplaneModel.id))
-            .forEach(airplaneModel => this._addAirplane(airplaneModel));
+        for (const airplaneModel of gameModel.airplanes) {
+            if (!this._airplanes.has(airplaneModel.id)) {
+                const sprite = new AirplaneSprite(this._resourceHolder, airplaneModel);
+                this._layerAirplanes.addChild(sprite);
+                this._airplanes.set(airplaneModel.id, sprite);
+            }
+        }
 
         // Check if the game model has changed size, if so we resize ourselves and
         // recreate the fog of war tiles.
-        const newStageWidth = this._gameModel.size.x * TILE_WIDTH;
-        const newStageHeight = this._gameModel.size.y * TILE_HEIGHT;
+        const newStageWidth = gameModel.size.x * TILE_WIDTH;
+        const newStageHeight = gameModel.size.y * TILE_HEIGHT;
         if (newStageWidth !== this._stageWidth || newStageHeight !== this._stageHeight) {
-            this._stageWidth = this._gameModel.size.x * TILE_WIDTH;
-            this._stageHeight = this._gameModel.size.y * TILE_HEIGHT;
+            this._stageWidth = newStageWidth;
+            this._stageHeight = newStageHeight;
             this.resize();
 
             // Note that the FoW layer is created such that the child index
             // corresponds to the board position. I.e. given an (x, y) one can
             // lookup the FoW Sprite by index: y * boardSizeX + x.
             this._layerFogOfWar.removeChildren();
-            for (let y = 0; y < this._gameModel.size.y; y++) {
-                for (let x = 0; x < this._gameModel.size.x; x++) {
+            for (let y = 0; y < gameModel.size.y; y++) {
+                for (let x = 0; x < gameModel.size.x; x++) {
                     const fogOfWarSprite = new FogOfWarSprite(this._resourceHolder, x, y);
                     this._layerFogOfWar.addChild(fogOfWarSprite);
                 }
@@ -161,13 +147,14 @@ export default class GameView {
         }
 
         // Update fog of war sprite visibilities.
-        const myFogOfWar = this._gameModel.myFogOfWar;
-        for (let y = 0; y < this._gameModel.size.y; y++) {
-            for (let x = 0; x < this._gameModel.size.x; x++) {
-                const idx = y * this._gameModel.size.x + x;
-                this._layerFogOfWar.getChildAt(idx).visible = !!myFogOfWar[idx];
-            }
+        const myFogOfWar = gameModel.myFogOfWar;
+        const fogOfWarSprites = this._layerFogOfWar.children;
+        for (let i = 0; i < fogOfWarSprites.length; i++) {
+            fogOfWarSprites[i].visible = !!myFogOfWar[i];
         }
+
+        this._islands.forEach(island => island.update());
+        this._airplanes.forEach(airplane => airplane.update());
     }
 
     addIslandClickListener(listener: IslandIdClickListener, context: unknown = null): void {
@@ -205,7 +192,12 @@ export default class GameView {
         this._stage.scale.y = (height * pixelRatio) / this._stageHeight;
     }
 
+    /**
+     * Updates the sprites from the model and renders them. Called every
+     * frame.
+     */
     render(): void {
+        this._sync();
         this._renderer.render(this._stage);
     }
 }

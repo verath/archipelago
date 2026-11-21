@@ -320,16 +320,8 @@ const GameViewWrapper = ({ gameModel, resourceHolder, dispatch }: GameViewWrappe
                 renderer.destroy();
             });
 
-            // Create the GameView and connect it to the GameModel.
+            // Create the GameView, which reads the GameModel as it renders.
             const gameView = new GameView(resourceHolder, renderer, gameModel);
-            const modelChangeListener = gameView.onModelChanged.bind(gameView);
-            gameModel.addChangeListener(modelChangeListener);
-            cleanup.unshift(() => {
-                gameModel.removeChangeListener(modelChangeListener);
-            });
-            // The renderer is created asynchronously, so the model may already
-            // have changed. Sync the view with the current model.
-            gameView.onModelChanged();
             if (import.meta.env.MODE === "e2e") {
                 setTestHookGameView(gameView);
                 cleanup.unshift(() => { setTestHookGameView(null); });
