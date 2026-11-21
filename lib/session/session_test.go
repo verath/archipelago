@@ -14,7 +14,7 @@ import (
 
 var errFakeDisconnected = errors.New("fakeConn disconnected")
 
-// fakeConn is a game.Client recording the events written to it.
+// fakeConn is a Client recording the events written to it.
 type fakeConn struct {
 	// blockWrites makes writes block until the fakeConn is disconnected.
 	blockWrites bool
