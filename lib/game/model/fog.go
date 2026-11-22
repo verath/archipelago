@@ -1,28 +1,49 @@
 package model
 
-// generateFogOfWar generates a set of Coordinates where player has fog of war
-// applied (i.e. limited vision) in the given game g.
-func generateFogOfWar(g *Game, player *Player) map[Coordinate]struct{} {
-	fogOfWarTiles := make(map[Coordinate]bool, g.Size().X*g.Size().Y)
+// FogOfWar is the set of tiles of a game board where a player has fog of war
+// applied (i.e. limited vision). It is a bitset with one bit per tile.
+//
+// A FogOfWar is immutable once generated, so it is safe to share, which makes
+// copying a Player cheap.
+type FogOfWar struct {
+	size Coordinate
+	// fog has bit y*size.X+x set if the tile (x, y) is in fog of war.
+	fog []uint64
+}
+
+// Contains reports whether c is in fog of war. Coordinates outside the board
+// are not.
+func (f *FogOfWar) Contains(c Coordinate) bool {
+	if !c.IsWithin(f.size) {
+		return false
+	}
+	i := c.Y*f.size.X + c.X
+	return f.fog[i/64]&(1<<(i%64)) != 0
+}
+
+// generateFogOfWar generates the FogOfWar for player in the given game g.
+func generateFogOfWar(g *Game, player *Player) *FogOfWar {
+	size := g.Size()
+	numTiles := size.X * size.Y
+	f := &FogOfWar{size: size, fog: make([]uint64, (numTiles+63)/64)}
+	// Initially mark all game tiles as in FoW.
+	for i := range f.fog {
+		f.fog[i] = ^uint64(0)
+	}
+	if rem := numTiles % 64; rem != 0 {
+		f.fog[len(f.fog)-1] = 1<<rem - 1
+	}
 	// clearArea clears FoW for tiles in a radius centered center.
 	clearArea := func(center Coordinate, radius int) {
-		xStart := center.X - radius
-		xEnd := center.X + radius
-		yStart := center.Y - radius
-		yEnd := center.Y + radius
-		for x := xStart; x <= xEnd; x++ {
-			for y := yStart; y <= yEnd; y++ {
-				c := Coordinate{X: x, Y: y}
-				if _, ok := fogOfWarTiles[c]; ok {
-					fogOfWarTiles[c] = false
-				}
+		xStart := max(center.X-radius, 0)
+		xEnd := min(center.X+radius, size.X-1)
+		yStart := max(center.Y-radius, 0)
+		yEnd := min(center.Y+radius, size.Y-1)
+		for y := yStart; y <= yEnd; y++ {
+			for x := xStart; x <= xEnd; x++ {
+				i := y*size.X + x
+				f.fog[i/64] &^= 1 << (i % 64)
 			}
-		}
-	}
-	// Initially mark all game tiles as in FoW.
-	for x := 0; x < g.Size().X; x++ {
-		for y := 0; y < g.Size().Y; y++ {
-			fogOfWarTiles[Coordinate{X: x, Y: y}] = true
 		}
 	}
 	// Clear FoW from tiles around islands.
@@ -41,12 +62,5 @@ func generateFogOfWar(g *Game, player *Player) map[Coordinate]struct{} {
 			clearArea(airplane.Position().ToCoordinate(), 1)
 		}
 	}
-	// Translate tile map to set of unique coordinates.
-	fogOfWar := make(map[Coordinate]struct{})
-	for coordinate, isFog := range fogOfWarTiles {
-		if isFog {
-			fogOfWar[coordinate] = struct{}{}
-		}
-	}
-	return fogOfWar
+	return f
 }

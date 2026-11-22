@@ -217,3 +217,44 @@ func TestTickAction_Apply_Player_Die(t *testing.T) {
 		t.Fatalf("Expected state to be Dead, was %d", p1.State())
 	}
 }
+
+// createBenchGame creates an 8x8 game, the size games are created with, with
+// four players that each own an island and have an airplane in flight.
+func createBenchGame() *Game {
+	pn := NewPlayer()
+	b := NewGameBuilder(Coordinate{X: 8, Y: 8}, pn)
+	neutral := NewIsland(Coordinate{X: 4, Y: 4}, IslandSizeLarge, 10, pn.ID())
+	b.AddIsland(neutral)
+	corners := []Coordinate{{X: 0, Y: 0}, {X: 7, Y: 0}, {X: 0, Y: 7}, {X: 7, Y: 7}}
+	var airplanes []*Airplane
+	for _, c := range corners {
+		p := NewPlayer()
+		island := NewIsland(c, IslandSizeMedium, 10, p.ID())
+		b.AddPlayer(p).AddIsland(island)
+		airplanes = append(airplanes, NewAirplane(c, neutral, p.ID(), 1))
+	}
+	g := b.BuildOrPanic()
+	for _, a := range airplanes {
+		g.AddAirplane(a)
+	}
+	return g
+}
+
+// BenchmarkTick measures a game tick, including filtering the tick event for
+// each player.
+func BenchmarkTick(b *testing.B) {
+	g := createBenchGame()
+	// A zero delta keeps the game state, and so the work per tick, the same
+	// across iterations.
+	ta := &ActionTick{Delta: 0}
+	b.ReportAllocs()
+	for b.Loop() {
+		evts, err := ta.Apply(g)
+		if err != nil {
+			b.Fatal(err)
+		}
+		for _, p := range g.Players() {
+			evts[0].ToPlayerEvent(p.ID())
+		}
+	}
+}

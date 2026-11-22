@@ -23,9 +23,10 @@ const (
 type Player struct {
 	id    PlayerID
 	state PlayerState
-	// fogOfWar is a set of coordinates for tiles where the player has Fog of
-	// War (limited) vision.
-	fogOfWar map[Coordinate]struct{}
+	// fogOfWar is the tiles where the player has Fog of War (limited)
+	// vision, nil if not calculated. It is immutable, so copies of the
+	// player share it.
+	fogOfWar *FogOfWar
 	// lastLaunchSeq is the highest PlayerActionLaunch.Seq processed for the
 	// player.
 	lastLaunchSeq uint32
@@ -60,8 +61,7 @@ func (p *Player) SetState(state PlayerState) {
 func (p *Player) IsInFogOfWar(c Coordinate) bool {
 	switch p.state {
 	case Alive:
-		_, inFoW := p.fogOfWar[c]
-		return inFoW
+		return p.fogOfWar != nil && p.fogOfWar.Contains(c)
 	case PendingRevival:
 		return true
 	case Dead, LeftGame:
@@ -70,14 +70,14 @@ func (p *Player) IsInFogOfWar(c Coordinate) bool {
 	panic("unknown player state")
 }
 
-// FogOfWar returns the set of coordinates where the player has fog of war
-// vision.
-func (p *Player) FogOfWar() map[Coordinate]struct{} {
+// FogOfWar returns the tiles where the player has fog of war vision, nil if
+// not calculated.
+func (p *Player) FogOfWar() *FogOfWar {
 	return p.fogOfWar
 }
 
-// SetFogOfWar sets the coordinates where the player has fog of war vision.
-func (p *Player) SetFogOfWar(fogOfWar map[Coordinate]struct{}) {
+// SetFogOfWar sets the tiles where the player has fog of war vision.
+func (p *Player) SetFogOfWar(fogOfWar *FogOfWar) {
 	p.fogOfWar = fogOfWar
 }
 
@@ -94,14 +94,10 @@ func (p *Player) SetLastLaunchSeq(seq uint32) {
 
 // Copy performs a deep copy of the Player, returning the copy.
 func (p *Player) Copy() *Player {
-	fogOfWar := make(map[Coordinate]struct{}, len(p.fogOfWar))
-	for c, v := range p.fogOfWar {
-		fogOfWar[c] = v
-	}
 	return &Player{
 		id:            p.id,
 		state:         p.state,
-		fogOfWar:      fogOfWar,
+		fogOfWar:      p.fogOfWar, // Immutable, so safe to share.
 		lastLaunchSeq: p.lastLaunchSeq,
 	}
 }
