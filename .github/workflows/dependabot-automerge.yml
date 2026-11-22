@@ -4,8 +4,8 @@
 #
 # Requires, in the repository settings:
 #   - General > "Allow auto-merge"
-#   - Branch protection / ruleset on master with the CI jobs "backend" and
-#     "frontend" as required status checks.
+#   - Branch protection / ruleset on master with the CI jobs "backend",
+#     "frontend" and "e2e" as required status checks.
 #
 # Note: merges done this way are made with GITHUB_TOKEN, so they do NOT trigger
 # the push-to-master deploy in ci.yml. Deploy dependency updates by running
