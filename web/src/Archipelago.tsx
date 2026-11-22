@@ -12,6 +12,10 @@ import GameView from "./game/view/GameView.ts";
 import { installTestHook, setTestHookGameView } from "./testHook.ts";
 
 
+/**
+ * Dispatched when the player clicks "Play!": connects to the server, which
+ * puts us in the next game.
+ */
 export interface UIActionGameStart {
     type: "game/start";
 }
@@ -35,9 +39,11 @@ export interface UIActionGameFrame {
 export type UIAction = UIActionGameStart | UIActionGameClickIsland | UIActionGameFrame;
 
 /**
- * RECONNECTING is while trying to resume a game after the connection broke.
+ * IDLE is before the player clicked "Play!": we only connect then, as the
+ * server puts each client in a game as soon as it connects. RECONNECTING is
+ * while trying to resume a game after the connection broke.
  */
-export type ConnectionState = "CONNECTING" | "CONNECTED" | "RECONNECTING" | "DISCONNECTED";
+export type ConnectionState = "IDLE" | "CONNECTING" | "CONNECTED" | "RECONNECTING" | "DISCONNECTED";
 
 export interface ArchipelagoModel {
     connectionState: ConnectionState;
@@ -48,7 +54,7 @@ export interface ArchipelagoModel {
 export type ModelChangeListener = (model: ArchipelagoModel) => void;
 
 const INITIAL_MODEL: ArchipelagoModel = {
-    connectionState: "CONNECTING",
+    connectionState: "IDLE",
     gameModel: null,
     gameResult: null,
 };
@@ -79,7 +85,7 @@ export class Archipelago {
         if (import.meta.env.MODE === "e2e") {
             installTestHook(() => this._model);
         }
-        this._connectToServer();
+        this._addConnectionListeners();
         // Render our react app into the root element.
         const archipelagoView = React.createElement(ArchipelagoView, {
             getModel: () => this._model,
@@ -113,7 +119,7 @@ export class Archipelago {
     private _dispatch(action: UIAction): void {
         switch (action.type) {
             case "game/start":
-                this._joinAndRunGame();
+                this._startGame();
                 break;
             case "game/click-island":
                 this._clickIsland(action.islandId);
@@ -127,7 +133,7 @@ export class Archipelago {
         }
     }
 
-    private _connectToServer(): void {
+    private _addConnectionListeners(): void {
         this._connection.addDisconnectListener(() => {
             // While reconnecting, a failed attempt is followed by another
             // one, until the game controller gives up (see _runGame).
@@ -141,10 +147,16 @@ export class Archipelago {
         this._connection.addConnectedListener(() => {
             this._setModel({ ...this._model, connectionState: "CONNECTED" });
         });
-        this._connection.connect();
     }
 
-    private _joinAndRunGame(): void {
+    private _startGame(): void {
+        // Only the first click counts, e.g. not a double click.
+        if (this._model.connectionState !== "IDLE") {
+            return;
+        }
+        // Connect first: if that throws, we stay IDLE and can try again.
+        this._connection.connect();
+        this._setModel({ ...this._model, connectionState: "CONNECTING" });
         (async () => {
             await this._joinGame();
             await this._runGame();
@@ -194,7 +206,7 @@ export interface ArchipelagoViewProps {
 export const ArchipelagoView = ({ getModel, addModelChangeListener, removeModelChangeListener, dispatch }: ArchipelagoViewProps): React.JSX.Element => {
     // Subscribe to "model changed" events. useSyncExternalStore re-reads the
     // model after subscribing, so a change made before the (deferred) first
-    // render and subscription, e.g. the WebSocket connecting, is not lost.
+    // render and subscription, e.g. a game starting, is not lost.
     const subscribe = useCallback((onChange: () => void) => {
         addModelChangeListener(onChange);
         return () => { removeModelChangeListener(onChange); };
@@ -204,19 +216,11 @@ export const ArchipelagoView = ({ getModel, addModelChangeListener, removeModelC
     // Load game view resources.
     const resourceHolder = useResourceHolder();
 
-    // Once resources are loaded, request to start the game.
-    // TODO: Maybe a button would be nice...
-    useEffect(() => {
-        if (resourceHolder != null) {
-            dispatch({ type: "game/start" });
-        }
-    }, [resourceHolder, dispatch]);
-
     // Loading resources -> Lobby -> Game.
     if (resourceHolder == null) {
         return (<LoadingText>Loading resources</LoadingText>);
     } else if (model.gameModel == null) {
-        return <LobbyScreen connectionState={model.connectionState} />;
+        return <LobbyScreen connectionState={model.connectionState} dispatch={dispatch} />;
     } else {
         return (<GameScreen
             gameModel={model.gameModel}
@@ -262,10 +266,22 @@ const LoadingText = ({ children }: TextProps): React.JSX.Element => (
 
 export interface LobbyScreenProps {
     connectionState: ConnectionState;
+    dispatch: (action: UIAction) => void;
 }
 
-export const LobbyScreen = ({ connectionState }: LobbyScreenProps): React.JSX.Element => {
-    if (connectionState === "CONNECTING") {
+export const LobbyScreen = ({ connectionState, dispatch }: LobbyScreenProps): React.JSX.Element => {
+    if (connectionState === "IDLE") {
+        // Players who want to play together click at about the same time,
+        // within the server's lobby wait, to end up in the same game.
+        return (
+            <CenterText>
+                <button type="button" className="play-button"
+                    onClick={() => { dispatch({ type: "game/start" }); }}>
+                    Play!
+                </button>
+            </CenterText>
+        );
+    } else if (connectionState === "CONNECTING") {
         return <LoadingText>Connecting</LoadingText>;
     } else if (connectionState === "CONNECTED") {
         return <LoadingText>Finding a game</LoadingText>;

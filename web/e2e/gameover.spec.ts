@@ -1,11 +1,11 @@
 import { test, expect } from "./fixtures.ts";
-import { gameState, waitForGameStarted } from "./helpers.ts";
+import { gameState, openAndPlay, waitForGameStarted } from "./helpers.ts";
 
 test.describe("human vs human", () => {
     test.use({ backendArgs: ["-aiPlayers", "0", "-lobbyWait", "2s"] });
 
     test("the remaining player wins when the other one leaves", async ({ page, newPlayerPage }) => {
-        await page.goto("/");
+        await openAndPlay(page);
         const page2 = await newPlayerPage();
         const state1 = await waitForGameStarted(page);
         const state2 = await waitForGameStarted(page2);
@@ -31,7 +31,7 @@ test.describe("server gone", () => {
     test.use({ backendArgs: ["-lobbyWait", "500ms", "-resumeGrace", "2s"] });
 
     test("stopping the backend mid-game ends the game instead of hanging", async ({ page, backend }) => {
-        await page.goto("/");
+        await openAndPlay(page);
         await waitForGameStarted(page);
 
         await backend.stop();
