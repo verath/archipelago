@@ -129,7 +129,9 @@ describe("ArchipelagoView", () => {
         const store = makeStore(lobbyModel("CONNECTING"));
         renderView(store);
         await screen.findByText("Connecting");
-        expect(store.dispatch).toHaveBeenCalledTimes(1);
+        // The start is dispatched from an effect that React may run after
+        // the lobby is in the DOM, so wait for it rather than expect it now.
+        await waitFor(() => expect(store.dispatch).toHaveBeenCalledTimes(1));
         expect(store.dispatch).toHaveBeenCalledWith({ type: "game/start" });
     });
 
