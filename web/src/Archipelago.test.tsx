@@ -149,6 +149,20 @@ describe("ArchipelagoView", () => {
         expect(screen.queryByRole("button", { name: "Play!" })).toBeNull();
     });
 
+    it("plays a made-up game behind the lobby, until the real game starts", async () => {
+        const store = makeStore(lobbyModel("IDLE"));
+        renderView(store);
+        await screen.findByRole("button", { name: "Play!" });
+        // The (mocked) canvas gets attached once the renderer is created.
+        await waitFor(() => expect(document.querySelector(".lobby-background canvas")).not.toBeNull());
+
+        const gameModel = new GameModel();
+        gameModel.myPlayerId = "me";
+        act(() => store.set({ connectionState: "CONNECTED", gameModel, gameResult: null }));
+        expect(document.querySelector(".lobby-background")).toBeNull();
+        await waitFor(() => expect(document.querySelector(".game-canvas canvas")).not.toBeNull());
+    });
+
     it("follows model changes", async () => {
         const store = makeStore(lobbyModel("CONNECTING"));
         renderView(store);

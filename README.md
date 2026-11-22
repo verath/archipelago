@@ -115,6 +115,7 @@ cd web && npm run test:e2e
   * the production build loads under the CSP from `web/firebase.json`;
   * a game against AI starts;
   * nobody joins a game before clicking "Play!", and players who click it together share a game;
+    a made-up game plays behind the button until then;
   * launching an airplane works;
   * the remaining player wins when the other one leaves;
   * the UI copes with the backend going away;
