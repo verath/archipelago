@@ -77,12 +77,20 @@ type SmartConfig struct {
 	// launch it plans and a few alternatives for this long, on a copy of its
 	// view of the game, and make the one that plays out best.
 	Lookahead time.Duration
+	// Opening, if set, is the config used instead until OpeningUntil, while
+	// more than one other player is left.
+	Opening      *SmartConfig
+	OpeningUntil time.Duration
 	// Duel, if set, is the config used instead when a single other player
 	// is left: a duel is a different game from one with several players,
 	// who also fight each other.
 	Duel *SmartConfig
 	// MaxOrigins is the most islands an attack is sent from.
 	MaxOrigins int
+	// Launches is the most launches in a row an attack sends from an island
+	// with a garrison, each of half of what is left on it. Islands without
+	// one send one.
+	Launches int
 	// MinLaunch is the smallest island strength the strategy launches from,
 	// except to move army to where it is needed. Launches send half of it.
 	MinLaunch int64
@@ -123,6 +131,7 @@ var smartMultiConfig = SmartConfig{
 	After:       1,
 	MaxOrigins:  10,
 	MinLaunch:   4,
+	Launches:    1,
 	Captured:    5,
 	Misjudge:    0.1,
 	Unseen:      0.5,
@@ -130,11 +139,33 @@ var smartMultiConfig = SmartConfig{
 
 // Set sets the setting named key, the field name in lower case, to value,
 // in both the config and its Duel config. With a "duel." prefix it sets it
-// in the Duel config only, with "multi." in the config only. A Duel config
-// is copied before changing it, as it may be shared.
+// in the Duel config only, with "multi." in the config only, with
+// "opening." in an Opening config (a copy of the config if there is none),
+// and "openinguntil" sets OpeningUntil. Duel and Opening configs are copied
+// before changing them, as they may be shared.
 func (c *SmartConfig) Set(key, value string) error {
 	if multiKey, ok := strings.CutPrefix(key, "multi."); ok {
 		return c.set(multiKey, value)
+	}
+	if key == "openinguntil" {
+		v, err := time.ParseDuration(value)
+		c.OpeningUntil = v
+		return err
+	}
+	if openingKey, ok := strings.CutPrefix(key, "opening."); ok {
+		opening := *c
+		if c.Opening != nil {
+			opening = *c.Opening
+		}
+		opening.Opening, opening.Duel = nil, nil
+		if err := opening.set(openingKey, value); err != nil {
+			return err
+		}
+		c.Opening = &opening
+		if c.OpeningUntil == 0 {
+			c.OpeningUntil = 2 * time.Minute
+		}
+		return nil
 	}
 	duelKey, duelOnly := strings.CutPrefix(key, "duel.")
 	if !duelOnly {
@@ -186,9 +217,13 @@ func (c *SmartConfig) set(key, value string) error {
 		}
 		return err
 	}
-	if key == "maxorigins" {
+	if key == "maxorigins" || key == "launches" {
 		v, err := strconv.Atoi(value)
-		c.MaxOrigins = v
+		if key == "maxorigins" {
+			c.MaxOrigins = v
+		} else {
+			c.Launches = v
+		}
 		return err
 	}
 	field, ok := fields[key]
@@ -364,6 +399,8 @@ func (s *smartStrategy) NextAction(state clientState, game *model.Game, rng *ran
 	s.cur = &s.cfg
 	if s.cfg.Duel != nil && opponents(game, state.myPlayerID) == 1 {
 		s.cur = s.cfg.Duel
+	} else if s.cfg.Opening != nil && game.Time() < s.cfg.OpeningUntil {
+		s.cur = s.cfg.Opening
 	}
 	t := &smartTurn{
 		cfg:     s.cur,
@@ -717,6 +754,33 @@ func (s *smartStrategy) canLaunch(t *smartTurn, island *model.Island) bool {
 	return float64(island.Strength()-half) >= s.cur.Keep*float64(s.exposure(t, island))
 }
 
+// spare is the army the island can send in up to Launches launches in a
+// row, each of half of what is left, while each still passes canLaunch.
+func (s *smartStrategy) spare(t *smartTurn, island *model.Island) int64 {
+	if !island.IsOwnedBy(t.me) {
+		return 0
+	}
+	th, threatened := t.threats[island.ID()]
+	exposure := s.cur.Keep * float64(s.exposure(t, island))
+	var sent int64
+	strength := island.Strength()
+	// Only an island with a garrison to hold it can safely be emptied.
+	launches := 1
+	if island.Garrison() > 0 {
+		launches = max(1, s.cur.Launches)
+	}
+	for k := 0; k < launches; k++ {
+		half := strength / 2
+		if strength < s.cur.MinLaunch || threatened && th.deficit+sent+half > 0 ||
+			float64(strength-half) < exposure {
+			break
+		}
+		sent += half
+		strength -= half
+	}
+	return sent
+}
+
 func launch(from, to *model.Island) *model.PlayerActionLaunch {
 	return &model.PlayerActionLaunch{From: from.ID(), To: to.ID()}
 }
@@ -829,7 +893,7 @@ func (s *smartStrategy) plan(t *smartTurn, target *model.Island) attackPlan {
 			break
 		}
 		p.origins = append(p.origins, from)
-		p.available += from.Strength() / 2
+		p.available += s.spare(t, from)
 	}
 	return p
 }
@@ -854,7 +918,7 @@ func (s *smartStrategy) attack(t *smartTurn) *model.PlayerActionLaunch {
 	if target := t.game.Island(s.target); target != nil && !target.IsOwnedBy(t.me) {
 		p := s.plan(t, target)
 		if p.need > 0 && p.available >= p.need {
-			return s.send(p)
+			return s.send(t, p)
 		}
 		if p.need > 0 {
 			// Not enough any more; what is in the air goes on, but we look
@@ -900,7 +964,7 @@ func (s *smartStrategy) attack(t *smartTurn) *model.PlayerActionLaunch {
 		}
 	}
 	s.target = best.target.ID()
-	return s.send(*best)
+	return s.send(t, *best)
 }
 
 // scouting is a scout being made from an island too strong to send a small
@@ -1012,10 +1076,10 @@ func (s *smartStrategy) scout(t *smartTurn, island *model.Island) *model.PlayerA
 
 // send launches the next airplane of an attack: from the closest origin
 // that alone sends what is still needed, else from the strongest.
-func (s *smartStrategy) send(p attackPlan) *model.PlayerActionLaunch {
+func (s *smartStrategy) send(t *smartTurn, p attackPlan) *model.PlayerActionLaunch {
 	best := p.origins[0]
 	for _, from := range p.origins {
-		if from.Strength()/2 >= p.need {
+		if s.spare(t, from) >= p.need {
 			return launch(from, p.target)
 		}
 		if from.Strength() > best.Strength() {

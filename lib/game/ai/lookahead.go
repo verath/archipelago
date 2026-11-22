@@ -42,7 +42,7 @@ func (s *smartStrategy) alternatives(t *smartTurn, k int) []*model.PlayerActionL
 	slices.SortFunc(plans, func(a, b scored) int { return cmpFloat(b.score, a.score) })
 	var launches []*model.PlayerActionLaunch
 	for _, p := range plans[:min(k, len(plans))] {
-		launches = append(launches, s.send(p.plan))
+		launches = append(launches, s.send(t, p.plan))
 	}
 	return launches
 }
