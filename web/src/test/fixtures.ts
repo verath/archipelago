@@ -8,13 +8,14 @@ import type { ServerEvent } from "../network/Connection.ts";
 export const NEUTRAL_ID = "neutral";
 
 export function makeIsland(
-    id: string, x: number, y: number, ownerId: string = NEUTRAL_ID, strength = 10, size = 0,
+    id: string, x: number, y: number, ownerId: string = NEUTRAL_ID, strength = 10, size = 0, garrison = 0,
 ): wire.msg.Island.$Properties {
     return {
         id,
         army: { ownerId, strength },
         position: { x, y },
         size,
+        garrison,
     };
 }
 

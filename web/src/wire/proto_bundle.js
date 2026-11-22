@@ -1773,6 +1773,7 @@ export const wire = $root.wire = (() => {
              * @property {wire.msg.Army.$Properties|null} [army] Island army
              * @property {wire.msg.Coordinate.$Properties|null} [position] Island position
              * @property {number|null} [size] Island size
+             * @property {number|null} [garrison] Island garrison
              * @property {Array.<Uint8Array>} [$unknowns] Unknown fields preserved while decoding when enabled
              */
 
@@ -1837,6 +1838,14 @@ export const wire = $root.wire = (() => {
             Island.prototype.size = 0;
 
             /**
+             * Island garrison.
+             * @member {number} garrison
+             * @memberof wire.msg.Island
+             * @instance
+             */
+            Island.prototype.garrison = 0;
+
+            /**
              * Creates a new Island instance using the specified properties.
              * @function create
              * @memberof wire.msg.Island
@@ -1876,6 +1885,8 @@ export const wire = $root.wire = (() => {
                     $root.wire.msg.Coordinate.encode(message.position, writer.uint32(/* id 3, wireType 2 =*/26).fork(), _depth + 1).ldelim();
                 if (message.size != null && $Object.hasOwnProperty.call(message, "size") && !$Object.is(message.size, 0))
                     writer.uint32(/* id 4, wireType 5 =*/37).float(message.size);
+                if (message.garrison != null && $Object.hasOwnProperty.call(message, "garrison") && message.garrison !== 0)
+                    writer.uint32(/* id 5, wireType 0 =*/40).int32(message.garrison);
                 if (message.$unknowns != null && $Object.hasOwnProperty.call(message, "$unknowns"))
                     for (let i = 0; i < message.$unknowns.length; ++i)
                         writer.raw(message.$unknowns[i]);
@@ -1963,6 +1974,15 @@ export const wire = $root.wire = (() => {
                                 delete message.size;
                             continue;
                         }
+                    case 5: {
+                            if (wireType !== 0)
+                                break;
+                            if (value = reader.int32())
+                                message.garrison = value;
+                            else
+                                delete message.garrison;
+                            continue;
+                        }
                     }
                     reader.skipType(wireType, _depth, tag);
                     if (!reader.discardUnknown) {
@@ -2027,6 +2047,9 @@ export const wire = $root.wire = (() => {
                 if (message.size != null && $Object.hasOwnProperty.call(message, "size"))
                     if (typeof message.size !== "number")
                         return "size: number expected";
+                if (message.garrison != null && $Object.hasOwnProperty.call(message, "garrison"))
+                    if (!$util.isInteger(message.garrison))
+                        return "garrison: integer expected";
                 return null;
             };
 
@@ -2064,6 +2087,9 @@ export const wire = $root.wire = (() => {
                 if (object.size != null)
                     if (!$Object.is($Number(object.size), 0))
                         message.size = $Number(object.size);
+                if (object.garrison != null)
+                    if ($Number(object.garrison) !== 0)
+                        message.garrison = object.garrison | 0;
                 return message;
             };
 
@@ -2089,6 +2115,7 @@ export const wire = $root.wire = (() => {
                     object.army = null;
                     object.position = null;
                     object.size = 0;
+                    object.garrison = 0;
                 }
                 if (message.id != null && $Object.hasOwnProperty.call(message, "id"))
                     object.id = message.id;
@@ -2098,6 +2125,8 @@ export const wire = $root.wire = (() => {
                     object.position = $root.wire.msg.Coordinate.toObject(message.position, options, _depth + 1);
                 if (message.size != null && $Object.hasOwnProperty.call(message, "size"))
                     object.size = options.json && !$isFinite(message.size) ? $String(message.size) : message.size;
+                if (message.garrison != null && $Object.hasOwnProperty.call(message, "garrison"))
+                    object.garrison = message.garrison;
                 return object;
             };
 
@@ -4536,6 +4565,7 @@ export const wire = $root.wire = (() => {
              * @typedef {Object} wire.msg.IslandUpdate.$Properties
              * @property {string|null} [id] IslandUpdate id
              * @property {wire.msg.Army.$Properties|null} [army] IslandUpdate army
+             * @property {number|null} [garrison] IslandUpdate garrison
              * @property {Array.<Uint8Array>} [$unknowns] Unknown fields preserved while decoding when enabled
              */
 
@@ -4584,6 +4614,14 @@ export const wire = $root.wire = (() => {
             IslandUpdate.prototype.army = null;
 
             /**
+             * IslandUpdate garrison.
+             * @member {number} garrison
+             * @memberof wire.msg.IslandUpdate
+             * @instance
+             */
+            IslandUpdate.prototype.garrison = 0;
+
+            /**
              * Creates a new IslandUpdate instance using the specified properties.
              * @function create
              * @memberof wire.msg.IslandUpdate
@@ -4619,6 +4657,8 @@ export const wire = $root.wire = (() => {
                     writer.uint32(/* id 1, wireType 2 =*/10).string(message.id);
                 if (message.army != null && $Object.hasOwnProperty.call(message, "army"))
                     $root.wire.msg.Army.encode(message.army, writer.uint32(/* id 2, wireType 2 =*/18).fork(), _depth + 1).ldelim();
+                if (message.garrison != null && $Object.hasOwnProperty.call(message, "garrison") && message.garrison !== 0)
+                    writer.uint32(/* id 3, wireType 0 =*/24).int32(message.garrison);
                 if (message.$unknowns != null && $Object.hasOwnProperty.call(message, "$unknowns"))
                     for (let i = 0; i < message.$unknowns.length; ++i)
                         writer.raw(message.$unknowns[i]);
@@ -4691,6 +4731,15 @@ export const wire = $root.wire = (() => {
                             message.army = $root.wire.msg.Army.decode(reader, reader.size(), $undefined, _depth + 1, message.army);
                             continue;
                         }
+                    case 3: {
+                            if (wireType !== 0)
+                                break;
+                            if (value = reader.int32())
+                                message.garrison = value;
+                            else
+                                delete message.garrison;
+                            continue;
+                        }
                     }
                     reader.skipType(wireType, _depth, tag);
                     if (!reader.discardUnknown) {
@@ -4747,6 +4796,9 @@ export const wire = $root.wire = (() => {
                     if (error)
                         return "army." + error;
                 }
+                if (message.garrison != null && $Object.hasOwnProperty.call(message, "garrison"))
+                    if (!$util.isInteger(message.garrison))
+                        return "garrison: integer expected";
                 return null;
             };
 
@@ -4776,6 +4828,9 @@ export const wire = $root.wire = (() => {
                         throw $TypeError(".wire.msg.IslandUpdate.army: object expected");
                     message.army = $root.wire.msg.Army.fromObject(object.army, _depth + 1);
                 }
+                if (object.garrison != null)
+                    if ($Number(object.garrison) !== 0)
+                        message.garrison = object.garrison | 0;
                 return message;
             };
 
@@ -4799,11 +4854,14 @@ export const wire = $root.wire = (() => {
                 if (options.defaults) {
                     object.id = "";
                     object.army = null;
+                    object.garrison = 0;
                 }
                 if (message.id != null && $Object.hasOwnProperty.call(message, "id"))
                     object.id = message.id;
                 if (message.army != null && $Object.hasOwnProperty.call(message, "army"))
                     object.army = $root.wire.msg.Army.toObject(message.army, options, _depth + 1);
+                if (message.garrison != null && $Object.hasOwnProperty.call(message, "garrison"))
+                    object.garrison = message.garrison;
                 return object;
             };
 

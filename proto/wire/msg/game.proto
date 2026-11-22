@@ -61,6 +61,11 @@ message Island {
     Army army = 2;
     Coordinate position = 3;
     float size = 4;
+    // An extra defence force on the island, 0 if none: it absorbs attacks
+    // before the army does, never grows and never joins a launch. Starting
+    // islands, and the islands revived players capture, have one. Shown also
+    // when the island is in fog of war.
+    int32 garrison = 5;
 }
 
 message Game {
@@ -156,7 +161,7 @@ message EventGameDelta {
     uint32 game_time = 2;
     // Players whose state or last_launch_seq changed, in full.
     repeated Player players = 3;
-    // Islands whose army (owner or strength) changed.
+    // Islands whose army (owner or strength) or garrison changed.
     repeated IslandUpdate islands = 4;
     // New airplanes, in full. Their position is at game_time.
     repeated Airplane airplanes_added = 5;
@@ -172,6 +177,8 @@ message IslandUpdate {
     string id = 1;
     // Always set, both owner and strength.
     Army army = 2;
+    // Always set, see Island.garrison.
+    int32 garrison = 3;
 }
 
 message AirplaneUpdate {

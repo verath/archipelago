@@ -17,6 +17,9 @@ type Game struct {
 
 	reviveCount int
 
+	// rules are the tunable rules of the game.
+	rules Rules
+
 	// playerNeutral is a special Player that owns everything not
 	// owned by any other Player.
 	playerNeutral *Player
@@ -54,6 +57,11 @@ func (g *Game) ReviveCount() int {
 // SetReviveCount sets how many times players have been revivied this game.
 func (g *Game) SetReviveCount(reviveCount int) {
 	g.reviveCount = reviveCount
+}
+
+// Rules returns the rules of the game.
+func (g *Game) Rules() Rules {
+	return g.rules
 }
 
 // PlayerNeutral is a getter for the Player model representing the neutral
@@ -147,6 +155,7 @@ func (g *Game) Copy() *Game {
 		size:          g.size,
 		time:          g.time,
 		reviveCount:   g.reviveCount,
+		rules:         g.rules,
 		playerNeutral: g.playerNeutral.Copy(),
 		players:       playersCopy,
 		islands:       islandsCopy,
@@ -156,11 +165,12 @@ func (g *Game) Copy() *Game {
 
 // newGame constructs a new game from the given parameters. Use GameBuilder to
 // perform validation on the parameters before creation.
-func newGame(size Coordinate, playerNeutral *Player, players []*Player, islands []*Island, airplanes []*Airplane) *Game {
+func newGame(size Coordinate, rules Rules, playerNeutral *Player, players []*Player, islands []*Island, airplanes []*Airplane) *Game {
 	id := GameID(NextModelID())
 	return &Game{
 		id:            id,
 		size:          size,
+		rules:         rules,
 		playerNeutral: playerNeutral,
 		players:       players,
 		islands:       islands,
@@ -171,6 +181,7 @@ func newGame(size Coordinate, playerNeutral *Player, players []*Player, islands 
 // GameBuilder implements a builder patter for creating a new Game instance.
 type GameBuilder struct {
 	size          Coordinate
+	rules         Rules
 	playerNeutral *Player
 	players       []*Player
 	islands       []*Island
@@ -193,6 +204,13 @@ func NewGameBuilder(size Coordinate, playerNeutral *Player) *GameBuilder {
 		islands:       make([]*Island, 0),
 		airplanes:     make([]*Airplane, 0),
 	}
+}
+
+// SetRules sets the rules of the game. Without it the game gets the zero
+// Rules, a game without garrisons.
+func (gb *GameBuilder) SetRules(rules Rules) *GameBuilder {
+	gb.rules = rules
+	return gb
 }
 
 // AddPlayer adds a player to GameBuilder, to be later included in the game.
@@ -249,7 +267,7 @@ func (gb *GameBuilder) Build() (*Game, error) {
 			return nil, errors.New("island owner did not exist")
 		}
 	}
-	return newGame(gb.size, gb.playerNeutral, gb.players, gb.islands, gb.airplanes), nil
+	return newGame(gb.size, gb.rules, gb.playerNeutral, gb.players, gb.islands, gb.airplanes), nil
 }
 
 // BuildOrPanic calls Build and panics if Build returns an error.

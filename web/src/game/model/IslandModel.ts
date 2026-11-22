@@ -8,6 +8,8 @@ export default class IslandModel extends OwnableModel<wire.msg.Island.$Propertie
 
     private _size = 0;
 
+    private _garrison = 0;
+
     private _selected = false;
 
     /**
@@ -73,6 +75,21 @@ export default class IslandModel extends OwnableModel<wire.msg.Island.$Propertie
         return this._size;
     }
 
+    /**
+     * The island's garrison, 0 if none: an extra defence force that absorbs
+     * attacks before the army does, never grows and never joins a launch.
+     */
+    get garrison(): number {
+        return this._garrison;
+    }
+
+    /**
+     * Updates the garrison, as sent in a delta.
+     */
+    updateGarrison(garrison: number | null | undefined): void {
+        this._garrison = garrison || 0;
+    }
+
     get selected(): boolean {
         return this._selected;
     }
@@ -88,5 +105,6 @@ export default class IslandModel extends OwnableModel<wire.msg.Island.$Propertie
         }
         this._position.set(islandData.position);
         this._size = islandData.size || 0;
+        this.updateGarrison(islandData.garrison);
     }
 }
