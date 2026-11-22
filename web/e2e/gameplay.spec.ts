@@ -28,7 +28,7 @@ test.describe("game against AI", () => {
         }
 
         // All islands are rendered on the canvas (so it has a bounding box).
-        const canvas = (await page.locator("canvas").boundingBox())!;
+        const canvas = (await page.locator(".game-canvas canvas").boundingBox())!;
         for (const island of state.islands) {
             expect(island.screen).not.toBeNull();
             const screen = island.screen!;

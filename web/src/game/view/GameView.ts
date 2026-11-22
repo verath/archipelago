@@ -15,6 +15,20 @@ export type IslandIdClickListener = (islandId: string | null) => void;
 export const TILE_WIDTH = 128;
 export const TILE_HEIGHT = 128;
 
+export interface GameViewOptions {
+    /**
+     * How the board fits the window: "contain" shows all of it (the
+     * default), "cover" fills the window, cropping the board's edges if its
+     * aspect ratio differs, centered.
+     */
+    fit?: "contain" | "cover";
+    /**
+     * Renders at most this many device pixels per CSS pixel, e.g. to save
+     * battery. By default, at the device's pixel ratio.
+     */
+    maxPixelRatio?: number;
+}
+
 export default class GameView {
     private readonly _resourceHolder: ResourceHolder;
 
@@ -25,6 +39,8 @@ export default class GameView {
     readonly _renderer: Renderer;
 
     private readonly _gameModel: GameModel;
+
+    private readonly _options: GameViewOptions;
 
     private _stageWidth: number;
 
@@ -65,10 +81,11 @@ export default class GameView {
      */
     private readonly _airplanes: Map<string | null, AirplaneSprite>;
 
-    constructor(resourceHolder: ResourceHolder, renderer: Renderer, gameModel: GameModel) {
+    constructor(resourceHolder: ResourceHolder, renderer: Renderer, gameModel: GameModel, options: GameViewOptions = {}) {
         this._resourceHolder = resourceHolder;
         this._renderer = renderer;
         this._gameModel = gameModel;
+        this._options = options;
         this._stageWidth = 0;
         this._stageHeight = 0;
         this._stage = new Container();
@@ -166,8 +183,13 @@ export default class GameView {
     }
 
     resize(): void {
-        const pixelRatio = (window.devicePixelRatio || 1);
+        const pixelRatio = Math.min(window.devicePixelRatio || 1, this._options.maxPixelRatio ?? Infinity);
         const canvas = this._renderer.canvas;
+
+        if (this._options.fit === "cover") {
+            this._resizeCover(pixelRatio);
+            return;
+        }
 
         // Center crop(?) the canvas, keep the aspect ratio
         let width, height;
@@ -190,6 +212,27 @@ export default class GameView {
         // Rescale our stage
         this._stage.scale.x = (width * pixelRatio) / this._stageWidth;
         this._stage.scale.y = (height * pixelRatio) / this._stageHeight;
+        this._stage.position.set(0, 0);
+    }
+
+    /**
+     * Sizes the canvas to the window, and scales the stage to cover it,
+     * centered.
+     */
+    private _resizeCover(pixelRatio: number): void {
+        const width = window.innerWidth;
+        const height = window.innerHeight;
+        this._renderer.resize(width * pixelRatio, height * pixelRatio);
+        this._renderer.canvas.style.width = width + "px";
+        this._renderer.canvas.style.height = height + "px";
+        if (this._stageWidth === 0 || this._stageHeight === 0) {
+            return;
+        }
+        const scale = pixelRatio * Math.max(width / this._stageWidth, height / this._stageHeight);
+        this._stage.scale.set(scale, scale);
+        this._stage.position.set(
+            (width * pixelRatio - this._stageWidth * scale) / 2,
+            (height * pixelRatio - this._stageHeight * scale) / 2);
     }
 
     /**
