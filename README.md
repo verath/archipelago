@@ -174,10 +174,11 @@ the player's view of the game doesn't say), gathers army from several islands fo
 remembers islands it saw before they went into fog of war (and that an island it sees an airplane
 leave has half its army left), and moves army from full islands towards the front. It plays at
 `ai.HumanPace`: about two launches per second at most, in bursts, acting on what it saw 0.4 s ago.
-It is not yet a strong player: head to head, the live `opp` AI beats it about 60% of the time. With the live AIs, rules that
-limit large armies mostly lead to stalemates the AIs can't break. Still, the games are between AIs,
-so they show how rules change the AIs' games, which is a hint, not proof, of how they change games
-between people.
+It is not yet a strong player: head to head, the live `opp` AI beats it about 60% of the time.
+
+The games are between AIs, so they show how rules change the AIs' games, which is a hint, not proof,
+of how they change games between people. The results also depend on how the AIs play: with the
+live AIs, rules that limit large armies mostly led to stalemates the AIs couldn't break.
 
 ### Network traffic
 
