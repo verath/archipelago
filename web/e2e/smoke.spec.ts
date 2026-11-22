@@ -35,9 +35,9 @@ test.describe("production build", () => {
         await clickPlay(page2);
 
         for (const p of [page, page2]) {
-            await expect(p.locator("canvas")).toBeVisible();
+            await expect(p.locator(".game-canvas canvas")).toBeVisible();
             // The canvas is sized to the board once the first tick arrived.
-            await expect.poll(async () => (await p.locator("canvas").boundingBox())?.width ?? 0)
+            await expect.poll(async () => (await p.locator(".game-canvas canvas").boundingBox())?.width ?? 0)
                 .toBeGreaterThan(100);
             // Let a few more frames render.
             await p.evaluate(() => new Promise<void>((resolve) => {

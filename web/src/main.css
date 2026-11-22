@@ -14,8 +14,20 @@ canvas {
     margin: 0 auto;
 }
 
+/* The made-up game behind the lobby: faded, under the lobby, and not
+   clickable. */
+.lobby-background {
+    position: fixed;
+    inset: 0;
+    overflow: hidden;
+    opacity: 0.45;
+    pointer-events: none;
+}
+
 /* Centers its content in the viewport, on phones and desktops alike. */
 .center-text-wrap {
+    /* Above the lobby background. */
+    position: relative;
     box-sizing: border-box;
     display: flex;
     align-items: center;

@@ -37,7 +37,7 @@ test.describe("websocket traffic", () => {
 
         // Watch a few seconds of ticks, then disconnect so that the backend
         // logs the traffic of the connection.
-        await expect(page.locator("canvas")).toBeVisible();
+        await expect(page.locator(".game-canvas canvas")).toBeVisible();
         await page.waitForTimeout(3_000);
         await page.close();
 

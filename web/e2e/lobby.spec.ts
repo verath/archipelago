@@ -12,6 +12,8 @@ test.describe("Play button", () => {
         await page2.goto("/");
         for (const p of [page, page2]) {
             await expect(p.getByRole("button", { name: "Play!" })).toBeVisible();
+            // A made-up game plays behind the button.
+            await expect(p.locator(".lobby-background canvas")).toBeVisible();
         }
 
         // Wait for longer than the lobby wait: nobody connects before Play.
@@ -30,5 +32,10 @@ test.describe("Play button", () => {
         expect(state2.myPlayerId).not.toBe(state1.myPlayerId);
         const owners = new Set(state1.islands.map((i) => i.ownerId));
         expect(owners).toContain(state2.myPlayerId);
+        // The made-up game is gone once the real one has started.
+        for (const p of [page, page2]) {
+            await expect(p.locator(".lobby-background")).toHaveCount(0);
+            await expect(p.locator("canvas")).toHaveCount(1);
+        }
     });
 });

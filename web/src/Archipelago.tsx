@@ -8,7 +8,8 @@ import type ResourceHolder from "./resource/ResourceHolder.ts";
 import ResourceLoader from "./resource/ResourceLoader.ts";
 import GameController, { type GameResult } from "./game/controller/GameController.ts";
 import GameModel from "./game/model/GameModel.ts";
-import GameView from "./game/view/GameView.ts";
+import GameView, { type GameViewOptions } from "./game/view/GameView.ts";
+import DemoGame, { demoBoardSize } from "./game/demo/DemoGame.ts";
 import { installTestHook, setTestHookGameView } from "./testHook.ts";
 
 
@@ -220,7 +221,12 @@ export const ArchipelagoView = ({ getModel, addModelChangeListener, removeModelC
     if (resourceHolder == null) {
         return (<LoadingText>Loading resources</LoadingText>);
     } else if (model.gameModel == null) {
-        return <LobbyScreen connectionState={model.connectionState} dispatch={dispatch} />;
+        return (
+            <>
+                <LobbyBackground resourceHolder={resourceHolder} />
+                <LobbyScreen connectionState={model.connectionState} dispatch={dispatch} />
+            </>
+        );
     } else {
         return (<GameScreen
             gameModel={model.gameModel}
@@ -299,26 +305,123 @@ interface GameScreenProps {
     dispatch: (action: UIAction) => void;
 }
 
-const GameScreen = ({ gameModel, gameResult, reconnecting, resourceHolder, dispatch }: GameScreenProps): React.JSX.Element => (
-    <>
-        {(reconnecting && gameResult == null) ? <ReconnectingView /> : null}
-        <GameResultView
-            gameModel={gameModel}
-            gameResult={gameResult} />
-        <GameViewWrapper
-            gameModel={gameModel}
-            resourceHolder={resourceHolder}
-            dispatch={dispatch} />
-    </>
-);
+const GameScreen = ({ gameModel, gameResult, reconnecting, resourceHolder, dispatch }: GameScreenProps): React.JSX.Element => {
+    // Stable, as GameCanvas recreates the view when they change.
+    const onFrame = useCallback((delta: number) => {
+        dispatch({ type: "game/frame", delta });
+    }, [dispatch]);
+    const onIslandClick = useCallback((islandId: string | null) => {
+        dispatch({ type: "game/click-island", islandId });
+    }, [dispatch]);
+    return (
+        <>
+            {(reconnecting && gameResult == null) ? <ReconnectingView /> : null}
+            <GameResultView
+                gameModel={gameModel}
+                gameResult={gameResult} />
+            <GameCanvas
+                className="game-canvas"
+                gameModel={gameModel}
+                resourceHolder={resourceHolder}
+                onFrame={onFrame}
+                onIslandClick={onIslandClick}
+                testHook />
+        </>
+    );
+};
 
-interface GameViewWrapperProps {
-    gameModel: GameModel;
+interface LobbyBackgroundProps {
     resourceHolder: ResourceHolder;
-    dispatch: (action: UIAction) => void;
 }
 
-const GameViewWrapper = ({ gameModel, resourceHolder, dispatch }: GameViewWrapperProps): React.JSX.Element => {
+/**
+ * A made-up game playing behind the lobby (see DemoGame), faded out and
+ * ignoring clicks. Still if the user prefers reduced motion.
+ */
+const LobbyBackground = ({ resourceHolder }: LobbyBackgroundProps): React.JSX.Element => {
+    const [demo, setDemo] = useState(newDemoGame);
+    // A new game when the screen turns, e.g. a phone, as the board would
+    // be mostly cropped away.
+    useEffect(() => {
+        const onResize = () => {
+            const { cols, rows } = demoBoardSize(window.innerWidth, window.innerHeight);
+            const { x, y } = demo.model.size;
+            if ((cols > rows) !== (x > y)) {
+                setDemo(newDemoGame());
+            }
+        };
+        window.addEventListener("resize", onResize);
+        return () => { window.removeEventListener("resize", onResize); };
+    }, [demo]);
+    const reducedMotion = usePrefersReducedMotion();
+    const onFrame = useCallback((delta: number) => {
+        if (!reducedMotion) {
+            demo.onFrame(delta);
+        }
+    }, [demo, reducedMotion]);
+    return (<GameCanvas
+        className="lobby-background"
+        gameModel={demo.model}
+        resourceHolder={resourceHolder}
+        onFrame={onFrame}
+        fit="cover"
+        maxPixelRatio={1.5}
+        // Still with reduced motion: then only redrawn for resizes.
+        maxFps={reducedMotion ? 1 : 30} />);
+};
+
+const newDemoGame = (): DemoGame => {
+    const { cols, rows } = demoBoardSize(window.innerWidth, window.innerHeight);
+    return new DemoGame(cols, rows);
+};
+
+const REDUCED_MOTION_QUERY = "(prefers-reduced-motion: reduce)";
+
+const subscribeReducedMotion = (onChange: () => void): (() => void) => {
+    // matchMedia is missing in some test environments.
+    const query = window.matchMedia?.(REDUCED_MOTION_QUERY);
+    query?.addEventListener("change", onChange);
+    return () => { query?.removeEventListener("change", onChange); };
+};
+
+/**
+ * Whether the user prefers reduced motion, following changes.
+ */
+const usePrefersReducedMotion = (): boolean => useSyncExternalStore(subscribeReducedMotion,
+    () => window.matchMedia?.(REDUCED_MOTION_QUERY).matches ?? false);
+
+interface GameCanvasProps {
+    className: string;
+    gameModel: GameModel;
+    resourceHolder: ResourceHolder;
+    /**
+     * Called every frame, right before the game view renders, with the time
+     * since the previous frame [ms]. Must be stable (e.g. useCallback), as
+     * the view is recreated when it changes.
+     */
+    onFrame: (delta: number) => void;
+    /**
+     * Called when an island (or, with null, the sea) is clicked. Must be
+     * stable too, if given.
+     */
+    onIslandClick?: (islandId: string | null) => void;
+    fit?: GameViewOptions["fit"];
+    maxPixelRatio?: number;
+    /**
+     * Renders at most about this many frames per second, e.g. to save
+     * battery. By default, at every animation frame.
+     */
+    maxFps?: number;
+    /**
+     * Whether the e2e test hook reports on this view.
+     */
+    testHook?: boolean;
+}
+
+/**
+ * Renders a GameModel with a GameView, on a canvas in a div.
+ */
+const GameCanvas = ({ className, gameModel, resourceHolder, onFrame, onIslandClick, fit, maxPixelRatio, maxFps, testHook = false }: GameCanvasProps): React.JSX.Element => {
     const containerElement = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
@@ -338,20 +441,19 @@ const GameViewWrapper = ({ gameModel, resourceHolder, dispatch }: GameViewWrappe
             });
 
             // Create the GameView, which reads the GameModel as it renders.
-            const gameView = new GameView(resourceHolder, renderer, gameModel);
-            if (import.meta.env.MODE === "e2e") {
+            const gameView = new GameView(resourceHolder, renderer, gameModel, { fit, maxPixelRatio });
+            if (import.meta.env.MODE === "e2e" && testHook) {
                 setTestHookGameView(gameView);
                 cleanup.unshift(() => { setTestHookGameView(null); });
             }
 
-            // Listen and dispatch island click events from GameView.
-            const islandClickListener = (islandId: string | null) => {
-                dispatch({ type: "game/click-island", islandId });
-            };
-            gameView.addIslandClickListener(islandClickListener);
-            cleanup.unshift(() => {
-                gameView.removeIslandClickListener(islandClickListener);
-            });
+            // Forward island click events from GameView.
+            if (onIslandClick != null) {
+                gameView.addIslandClickListener(onIslandClick);
+                cleanup.unshift(() => {
+                    gameView.removeIslandClickListener(onIslandClick);
+                });
+            }
 
             // Forward window resize events to GameView.
             const resizeListener = gameView.resize.bind(gameView);
@@ -365,13 +467,18 @@ const GameViewWrapper = ({ gameModel, resourceHolder, dispatch }: GameViewWrappe
             // Start the GameView rendering loop. Each frame first lets the
             // game controller move the airplanes, so that they don't lag a
             // frame behind.
+            // A bit less than a frame at maxFps, as animation frames don't
+            // come at exact intervals.
+            const minFrameTime = (maxFps == null) ? 0 : 1000 / maxFps - 2;
             let renderRequestId: number;
             let lastTimestamp: DOMHighResTimeStamp | null = null;
             const render = (timestamp: DOMHighResTimeStamp) => {
                 const delta = (lastTimestamp === null) ? 0 : timestamp - lastTimestamp;
-                lastTimestamp = timestamp;
-                dispatch({ type: "game/frame", delta });
-                gameView.render();
+                if (lastTimestamp === null || delta >= minFrameTime) {
+                    lastTimestamp = timestamp;
+                    onFrame(delta);
+                    gameView.render();
+                }
                 renderRequestId = window.requestAnimationFrame(render);
             };
             renderRequestId = window.requestAnimationFrame(render);
@@ -400,9 +507,9 @@ const GameViewWrapper = ({ gameModel, resourceHolder, dispatch }: GameViewWrappe
             aborted = true;
             cleanup.forEach(f => f());
         };
-    }, [gameModel, resourceHolder, containerElement, dispatch]);
+    }, [gameModel, resourceHolder, containerElement, onFrame, onIslandClick, fit, maxPixelRatio, maxFps, testHook]);
 
-    return (<div ref={containerElement} />);
+    return (<div ref={containerElement} className={className} />);
 };
 
 export interface GameResultViewProps {
