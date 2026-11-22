@@ -1,4 +1,5 @@
 import { test, expect } from "./fixtures.ts";
+import { openAndPlay } from "./helpers.ts";
 
 /**
  * Parses the backend's "client traffic" log lines (logged when a websocket
@@ -27,7 +28,7 @@ test.describe("websocket traffic", () => {
             cdp.on("Network.webSocketHandshakeResponseReceived", (evt) => resolve({ url, headers: evt.response.headers }));
         });
 
-        await page.goto("/");
+        await openAndPlay(page);
         const { url, headers } = await handshake;
         expect(new URL(url).searchParams.get("v")).toBe("5");
         const extensions = Object.entries(headers)

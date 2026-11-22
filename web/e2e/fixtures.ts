@@ -1,5 +1,6 @@
 import { test as base, expect, type BrowserContext, type Page } from "@playwright/test";
 
+import { openAndPlay } from "./helpers.ts";
 import { DIST_DIR, DIST_E2E_DIR } from "./paths.ts";
 import { startBackend, startNetworkProxy, startPreview, type Backend, type NetworkProxy } from "./servers.ts";
 
@@ -15,9 +16,11 @@ import { startBackend, startNetworkProxy, startPreview, type Backend, type Netwo
  * - backend: the running backend (see servers.ts), e.g. backend.stop().
  * - network: the TCP proxy between the frontend's /app/ws proxy and the
  *   backend, e.g. network.dropConnections() to cut all websockets.
- * - baseURL: the frontend URL, so page.goto("/") opens the game.
+ * - baseURL: the frontend URL, so page.goto("/") opens the game (then click
+ *   "Play!" to join one, see openAndPlay in helpers.ts).
  * - newPlayerPage({navigate = true}): a page for another player, in a new
- *   browser context; opens the game unless navigate is false.
+ *   browser context; opens the game and clicks "Play!" unless navigate is
+ *   false.
  */
 export interface TestOptions {
     backendArgs: string[];
@@ -73,7 +76,7 @@ export const test = base.extend<TestOptions & TestFixtures>({
             contexts.push(context);
             const page = await context.newPage();
             if (navigate) {
-                await page.goto("/");
+                await openAndPlay(page);
             }
             return page;
         });

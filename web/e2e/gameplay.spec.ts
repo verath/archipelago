@@ -1,6 +1,6 @@
 import type { TestHookAirplane, TestHookIsland } from "../src/testHook.ts";
 import { test, expect } from "./fixtures.ts";
-import { gameState, myIsland, waitForGameStarted } from "./helpers.ts";
+import { gameState, myIsland, openAndPlay, waitForGameStarted } from "./helpers.ts";
 
 // Non-null assertions (!) below: gameState is non-null once the game has
 // started (the test hook is installed), waitForGameStarted waited for
@@ -12,7 +12,7 @@ test.describe("game against AI", () => {
     test.use({ backendArgs: ["-lobbyWait", "500ms"] });
 
     test("a single player gets a game with AI opponents that ticks", async ({ page }) => {
-        await page.goto("/");
+        await openAndPlay(page);
         const state = await waitForGameStarted(page);
 
         expect(state.connectionState).toBe("CONNECTED");
@@ -52,7 +52,7 @@ test.describe("launching an airplane", () => {
     test.use({ backendArgs: ["-aiPlayers", "0", "-lobbyWait", "0s"] });
 
     test("halves my island's strength and attacks the target on arrival", async ({ page, newPlayerPage }) => {
-        await page.goto("/");
+        await openAndPlay(page);
         await newPlayerPage();
         const state = await waitForGameStarted(page);
         const me = state.myPlayerId;
