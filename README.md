@@ -162,13 +162,19 @@ and are all off in live games:
 Every variant plays the same seeds, so variants are compared on the same maps, and a seed always
 plays the same game. `-bots` picks the AIs, `-json` writes every game's record for further
 analysis, `-summarize` prints the table for such a file again, and `go run ./cmd/sim -h` lists the
-rest.
+rest. A variant can also change the smart AI: `smart.K=V` sets a field of `ai.SmartConfig` (e.g.
+`smart.hold=0.5`) and `pace.K=V` a field of its `ai.Pace` (e.g. `pace.rate=3`, `pace.live=` to
+play at the live AIs' pace), so the same run can compare AI settings. The table then also shows,
+per kind of AI, its win rate, launches per minute and captures per attack launch.
 
 The default AI is `smart` (`ai.SmartStrategy`, [lib/game/ai/smart.go](lib/game/ai/smart.go)), which
 plays more like a person than the AIs in live games (`opp` and `rand`): it defends islands under
 attack (guessing, like a person, which island an enemy airplane is going to from its heading, as
-the player's view of the game doesn't say), gathers army from several islands for an attack, remembers islands it saw before they went
-into fog of war, and moves army from full islands towards the front. With the live AIs, rules that
+the player's view of the game doesn't say), gathers army from several islands for an attack,
+remembers islands it saw before they went into fog of war (and that an island it sees an airplane
+leave has half its army left), and moves army from full islands towards the front. It plays at
+`ai.HumanPace`: about two launches per second at most, in bursts, acting on what it saw 0.4 s ago.
+It is not yet a strong player: head to head, the live `opp` AI beats it about 60% of the time. With the live AIs, rules that
 limit large armies mostly lead to stalemates the AIs can't break. Still, the games are between AIs,
 so they show how rules change the AIs' games, which is a hint, not proof, of how they change games
 between people.

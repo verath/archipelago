@@ -15,6 +15,11 @@
 //	           (G as 0.7 or 70%)
 //	un=A@S/I   United Nations: above a total army of A, a neutral airplane
 //	           every I (e.g. 10s) with S (0.2 or 20%) of the army above A
+//	smart.K=V  a setting of the smart AI, see ai.SmartConfig (e.g.
+//	           smart.hold=0.5)
+//	pace.K=V   the pace of the smart AI, see ai.Pace (e.g. pace.rate=3,
+//	           pace.reaction=200ms); pace.live= and pace.human= start from
+//	           ai.LivePace or ai.HumanPace (the default)
 //
 // Every variant plays the same seeds, so they are compared on the same maps.
 package main
@@ -33,6 +38,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/verath/archipelago/lib/game/ai"
 	"github.com/verath/archipelago/lib/game/model"
 	"github.com/verath/archipelago/lib/game/sim"
 )
@@ -48,6 +54,8 @@ var defaultVariants = []string{
 type variant struct {
 	name  string
 	rules model.Rules
+	smart ai.SmartConfig
+	pace  ai.Pace
 }
 
 type variantFlags []string
@@ -60,13 +68,27 @@ func parseVariant(s string) (variant, error) {
 	if !ok || strings.TrimSpace(name) == "" {
 		return variant{}, fmt.Errorf("variant %q: want \"name: settings\"", s)
 	}
-	v := variant{name: strings.TrimSpace(name)}
+	v := variant{name: strings.TrimSpace(name), smart: ai.DefaultSmartConfig, pace: ai.HumanPace}
 	for _, setting := range strings.Fields(settings) {
 		key, value, ok := strings.Cut(setting, "=")
 		if !ok {
 			return variant{}, fmt.Errorf("variant %q: setting %q: want key=value", s, setting)
 		}
 		var err error
+		if smartKey, ok := strings.CutPrefix(key, "smart."); ok {
+			if err := v.smart.Set(smartKey, value); err != nil {
+				return variant{}, fmt.Errorf("variant %q: %w", s, err)
+			}
+			continue
+		}
+		if paceKey, ok := strings.CutPrefix(key, "pace."); ok {
+			if paceKey == "live" || paceKey == "human" {
+				v.pace = map[string]ai.Pace{"live": ai.LivePace, "human": ai.HumanPace}[paceKey]
+			} else if err := v.pace.Set(paceKey, value); err != nil {
+				return variant{}, fmt.Errorf("variant %q: %w", s, err)
+			}
+			continue
+		}
 		switch key {
 		case "start":
 			v.rules.StartGarrison, err = strconv.ParseInt(value, 10, 64)
@@ -272,7 +294,7 @@ func main() {
 	var sums []*sim.Summary
 	for _, v := range variants {
 		start := time.Now()
-		cfg := sim.Config{Rules: v.rules, Bots: bots, MaxTime: *maxTime, Tick: *tick}
+		cfg := sim.Config{Rules: v.rules, Bots: bots, MaxTime: *maxTime, Tick: *tick, Smart: v.smart, SmartPace: v.pace}
 		results, err := runVariant(cfg, *seed, *games, *parallel)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "variant %s: %v\n", v.name, err)

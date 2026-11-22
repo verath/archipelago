@@ -195,3 +195,44 @@ func TestSmartStrategy_SplitsThreatBetweenIslandsOnTheLine(t *testing.T) {
 		}
 	}
 }
+
+func TestSmartStrategy_RemembersLaunchesTheViewDoesNotShowYet(t *testing.T) {
+	g := newSmartGame(func(p1, p2, pn *model.Player) []*model.Island {
+		return []*model.Island{
+			island("home", 0, 0, 200, p1),
+			island("target", 1, 1, 50, pn),
+			island("enemy", 8, 8, 1000, p2),
+		}
+	})
+	s := newSmartStrategy()
+	rng := rand.New(rand.NewSource(1))
+	state := clientState{myPlayerID: g.p1.ID()}
+	first, err := s.NextAction(state, g.game, rng)
+	if err != nil || first == nil || first.(*model.PlayerActionLaunch).To != "target" {
+		t.Fatalf("expected a launch to target, got %+v, %v", first, err)
+	}
+	if seq := first.(*model.PlayerActionLaunch).Seq; seq != 1 {
+		t.Errorf("expected seq 1, got %d", seq)
+	}
+	// The same view again, as if the launch was not processed yet: the 100
+	// on the way are enough, so no second launch to target.
+	second, err := s.NextAction(state, g.game, rng)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if second != nil && second.(*model.PlayerActionLaunch).To == "target" {
+		t.Errorf("expected no second launch to target, got %+v", second)
+	}
+	// Once the view shows the launch, it is no longer pending.
+	if _, err := first.ToAction(g.p1.ID()).Apply(g.game); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := s.NextAction(state, g.game, rng); err != nil {
+		t.Fatal(err)
+	}
+	for _, p := range s.pending {
+		if p.seq == 1 {
+			t.Error("expected launch 1 to no longer be pending")
+		}
+	}
+}

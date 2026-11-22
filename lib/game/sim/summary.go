@@ -61,6 +61,11 @@ type Summary struct {
 	PeakArmy []int64
 	// WinsByBot counts wins and seats per bot kind.
 	WinsByBot, SeatsByBot map[BotKind]int
+	// LaunchesByBot, AttacksByBot and CapturesByBot count launches, attack
+	// launches and captures of islands per bot kind, and MinutesByBot the
+	// minutes played by them.
+	LaunchesByBot, AttacksByBot, CapturesByBot map[BotKind]int
+	MinutesByBot                               map[BotKind]float64
 }
 
 // leader returns the index of the player with the most islands, or -1 if
@@ -97,11 +102,15 @@ func sampleAt(res *Result, t time.Duration) (Sample, bool) {
 // Summarize aggregates the results of games of one variant.
 func Summarize(name string, results []*Result) *Summary {
 	sum := &Summary{
-		Name:       name,
-		Running:    make([]int, len(Checkpoints)),
-		LeaderWon:  make([]int, len(Checkpoints)),
-		WinsByBot:  map[BotKind]int{},
-		SeatsByBot: map[BotKind]int{},
+		Name:          name,
+		Running:       make([]int, len(Checkpoints)),
+		LeaderWon:     make([]int, len(Checkpoints)),
+		WinsByBot:     map[BotKind]int{},
+		SeatsByBot:    map[BotKind]int{},
+		LaunchesByBot: map[BotKind]int{},
+		AttacksByBot:  map[BotKind]int{},
+		CapturesByBot: map[BotKind]int{},
+		MinutesByBot:  map[BotKind]float64{},
 	}
 	for _, res := range results {
 		sum.Games++
@@ -110,6 +119,18 @@ func Summarize(name string, results []*Result) *Summary {
 			sum.SeatsByBot[bot]++
 			if res.Winner == i {
 				sum.WinsByBot[bot]++
+			}
+			if len(res.Launches) > i {
+				sum.LaunchesByBot[bot] += res.Launches[i]
+				sum.AttacksByBot[bot] += res.Attacks[i]
+			}
+		}
+		for _, life := range res.Lives {
+			sum.MinutesByBot[res.Bots[life.Player]] += (life.End - life.Start).Minutes()
+		}
+		for _, c := range res.Captures {
+			if c.To != Neutral {
+				sum.CapturesByBot[res.Bots[c.To]]++
 			}
 		}
 		if res.TimedOut {
@@ -288,8 +309,21 @@ func WriteTable(w io.Writer, sums []*Summary) error {
 		p90, _ := quantile(s.PeakArmy, 0.9)
 		return fmt.Sprintf("%d [%d–%d]", p50, p10, p90)
 	})
+	section("bots")
 	for _, bot := range BotKinds {
-		row(fmt.Sprintf("  win rate per %s seat", bot), func(s *Summary) string { return pct(s.WinsByBot[bot], s.SeatsByBot[bot]) })
+		row(fmt.Sprintf("  %s: win rate per seat", bot), func(s *Summary) string { return pct(s.WinsByBot[bot], s.SeatsByBot[bot]) })
+		row(fmt.Sprintf("  %s: launches / minute alive", bot), func(s *Summary) string {
+			if s.MinutesByBot[bot] == 0 {
+				return "-"
+			}
+			return fmt.Sprintf("%.1f", float64(s.LaunchesByBot[bot])/s.MinutesByBot[bot])
+		})
+		row(fmt.Sprintf("  %s: captures / attack launch", bot), func(s *Summary) string {
+			if s.AttacksByBot[bot] == 0 {
+				return "-"
+			}
+			return fmt.Sprintf("%.2f", float64(s.CapturesByBot[bot])/float64(s.AttacksByBot[bot]))
+		})
 	}
 	return tw.Flush()
 }

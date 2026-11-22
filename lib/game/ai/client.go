@@ -40,7 +40,7 @@ func NewClient(logger *slog.Logger, strategyCreator StrategyCreatorFunc) (*Clien
 		panic("strategyCreator == nil")
 	}
 	logger = common.ModuleLogEntryWithID(logger, "ai/client")
-	bot, err := NewBot(strategyCreator, rand.New(rand.NewSource(time.Now().UnixNano())))
+	bot, err := NewBot(strategyCreator, LivePace, rand.New(rand.NewSource(time.Now().UnixNano())))
 	if err != nil {
 		return nil, err
 	}

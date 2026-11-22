@@ -22,7 +22,7 @@ const (
 	// BotRandom plays with ai.RandomStrategy, with a random minimum origin
 	// strength like in live games.
 	BotRandom BotKind = "rand"
-	// BotSmart plays with ai.SmartStrategy.
+	// BotSmart plays with ai.SmartStrategy, at ai.HumanPace.
 	BotSmart BotKind = "smart"
 )
 
@@ -47,6 +47,12 @@ type Config struct {
 	// Tick is the game time step of each tick. Live games tick 10 times per
 	// second.
 	Tick time.Duration
+	// Smart is the config of the BotSmart bots. The zero value means
+	// ai.DefaultSmartConfig.
+	Smart ai.SmartConfig
+	// SmartPace is the pace of the BotSmart bots. The zero value means
+	// ai.HumanPace.
+	SmartPace ai.Pace
 }
 
 // Result is the record of a simulated game. Players are referred to by their
@@ -66,6 +72,10 @@ type Result struct {
 	Lives    []Life    `json:"lives"`
 	// UNPlanes is the number of UN airplanes sent, see model.Rules.UN.
 	UNPlanes int `json:"unPlanes"`
+	// Launches is the number of launches of each player, and Attacks how
+	// many of them went to an island the player did not own at the time.
+	Launches []int `json:"launches"`
+	Attacks  []int `json:"attacks"`
 }
 
 // Sample is a snapshot of each player's territory and army.
@@ -86,6 +96,10 @@ type Capture struct {
 	To     int           `json:"to"`
 	// Start is true if the island was the starting island of From.
 	Start bool `json:"start"`
+	// Before is the army of the island, and Garrison its garrison, before
+	// the tick in which it was taken.
+	Before   int64 `json:"before"`
+	Garrison int64 `json:"garrison"`
 }
 
 // Life is a period during which a player was alive: from the start of the
@@ -127,17 +141,26 @@ func Run(cfg Config, seed int64) (*Result, error) {
 	bots := make([]*ai.Bot, len(cfg.Bots))
 	for i, kind := range cfg.Bots {
 		var creator ai.StrategyCreatorFunc
+		pace := ai.LivePace
 		switch kind {
 		case BotOpportunistic:
 			creator = ai.OpportunisticStrategy()
 		case BotRandom:
 			creator = ai.RandomStrategy(rng.Int63n(30) + 2)
 		case BotSmart:
-			creator = ai.SmartStrategy()
+			smart := cfg.Smart
+			if smart == (ai.SmartConfig{}) {
+				smart = ai.DefaultSmartConfig
+			}
+			pace = cfg.SmartPace
+			if pace == (ai.Pace{}) {
+				pace = ai.HumanPace
+			}
+			creator = ai.SmartStrategyWith(smart)
 		default:
 			return nil, fmt.Errorf("unknown bot kind %q", kind)
 		}
-		bots[i], err = ai.NewBot(creator, rand.New(rand.NewSource(rng.Int63())))
+		bots[i], err = ai.NewBot(creator, pace, rand.New(rand.NewSource(rng.Int63())))
 		if err != nil {
 			return nil, err
 		}
@@ -151,10 +174,14 @@ func Run(cfg Config, seed int64) (*Result, error) {
 		// the tick, then the game over check.
 		rng.Shuffle(len(queued), func(i, j int) { queued[i], queued[j] = queued[j], queued[i] })
 		for _, q := range queued {
+			before := len(g.Airplanes())
 			_, err := q.action.ToAction(q.player).Apply(g)
 			var illegal *model.IllegalActionError
 			if err != nil && !errors.As(err, &illegal) {
 				return nil, fmt.Errorf("applying action: %w", err)
+			}
+			if len(g.Airplanes()) > before {
+				r.launched(g, q.player, g.Airplanes()[len(g.Airplanes())-1])
 			}
 		}
 		queued = queued[:0]
@@ -198,7 +225,9 @@ type recorder struct {
 	// InvalidID to Neutral.
 	index      map[model.PlayerID]int
 	owners     []int
-	starts     []int // the starting island of each player
+	strengths  []int64 // army of each island after the last tick
+	garrisons  []int64 // garrison of each island after the last tick
+	starts     []int   // the starting island of each player
 	states     []model.PlayerState
 	lives      []int // index in res.Lives of each player's current life, -1 if none
 	nextSample time.Duration
@@ -207,18 +236,22 @@ type recorder struct {
 func newRecorder(g *model.Game, seed int64, bots []BotKind) *recorder {
 	r := &recorder{
 		res: &Result{
-			Seed:    seed,
-			Bots:    bots,
-			Islands: len(g.Islands()),
+			Seed:     seed,
+			Bots:     bots,
+			Islands:  len(g.Islands()),
+			Launches: make([]int, len(g.Players())),
+			Attacks:  make([]int, len(g.Players())),
 		},
 		index: map[model.PlayerID]int{
 			g.PlayerNeutral().ID():          Neutral,
 			model.PlayerID(model.InvalidID): Neutral,
 		},
-		owners: make([]int, len(g.Islands())),
-		starts: make([]int, len(g.Players())),
-		states: make([]model.PlayerState, len(g.Players())),
-		lives:  make([]int, len(g.Players())),
+		owners:    make([]int, len(g.Islands())),
+		strengths: make([]int64, len(g.Islands())),
+		garrisons: make([]int64, len(g.Islands())),
+		starts:    make([]int, len(g.Players())),
+		states:    make([]model.PlayerState, len(g.Players())),
+		lives:     make([]int, len(g.Players())),
 	}
 	for i, p := range g.Players() {
 		r.index[p.ID()] = i
@@ -228,6 +261,7 @@ func newRecorder(g *model.Game, seed int64, bots []BotKind) *recorder {
 	}
 	for i, island := range g.Islands() {
 		r.owners[i] = r.index[island.Owner()]
+		r.strengths[i], r.garrisons[i] = island.Strength(), island.Garrison()
 		if r.owners[i] != Neutral {
 			r.starts[r.owners[i]] = i
 		}
@@ -255,6 +289,15 @@ func (r *recorder) territory(g *model.Game) ([]int, []int64) {
 	return islands, army
 }
 
+// launched records a launch of the player.
+func (r *recorder) launched(g *model.Game, player model.PlayerID, airplane *model.Airplane) {
+	i := r.index[player]
+	r.res.Launches[i]++
+	if !g.Island(airplane.Destination()).IsOwnedBy(player) {
+		r.res.Attacks[i]++
+	}
+}
+
 func (r *recorder) sample(g *model.Game) {
 	islands, army := r.territory(g)
 	r.res.Samples = append(r.res.Samples, Sample{Time: g.Time(), Islands: islands, Army: army})
@@ -277,16 +320,20 @@ func (r *recorder) afterTick(g *model.Game) {
 	now := g.Time()
 	for i, island := range g.Islands() {
 		owner := r.index[island.Owner()]
+		before, garrison := r.strengths[i], r.garrisons[i]
+		r.strengths[i], r.garrisons[i] = island.Strength(), island.Garrison()
 		if owner == r.owners[i] {
 			continue
 		}
 		from := r.owners[i]
 		r.res.Captures = append(r.res.Captures, Capture{
-			Time:   now,
-			Island: i,
-			From:   from,
-			To:     owner,
-			Start:  from != Neutral && r.starts[from] == i,
+			Time:     now,
+			Island:   i,
+			From:     from,
+			To:       owner,
+			Start:    from != Neutral && r.starts[from] == i,
+			Before:   before,
+			Garrison: garrison,
 		})
 		r.owners[i] = owner
 	}
