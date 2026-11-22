@@ -14,10 +14,16 @@ canvas {
     margin: 0 auto;
 }
 
+/* Centers its content in the viewport, on phones and desktops alike. */
 .center-text-wrap {
-    display: block;
-    margin-top: 10vmin;
-    line-height: 20vmin;
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    /* Without the mobile browser toolbars, where supported. */
+    min-height: 100dvh;
+    padding: 16px;
     text-align: center;
     font-family: 'Droid Sans Mono', 'Courier New', monospace;
     font-size: 10vmin;
@@ -34,6 +40,8 @@ canvas {
     border-radius: 0.3em;
     box-shadow: 0 0.1em 0.3em rgba(0, 0, 0, 0.4);
     cursor: pointer;
+    /* No double-tap-to-zoom delay on phones. */
+    touch-action: manipulation;
 }
 
 .play-button:hover {
