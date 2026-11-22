@@ -23,8 +23,9 @@ type Summary struct {
 	// Durations are the durations of the games that had a winner.
 	Durations []time.Duration
 
-	// Running is, per checkpoint, the number of games still running with a
-	// single player owning the most islands.
+	// Running is, per checkpoint, the number of games that were still
+	// running, had a single player owning the most islands, and ended with
+	// a winner. Games that timed out are left out, as nobody won them.
 	Running []int
 	// LeaderWon is, per checkpoint, how many of the Running games were won
 	// by the player leading at the checkpoint.
@@ -118,7 +119,7 @@ func Summarize(name string, results []*Result) *Summary {
 		}
 
 		for ci, cp := range Checkpoints {
-			if res.Duration <= cp {
+			if res.TimedOut || res.Duration <= cp {
 				continue
 			}
 			s, ok := sampleAt(res, cp)
@@ -256,7 +257,7 @@ func WriteTable(w io.Writer, sums []*Summary) error {
 	row("timed out", func(s *Summary) string { return pct(s.TimedOut, s.Games) })
 	row("duration p50 [p10–p90]", func(s *Summary) string { return durations(s.Durations, 0) })
 
-	section("snowball (lower = more comebacks)")
+	section("snowball, of games with a winner (lower = more comebacks)")
 	for ci, cp := range Checkpoints {
 		row(fmt.Sprintf("  leader at %v wins", cp), func(s *Summary) string { return pct(s.LeaderWon[ci], s.Running[ci]) })
 	}

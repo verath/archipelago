@@ -178,6 +178,40 @@ func runVariant(cfg sim.Config, firstSeed int64, games, parallel int) ([]*sim.Re
 	return results, errors.Join(errs...)
 }
 
+// jsonLine is a line of the -json output.
+type jsonLine struct {
+	Variant string `json:"variant"`
+	*sim.Result
+}
+
+// summarizeFile summarizes the game records of a -json file, per variant in
+// the order they first appear.
+func summarizeFile(path string) ([]*sim.Summary, error) {
+	f, err := os.Open(path)
+	if err != nil {
+		return nil, err
+	}
+	defer f.Close()
+	var names []string
+	results := map[string][]*sim.Result{}
+	dec := json.NewDecoder(f)
+	for dec.More() {
+		var line jsonLine
+		if err := dec.Decode(&line); err != nil {
+			return nil, fmt.Errorf("%s: %w", path, err)
+		}
+		if _, ok := results[line.Variant]; !ok {
+			names = append(names, line.Variant)
+		}
+		results[line.Variant] = append(results[line.Variant], line.Result)
+	}
+	var sums []*sim.Summary
+	for _, name := range names {
+		sums = append(sums, sim.Summarize(name, results[name]))
+	}
+	return sums, nil
+}
+
 func main() {
 	var variantSpecs variantFlags
 	games := flag.Int("games", 200, "games to play per variant")
@@ -188,10 +222,23 @@ func main() {
 	tick := flag.Duration("tick", 100*time.Millisecond, "game time step of a tick")
 	parallel := flag.Int("parallel", runtime.NumCPU(), "games played in parallel")
 	jsonPath := flag.String("json", "", "if set, write every game's record to this file as JSON lines")
+	summarize := flag.String("summarize", "", "if set, play nothing: print the table for the game records in this "+
+		"file, as written by -json")
 	flag.Var(&variantSpecs, "variant", "a rule variant to play, repeatable (see the package doc); "+
 		"defaults to baseline, garrison, upkeep and both")
 	flag.Parse()
 
+	if *summarize != "" {
+		sums, err := summarizeFile(*summarize)
+		if err == nil {
+			err = sim.WriteTable(os.Stdout, sums)
+		}
+		if err != nil {
+			fmt.Fprintln(os.Stderr, err)
+			os.Exit(1)
+		}
+		return
+	}
 	if len(variantSpecs) == 0 {
 		variantSpecs = defaultVariants
 	}
@@ -235,11 +282,7 @@ func main() {
 		if jsonOut != nil {
 			enc := json.NewEncoder(jsonOut)
 			for _, res := range results {
-				line := struct {
-					Variant string `json:"variant"`
-					*sim.Result
-				}{v.name, res}
-				if err := enc.Encode(line); err != nil {
+				if err := enc.Encode(jsonLine{v.name, res}); err != nil {
 					fmt.Fprintln(os.Stderr, err)
 					os.Exit(1)
 				}
