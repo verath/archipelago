@@ -4,23 +4,13 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log/slog"
 	"math/rand"
 	"sync"
+	"time"
 
 	"github.com/verath/archipelago/lib/common"
 	"github.com/verath/archipelago/lib/game/model"
-	"golang.org/x/time/rate"
-	"log/slog"
-)
-
-const (
-	// clientActionLimitRate is the rate limit bucket refill rate [token/s], limiting
-	// the number of actions the client is allowed to take per second on average.
-	clientActionLimitRate = rate.Limit(1)
-
-	// clientActionLimitBurst is the rate limit bucket size, limiting the burst number
-	// number of actions that the client is allowed to take.
-	clientActionLimitBurst = 10
 )
 
 type clientState struct {
@@ -34,12 +24,9 @@ type clientState struct {
 type Client struct {
 	logger *slog.Logger
 
-	strategy strategy
-
 	stateMu sync.Mutex
 	state   clientState
-
-	limiter *rate.Limiter
+	bot     *Bot
 
 	actionCh chan model.PlayerAction
 
@@ -53,14 +40,13 @@ func NewClient(logger *slog.Logger, strategyCreator StrategyCreatorFunc) (*Clien
 		panic("strategyCreator == nil")
 	}
 	logger = common.ModuleLogEntryWithID(logger, "ai/client")
-	strategy, err := strategyCreator()
+	bot, err := NewBot(strategyCreator, rand.New(rand.NewSource(time.Now().UnixNano())))
 	if err != nil {
-		return nil, fmt.Errorf("failed creating strategy: %w", err)
+		return nil, err
 	}
 	return &Client{
 		logger:       logger,
-		strategy:     strategy,
-		limiter:      rate.NewLimiter(clientActionLimitRate, clientActionLimitBurst),
+		bot:          bot,
 		actionCh:     make(chan model.PlayerAction, 1),
 		disconnectCh: make(chan struct{}, 0),
 	}, nil
@@ -127,17 +113,9 @@ func (c *Client) onGameOver(ctx context.Context, evt *model.PlayerEventGameOver)
 }
 
 func (c *Client) onTick(ctx context.Context, evt *model.PlayerEventTick) error {
-	// Rate limit and add 50% do nothing, do prevent multiple instances to
-	// perform actions as the same time.
-	if !c.limiter.Allow() || rand.Intn(10) < 5 {
-		return nil
-	}
-	// Delegate to strategy to perform next action.
-	// TODO: This somewhat locks the strategy to the tick rate, probably
-	// not ideal...
 	c.stateMu.Lock()
-	defer c.stateMu.Unlock()
-	act, err := c.strategy.NextAction(c.state, evt.Game)
+	act, err := c.bot.NextAction(c.state.myPlayerID, evt.Game)
+	c.stateMu.Unlock()
 	if err != nil {
 		// Not fatal for the client; log it and carry on. Debug level, as
 		// this runs on every tick.

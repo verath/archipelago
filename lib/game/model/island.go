@@ -39,6 +39,9 @@ type Island struct {
 	// the army size would increase again. This is required as ticks
 	// will not always coincide with the rate of growth.
 	growthRemainder time.Duration
+	// garrison is an extra defence force on the island. It absorbs attacks
+	// before the army does, never grows and never leaves the island.
+	garrison int64
 }
 
 // NewIsland creates a new Island from the provided values, automatically
@@ -86,6 +89,17 @@ func (i *Island) SetGrowthRemainder(growthRemainder time.Duration) {
 	i.growthRemainder = growthRemainder
 }
 
+// Garrison returns the garrison of the island: an extra defence force that
+// absorbs attacks before the army does.
+func (i *Island) Garrison() int64 {
+	return i.garrison
+}
+
+// SetGarrison sets the garrison of the island.
+func (i *Island) SetGarrison(garrison int64) {
+	i.garrison = garrison
+}
+
 // Copy performs a deep copy of the Island, returning the copy.
 func (i *Island) Copy() *Island {
 	return &Island{
@@ -94,5 +108,6 @@ func (i *Island) Copy() *Island {
 		position:        i.position,
 		size:            i.size,
 		growthRemainder: i.growthRemainder,
+		garrison:        i.garrison,
 	}
 }

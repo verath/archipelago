@@ -2,6 +2,7 @@ package ai
 
 import (
 	"context"
+	"math/rand"
 	"testing"
 	"time"
 
@@ -13,7 +14,7 @@ import (
 // alwaysLaunchStrategy is a strategy that always returns an action.
 type alwaysLaunchStrategy struct{}
 
-func (alwaysLaunchStrategy) NextAction(clientState, *model.Game) (model.PlayerAction, error) {
+func (alwaysLaunchStrategy) NextAction(clientState, *model.Game, *rand.Rand) (model.PlayerAction, error) {
 	return &model.PlayerActionLaunch{}, nil
 }
 
@@ -24,7 +25,7 @@ func TestClient_WritePlayerEvent_DoesNotBlockAfterDisconnect(t *testing.T) {
 	if err != nil {
 		t.Fatalf("unexpected error creating client: %v", err)
 	}
-	client.limiter = rate.NewLimiter(rate.Inf, 1)
+	client.bot.limiter = rate.NewLimiter(rate.Inf, 1)
 	// Fill actionCh, as if the action reader stopped before reading it.
 	client.actionCh <- &model.PlayerActionLaunch{}
 	client.Disconnect()

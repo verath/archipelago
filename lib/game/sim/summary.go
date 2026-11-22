@@ -1,0 +1,284 @@
+package sim
+
+import (
+	"fmt"
+	"io"
+	"slices"
+	"strings"
+	"text/tabwriter"
+	"time"
+)
+
+// Checkpoints are the game times at which Summarize looks at who is leading.
+var Checkpoints = []time.Duration{1 * time.Minute, 2 * time.Minute, 3 * time.Minute, 5 * time.Minute}
+
+// EarlyGame is the game time that the early game metrics look at.
+const EarlyGame = 2 * time.Minute
+
+// Summary is the aggregate of many simulated games of a variant.
+type Summary struct {
+	Name     string
+	Games    int
+	TimedOut int
+	// Durations are the durations of the games that had a winner.
+	Durations []time.Duration
+
+	// Running is, per checkpoint, the number of games still running with a
+	// single player owning the most islands.
+	Running []int
+	// LeaderWon is, per checkpoint, how many of the Running games were won
+	// by the player leading at the checkpoint.
+	LeaderWon []int
+	// LeadChanges is the number of times the leader changed, over all games.
+	LeadChanges int
+
+	// FirstAttack is the time of the first capture of a player's island by
+	// another player, in the games where there was one.
+	FirstAttack []time.Duration
+	// FirstElimination is the time a player was first eliminated, in the
+	// games where one was.
+	FirstElimination []time.Duration
+	// EarlyNeutral and EarlyPvP count captures in the early game of neutral
+	// islands and of other players' islands.
+	EarlyNeutral, EarlyPvP int
+	// EarlyStartsLost is the number of starting islands lost to another
+	// player in the early game.
+	EarlyStartsLost int
+	// Seats is the number of players over all games.
+	Seats int
+
+	// Revivals is the number of revivals. RevivedWon counts revivals whose
+	// player went on to win, RevivedGrew those reaching 3 or more islands,
+	// RevivedSurvived1m those surviving at least a minute.
+	Revivals, RevivedWon, RevivedGrew, RevivedSurvived1m int
+
+	// PeakArmy is the largest army of any player in each game.
+	PeakArmy []int64
+	// WinsByBot counts wins and seats per bot kind.
+	WinsByBot, SeatsByBot map[BotKind]int
+}
+
+// leader returns the index of the player with the most islands, or -1 if
+// there is a tie.
+func leader(s Sample) int {
+	best, bestIslands, tie := -1, 0, false
+	for i, islands := range s.Islands {
+		switch {
+		case islands > bestIslands:
+			best, bestIslands, tie = i, islands, false
+		case islands == bestIslands:
+			tie = true
+		}
+	}
+	if tie || best == -1 {
+		return -1
+	}
+	return best
+}
+
+// sampleAt returns the last sample at or before t.
+func sampleAt(res *Result, t time.Duration) (Sample, bool) {
+	var found Sample
+	ok := false
+	for _, s := range res.Samples {
+		if s.Time > t {
+			break
+		}
+		found, ok = s, true
+	}
+	return found, ok
+}
+
+// Summarize aggregates the results of games of one variant.
+func Summarize(name string, results []*Result) *Summary {
+	sum := &Summary{
+		Name:       name,
+		Running:    make([]int, len(Checkpoints)),
+		LeaderWon:  make([]int, len(Checkpoints)),
+		WinsByBot:  map[BotKind]int{},
+		SeatsByBot: map[BotKind]int{},
+	}
+	for _, res := range results {
+		sum.Games++
+		sum.Seats += len(res.Bots)
+		for i, bot := range res.Bots {
+			sum.SeatsByBot[bot]++
+			if res.Winner == i {
+				sum.WinsByBot[bot]++
+			}
+		}
+		if res.TimedOut {
+			sum.TimedOut++
+		} else {
+			sum.Durations = append(sum.Durations, res.Duration)
+		}
+
+		for ci, cp := range Checkpoints {
+			if res.Duration <= cp {
+				continue
+			}
+			s, ok := sampleAt(res, cp)
+			if !ok {
+				continue
+			}
+			if l := leader(s); l != -1 {
+				sum.Running[ci]++
+				if res.Winner == l {
+					sum.LeaderWon[ci]++
+				}
+			}
+		}
+		prev := -1
+		for _, s := range res.Samples {
+			l := leader(s)
+			if l == -1 {
+				continue
+			}
+			if prev != -1 && l != prev {
+				sum.LeadChanges++
+			}
+			prev = l
+		}
+
+		firstAttack := time.Duration(-1)
+		for _, c := range res.Captures {
+			pvp := c.From != Neutral && c.To != Neutral
+			if pvp && firstAttack < 0 {
+				firstAttack = c.Time
+			}
+			if c.Time > EarlyGame {
+				continue
+			}
+			if c.From == Neutral {
+				sum.EarlyNeutral++
+			} else if pvp {
+				sum.EarlyPvP++
+				if c.Start {
+					sum.EarlyStartsLost++
+				}
+			}
+		}
+		if firstAttack >= 0 {
+			sum.FirstAttack = append(sum.FirstAttack, firstAttack)
+		}
+
+		firstElimination := time.Duration(-1)
+		var peak int64
+		for _, life := range res.Lives {
+			peak = max(peak, life.PeakArmy)
+			if life.Eliminated && (firstElimination < 0 || life.End < firstElimination) {
+				firstElimination = life.End
+			}
+			if !life.Revived {
+				continue
+			}
+			sum.Revivals++
+			if res.Winner == life.Player && !life.Eliminated {
+				sum.RevivedWon++
+			}
+			if life.MaxIslands >= 3 {
+				sum.RevivedGrew++
+			}
+			if life.End-life.Start >= time.Minute {
+				sum.RevivedSurvived1m++
+			}
+		}
+		if firstElimination >= 0 {
+			sum.FirstElimination = append(sum.FirstElimination, firstElimination)
+		}
+		sum.PeakArmy = append(sum.PeakArmy, peak)
+	}
+	return sum
+}
+
+func pct(n, of int) string {
+	if of == 0 {
+		return "-"
+	}
+	return fmt.Sprintf("%.0f%% (%d)", 100*float64(n)/float64(of), of)
+}
+
+func perGame(n, games int) string {
+	if games == 0 {
+		return "-"
+	}
+	return fmt.Sprintf("%.2f", float64(n)/float64(games))
+}
+
+func quantile[T int64 | time.Duration](values []T, q float64) (T, bool) {
+	if len(values) == 0 {
+		return 0, false
+	}
+	sorted := slices.Clone(values)
+	slices.Sort(sorted)
+	return sorted[int(q*float64(len(sorted)-1)+0.5)], true
+}
+
+func durations(values []time.Duration, of int) string {
+	p50, ok := quantile(values, 0.5)
+	if !ok {
+		return "-"
+	}
+	p10, _ := quantile(values, 0.1)
+	p90, _ := quantile(values, 0.9)
+	r := func(d time.Duration) string { return d.Round(time.Second).String() }
+	s := fmt.Sprintf("%s [%s–%s]", r(p50), r(p10), r(p90))
+	if of > 0 && len(values) != of {
+		s += fmt.Sprintf(" n=%d", len(values))
+	}
+	return s
+}
+
+// WriteTable writes the summaries side by side, one column per summary.
+func WriteTable(w io.Writer, sums []*Summary) error {
+	tw := tabwriter.NewWriter(w, 0, 0, 3, ' ', 0)
+	row := func(label string, f func(s *Summary) string) {
+		cells := []string{label}
+		for _, s := range sums {
+			cells = append(cells, f(s))
+		}
+		fmt.Fprintln(tw, strings.Join(cells, "\t")+"\t")
+	}
+	section := func(label string) {
+		fmt.Fprintln(tw, label+strings.Repeat("\t", len(sums)+1))
+	}
+
+	row("", func(s *Summary) string { return s.Name })
+	row("games", func(s *Summary) string { return fmt.Sprint(s.Games) })
+	row("timed out", func(s *Summary) string { return pct(s.TimedOut, s.Games) })
+	row("duration p50 [p10–p90]", func(s *Summary) string { return durations(s.Durations, 0) })
+
+	section("snowball (lower = more comebacks)")
+	for ci, cp := range Checkpoints {
+		row(fmt.Sprintf("  leader at %v wins", cp), func(s *Summary) string { return pct(s.LeaderWon[ci], s.Running[ci]) })
+	}
+	row("  lead changes / game", func(s *Summary) string { return perGame(s.LeadChanges, s.Games) })
+
+	section(fmt.Sprintf("early game (first %v)", EarlyGame))
+	row("  neutral captures / game", func(s *Summary) string { return perGame(s.EarlyNeutral, s.Games) })
+	row("  player captures / game", func(s *Summary) string { return perGame(s.EarlyPvP, s.Games) })
+	row("  start islands lost", func(s *Summary) string { return pct(s.EarlyStartsLost, s.Seats) })
+	row("  first player capture", func(s *Summary) string { return durations(s.FirstAttack, s.Games) })
+	row("  first elimination", func(s *Summary) string { return durations(s.FirstElimination, s.Games) })
+
+	section("revivals")
+	row("  revivals / game", func(s *Summary) string { return perGame(s.Revivals, s.Games) })
+	row("  revived, reached 3+ islands", func(s *Summary) string { return pct(s.RevivedGrew, s.Revivals) })
+	row("  revived, survived 1m+", func(s *Summary) string { return pct(s.RevivedSurvived1m, s.Revivals) })
+	row("  revived, won", func(s *Summary) string { return pct(s.RevivedWon, s.Revivals) })
+
+	section("army")
+	row("  peak army p50 [p10–p90]", func(s *Summary) string {
+		p50, ok := quantile(s.PeakArmy, 0.5)
+		if !ok {
+			return "-"
+		}
+		p10, _ := quantile(s.PeakArmy, 0.1)
+		p90, _ := quantile(s.PeakArmy, 0.9)
+		return fmt.Sprintf("%d [%d–%d]", p50, p10, p90)
+	})
+	for _, bot := range []BotKind{BotOpportunistic, BotRandom} {
+		row(fmt.Sprintf("  win rate per %s seat", bot), func(s *Summary) string { return pct(s.WinsByBot[bot], s.SeatsByBot[bot]) })
+	}
+	return tw.Flush()
+}

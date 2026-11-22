@@ -132,6 +132,34 @@ use backend flags that make test games fast and predictable:
 To profile the backend, run it with `-pprofAddr localhost:6060`: it then serves Go's
 `net/http/pprof` endpoints on that address, on a listener separate from the game's (default: off).
 
+### Simulating rule changes
+
+[cmd/sim](cmd/sim) plays headless games between AI players, much faster than real time, and prints
+a table comparing rule variants: how often the player leading at 1, 2, 3 and 5 minutes wins, how
+the early game goes, how revived players fare, how large armies get. For example:
+
+```
+go run ./cmd/sim -games 500 \
+    -variant 'baseline:' \
+    -variant 'garrison: start=20 revive=20' \
+    -variant 'upkeep: upkeep=100@0.7,200@0.4'
+```
+
+The rules a variant can change are in `model.Rules` ([lib/game/model/rules.go](lib/game/model/rules.go)),
+and are all off in live games:
+
+* `start=N`, `revive=N`: a garrison of `N` on each starting island, and on the island a revived
+  player captures. A garrison absorbs attacks before the island's army does, never grows and never
+  joins a launch.
+* `upkeep=A@G,...`: upkeep tiers, as in Warcraft 3. From a total army (islands and airplanes) of `A`,
+  a player's islands grow at `G` (e.g. `0.7`) of the normal rate.
+
+Every variant plays the same seeds, so variants are compared on the same maps, and a seed always
+plays the same game. `-bots` picks the AIs (default: the lineup a live game with 4 AIs gets),
+`-json` writes every game's record for further analysis, and `go run ./cmd/sim -h` lists the rest.
+The games are between AIs, so they show how rules change the AIs' games, which is a hint, not proof,
+of how they change games between people.
+
 ### Network traffic
 
 WebSocket messages are compressed with `permessage-deflate`, which all browsers negotiate on their

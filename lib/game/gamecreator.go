@@ -1,7 +1,9 @@
 package game
 
 import (
+	"cmp"
 	"math/rand"
+	"slices"
 	"time"
 
 	"github.com/verath/archipelago/lib/game/model"
@@ -16,7 +18,7 @@ func createPlayers(numPlayers int) ([]*model.Player, *model.Player) {
 	return players, playerNeutral
 }
 
-func createIslands(players []*model.Player, playerNeutral *model.Player, size model.Coordinate, gameRand *rand.Rand) []*model.Island {
+func createIslands(players []*model.Player, playerNeutral *model.Player, size model.Coordinate, rules model.Rules, gameRand *rand.Rand) []*model.Island {
 	type islandData struct {
 		Size            model.IslandSize
 		Strength        int64
@@ -47,29 +49,47 @@ func createIslands(players []*model.Player, playerNeutral *model.Player, size mo
 		pos := model.Coordinate{X: x, Y: y}
 		islandMap[pos] = islandData{model.IslandSizeLarge, 20, players[i], 0}
 	}
-	// Transform the map to a slice of islands.
+	// Transform the map to a slice of islands. The islands are sorted by
+	// position, so that a seed always gives the same game.
+	positions := make([]model.Coordinate, 0, len(islandMap))
+	for pos := range islandMap {
+		positions = append(positions, pos)
+	}
+	slices.SortFunc(positions, func(a, b model.Coordinate) int {
+		return cmp.Or(cmp.Compare(a.Y, b.Y), cmp.Compare(a.X, b.X))
+	})
 	var islands []*model.Island
-	for pos, data := range islandMap {
+	for _, pos := range positions {
+		data := islandMap[pos]
 		island := model.NewIsland(pos, data.Size, data.Strength, data.Player.ID())
 		island.SetGrowthRemainder(data.GrowthRemainder)
+		if data.Player != playerNeutral {
+			island.SetGarrison(rules.StartGarrison)
+		}
 		islands = append(islands, island)
 	}
 	return islands
 }
 
 // createBasicGame creates a new instance of a Game model with numPlayers
-// players.
+// players, using the standard rules and a random map.
 func createBasicGame(numPlayers int) (*model.Game, error) {
+	return CreateGame(numPlayers, time.Now().UnixNano(), model.Rules{})
+}
+
+// CreateGame creates a new instance of a Game model with numPlayers players
+// and the given rules. The map is generated from seed, so the same seed and
+// number of players always give the same map.
+func CreateGame(numPlayers int, seed int64, rules model.Rules) (*model.Game, error) {
 	size := model.Coordinate{X: 8, Y: 8}
 	if numPlayers > 5 {
 		size.X += 2
 		size.Y += 2
 	}
 	players, playerNeutral := createPlayers(numPlayers)
-	seed := time.Now().UnixNano()
 	gameRand := rand.New(rand.NewSource(seed))
-	islands := createIslands(players, playerNeutral, size, gameRand)
-	gameBuilder := model.NewGameBuilder(size, playerNeutral)
+	islands := createIslands(players, playerNeutral, size, rules, gameRand)
+	gameBuilder := model.NewGameBuilder(size, playerNeutral).SetRules(rules)
 	for _, player := range players {
 		gameBuilder.AddPlayer(player)
 	}

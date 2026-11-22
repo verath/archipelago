@@ -57,7 +57,13 @@ func (*ActionTick) updateAirplanes(g *Game, delta time.Duration) {
 
 		if target.Owner() == airplane.Owner() {
 			target.SetStrength(targetStr + airplaneStr)
+		} else if target.Garrison() >= airplaneStr {
+			// The garrison absorbs the whole attack, the army is untouched.
+			target.SetGarrison(target.Garrison() - airplaneStr)
 		} else {
+			// The garrison absorbs what it can, the army fights the rest.
+			airplaneStr -= target.Garrison()
+			target.SetGarrison(0)
 			if targetStr > airplaneStr {
 				// If island str is greater, the the island remains
 				// controlled by its previous owner
@@ -68,6 +74,7 @@ func (*ActionTick) updateAirplanes(g *Game, delta time.Duration) {
 				target.SetStrength(airplaneStr - targetStr)
 				target.SetGrowthRemainder(0)
 				target.SetOwner(airplane.Owner())
+				target.SetGarrison(airplane.Garrison())
 			} else {
 				// If they are equal, the owner is set to the neutral player
 				target.SetStrength(0)
@@ -80,7 +87,29 @@ func (*ActionTick) updateAirplanes(g *Game, delta time.Duration) {
 	}
 }
 
+// growthFactors returns the upkeep growth factor of each player that owns any
+// army, or nil if the game has no upkeep.
+func growthFactors(g *Game) map[PlayerID]float64 {
+	rules := g.Rules()
+	if len(rules.Upkeep) == 0 {
+		return nil
+	}
+	armies := make(map[PlayerID]int64)
+	for _, island := range g.Islands() {
+		armies[island.Owner()] += island.Strength()
+	}
+	for _, airplane := range g.Airplanes() {
+		armies[airplane.Owner()] += airplane.Strength()
+	}
+	factors := make(map[PlayerID]float64, len(armies))
+	for owner, army := range armies {
+		factors[owner] = rules.GrowthFactor(army)
+	}
+	return factors
+}
+
 func (*ActionTick) updateIslands(g *Game, delta time.Duration) {
+	factors := growthFactors(g)
 	for _, island := range g.Islands() {
 		size := float64(island.Size())
 		// Determine change for delta, based on island size.
@@ -92,7 +121,12 @@ func (*ActionTick) updateIslands(g *Game, delta time.Duration) {
 		} else {
 			// Armies on player controller islands increase over time, scaled
 			// by islands size.
-			change = time.Duration(size * float64(delta))
+			// Upkeep reduces the growth of players with a large army.
+			factor := 1.0
+			if factors != nil {
+				factor = factors[island.Owner()]
+			}
+			change = time.Duration(size * factor * float64(delta))
 		}
 		// Calculate the whole number of added strength, storing the remaining
 		// "fractions" as the growth remainder.
@@ -157,6 +191,7 @@ func (*ActionTick) revivePlayer(g *Game, player *Player) bool {
 	}
 	airplane := NewAirplane(origin, island, player.ID(), strength)
 	airplane.SetSpeed(AirplaneDefaultSpeed * 2)
+	airplane.SetGarrison(g.Rules().ReviveGarrison)
 	g.AddAirplane(airplane)
 	g.SetReviveCount(reviveCount + 1)
 	return true

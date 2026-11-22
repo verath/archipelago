@@ -15,7 +15,8 @@ type strategy interface {
 	// ai client state and game.
 	// The returned action may be nil, to indicate that the strategy could not
 	// determine a next action.
-	NextAction(state clientState, game *model.Game) (model.PlayerAction, error)
+	// rng is the source of randomness for the strategy.
+	NextAction(state clientState, game *model.Game, rng *rand.Rand) (model.PlayerAction, error)
 }
 
 // StrategyCreatorFunc is a function that returns an AI strategy, hiding the
@@ -50,7 +51,7 @@ func newRandomStrategy(minOriginStrength int64) (*randomStrategy, error) {
 	}, nil
 }
 
-func (s *randomStrategy) NextAction(state clientState, game *model.Game) (model.PlayerAction, error) {
+func (s *randomStrategy) NextAction(state clientState, game *model.Game, rng *rand.Rand) (model.PlayerAction, error) {
 	myPlayer := game.Player(state.myPlayerID)
 	if myPlayer == nil {
 		return nil, errors.New("myPlayer not found in game")
@@ -62,13 +63,13 @@ func (s *randomStrategy) NextAction(state clientState, game *model.Game) (model.
 	if len(myIslands) == 0 {
 		return nil, nil
 	}
-	originIsland := myIslands[rand.Intn(len(myIslands))]
+	originIsland := myIslands[rng.Intn(len(myIslands))]
 	// Select random target island.
 	otherIslands := islandsNotOwnedBy(game, myPlayer)
 	if len(otherIslands) == 0 {
 		return nil, nil
 	}
-	targetIsland := otherIslands[rand.Intn(len(otherIslands))]
+	targetIsland := otherIslands[rng.Intn(len(otherIslands))]
 	// Create the action.
 	act := &model.PlayerActionLaunch{
 		From: originIsland.ID(),
@@ -87,7 +88,7 @@ func newOpportunisticStrategy() (*opportunisticStrategy, error) {
 	return &opportunisticStrategy{}, nil
 }
 
-func (s *opportunisticStrategy) NextAction(state clientState, game *model.Game) (act model.PlayerAction, err error) {
+func (s *opportunisticStrategy) NextAction(state clientState, game *model.Game, rng *rand.Rand) (act model.PlayerAction, err error) {
 	myPlayer := game.Player(state.myPlayerID)
 	if myPlayer == nil {
 		return nil, errors.New("myPlayer not found in game")
@@ -102,7 +103,7 @@ func (s *opportunisticStrategy) NextAction(state clientState, game *model.Game) 
 		s.failed = 0
 		return nil, nil
 	}
-	originIsland := myIslands[rand.Intn(len(myIslands))]
+	originIsland := myIslands[rng.Intn(len(myIslands))]
 
 	// Target any other island "weaker" than this island.
 	weakerIslands := filterIslands(game.Islands(), func(island *model.Island) bool {
@@ -118,6 +119,10 @@ func (s *opportunisticStrategy) NextAction(state clientState, game *model.Game) 
 		// never attack a very large island.
 		if islandStrength > model.IslandGrowthCap {
 			islandStrength = model.IslandGrowthCap
+		}
+		// A garrison has to be beaten as well, it is never hidden by FoW.
+		if !island.IsOwnedBy(myPlayer.ID()) {
+			islandStrength += island.Garrison()
 		}
 		// Punish by owner.
 		if island.IsOwnedBy(game.PlayerNeutral().ID()) {
@@ -142,7 +147,7 @@ func (s *opportunisticStrategy) NextAction(state clientState, game *model.Game) 
 		return nil, nil
 	}
 	s.failed = 0
-	targetIsland := weakerIslands[rand.Intn(len(weakerIslands))]
+	targetIsland := weakerIslands[rng.Intn(len(weakerIslands))]
 
 	// Create the action.
 	act = &model.PlayerActionLaunch{

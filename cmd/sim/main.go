@@ -1,0 +1,221 @@
+// Command sim plays many headless games between AI players for each of a few
+// rule variants, and prints a table comparing them.
+//
+//	go run ./cmd/sim -games 500
+//	go run ./cmd/sim -games 500 \
+//	    -variant 'baseline:' \
+//	    -variant 'garrison: start=20 revive=20' \
+//	    -variant 'upkeep: upkeep=100@0.7,200@0.4'
+//
+// A variant is "name:" followed by space separated settings:
+//
+//	start=N    garrison of each player's starting island
+//	revive=N   garrison of the island a revived player captures
+//	upkeep=A@G,...  upkeep tiers: from total army A, growth is G of normal
+//	           (G as 0.7 or 70%)
+//
+// Every variant plays the same seeds, so they are compared on the same maps.
+package main
+
+import (
+	"bufio"
+	"encoding/json"
+	"errors"
+	"flag"
+	"fmt"
+	"os"
+	"runtime"
+	"strconv"
+	"strings"
+	"sync"
+	"time"
+
+	"github.com/verath/archipelago/lib/game/model"
+	"github.com/verath/archipelago/lib/game/sim"
+)
+
+// defaultVariants are played when no -variant flag is given.
+var defaultVariants = []string{
+	"baseline:",
+	"garrison: start=20 revive=20",
+	"upkeep: upkeep=100@0.7,200@0.4",
+	"both: start=20 revive=20 upkeep=100@0.7,200@0.4",
+}
+
+type variant struct {
+	name  string
+	rules model.Rules
+}
+
+type variantFlags []string
+
+func (v *variantFlags) String() string     { return strings.Join(*v, "; ") }
+func (v *variantFlags) Set(s string) error { *v = append(*v, s); return nil }
+
+func parseVariant(s string) (variant, error) {
+	name, settings, ok := strings.Cut(s, ":")
+	if !ok || strings.TrimSpace(name) == "" {
+		return variant{}, fmt.Errorf("variant %q: want \"name: settings\"", s)
+	}
+	v := variant{name: strings.TrimSpace(name)}
+	for _, setting := range strings.Fields(settings) {
+		key, value, ok := strings.Cut(setting, "=")
+		if !ok {
+			return variant{}, fmt.Errorf("variant %q: setting %q: want key=value", s, setting)
+		}
+		var err error
+		switch key {
+		case "start":
+			v.rules.StartGarrison, err = strconv.ParseInt(value, 10, 64)
+		case "revive":
+			v.rules.ReviveGarrison, err = strconv.ParseInt(value, 10, 64)
+		case "upkeep":
+			v.rules.Upkeep, err = parseUpkeep(value)
+		default:
+			err = errors.New("unknown setting")
+		}
+		if err != nil {
+			return variant{}, fmt.Errorf("variant %q: setting %q: %w", s, setting, err)
+		}
+	}
+	return v, nil
+}
+
+func parseUpkeep(s string) ([]model.UpkeepTier, error) {
+	var tiers []model.UpkeepTier
+	for _, tier := range strings.Split(s, ",") {
+		army, growth, ok := strings.Cut(tier, "@")
+		if !ok {
+			return nil, fmt.Errorf("tier %q: want ARMY@GROWTH", tier)
+		}
+		a, err := strconv.ParseInt(army, 10, 64)
+		if err != nil {
+			return nil, err
+		}
+		scale := 1.0
+		if strings.HasSuffix(growth, "%") {
+			growth, scale = strings.TrimSuffix(growth, "%"), 0.01
+		}
+		g, err := strconv.ParseFloat(growth, 64)
+		if err != nil {
+			return nil, err
+		}
+		if len(tiers) > 0 && a <= tiers[len(tiers)-1].Army {
+			return nil, errors.New("tiers must be in increasing army order")
+		}
+		tiers = append(tiers, model.UpkeepTier{Army: a, Growth: g * scale})
+	}
+	return tiers, nil
+}
+
+func parseBots(s string) ([]sim.BotKind, error) {
+	var bots []sim.BotKind
+	for _, b := range strings.Split(s, ",") {
+		switch kind := sim.BotKind(strings.TrimSpace(b)); kind {
+		case sim.BotOpportunistic, sim.BotRandom:
+			bots = append(bots, kind)
+		default:
+			return nil, fmt.Errorf("unknown bot %q, want %q or %q", b, sim.BotOpportunistic, sim.BotRandom)
+		}
+	}
+	return bots, nil
+}
+
+// runVariant plays the games of a variant on parallel goroutines, returning
+// the results in seed order.
+func runVariant(cfg sim.Config, firstSeed int64, games, parallel int) ([]*sim.Result, error) {
+	results := make([]*sim.Result, games)
+	errs := make([]error, games)
+	next := make(chan int)
+	var wg sync.WaitGroup
+	for w := 0; w < parallel; w++ {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			for i := range next {
+				results[i], errs[i] = sim.Run(cfg, firstSeed+int64(i))
+			}
+		}()
+	}
+	for i := 0; i < games; i++ {
+		next <- i
+	}
+	close(next)
+	wg.Wait()
+	return results, errors.Join(errs...)
+}
+
+func main() {
+	var variantSpecs variantFlags
+	games := flag.Int("games", 200, "games to play per variant")
+	seed := flag.Int64("seed", 1, "seed of the first game; game i plays seed+i")
+	botsFlag := flag.String("bots", "opp,opp,rand,opp", "the AI in each seat: opp (opportunistic) or rand (random); "+
+		"the default is the lineup a live game with 4 AIs gets")
+	maxTime := flag.Duration("max", 30*time.Minute, "game time after which a game is stopped as timed out")
+	tick := flag.Duration("tick", 100*time.Millisecond, "game time step of a tick")
+	parallel := flag.Int("parallel", runtime.NumCPU(), "games played in parallel")
+	jsonPath := flag.String("json", "", "if set, write every game's record to this file as JSON lines")
+	flag.Var(&variantSpecs, "variant", "a rule variant to play, repeatable (see the package doc); "+
+		"defaults to baseline, garrison, upkeep and both")
+	flag.Parse()
+
+	if len(variantSpecs) == 0 {
+		variantSpecs = defaultVariants
+	}
+	var variants []variant
+	for _, spec := range variantSpecs {
+		v, err := parseVariant(spec)
+		if err != nil {
+			fmt.Fprintln(os.Stderr, err)
+			os.Exit(2)
+		}
+		variants = append(variants, v)
+	}
+	bots, err := parseBots(*botsFlag)
+	if err != nil {
+		fmt.Fprintln(os.Stderr, err)
+		os.Exit(2)
+	}
+
+	var jsonOut *bufio.Writer
+	if *jsonPath != "" {
+		f, err := os.Create(*jsonPath)
+		if err != nil {
+			fmt.Fprintln(os.Stderr, err)
+			os.Exit(1)
+		}
+		defer f.Close()
+		jsonOut = bufio.NewWriter(f)
+		defer jsonOut.Flush()
+	}
+
+	var sums []*sim.Summary
+	for _, v := range variants {
+		start := time.Now()
+		cfg := sim.Config{Rules: v.rules, Bots: bots, MaxTime: *maxTime, Tick: *tick}
+		results, err := runVariant(cfg, *seed, *games, *parallel)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "variant %s: %v\n", v.name, err)
+			os.Exit(1)
+		}
+		fmt.Fprintf(os.Stderr, "%s: %d games in %v\n", v.name, *games, time.Since(start).Round(time.Millisecond))
+		if jsonOut != nil {
+			enc := json.NewEncoder(jsonOut)
+			for _, res := range results {
+				line := struct {
+					Variant string `json:"variant"`
+					*sim.Result
+				}{v.name, res}
+				if err := enc.Encode(line); err != nil {
+					fmt.Fprintln(os.Stderr, err)
+					os.Exit(1)
+				}
+			}
+		}
+		sums = append(sums, sim.Summarize(v.name, results))
+	}
+	if err := sim.WriteTable(os.Stdout, sums); err != nil {
+		fmt.Fprintln(os.Stderr, err)
+		os.Exit(1)
+	}
+}
