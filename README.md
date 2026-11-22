@@ -153,6 +153,11 @@ and are all off in live games:
   joins a launch.
 * `upkeep=A@G,...`: upkeep tiers, as in Warcraft 3. From a total army (islands and airplanes) of `A`,
   a player's islands grow at `G` (e.g. `0.7`) of the normal rate.
+* `un=A@S/I`: the United Nations, who don't want a superpower to own the archipelago. While a
+  player's total army is above `A`, a neutral airplane flies in from the edge of the map every `I`
+  (e.g. `10s`) against one of the player's islands, with `S` (e.g. `0.1`) of the army above `A`.
+  If it defeats the island's army, the island becomes neutral. The same pressure as upkeep, but one
+  that players can see coming and react to.
 
 Every variant plays the same seeds, so variants are compared on the same maps, and a seed always
 plays the same game. `-bots` picks the AIs (default: the lineup a live game with 4 AIs gets),

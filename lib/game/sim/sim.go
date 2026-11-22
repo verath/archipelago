@@ -59,6 +59,8 @@ type Result struct {
 	Samples  []Sample  `json:"samples"`
 	Captures []Capture `json:"captures"`
 	Lives    []Life    `json:"lives"`
+	// UNPlanes is the number of UN airplanes sent, see model.Rules.UN.
+	UNPlanes int `json:"unPlanes"`
 }
 
 // Sample is a snapshot of each player's territory and army.
@@ -313,5 +315,6 @@ func (r *recorder) finish(g *model.Game, winner int, timedOut bool) *Result {
 	r.res.Winner = winner
 	r.res.Duration = g.Time()
 	r.res.TimedOut = timedOut
+	r.res.UNPlanes = g.UNCount()
 	return r.res
 }

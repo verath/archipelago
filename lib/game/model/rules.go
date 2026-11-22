@@ -1,7 +1,9 @@
 package model
 
+import "time"
+
 // Rules holds the tunable rules of a game. The zero value is the standard
-// game: no garrisons and no upkeep.
+// game: no garrisons, no upkeep and no UN.
 type Rules struct {
 	// StartGarrison is the garrison given to each player's starting island.
 	StartGarrison int64
@@ -13,6 +15,25 @@ type Rules struct {
 	// (the highest such tier applies). Below the first tier growth is
 	// unchanged.
 	Upkeep []UpkeepTier
+	// UN, if set, makes the United Nations send neutral airplanes against
+	// players whose army has grown too large.
+	UN *UNRule
+}
+
+// UNRule configures the United Nations, which do not want a single
+// superpower to own the archipelago. While a player's total army is above
+// Army, the UN send a neutral airplane every Interval against one of the
+// player's islands. An airplane that defeats the island's army makes the
+// island neutral.
+type UNRule struct {
+	// Army is the total army, on islands and airplanes but not counting
+	// garrisons, above which a player gets UN airplanes.
+	Army int64
+	// Interval is the time between two UN airplanes against a player.
+	Interval time.Duration
+	// Share is the strength of a UN airplane, as a share of the player's
+	// army above Army.
+	Share float64
 }
 
 // UpkeepTier is a step in the upkeep table, see Rules.Upkeep.

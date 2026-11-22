@@ -148,3 +148,51 @@ func TestTickAction_Apply_Upkeep(t *testing.T) {
 		t.Errorf("expected p2 island to grow to 62, was %d", i2.Strength())
 	}
 }
+
+func TestTickAction_Apply_UN(t *testing.T) {
+	game := CreateDummyGameSimple()
+	game.rules = Rules{UN: &UNRule{Army: 50, Interval: 10 * time.Second, Share: 0.5}}
+	p1 := game.Players()[0]
+	game.Island("p1").SetStrength(30)
+	big := game.Island("p2")
+	big.SetStrength(80)
+
+	tick := func(d time.Duration) {
+		t.Helper()
+		if _, err := (&ActionTick{Delta: d}).Apply(game); err != nil {
+			t.Fatalf("unexpected tick error: %v", err)
+		}
+	}
+	tick(9 * time.Second)
+	if len(game.Airplanes()) != 0 {
+		t.Fatal("expected no UN airplane before the interval passed")
+	}
+	if p1.UNTimer() != 0 {
+		t.Errorf("expected no UN timer for p1 below the limit, was %v", p1.UNTimer())
+	}
+	tick(time.Second)
+	if len(game.Airplanes()) != 1 {
+		t.Fatalf("expected one UN airplane, got %d", len(game.Airplanes()))
+	}
+	airplane := game.Airplanes()[0]
+	if !airplane.IsOwnedBy(game.PlayerNeutral().ID()) || airplane.Destination() != big.ID() {
+		t.Errorf("expected a neutral airplane to p2's island, got owner %s to %s", airplane.Owner(), airplane.Destination())
+	}
+	// p2's island is at its growth cap of 80, so half of the 30 above the
+	// limit.
+	if airplane.Strength() != 15 {
+		t.Errorf("expected UN airplane strength 15, was %d", airplane.Strength())
+	}
+	if game.UNCount() != 1 {
+		t.Errorf("expected UNCount 1, was %d", game.UNCount())
+	}
+}
+
+func TestTickAction_Apply_UN_MakesIslandNeutral(t *testing.T) {
+	game := CreateDummyGameSimple()
+	island := game.Island("p2")
+	arrive(t, game, island, game.PlayerNeutral().ID(), 15)
+	if !island.IsOwnedBy(game.PlayerNeutral().ID()) || island.Strength() != 5 {
+		t.Errorf("expected island to be neutral with 5, was (%s, %d)", island.Owner(), island.Strength())
+	}
+}

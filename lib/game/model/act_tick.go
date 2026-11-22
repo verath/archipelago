@@ -21,6 +21,7 @@ func (at *ActionTick) Apply(game *Game) ([]Event, error) {
 	}
 	at.updateAirplanes(game, at.Delta)
 	at.updateIslands(game, at.Delta)
+	at.updateUN(game, at.Delta)
 	at.updatePlayers(game, at.Delta)
 	game.SetTime(game.Time() + at.Delta)
 	tickEvt := &EventTick{Game: game.Copy()}
@@ -87,13 +88,9 @@ func (*ActionTick) updateAirplanes(g *Game, delta time.Duration) {
 	}
 }
 
-// growthFactors returns the upkeep growth factor of each player that owns any
-// army, or nil if the game has no upkeep.
-func growthFactors(g *Game) map[PlayerID]float64 {
-	rules := g.Rules()
-	if len(rules.Upkeep) == 0 {
-		return nil
-	}
+// armies returns the total army, on islands and airplanes but not counting
+// garrisons, of each player that owns any.
+func armies(g *Game) map[PlayerID]int64 {
 	armies := make(map[PlayerID]int64)
 	for _, island := range g.Islands() {
 		armies[island.Owner()] += island.Strength()
@@ -101,6 +98,17 @@ func growthFactors(g *Game) map[PlayerID]float64 {
 	for _, airplane := range g.Airplanes() {
 		armies[airplane.Owner()] += airplane.Strength()
 	}
+	return armies
+}
+
+// growthFactors returns the upkeep growth factor of each player that owns any
+// army, or nil if the game has no upkeep.
+func growthFactors(g *Game) map[PlayerID]float64 {
+	rules := g.Rules()
+	if len(rules.Upkeep) == 0 {
+		return nil
+	}
+	armies := armies(g)
 	factors := make(map[PlayerID]float64, len(armies))
 	for owner, army := range armies {
 		factors[owner] = rules.GrowthFactor(army)
@@ -164,6 +172,56 @@ func (*ActionTick) isPlayerAlive(g *Game, p *Player) bool {
 	return false
 }
 
+// edgeOrigin returns where an airplane from outside the map to the island
+// starts: just outside the top or bottom edge, whichever is closer.
+func edgeOrigin(g *Game, island *Island) Coordinate {
+	if island.Position().Y > g.Size().Y/2 {
+		return Coordinate{X: island.Position().X, Y: g.Size().Y}
+	}
+	return Coordinate{X: island.Position().X, Y: -1}
+}
+
+// updateUN sends UN airplanes against players with a too large army, see
+// Rules.UN.
+func (*ActionTick) updateUN(g *Game, delta time.Duration) {
+	un := g.Rules().UN
+	if un == nil {
+		return
+	}
+	armies := armies(g)
+	for _, player := range g.Players() {
+		if player.State() != Alive {
+			continue
+		}
+		excess := armies[player.ID()] - un.Army
+		if excess <= 0 {
+			player.SetUNTimer(0)
+			continue
+		}
+		timer := player.UNTimer() + delta
+		if timer < un.Interval {
+			player.SetUNTimer(timer)
+			continue
+		}
+		player.SetUNTimer(timer - un.Interval)
+		var islands []*Island
+		for _, island := range g.Islands() {
+			if island.IsOwnedBy(player.ID()) {
+				islands = append(islands, island)
+			}
+		}
+		if len(islands) == 0 {
+			continue
+		}
+		// The target is picked by an increasing counter, so that it moves
+		// around between the player's islands.
+		target := islands[g.UNCount()%len(islands)]
+		g.SetUNCount(g.UNCount() + 1)
+		strength := max(1, int64(math.Ceil(un.Share*float64(excess))))
+		g.AddAirplane(NewAirplane(edgeOrigin(g, target), target, g.PlayerNeutral().ID(), strength))
+	}
+}
+
 // revivePlayer tries to revive a player.
 // A player is revived by being given an airplane targeted at a neutral island.
 // If no neutral islands are left, the player cannot be revived.
@@ -185,11 +243,7 @@ func (*ActionTick) revivePlayer(g *Game, player *Player) bool {
 	idx := reviveCount % len(neutralIslands)
 	island := neutralIslands[idx]
 	strength := island.Strength()*2 + 1
-	origin := Coordinate{X: island.Position().X, Y: -1}
-	if island.Position().Y > g.Size().Y/2 {
-		origin = Coordinate{X: island.Position().X, Y: g.Size().Y}
-	}
-	airplane := NewAirplane(origin, island, player.ID(), strength)
+	airplane := NewAirplane(edgeOrigin(g, island), island, player.ID(), strength)
 	airplane.SetSpeed(AirplaneDefaultSpeed * 2)
 	airplane.SetGarrison(g.Rules().ReviveGarrison)
 	g.AddAirplane(airplane)

@@ -1,5 +1,7 @@
 package model
 
+import "time"
+
 // A PlayerState represents the current exclusive state of a Player.
 // During a game a Player transitions between PlayerStates:
 //
@@ -30,6 +32,9 @@ type Player struct {
 	// lastLaunchSeq is the highest PlayerActionLaunch.Seq processed for the
 	// player.
 	lastLaunchSeq uint32
+	// unTimer is how long the player has been above the UN army limit since
+	// the last UN airplane was sent against it, see Rules.UN.
+	unTimer time.Duration
 }
 
 // NewPlayer creates a new Player with a new generated ID.
@@ -92,6 +97,18 @@ func (p *Player) SetLastLaunchSeq(seq uint32) {
 	p.lastLaunchSeq = seq
 }
 
+// UNTimer returns how long the player has been above the UN army limit since
+// the last UN airplane was sent against it.
+func (p *Player) UNTimer() time.Duration {
+	return p.unTimer
+}
+
+// SetUNTimer sets how long the player has been above the UN army limit since
+// the last UN airplane was sent against it.
+func (p *Player) SetUNTimer(unTimer time.Duration) {
+	p.unTimer = unTimer
+}
+
 // Copy performs a deep copy of the Player, returning the copy.
 func (p *Player) Copy() *Player {
 	return &Player{
@@ -99,5 +116,6 @@ func (p *Player) Copy() *Player {
 		state:         p.state,
 		fogOfWar:      p.fogOfWar, // Immutable, so safe to share.
 		lastLaunchSeq: p.lastLaunchSeq,
+		unTimer:       p.unTimer,
 	}
 }

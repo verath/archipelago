@@ -52,6 +52,10 @@ type Summary struct {
 	// RevivedSurvived1m those surviving at least a minute.
 	Revivals, RevivedWon, RevivedGrew, RevivedSurvived1m int
 
+	// UNPlanes is the number of UN airplanes sent. Neutralized is the number
+	// of player islands that became neutral, mostly to UN airplanes.
+	UNPlanes, Neutralized int
+
 	// PeakArmy is the largest army of any player in each game.
 	PeakArmy []int64
 	// WinsByBot counts wins and seats per bot kind.
@@ -140,8 +144,12 @@ func Summarize(name string, results []*Result) *Summary {
 			prev = l
 		}
 
+		sum.UNPlanes += res.UNPlanes
 		firstAttack := time.Duration(-1)
 		for _, c := range res.Captures {
+			if c.From != Neutral && c.To == Neutral {
+				sum.Neutralized++
+			}
 			pvp := c.From != Neutral && c.To != Neutral
 			if pvp && firstAttack < 0 {
 				firstAttack = c.Time
@@ -268,6 +276,8 @@ func WriteTable(w io.Writer, sums []*Summary) error {
 	row("  revived, won", func(s *Summary) string { return pct(s.RevivedWon, s.Revivals) })
 
 	section("army")
+	row("  UN airplanes / game", func(s *Summary) string { return perGame(s.UNPlanes, s.Games) })
+	row("  player islands made neutral / game", func(s *Summary) string { return perGame(s.Neutralized, s.Games) })
 	row("  peak army p50 [p10–p90]", func(s *Summary) string {
 		p50, ok := quantile(s.PeakArmy, 0.5)
 		if !ok {

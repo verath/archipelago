@@ -13,6 +13,8 @@
 //	revive=N   garrison of the island a revived player captures
 //	upkeep=A@G,...  upkeep tiers: from total army A, growth is G of normal
 //	           (G as 0.7 or 70%)
+//	un=A@S/I   United Nations: above a total army of A, a neutral airplane
+//	           every I (e.g. 10s) with S (0.2 or 20%) of the army above A
 //
 // Every variant plays the same seeds, so they are compared on the same maps.
 package main
@@ -71,6 +73,8 @@ func parseVariant(s string) (variant, error) {
 			v.rules.ReviveGarrison, err = strconv.ParseInt(value, 10, 64)
 		case "upkeep":
 			v.rules.Upkeep, err = parseUpkeep(value)
+		case "un":
+			v.rules.UN, err = parseUN(value)
 		default:
 			err = errors.New("unknown setting")
 		}
@@ -79,6 +83,39 @@ func parseVariant(s string) (variant, error) {
 		}
 	}
 	return v, nil
+}
+
+// parseFraction parses 0.7 or 70% as 0.7.
+func parseFraction(s string) (float64, error) {
+	scale := 1.0
+	if strings.HasSuffix(s, "%") {
+		s, scale = strings.TrimSuffix(s, "%"), 0.01
+	}
+	f, err := strconv.ParseFloat(s, 64)
+	return f * scale, err
+}
+
+func parseUN(s string) (*model.UNRule, error) {
+	army, rest, ok1 := strings.Cut(s, "@")
+	share, interval, ok2 := strings.Cut(rest, "/")
+	if !ok1 || !ok2 {
+		return nil, fmt.Errorf("%q: want ARMY@SHARE/INTERVAL", s)
+	}
+	var un model.UNRule
+	var err error
+	if un.Army, err = strconv.ParseInt(army, 10, 64); err != nil {
+		return nil, err
+	}
+	if un.Share, err = parseFraction(share); err != nil {
+		return nil, err
+	}
+	if un.Interval, err = time.ParseDuration(interval); err != nil {
+		return nil, err
+	}
+	if un.Interval <= 0 {
+		return nil, errors.New("interval must be > 0")
+	}
+	return &un, nil
 }
 
 func parseUpkeep(s string) ([]model.UpkeepTier, error) {
@@ -92,18 +129,14 @@ func parseUpkeep(s string) ([]model.UpkeepTier, error) {
 		if err != nil {
 			return nil, err
 		}
-		scale := 1.0
-		if strings.HasSuffix(growth, "%") {
-			growth, scale = strings.TrimSuffix(growth, "%"), 0.01
-		}
-		g, err := strconv.ParseFloat(growth, 64)
+		g, err := parseFraction(growth)
 		if err != nil {
 			return nil, err
 		}
 		if len(tiers) > 0 && a <= tiers[len(tiers)-1].Army {
 			return nil, errors.New("tiers must be in increasing army order")
 		}
-		tiers = append(tiers, model.UpkeepTier{Army: a, Growth: g * scale})
+		tiers = append(tiers, model.UpkeepTier{Army: a, Growth: g})
 	}
 	return tiers, nil
 }

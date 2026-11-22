@@ -17,6 +17,9 @@ type Game struct {
 
 	reviveCount int
 
+	// unCount is the number of UN airplanes sent this game.
+	unCount int
+
 	// rules are the tunable rules of the game.
 	rules Rules
 
@@ -57,6 +60,16 @@ func (g *Game) ReviveCount() int {
 // SetReviveCount sets how many times players have been revivied this game.
 func (g *Game) SetReviveCount(reviveCount int) {
 	g.reviveCount = reviveCount
+}
+
+// UNCount returns how many UN airplanes have been sent this game.
+func (g *Game) UNCount() int {
+	return g.unCount
+}
+
+// SetUNCount sets how many UN airplanes have been sent this game.
+func (g *Game) SetUNCount(unCount int) {
+	g.unCount = unCount
 }
 
 // Rules returns the rules of the game.
@@ -155,6 +168,7 @@ func (g *Game) Copy() *Game {
 		size:          g.size,
 		time:          g.time,
 		reviveCount:   g.reviveCount,
+		unCount:       g.unCount,
 		rules:         g.rules,
 		playerNeutral: g.playerNeutral.Copy(),
 		players:       playersCopy,
