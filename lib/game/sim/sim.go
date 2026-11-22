@@ -22,7 +22,12 @@ const (
 	// BotRandom plays with ai.RandomStrategy, with a random minimum origin
 	// strength like in live games.
 	BotRandom BotKind = "rand"
+	// BotSmart plays with ai.SmartStrategy.
+	BotSmart BotKind = "smart"
 )
+
+// BotKinds are all the kinds of bots.
+var BotKinds = []BotKind{BotOpportunistic, BotRandom, BotSmart}
 
 // Neutral is the player index used for the neutral player in a Result.
 const Neutral = -1
@@ -127,6 +132,8 @@ func Run(cfg Config, seed int64) (*Result, error) {
 			creator = ai.OpportunisticStrategy()
 		case BotRandom:
 			creator = ai.RandomStrategy(rng.Int63n(30) + 2)
+		case BotSmart:
+			creator = ai.SmartStrategy()
 		default:
 			return nil, fmt.Errorf("unknown bot kind %q", kind)
 		}

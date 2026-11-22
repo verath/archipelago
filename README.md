@@ -160,10 +160,17 @@ and are all off in live games:
   that players can see coming and react to.
 
 Every variant plays the same seeds, so variants are compared on the same maps, and a seed always
-plays the same game. `-bots` picks the AIs (default: the lineup a live game with 4 AIs gets),
-`-json` writes every game's record for further analysis, and `go run ./cmd/sim -h` lists the rest.
-The games are between AIs, so they show how rules change the AIs' games, which is a hint, not proof,
-of how they change games between people.
+plays the same game. `-bots` picks the AIs, `-json` writes every game's record for further
+analysis, `-summarize` prints the table for such a file again, and `go run ./cmd/sim -h` lists the
+rest.
+
+The default AI is `smart` (`ai.SmartStrategy`, [lib/game/ai/smart.go](lib/game/ai/smart.go)), which
+plays more like a person than the AIs in live games (`opp` and `rand`): it defends islands under
+attack, gathers army from several islands for an attack, remembers islands it saw before they went
+into fog of war, and moves army from full islands towards the front. With the live AIs, rules that
+limit large armies mostly lead to stalemates the AIs can't break. Still, the games are between AIs,
+so they show how rules change the AIs' games, which is a hint, not proof, of how they change games
+between people.
 
 ### Network traffic
 

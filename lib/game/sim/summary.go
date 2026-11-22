@@ -288,7 +288,7 @@ func WriteTable(w io.Writer, sums []*Summary) error {
 		p90, _ := quantile(s.PeakArmy, 0.9)
 		return fmt.Sprintf("%d [%d–%d]", p50, p10, p90)
 	})
-	for _, bot := range []BotKind{BotOpportunistic, BotRandom} {
+	for _, bot := range BotKinds {
 		row(fmt.Sprintf("  win rate per %s seat", bot), func(s *Summary) string { return pct(s.WinsByBot[bot], s.SeatsByBot[bot]) })
 	}
 	return tw.Flush()

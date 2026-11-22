@@ -27,6 +27,7 @@ import (
 	"fmt"
 	"os"
 	"runtime"
+	"slices"
 	"strconv"
 	"strings"
 	"sync"
@@ -144,12 +145,11 @@ func parseUpkeep(s string) ([]model.UpkeepTier, error) {
 func parseBots(s string) ([]sim.BotKind, error) {
 	var bots []sim.BotKind
 	for _, b := range strings.Split(s, ",") {
-		switch kind := sim.BotKind(strings.TrimSpace(b)); kind {
-		case sim.BotOpportunistic, sim.BotRandom:
-			bots = append(bots, kind)
-		default:
-			return nil, fmt.Errorf("unknown bot %q, want %q or %q", b, sim.BotOpportunistic, sim.BotRandom)
+		kind := sim.BotKind(strings.TrimSpace(b))
+		if !slices.Contains(sim.BotKinds, kind) {
+			return nil, fmt.Errorf("unknown bot %q, want one of %v", b, sim.BotKinds)
 		}
+		bots = append(bots, kind)
 	}
 	return bots, nil
 }
@@ -216,8 +216,8 @@ func main() {
 	var variantSpecs variantFlags
 	games := flag.Int("games", 200, "games to play per variant")
 	seed := flag.Int64("seed", 1, "seed of the first game; game i plays seed+i")
-	botsFlag := flag.String("bots", "opp,opp,rand,opp", "the AI in each seat: opp (opportunistic) or rand (random); "+
-		"the default is the lineup a live game with 4 AIs gets")
+	botsFlag := flag.String("bots", "smart,smart,smart,smart", "the AI in each seat: smart, opp (opportunistic, "+
+		"as in live games) or rand (random, as in live games)")
 	maxTime := flag.Duration("max", 30*time.Minute, "game time after which a game is stopped as timed out")
 	tick := flag.Duration("tick", 100*time.Millisecond, "game time step of a tick")
 	parallel := flag.Int("parallel", runtime.NumCPU(), "games played in parallel")
