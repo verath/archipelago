@@ -61,6 +61,11 @@ func (a *Airplane) Destination() IslandID {
 	return a.destination
 }
 
+// SetDestination sets the IslandID of the airplane's target island.
+func (a *Airplane) SetDestination(destination IslandID) {
+	a.destination = destination
+}
+
 // Position returns the current position of the airplane.
 func (a *Airplane) Position() FloatCoordinate {
 	return a.position

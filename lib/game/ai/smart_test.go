@@ -140,3 +140,58 @@ func TestSmartStrategy_RemembersIslandsInFog(t *testing.T) {
 		t.Errorf("expected the remembered strength 90, got %d", d)
 	}
 }
+
+// view returns p1's view of the game, as the AI gets it in live games: with
+// fog of war, and without other players' airplane destinations.
+func (g smartGame) view() *model.Game {
+	return (&model.EventTick{Game: g.game.Copy()}).ToPlayerEvent(g.p1.ID()).(*model.PlayerEventTick).Game
+}
+
+func TestSmartStrategy_DefendsFromTheHeadingAlone(t *testing.T) {
+	g := newSmartGame(func(p1, p2, pn *model.Player) []*model.Island {
+		return []*model.Island{
+			island("weak", 0, 0, 10, p1),
+			island("strong", 1, 0, 60, p1),
+			island("enemy", 0, 4, 10, p2),
+		}
+	})
+	// 1.4 tiles out, close enough to be seen, far enough for help to arrive.
+	g.game.AddAirplane(model.NewAirplane(model.Coordinate{X: 0, Y: 4}, g.game.Island("weak"), g.p2.ID(), 30))
+	g.game.Airplanes()[0].SetPosition(model.FloatCoordinate{X: 0, Y: 1.4})
+
+	view := g.view()
+	if d := view.Airplanes()[0].Destination(); d != model.IslandID(model.InvalidID) {
+		t.Fatalf("expected the view to hide the destination, got %q", d)
+	}
+	act, err := newSmartStrategy().NextAction(clientState{myPlayerID: g.p1.ID()}, view, rand.New(rand.NewSource(1)))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if launch, ok := act.(*model.PlayerActionLaunch); !ok || launch.From != "strong" || launch.To != "weak" {
+		t.Errorf("expected a launch strong -> weak, got %+v", act)
+	}
+}
+
+func TestSmartStrategy_SplitsThreatBetweenIslandsOnTheLine(t *testing.T) {
+	g := newSmartGame(func(p1, p2, pn *model.Player) []*model.Island {
+		return []*model.Island{
+			island("near", 0, 2, 20, p1),
+			island("far", 0, 0, 20, p1),
+			island("enemy", 0, 4, 10, p2),
+		}
+	})
+	// Heading for "far" over "near": 30 each could take, but split in two
+	// neither is expected to fall.
+	g.game.AddAirplane(model.NewAirplane(model.Coordinate{X: 0, Y: 4}, g.game.Island("far"), g.p2.ID(), 30))
+	g.game.Airplanes()[0].SetPosition(model.FloatCoordinate{X: 0, Y: 3.5})
+
+	s := newSmartStrategy()
+	turn := &smartTurn{game: g.view(), me: g.p1.ID(), neutral: g.pn.ID()}
+	threats := s.threats(turn)
+	for _, id := range []model.IslandID{"near", "far"} {
+		th, ok := threats[id]
+		if !ok || th.expected != 15 || th.deficit > 0 {
+			t.Errorf("%s: expected a threat of 15 that holds, got %+v (found: %v)", id, th, ok)
+		}
+	}
+}

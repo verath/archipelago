@@ -38,6 +38,9 @@ const (
 	// smartStageAt is the share of the growth cap from which an island is
 	// considered full, and its army better used elsewhere.
 	smartStageAt = 0.9
+	// smartRayWidth is how far, in tiles, an island may be from the line an
+	// airplane flies along to be one it may be flying to.
+	smartRayWidth = 0.3
 )
 
 // seenIsland is what the strategy last saw of an island outside fog of war.
@@ -74,13 +77,47 @@ type smartTurn struct {
 	threats map[model.IslandID]threat
 }
 
-// threat is the attacks on an island of ours.
+// threat is the attacks that may be coming for an island of ours. Like a
+// person, the strategy doesn't know where other players' airplanes are
+// going, only where they are heading: an airplane is a threat to each of the
+// islands ahead of it on its line, an equal share to each.
 type threat struct {
+	// expected is the hostile army expected to arrive: each airplane's
+	// strength times the share of it that may be for the island.
+	expected float64
 	// deficit is by how much the island is expected to lose, <= 0 if it is
 	// expected to hold.
 	deficit int64
-	// first is when the first hostile airplane arrives.
+	// first is when the first hostile airplane that may be coming would
+	// arrive.
 	first time.Duration
+}
+
+// possibleTarget is an island an airplane may be flying to.
+type possibleTarget struct {
+	island *model.Island
+	// dist is how far ahead of the airplane the island is.
+	dist float64
+}
+
+// possibleTargets returns the islands that an airplane may be flying to: the
+// islands close to the line ahead of it.
+func possibleTargets(game *model.Game, airplane *model.Airplane) []possibleTarget {
+	pos := airplane.Position()
+	dx, dy := math.Cos(airplane.Direction()), math.Sin(airplane.Direction())
+	var targets []possibleTarget
+	for _, island := range game.Islands() {
+		c := island.Position().ToFloatCoordinate()
+		vx, vy := c.X-pos.X, c.Y-pos.Y
+		ahead := vx*dx + vy*dy
+		if ahead <= 1e-6 {
+			continue // Behind it, or the island it starts from.
+		}
+		if math.Abs(vx*dy-vy*dx) <= smartRayWidth {
+			targets = append(targets, possibleTarget{island, ahead})
+		}
+	}
+	return targets
 }
 
 func distance(a, b model.FloatCoordinate) float64 {
@@ -193,42 +230,49 @@ func (t *smartTurn) inFlight(island *model.Island) int64 {
 	return strength
 }
 
-// threats finds the islands of ours that hostile airplanes fly to, and by how
-// much they are expected to lose.
+// threats finds the islands of ours that hostile airplanes may be flying
+// to, and by how much they are expected to lose.
 func (s *smartStrategy) threats(t *smartTurn) map[model.IslandID]threat {
 	threats := map[model.IslandID]threat{}
 	for _, airplane := range t.game.Airplanes() {
 		if airplane.IsOwnedBy(t.me) {
 			continue
 		}
-		island := t.game.Island(airplane.Destination())
-		if island == nil || !island.IsOwnedBy(t.me) {
-			continue
+		targets := possibleTargets(t.game, airplane)
+		share := 1 / float64(len(targets))
+		for _, target := range targets {
+			if !target.island.IsOwnedBy(t.me) {
+				continue
+			}
+			eta := time.Duration(target.dist / airplane.Speed())
+			th, ok := threats[target.island.ID()]
+			if !ok || eta < th.first {
+				th.first = eta
+			}
+			th.expected += share * float64(s.planeStrength(airplane))
+			threats[target.island.ID()] = th
 		}
-		eta := time.Duration(distance(airplane.Position(), island.Position().ToFloatCoordinate()) / airplane.Speed())
-		th, ok := threats[island.ID()]
-		if !ok || eta < th.first {
-			th.first = eta
-		}
-		th.deficit += s.planeStrength(airplane)
-		threats[island.ID()] = th
 	}
 	for id, th := range threats {
 		island := t.game.Island(id)
 		hold := island.Strength() + island.Garrison() + growth(island, th.first) + t.inFlight(island)
 		// An attack equal to the defence makes the island neutral, so it
 		// takes one more to hold it.
-		th.deficit -= hold - 1
+		th.deficit = int64(math.Ceil(th.expected)) - (hold - 1)
 		threats[id] = th
 	}
 	return threats
 }
 
 // canLaunch is true if the island has army to spare: it is ours, strong
-// enough, and not about to be attacked.
+// enough, and still expected to hold against what may be coming for it after
+// launching half of its army.
 func (t *smartTurn) canLaunch(island *model.Island) bool {
-	_, threatened := t.threats[island.ID()]
-	return island.IsOwnedBy(t.me) && island.Strength() >= smartMinLaunch && !threatened
+	if !island.IsOwnedBy(t.me) || island.Strength() < smartMinLaunch {
+		return false
+	}
+	th, threatened := t.threats[island.ID()]
+	return !threatened || th.deficit+island.Strength()/2 <= 0
 }
 
 func launch(from, to *model.Island) model.PlayerAction {

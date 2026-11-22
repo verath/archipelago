@@ -42,9 +42,13 @@ func (*EventTick) applyFogOfWar(g *Game, player *Player) {
 			p.SetLastLaunchSeq(0)
 		}
 	}
+	// Other players' airplanes don't reveal where they are going, or what
+	// they carry. Players can only guess the target from the heading.
 	for _, airplane := range g.Airplanes() {
 		if !airplane.IsOwnedBy(player.ID()) {
 			airplane.SetLaunchSeq(0)
+			airplane.SetDestination(IslandID(InvalidID))
+			airplane.SetGarrison(0)
 		}
 	}
 }

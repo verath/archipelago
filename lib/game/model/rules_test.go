@@ -196,3 +196,31 @@ func TestTickAction_Apply_UN_MakesIslandNeutral(t *testing.T) {
 		t.Errorf("expected island to be neutral with 5, was (%s, %d)", island.Owner(), island.Strength())
 	}
 }
+
+func TestEventTick_ToPlayerEvent_HidesOtherPlayersDestinations(t *testing.T) {
+	game := CreateDummyGameSimple()
+	p1, p2 := game.Players()[0], game.Players()[1]
+	own := NewAirplane(Coordinate{X: 0, Y: 0}, game.Island("pn"), p1.ID(), 5)
+	other := NewAirplane(Coordinate{X: 8, Y: 8}, game.Island("p1"), p2.ID(), 5)
+	other.SetGarrison(20)
+	game.AddAirplane(own)
+	game.AddAirplane(other)
+
+	view := (&EventTick{Game: game.Copy()}).ToPlayerEvent(p1.ID()).(*PlayerEventTick).Game
+	for _, airplane := range view.Airplanes() {
+		switch airplane.ID() {
+		case own.ID():
+			if airplane.Destination() != "pn" {
+				t.Errorf("own airplane: destination %q, want pn", airplane.Destination())
+			}
+		case other.ID():
+			if airplane.Destination() != IslandID(InvalidID) || airplane.Garrison() != 0 {
+				t.Errorf("other's airplane: destination %q, garrison %d; want hidden",
+					airplane.Destination(), airplane.Garrison())
+			}
+		}
+	}
+	if other.Destination() != "p1" {
+		t.Error("the view changed the game's airplane")
+	}
+}

@@ -166,7 +166,8 @@ rest.
 
 The default AI is `smart` (`ai.SmartStrategy`, [lib/game/ai/smart.go](lib/game/ai/smart.go)), which
 plays more like a person than the AIs in live games (`opp` and `rand`): it defends islands under
-attack, gathers army from several islands for an attack, remembers islands it saw before they went
+attack (guessing, like a person, which island an enemy airplane is going to from its heading, as
+the player's view of the game doesn't say), gathers army from several islands for an attack, remembers islands it saw before they went
 into fog of war, and moves army from full islands towards the front. With the live AIs, rules that
 limit large armies mostly lead to stalemates the AIs can't break. Still, the games are between AIs,
 so they show how rules change the AIs' games, which is a hint, not proof, of how they change games
