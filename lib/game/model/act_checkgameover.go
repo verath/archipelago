@@ -15,11 +15,19 @@ func (act *ActionCheckGameOver) Apply(game *Game) ([]Event, error) {
 }
 
 // isGameOver checks if the current game is over. A game is over when less than
-// two players are still alive.
+// two players are still alive, or when a player has won by domination, see
+// Rules.Domination.
 // If only a single player is alive, then that player is returned as the
 // winner.
 // If no players are alive then nil is returned as winner.
 func isGameOver(g *Game) (gameOver bool, winner *Player) {
+	if dom := g.Rules().Domination; dom != nil {
+		for _, player := range g.Players() {
+			if player.State() == Alive && player.Dominating() >= dom.Hold {
+				return true, player
+			}
+		}
+	}
 	alivePlayers := make([]*Player, 0)
 	for _, player := range g.Players() {
 		if player.State() == Alive {

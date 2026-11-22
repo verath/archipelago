@@ -35,6 +35,9 @@ type Player struct {
 	// unTimer is how long the player has been above the UN army limit since
 	// the last UN airplane was sent against it, see Rules.UN.
 	unTimer time.Duration
+	// dominating is how long the player has held the share of islands for a
+	// domination victory, see Rules.Domination.
+	dominating time.Duration
 }
 
 // NewPlayer creates a new Player with a new generated ID.
@@ -109,6 +112,18 @@ func (p *Player) SetUNTimer(unTimer time.Duration) {
 	p.unTimer = unTimer
 }
 
+// Dominating returns how long the player has held the share of islands for
+// a domination victory, in a row.
+func (p *Player) Dominating() time.Duration {
+	return p.dominating
+}
+
+// SetDominating sets how long the player has held the share of islands for a
+// domination victory.
+func (p *Player) SetDominating(dominating time.Duration) {
+	p.dominating = dominating
+}
+
 // Copy performs a deep copy of the Player, returning the copy.
 func (p *Player) Copy() *Player {
 	return &Player{
@@ -117,5 +132,6 @@ func (p *Player) Copy() *Player {
 		fogOfWar:      p.fogOfWar, // Immutable, so safe to share.
 		lastLaunchSeq: p.lastLaunchSeq,
 		unTimer:       p.unTimer,
+		dominating:    p.dominating,
 	}
 }

@@ -3,7 +3,7 @@ package model
 import "time"
 
 // Rules holds the tunable rules of a game. The zero value is the standard
-// game: no garrisons, no upkeep and no UN.
+// game: no garrisons, no upkeep, no UN, no bounty and no domination victory.
 type Rules struct {
 	// StartGarrison is the garrison given to each player's starting island.
 	StartGarrison int64
@@ -18,6 +18,19 @@ type Rules struct {
 	// UN, if set, makes the United Nations send neutral airplanes against
 	// players whose army has grown too large.
 	UN *UNRule
+	// Bounty is the extra army a player gets on an island it takes from the
+	// leader: the player with the most islands, if only one has the most.
+	Bounty int64
+	// Domination, if set, makes a player that holds a large enough share of
+	// the islands for long enough win the game.
+	Domination *DominationRule
+}
+
+// DominationRule configures the domination victory: a player that holds at
+// least Share of all islands for Hold in a row wins.
+type DominationRule struct {
+	Share float64
+	Hold  time.Duration
 }
 
 // UNRule configures the United Nations, which do not want a single

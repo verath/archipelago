@@ -224,3 +224,49 @@ func TestEventTick_ToPlayerEvent_HidesOtherPlayersDestinations(t *testing.T) {
 		t.Error("the view changed the game's airplane")
 	}
 }
+
+func TestTickAction_Apply_Bounty(t *testing.T) {
+	game := CreateDummyGameSimple()
+	game.rules = Rules{Bounty: 10}
+	p1, p2 := game.Players()[0], game.Players()[1]
+	// p2 leads with two islands to one.
+	game.Island("pn").SetOwner(p2.ID())
+	arrive(t, game, game.Island("p2"), p1.ID(), 15)
+	if island := game.Island("p2"); !island.IsOwnedBy(p1.ID()) || island.Strength() != 15 {
+		t.Errorf("expected p1 to take the leader's island with 5 + a bounty of 10, got (%s, %d)",
+			island.Owner(), island.Strength())
+	}
+	// Now p1 and p2 have two islands each: nobody leads, no bounty.
+	arrive(t, game, game.Island("pn"), p1.ID(), 15)
+	if island := game.Island("pn"); !island.IsOwnedBy(p1.ID()) || island.Strength() != 5 {
+		t.Errorf("expected p1 to take the island with 5 and no bounty, got (%s, %d)", island.Owner(), island.Strength())
+	}
+}
+
+func TestDomination(t *testing.T) {
+	game := CreateDummyGameSimple()
+	game.rules = Rules{Domination: &DominationRule{Share: 0.75, Hold: 10 * time.Second}}
+	p1 := game.Players()[0]
+	tick := func(d time.Duration) {
+		t.Helper()
+		if _, err := (&ActionTick{Delta: d}).Apply(game); err != nil {
+			t.Fatal(err)
+		}
+	}
+	// 2 of 4 islands is not enough.
+	game.Island("pn").SetOwner(p1.ID())
+	tick(20 * time.Second)
+	if over, _ := isGameOver(game); over {
+		t.Fatal("expected no domination with half of the islands")
+	}
+	// 3 of 4 is, once held for 10 s.
+	game.Island("bottom-left").SetOwner(p1.ID())
+	tick(5 * time.Second)
+	if over, _ := isGameOver(game); over {
+		t.Fatal("expected no domination before it was held for 10 s")
+	}
+	tick(5 * time.Second)
+	if over, winner := isGameOver(game); !over || winner != p1 {
+		t.Errorf("expected p1 to win by domination, got over=%v winner=%v", over, winner)
+	}
+}

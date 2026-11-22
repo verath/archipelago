@@ -70,6 +70,9 @@ type Result struct {
 	Samples  []Sample  `json:"samples"`
 	Captures []Capture `json:"captures"`
 	Lives    []Life    `json:"lives"`
+	// Domination is true if the winner won by domination, see
+	// model.Rules.Domination, with other players still alive.
+	Domination bool `json:"domination"`
 	// UNPlanes is the number of UN airplanes sent, see model.Rules.UN.
 	UNPlanes int `json:"unPlanes"`
 	// Launches is the number of launches of each player, and Attacks how
@@ -370,5 +373,12 @@ func (r *recorder) finish(g *model.Game, winner int, timedOut bool) *Result {
 	r.res.Duration = g.Time()
 	r.res.TimedOut = timedOut
 	r.res.UNPlanes = g.UNCount()
+	if winner >= 0 {
+		for i, p := range g.Players() {
+			if i != winner && p.State() == model.Alive {
+				r.res.Domination = true
+			}
+		}
+	}
 	return r.res
 }

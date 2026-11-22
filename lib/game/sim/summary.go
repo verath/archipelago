@@ -53,6 +53,8 @@ type Summary struct {
 	// RevivedSurvived1m those surviving at least a minute.
 	Revivals, RevivedWon, RevivedGrew, RevivedSurvived1m int
 
+	// Dominations is the number of games won by domination.
+	Dominations int
 	// UNPlanes is the number of UN airplanes sent. Neutralized is the number
 	// of player islands that became neutral, mostly to UN airplanes.
 	UNPlanes, Neutralized int
@@ -167,6 +169,9 @@ func Summarize(name string, results []*Result) *Summary {
 		}
 
 		sum.UNPlanes += res.UNPlanes
+		if res.Domination {
+			sum.Dominations++
+		}
 		firstAttack := time.Duration(-1)
 		for _, c := range res.Captures {
 			if c.From != Neutral && c.To == Neutral {
@@ -277,6 +282,7 @@ func WriteTable(w io.Writer, sums []*Summary) error {
 	row("games", func(s *Summary) string { return fmt.Sprint(s.Games) })
 	row("timed out", func(s *Summary) string { return pct(s.TimedOut, s.Games) })
 	row("duration p50 [p10–p90]", func(s *Summary) string { return durations(s.Durations, 0) })
+	row("won by domination", func(s *Summary) string { return pct(s.Dominations, s.Games) })
 
 	section("snowball, of games with a winner (lower = more comebacks)")
 	for ci, cp := range Checkpoints {

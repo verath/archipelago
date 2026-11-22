@@ -28,8 +28,36 @@ func (at *ActionTick) Apply(game *Game) ([]Event, error) {
 	return []Event{tickEvt}, nil
 }
 
+// leader returns the player with the most islands, or "" if no single
+// player has the most.
+func leader(g *Game) PlayerID {
+	counts := map[PlayerID]int{}
+	for _, island := range g.Islands() {
+		counts[island.Owner()]++
+	}
+	var best PlayerID
+	tie := false
+	for _, p := range g.Players() {
+		switch c := counts[p.ID()]; {
+		case c > counts[best]:
+			best, tie = p.ID(), false
+		case c == counts[best] && c > 0:
+			tie = true
+		}
+	}
+	if tie {
+		return ""
+	}
+	return best
+}
+
 func (*ActionTick) updateAirplanes(g *Game, delta time.Duration) {
 	var arrivals []*Airplane
+	// The leader for the bounty is who leads before this tick's arrivals.
+	var bountyOn PlayerID
+	if g.Rules().Bounty > 0 {
+		bountyOn = leader(g)
+	}
 	for _, airplane := range g.Airplanes() {
 		speed := airplane.Speed()
 		pos := airplane.Position()
@@ -72,7 +100,11 @@ func (*ActionTick) updateAirplanes(g *Game, delta time.Duration) {
 			} else if airplaneStr > targetStr {
 				// If the airplane str is greater, then the airplane
 				// owner takes control of the island
-				target.SetStrength(airplaneStr - targetStr)
+				strength := airplaneStr - targetStr
+				if bountyOn != "" && target.IsOwnedBy(bountyOn) {
+					strength += g.Rules().Bounty
+				}
+				target.SetStrength(strength)
 				target.SetGrowthRemainder(0)
 				target.SetOwner(airplane.Owner())
 				target.SetGarrison(airplane.Garrison())
@@ -277,6 +309,21 @@ func (at *ActionTick) updatePlayers(g *Game, delta time.Duration) {
 			player.SetState(Alive)
 		} else {
 			player.SetState(Dead)
+		}
+	}
+	// Time the players holding the share of islands for a domination
+	// victory.
+	if dom := g.Rules().Domination; dom != nil {
+		counts := map[PlayerID]int{}
+		for _, island := range g.Islands() {
+			counts[island.Owner()]++
+		}
+		for _, player := range g.Players() {
+			if player.State() == Alive && float64(counts[player.ID()]) >= dom.Share*float64(len(g.Islands())) {
+				player.SetDominating(player.Dominating() + delta)
+			} else {
+				player.SetDominating(0)
+			}
 		}
 	}
 	// Last we re-calculate fog of war for Alive players.

@@ -70,6 +70,13 @@ type SmartConfig struct {
 	// weak enough: it sends half of its army to a neighbour, as often as
 	// needed, then the scout, and then the neighbour sends army back.
 	MakeScouts bool
+	// Captured is the army the strategy assumes an island has when it sees
+	// it change owner in fog of war, or < 0 to not assume anything.
+	Captured int64
+	// Lookahead, an experiment, if > 0, makes the strategy play out the
+	// launch it plans and a few alternatives for this long, on a copy of its
+	// view of the game, and make the one that plays out best.
+	Lookahead time.Duration
 	// Duel, if set, is the config used instead when a single other player
 	// is left: a duel is a different game from one with several players,
 	// who also fight each other.
@@ -116,6 +123,7 @@ var smartMultiConfig = SmartConfig{
 	After:       1,
 	MaxOrigins:  10,
 	MinLaunch:   4,
+	Captured:    5,
 	Misjudge:    0.1,
 	Unseen:      0.5,
 }
@@ -154,7 +162,7 @@ func (c *SmartConfig) set(key, value string) error {
 		"leadervalue": &c.LeaderValue, "exposure": &c.Exposure, "hold": &c.Hold,
 		"keep": &c.Keep, "swoopshare": &c.SwoopShare, "after": &c.After, "misjudge": &c.Misjudge, "unseen": &c.Unseen,
 	}
-	ints := map[string]*int64{"marginflat": &c.MarginFlat, "minlaunch": &c.MinLaunch}
+	ints := map[string]*int64{"marginflat": &c.MarginFlat, "minlaunch": &c.MinLaunch, "captured": &c.Captured}
 	if field, ok := ints[key]; ok {
 		v, err := strconv.ParseInt(value, 10, 64)
 		*field = v
@@ -169,9 +177,13 @@ func (c *SmartConfig) set(key, value string) error {
 			c.MakeScouts = v
 		}
 		return err
-	case "scoutage":
+	case "scoutage", "lookahead":
 		v, err := time.ParseDuration(value)
-		c.ScoutAge = v
+		if key == "scoutage" {
+			c.ScoutAge = v
+		} else {
+			c.Lookahead = v
+		}
 		return err
 	}
 	if key == "maxorigins" {
@@ -377,6 +389,9 @@ func (s *smartStrategy) NextAction(state clientState, game *model.Game, rng *ran
 	if act == nil {
 		act = s.stage(t)
 	}
+	if s.cur.Lookahead > 0 {
+		act = s.lookahead(t, act)
+	}
 	if act == nil {
 		return nil, nil
 	}
@@ -451,6 +466,10 @@ func (s *smartStrategy) remember(game *model.Game) {
 	for _, island := range game.Islands() {
 		if island.Strength() >= 0 {
 			s.seen[island.ID()] = seenIsland{island.Owner(), island.Strength(), game.Time()}
+		} else if seen, ok := s.seen[island.ID()]; ok && seen.owner != island.Owner() && s.cur.Captured >= 0 {
+			// Taken while in fog of war: likely with little more than it
+			// took, so it is weak now.
+			s.seen[island.ID()] = seenIsland{island.Owner(), s.cur.Captured, game.Time()}
 		}
 	}
 	planes := make(map[model.AirplaneID]int64, len(game.Airplanes()))

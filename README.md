@@ -158,6 +158,11 @@ and are all off in live games:
   (e.g. `10s`) against one of the player's islands, with `S` (e.g. `0.1`) of the army above `A`.
   If it defeats the island's army, the island becomes neutral. The same pressure as upkeep, but one
   that players can see coming and react to.
+* `bounty=N`: a bounty on the leader. Whoever takes an island from the player with the most islands
+  gets `N` extra army on it.
+* `domination=S/H`: a domination victory. A player holding `S` (e.g. `60%`) of all islands for `H`
+  (e.g. `30s`) in a row wins, so a decided game doesn't drag on, and the others get a countdown to
+  stop the leader.
 
 Every variant plays the same seeds, so variants are compared on the same maps, and a seed always
 plays the same game. Maps aren't fair (starting islands and neutral islands are random), so when the
