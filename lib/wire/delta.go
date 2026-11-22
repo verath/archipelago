@@ -95,8 +95,9 @@ func diffGame(prev, cur *msg.Game) *msg.EventGameDelta {
 
 	prevIslands := islandsByID(prev.Islands)
 	for _, island := range cur.Islands {
-		if !armyEqual(prevIslands[island.Id].Army, island.Army) {
-			delta.Islands = append(delta.Islands, &msg.IslandUpdate{Id: island.Id, Army: island.Army})
+		p := prevIslands[island.Id]
+		if !armyEqual(p.Army, island.Army) || p.Garrison != island.Garrison {
+			delta.Islands = append(delta.Islands, &msg.IslandUpdate{Id: island.Id, Army: island.Army, Garrison: island.Garrison})
 		}
 	}
 

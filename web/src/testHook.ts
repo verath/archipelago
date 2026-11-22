@@ -24,6 +24,7 @@ export interface TestHookIsland {
      */
     strength: number;
     size: number;
+    garrison: number;
     position: TestHookPosition;
     selected: boolean;
     /**
@@ -122,6 +123,7 @@ export function installTestHook(getModel: () => ArchipelagoModel): void {
             // Negative when the island is in fog of war.
             strength: island.strength,
             size: island.size,
+            garrison: island.garrison,
             position: { x: island.position.x, y: island.position.y },
             selected: island.selected,
             screen: islandScreenPosition(island.id),

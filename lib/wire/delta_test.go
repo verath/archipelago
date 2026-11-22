@@ -66,6 +66,7 @@ func (r *replica) applyDelta(d *msg.EventGameDelta) error {
 			return fmt.Errorf("unknown island %s", u.Id)
 		}
 		r.game.Islands[i].Army = u.Army
+		r.game.Islands[i].Garrison = u.Garrison
 	}
 	// Removed before added, see the EventGameDelta docs.
 	for _, id := range d.AirplanesRemoved {
@@ -149,10 +150,10 @@ func normalize(g *msg.Game) *msg.Game {
 }
 
 // newRandomGame creates a game like the real game creator does: a board
-// with ~45% neutral islands and one large island per player.
+// with ~45% neutral islands and one large island with a garrison per player.
 func newRandomGame(rng *rand.Rand, numPlayers int, size model.Coordinate) *model.Game {
 	pn := model.NewPlayer()
-	gb := model.NewGameBuilder(size, pn)
+	gb := model.NewGameBuilder(size, pn).SetRules(model.DefaultRules)
 	players := make([]*model.Player, numPlayers)
 	for i := range players {
 		players[i] = model.NewPlayer()
@@ -165,6 +166,7 @@ func newRandomGame(rng *rand.Rand, numPlayers int, size model.Coordinate) *model
 		var island *model.Island
 		if i < numPlayers {
 			island = model.NewIsland(pos, model.IslandSizeLarge, 20, players[i].ID())
+			island.SetGarrison(model.DefaultRules.StartGarrison)
 		} else if rng.Intn(100) < 45 {
 			s := sizes[rng.Intn(len(sizes))]
 			island = model.NewIsland(pos, s, rng.Int63n(int64(s*model.IslandGrowthCap))+10, pn.ID())
@@ -360,6 +362,26 @@ func TestDeltaEncoder_Islands(t *testing.T) {
 	want := []*msg.IslandUpdate{{Id: "p1", Army: &msg.Army{OwnerId: string(game.PlayerNeutral().ID()), Strength: 0}}}
 	if len(d.Islands) != 1 || !proto.Equal(d.Islands[0], want[0]) {
 		t.Errorf("delta islands = %v, want %v", d.Islands, want)
+	}
+}
+
+func TestDeltaEncoder_IslandGarrison(t *testing.T) {
+	game := testGame()
+	game.Island("p1").SetGarrison(20)
+	var e deltaEncoder
+	snap := e.encodeTick(tick(game)).GetEventGameSnapshot()
+	for _, island := range snap.Game.Islands {
+		if want := map[string]int32{"p1": 20}[island.Id]; island.Garrison != want {
+			t.Errorf("snapshot island %s garrison = %d, want %d", island.Id, island.Garrison, want)
+		}
+	}
+
+	// An attack absorbed by the garrison changes only the garrison.
+	game.Island("p1").SetGarrison(5)
+	d := mustDelta(t, e.encodeTick(tick(game)))
+	want := &msg.IslandUpdate{Id: "p1", Army: msg.EncodeArmy(&game.Island("p1").Army), Garrison: 5}
+	if len(d.Islands) != 1 || !proto.Equal(d.Islands[0], want) {
+		t.Errorf("delta islands = %v, want [%v]", d.Islands, want)
 	}
 }
 

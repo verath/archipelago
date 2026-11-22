@@ -22,6 +22,10 @@ test.describe("game against AI", () => {
         owners.delete(state.neutralPlayerId);
         expect(owners.size).toBe(4);
         expect(owners).toContain(state.myPlayerId);
+        // Starting islands have a garrison, other islands none.
+        for (const island of state.islands) {
+            expect(island.garrison).toBe(island.ownerId === state.neutralPlayerId ? 0 : 20);
+        }
 
         // All islands are rendered on the canvas (so it has a bounding box).
         const canvas = (await page.locator("canvas").boundingBox())!;

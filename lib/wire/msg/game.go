@@ -101,6 +101,7 @@ func EncodeIsland(island *model.Island) *Island {
 		Army:     EncodeArmy(&island.Army),
 		Position: EncodeCoordinate(island.Position()),
 		Size:     float32(island.Size()),
+		Garrison: int32(island.Garrison()),
 	}
 }
 

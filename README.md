@@ -27,6 +27,12 @@ As an airplane reaches its destination different things happen:
      2. If the resulting island army size is `== 0`, then control of the island is given to the 
      neutral player.
 
+Each player's starting island also has a garrison of 20, shown as a shield on the island: an extra
+defence force that an attacking airplane must get through before it fights the island's army. The
+garrison never grows and never joins an airplane, and once beaten it is gone. A player that loses
+all islands and airplanes is revived (while there are neutral islands left) with an airplane flying
+in to capture a neutral island, and that island gets a garrison of 20 too.
+
 The game is over when there is only a single player controlling any islands or airplanes.
 
 ## Project Overview

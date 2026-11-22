@@ -705,6 +705,9 @@ export namespace wire {
             /** Island size. */
             size: number;
 
+            /** Island garrison. */
+            garrison: number;
+
             /**
              * Creates a new Island instance using the specified properties.
              * @param [properties] Properties to set
@@ -800,6 +803,9 @@ export namespace wire {
 
                 /** Island size */
                 size?: (number|null);
+
+                /** Island garrison */
+                garrison?: (number|null);
 
                 /** Unknown fields preserved while decoding when enabled */
                 $unknowns?: Uint8Array[];
@@ -1664,6 +1670,9 @@ export namespace wire {
             /** IslandUpdate army. */
             army?: (wire.msg.Army.$Properties|null);
 
+            /** IslandUpdate garrison. */
+            garrison: number;
+
             /**
              * Creates a new IslandUpdate instance using the specified properties.
              * @param [properties] Properties to set
@@ -1753,6 +1762,9 @@ export namespace wire {
 
                 /** IslandUpdate army */
                 army?: (wire.msg.Army.$Properties|null);
+
+                /** IslandUpdate garrison */
+                garrison?: (number|null);
 
                 /** Unknown fields preserved while decoding when enabled */
                 $unknowns?: Uint8Array[];

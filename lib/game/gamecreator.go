@@ -16,7 +16,7 @@ func createPlayers(numPlayers int) ([]*model.Player, *model.Player) {
 	return players, playerNeutral
 }
 
-func createIslands(players []*model.Player, playerNeutral *model.Player, size model.Coordinate, gameRand *rand.Rand) []*model.Island {
+func createIslands(players []*model.Player, playerNeutral *model.Player, size model.Coordinate, rules model.Rules, gameRand *rand.Rand) []*model.Island {
 	type islandData struct {
 		Size            model.IslandSize
 		Strength        int64
@@ -52,6 +52,9 @@ func createIslands(players []*model.Player, playerNeutral *model.Player, size mo
 	for pos, data := range islandMap {
 		island := model.NewIsland(pos, data.Size, data.Strength, data.Player.ID())
 		island.SetGrowthRemainder(data.GrowthRemainder)
+		if data.Player != playerNeutral {
+			island.SetGarrison(rules.StartGarrison)
+		}
 		islands = append(islands, island)
 	}
 	return islands
@@ -68,8 +71,9 @@ func createBasicGame(numPlayers int) (*model.Game, error) {
 	players, playerNeutral := createPlayers(numPlayers)
 	seed := time.Now().UnixNano()
 	gameRand := rand.New(rand.NewSource(seed))
-	islands := createIslands(players, playerNeutral, size, gameRand)
-	gameBuilder := model.NewGameBuilder(size, playerNeutral)
+	rules := model.DefaultRules
+	islands := createIslands(players, playerNeutral, size, rules, gameRand)
+	gameBuilder := model.NewGameBuilder(size, playerNeutral).SetRules(rules)
 	for _, player := range players {
 		gameBuilder.AddPlayer(player)
 	}
