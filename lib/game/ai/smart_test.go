@@ -236,3 +236,63 @@ func TestSmartStrategy_RemembersLaunchesTheViewDoesNotShowYet(t *testing.T) {
 		}
 	}
 }
+
+func TestSmartStrategy_MakesAScoutFromAStrongIsland(t *testing.T) {
+	g := newSmartGame(func(p1, p2, pn *model.Player) []*model.Island {
+		return []*model.Island{
+			island("home", 0, 0, 200, p1),
+			island("other", 0, 1, 200, p1),
+			island("hidden", 4, 0, 30, pn), // Never seen: in fog of war.
+			island("enemy", 8, 8, 10, p2),
+		}
+	})
+	s := newSmartStrategy()
+	rng := rand.New(rand.NewSource(1))
+	// A tick without time passing, to work out fog of war.
+	tick := func() {
+		if _, err := (&model.ActionTick{}).Apply(g.game); err != nil {
+			t.Fatal(err)
+		}
+	}
+	var launches []string
+	for i := 0; i < 12 && (s.scouting == nil || !s.scouting.sent); i++ {
+		tick()
+		act, err := s.NextAction(clientState{myPlayerID: g.p1.ID()}, g.view(), rng)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if act == nil {
+			break
+		}
+		launch := act.(*model.PlayerActionLaunch)
+		launches = append(launches, string(launch.From)+">"+string(launch.To))
+		if _, err := act.ToAction(g.p1.ID()).Apply(g.game); err != nil {
+			t.Fatal(err)
+		}
+	}
+	// Halve one island into the other until it can send a small scout, to
+	// one of the islands in fog of war.
+	if s.scouting == nil || !s.scouting.sent || len(launches) < 2 {
+		t.Fatalf("expected halving launches and then a scout, got %v", launches)
+	}
+	sc := *s.scouting
+	for _, l := range launches[:len(launches)-1] {
+		if l != string(sc.from)+">"+string(sc.via) {
+			t.Errorf("expected only halving launches %s>%s before the scout, got %v", sc.from, sc.via, launches)
+		}
+	}
+	for _, airplane := range g.game.Airplanes() {
+		if airplane.Destination() == sc.target && airplane.Strength() > smartScoutMax {
+			t.Errorf("expected a scout of at most %d, got %d", smartScoutMax, airplane.Strength())
+		}
+	}
+	// Then army goes back to the scout's island.
+	tick()
+	act, err := s.NextAction(clientState{myPlayerID: g.p1.ID()}, g.view(), rng)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if launch, ok := act.(*model.PlayerActionLaunch); !ok || launch.From != sc.via || launch.To != sc.from {
+		t.Errorf("expected army sent back %s>%s, got %+v", sc.via, sc.from, act)
+	}
+}

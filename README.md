@@ -160,7 +160,9 @@ and are all off in live games:
   that players can see coming and react to.
 
 Every variant plays the same seeds, so variants are compared on the same maps, and a seed always
-plays the same game. `-bots` picks the AIs, `-json` writes every game's record for further
+plays the same game. Maps aren't fair (starting islands and neutral islands are random), so when the
+AIs in a game differ, `-rotate` (on by default) plays each map once per seat rotation, giving every
+AI every starting position. `-bots` picks the AIs, `-json` writes every game's record for further
 analysis, `-summarize` prints the table for such a file again, and `go run ./cmd/sim -h` lists the
 rest. A variant can also change the smart AI: `smart.K=V` sets a field of `ai.SmartConfig` (e.g.
 `smart.hold=0.5`) and `pace.K=V` a field of its `ai.Pace` (e.g. `pace.rate=3`, `pace.live=` to
@@ -172,9 +174,14 @@ plays more like a person than the AIs in live games (`opp` and `rand`): it defen
 attack (guessing, like a person, which island an enemy airplane is going to from its heading, as
 the player's view of the game doesn't say), gathers army from several islands for an attack,
 remembers islands it saw before they went into fog of war (and that an island it sees an airplane
-leave has half its army left), and moves army from full islands towards the front. It plays at
+leave has half its army left, and so what the airplane carries), scouts islands it can only guess
+at with a small airplane (halving an island into a neighbour first, if none is weak enough), and
+moves army from full islands towards the front. It plays a duel, with one other player left, with
+its own settings (`ai.SmartConfig.Duel`; `smart.duel.K=V` and `smart.multi.K=V` set one only). It plays at
 `ai.HumanPace`: about two launches per second at most, in bursts, acting on what it saw 0.4 s ago.
-It is not yet a strong player: head to head, the live `opp` AI beats it about 60% of the time.
+With garrisons (`start=20 revive=20`) it beats the live `opp` AI in about 86% of duels, and wins
+about 65% of 4-player games against the live lineup (`opp`, `opp`, `rand`). Without garrisons, the
+live AIs' early attacks on its starting island still win most duels.
 
 The games are between AIs, so they show how rules change the AIs' games, which is a hint, not proof,
 of how they change games between people. The results also depend on how the AIs play: with the

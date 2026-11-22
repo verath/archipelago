@@ -7,6 +7,7 @@ import (
 	"math/rand"
 	"slices"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/verath/archipelago/lib/game/model"
@@ -25,6 +26,7 @@ func SmartStrategyWith(cfg SmartConfig) StrategyCreatorFunc {
 	return func() (strategy, error) {
 		s := newSmartStrategy()
 		s.cfg = cfg
+		s.cur = &s.cfg
 		return s, nil
 	}
 }
@@ -51,6 +53,27 @@ type SmartConfig struct {
 	// the island once taken. Keep is the share of its exposure an island
 	// keeps when launching.
 	Hold, Keep float64
+	// SwoopShare is the least share of an airplane's line that an island
+	// needs for the strategy to expect the airplane to land there, when
+	// planning its own attack on the island. Above 1, it never does.
+	SwoopShare float64
+	// After is the share of the airplanes expected to land on an island after
+	// an attack that the attack also sends, to hold the island.
+	After float64
+	// Scout makes the strategy send a small airplane to look at an island
+	// in fog of war before attacking it, when it can only guess its army:
+	// when it never saw it, or it is another player's island last seen
+	// more than ScoutAge ago.
+	Scout    bool
+	ScoutAge time.Duration
+	// MakeScouts, if no island is weak enough to send a scout, makes one
+	// weak enough: it sends half of its army to a neighbour, as often as
+	// needed, then the scout, and then the neighbour sends army back.
+	MakeScouts bool
+	// Duel, if set, is the config used instead when a single other player
+	// is left: a duel is a different game from one with several players,
+	// who also fight each other.
+	Duel *SmartConfig
 	// MaxOrigins is the most islands an attack is sent from.
 	MaxOrigins int
 	// MinLaunch is the smallest island strength the strategy launches from,
@@ -66,7 +89,18 @@ type SmartConfig struct {
 }
 
 // DefaultSmartConfig is the config of SmartStrategy.
-var DefaultSmartConfig = SmartConfig{
+var DefaultSmartConfig = func() SmartConfig {
+	c := smartMultiConfig
+	// In a duel, holding on to army costs more than it saves: there is no
+	// third player to take what the two fight over.
+	duel := c
+	duel.Hold, duel.Keep = 0.25, 0.5
+	c.Duel = &duel
+	return c
+}()
+
+// smartMultiConfig is the config for games with several other players.
+var smartMultiConfig = SmartConfig{
 	Margin:      0.15,
 	MarginFlat:  3,
 	Reach:       3,
@@ -75,23 +109,69 @@ var DefaultSmartConfig = SmartConfig{
 	Exposure:    3.5,
 	Hold:        1,
 	Keep:        1,
+	SwoopShare:  1,
+	Scout:       true,
+	ScoutAge:    30 * time.Second,
+	MakeScouts:  true,
+	After:       1,
 	MaxOrigins:  10,
 	MinLaunch:   4,
 	Misjudge:    0.1,
 	Unseen:      0.5,
 }
 
-// Set sets the setting named key, the field name in lower case, to value.
+// Set sets the setting named key, the field name in lower case, to value,
+// in both the config and its Duel config. With a "duel." prefix it sets it
+// in the Duel config only, with "multi." in the config only. A Duel config
+// is copied before changing it, as it may be shared.
 func (c *SmartConfig) Set(key, value string) error {
+	if multiKey, ok := strings.CutPrefix(key, "multi."); ok {
+		return c.set(multiKey, value)
+	}
+	duelKey, duelOnly := strings.CutPrefix(key, "duel.")
+	if !duelOnly {
+		if err := c.set(key, value); err != nil {
+			return err
+		}
+	}
+	if c.Duel == nil {
+		if duelOnly {
+			return fmt.Errorf("no duel config to set %q in", duelKey)
+		}
+		return nil
+	}
+	duel := *c.Duel
+	if err := duel.set(duelKey, value); err != nil {
+		return err
+	}
+	c.Duel = &duel
+	return nil
+}
+
+func (c *SmartConfig) set(key, value string) error {
 	fields := map[string]*float64{
 		"margin": &c.Margin, "reach": &c.Reach, "playervalue": &c.PlayerValue,
 		"leadervalue": &c.LeaderValue, "exposure": &c.Exposure, "hold": &c.Hold,
-		"keep": &c.Keep, "misjudge": &c.Misjudge, "unseen": &c.Unseen,
+		"keep": &c.Keep, "swoopshare": &c.SwoopShare, "after": &c.After, "misjudge": &c.Misjudge, "unseen": &c.Unseen,
 	}
 	ints := map[string]*int64{"marginflat": &c.MarginFlat, "minlaunch": &c.MinLaunch}
 	if field, ok := ints[key]; ok {
 		v, err := strconv.ParseInt(value, 10, 64)
 		*field = v
+		return err
+	}
+	switch key {
+	case "scout", "makescouts":
+		v, err := strconv.ParseBool(value)
+		if key == "scout" {
+			c.Scout = v
+		} else {
+			c.MakeScouts = v
+		}
+		return err
+	case "scoutage":
+		v, err := time.ParseDuration(value)
+		c.ScoutAge = v
 		return err
 	}
 	if key == "maxorigins" {
@@ -115,6 +195,8 @@ const (
 	// smartStageAt is the share of the growth cap from which an island is
 	// considered full, and its army better used elsewhere.
 	smartStageAt = 0.9
+	// smartScoutMax is the largest airplane the strategy scouts with.
+	smartScoutMax = 5
 	// smartRayWidth is how far, in tiles, an island may be from the line an
 	// airplane flies along to be one it may be flying to.
 	smartRayWidth = 0.3
@@ -145,6 +227,8 @@ type misjudgement struct {
 
 type smartStrategy struct {
 	cfg SmartConfig
+	// cur is the config for the current turn: cfg, or cfg.Duel.
+	cur *SmartConfig
 	// target is the island being attacked, "" if none.
 	target model.IslandID
 	// seen is the last seen state of each island.
@@ -158,17 +242,21 @@ type smartStrategy struct {
 	// pending are the launches not yet in the view of the game, by
 	// increasing seq.
 	pending []pendingLaunch
+	// scouting is the scout being made, if any.
+	scouting *scouting
 	// misjudged is the current misjudgement of each island.
 	misjudged map[model.IslandID]misjudgement
 }
 
 func newSmartStrategy() *smartStrategy {
-	return &smartStrategy{
+	s := &smartStrategy{
 		cfg:       DefaultSmartConfig,
 		seen:      map[model.IslandID]seenIsland{},
 		planes:    map[model.AirplaneID]int64{},
 		misjudged: map[model.IslandID]misjudgement{},
 	}
+	s.cur = &s.cfg
+	return s
 }
 
 // smartTurn holds what a single NextAction call works with.
@@ -260,8 +348,13 @@ func (s *smartStrategy) NextAction(state clientState, game *model.Game, rng *ran
 	}
 	s.remember(game)
 	game = s.withPending(game, myPlayer)
+	// A duel, with a single other player left, is a different game.
+	s.cur = &s.cfg
+	if s.cfg.Duel != nil && opponents(game, state.myPlayerID) == 1 {
+		s.cur = s.cfg.Duel
+	}
 	t := &smartTurn{
-		cfg:     &s.cfg,
+		cfg:     s.cur,
 		game:    game,
 		me:      state.myPlayerID,
 		neutral: game.PlayerNeutral().ID(),
@@ -318,6 +411,25 @@ func (s *smartStrategy) withPending(game *model.Game, myPlayer *model.Player) *m
 	return game
 }
 
+// opponents returns the number of other players that own islands or
+// airplanes.
+func opponents(game *model.Game, me model.PlayerID) int {
+	owners := map[model.PlayerID]bool{}
+	for _, island := range game.Islands() {
+		owners[island.Owner()] = true
+	}
+	for _, airplane := range game.Airplanes() {
+		owners[airplane.Owner()] = true
+	}
+	n := 0
+	for _, p := range game.Players() {
+		if p.ID() != me && owners[p.ID()] {
+			n++
+		}
+	}
+	return n
+}
+
 // leader returns the other player with the most islands, or "" if no other
 // player has any.
 func leader(game *model.Game, me, neutral model.PlayerID) model.PlayerID {
@@ -351,7 +463,9 @@ func (s *smartStrategy) remember(game *model.Game) {
 			planes[airplane.ID()] = strength
 		}
 		if !s.known[airplane.ID()] {
-			s.launchedFrom(game, airplane)
+			if strength, ok := s.launchedFrom(game, airplane); ok && airplane.Strength() < 0 {
+				planes[airplane.ID()] = strength
+			}
 		}
 	}
 	s.planes, s.known = planes, known
@@ -360,7 +474,8 @@ func (s *smartStrategy) remember(game *model.Game) {
 // launchedFrom updates what the strategy remembers of the island a new
 // airplane took off from, if that island is in fog of war: like a person
 // seeing an airplane leave it, the strategy knows it sent half of its army.
-func (s *smartStrategy) launchedFrom(game *model.Game, airplane *model.Airplane) {
+// Returns the estimated strength of the airplane, if it could tell.
+func (s *smartStrategy) launchedFrom(game *model.Game, airplane *model.Airplane) (int64, bool) {
 	for _, island := range game.Islands() {
 		if !island.IsOwnedBy(airplane.Owner()) || island.Strength() >= 0 ||
 			distance(airplane.Position(), island.Position().ToFloatCoordinate()) > 0.5 {
@@ -368,12 +483,13 @@ func (s *smartStrategy) launchedFrom(game *model.Game, airplane *model.Airplane)
 		}
 		seen, ok := s.seen[island.ID()]
 		if !ok || seen.owner != island.Owner() {
-			return
+			return 0, false
 		}
 		strength := seen.strength + growth(island, game.Time()-seen.time)
 		s.seen[island.ID()] = seenIsland{island.Owner(), strength - strength/2, game.Time()}
-		return
+		return strength / 2, true
 	}
+	return 0, false
 }
 
 // planeStrength returns the strength of an airplane, or a guess if it was
@@ -400,7 +516,7 @@ func (s *smartStrategy) defence(t *smartTurn, island *model.Island, eta time.Dur
 		} else if island.IsOwnedBy(t.neutral) {
 			// Never seen: neutral islands start with 10 to 10 + the growth
 			// cap, and have been losing army since.
-			strength, age = int64(10+s.cfg.Unseen*model.IslandGrowthCap*float64(island.Size())), t.game.Time()
+			strength, age = int64(10+s.cur.Unseen*model.IslandGrowthCap*float64(island.Size())), t.game.Time()
 		} else {
 			strength = int64(50 * float64(island.Size()))
 		}
@@ -425,12 +541,78 @@ func (s *smartStrategy) misjudgement(t *smartTurn, island *model.Island) float64
 	m, ok := s.misjudged[island.ID()]
 	if !ok || t.game.Time() >= m.until {
 		m = misjudgement{
-			factor: max(0.5, 1+s.cfg.Misjudge*t.rng.NormFloat64()),
+			factor: max(0.5, 1+s.cur.Misjudge*t.rng.NormFloat64()),
 			until:  t.game.Time() + smartMisjudgeFor,
 		}
 		s.misjudged[island.ID()] = m
 	}
 	return m.factor
+}
+
+// incoming is another player's airplane expected to land on an island.
+type incoming struct {
+	owner    model.PlayerID
+	strength int64
+	eta      time.Duration
+}
+
+// arrival estimates the army an attack arriving at the island after eta has
+// to beat, garrison included, and the army of the airplanes expected to land
+// on it later, which the attack must then hold against.
+//
+// Other players' airplanes that are expected to land first are played out:
+// an airplane that fights a neutral island leaves only what is left of
+// either for us to beat, so swooping in just after it is cheap. An airplane
+// is expected to land on the island if the island is ahead of it on its line
+// and gets at least smartSwoopShare of it.
+func (s *smartStrategy) arrival(t *smartTurn, island *model.Island, eta time.Duration) (defence, after int64) {
+	var planes []incoming
+	for _, airplane := range t.game.Airplanes() {
+		if airplane.IsOwnedBy(t.me) {
+			continue
+		}
+		targets := possibleTargets(t.game, airplane)
+		if float64(len(targets))*s.cur.SwoopShare > 1 {
+			continue
+		}
+		for _, target := range targets {
+			if target.island == island {
+				planes = append(planes, incoming{
+					airplane.Owner(), s.planeStrength(airplane), time.Duration(target.dist / airplane.Speed()),
+				})
+			}
+		}
+	}
+	defence = s.defence(t, island, eta)
+	if len(planes) == 0 {
+		return defence, 0
+	}
+	slices.SortFunc(planes, func(a, b incoming) int { return int(a.eta - b.eta) })
+	owner, garrison := island.Owner(), island.Garrison()
+	strength := defence - garrison
+	for _, plane := range planes {
+		if plane.eta >= eta {
+			after += plane.strength
+			continue
+		}
+		attack := plane.strength
+		switch {
+		case plane.owner == owner:
+			strength += attack
+			continue
+		case garrison >= attack:
+			garrison -= attack
+			continue
+		}
+		attack -= garrison
+		garrison = 0
+		if attack > strength {
+			owner, strength = plane.owner, attack-strength
+		} else {
+			strength -= attack
+		}
+	}
+	return strength + garrison, after
 }
 
 // inFlight is the army of our airplanes flying to the island.
@@ -488,7 +670,7 @@ func (s *smartStrategy) exposure(t *smartTurn, island *model.Island) int64 {
 	var e int64
 	for _, enemy := range t.game.Islands() {
 		if enemy == island || enemy.IsOwnedBy(t.me) || enemy.IsOwnedBy(t.neutral) ||
-			islandDistance(enemy, island) > s.cfg.Exposure {
+			islandDistance(enemy, island) > s.cur.Exposure {
 			continue
 		}
 		e = max(e, (s.defence(t, enemy, 0)-enemy.Garrison())/2)
@@ -506,14 +688,14 @@ func (s *smartStrategy) exposure(t *smartTurn, island *model.Island) int64 {
 // launching half of its army, and keeps enough to be safe from the enemy
 // islands near it.
 func (s *smartStrategy) canLaunch(t *smartTurn, island *model.Island) bool {
-	if !island.IsOwnedBy(t.me) || island.Strength() < s.cfg.MinLaunch {
+	if !island.IsOwnedBy(t.me) || island.Strength() < s.cur.MinLaunch {
 		return false
 	}
 	half := island.Strength() / 2
 	if th, threatened := t.threats[island.ID()]; threatened && th.deficit+half > 0 {
 		return false
 	}
-	return float64(island.Strength()-half) >= s.cfg.Keep*float64(s.exposure(t, island))
+	return float64(island.Strength()-half) >= s.cur.Keep*float64(s.exposure(t, island))
 }
 
 func launch(from, to *model.Island) *model.PlayerActionLaunch {
@@ -609,20 +791,22 @@ func (s *smartStrategy) plan(t *smartTurn, target *model.Island) attackPlan {
 	}
 	var candidates []*model.Island
 	for _, from := range t.mine {
-		if s.canLaunch(t, from) && islandDistance(from, target) <= closest+s.cfg.Reach {
+		if s.canLaunch(t, from) && islandDistance(from, target) <= closest+s.cur.Reach {
 			candidates = append(candidates, from)
 		}
 	}
 	slices.SortFunc(candidates, func(a, b *model.Island) int { return int(b.Strength() - a.Strength()) })
 	// Enough to beat the defence with a margin, and then to hold the island
-	// against the enemy islands near it, less what is already on the way.
-	defence := s.defence(t, target, flightTime(closest+s.cfg.Reach/2))
-	p.need = defence + int64(s.cfg.Margin*float64(defence)) + s.cfg.MarginFlat +
-		int64(s.cfg.Hold*float64(s.exposure(t, target))) - t.inFlight(target)
+	// against the enemy islands near it and the airplanes expected to land
+	// on it after ours, less what is already on the way.
+	// Timed by our first airplane, from the closest island.
+	defence, after := s.arrival(t, target, flightTime(closest))
+	p.need = defence + int64(s.cur.Margin*float64(defence)) + s.cur.MarginFlat +
+		int64(s.cur.Hold*float64(s.exposure(t, target))) + int64(s.cur.After*float64(after)) - t.inFlight(target)
 	// Like a person, send a few large airplanes from strong islands rather
 	// than many small ones from all of them.
 	for _, from := range candidates {
-		if p.available >= p.need || len(p.origins) >= s.cfg.MaxOrigins {
+		if p.available >= p.need || len(p.origins) >= s.cur.MaxOrigins {
 			break
 		}
 		p.origins = append(p.origins, from)
@@ -645,6 +829,9 @@ func (t *smartTurn) value(island *model.Island) float64 {
 
 // attack continues the attack on the current target, or picks a new one.
 func (s *smartStrategy) attack(t *smartTurn) *model.PlayerActionLaunch {
+	if act := s.continueScouting(t); act != nil {
+		return act
+	}
 	if target := t.game.Island(s.target); target != nil && !target.IsOwnedBy(t.me) {
 		p := s.plan(t, target)
 		if p.need > 0 && p.available >= p.need {
@@ -664,6 +851,9 @@ func (s *smartStrategy) attack(t *smartTurn) *model.PlayerActionLaunch {
 		if island.IsOwnedBy(t.me) {
 			continue
 		}
+		if s.cur.Scout && s.uncertain(t, island) && t.inFlight(island) > 0 {
+			continue // Wait for what is on the way to show it.
+		}
 		p := s.plan(t, island)
 		if p.need <= 0 || p.available < p.need {
 			continue
@@ -679,8 +869,126 @@ func (s *smartStrategy) attack(t *smartTurn) *model.PlayerActionLaunch {
 	if best == nil {
 		return nil
 	}
+	if s.cur.Scout && s.uncertain(t, best.target) {
+		// Like a person, take a look before sending a real attack.
+		if scout := s.scout(t, best.target); scout != nil {
+			return scout
+		}
+		if s.cur.MakeScouts {
+			if act := s.startScouting(t, best.target); act != nil {
+				return act
+			}
+		}
+	}
 	s.target = best.target.ID()
 	return s.send(*best)
+}
+
+// scouting is a scout being made from an island too strong to send a small
+// airplane from: the island sends half of its army to a neighbour until it
+// is weak enough, then sends the scout, and then the neighbour sends army
+// back.
+type scouting struct {
+	from, via, target model.IslandID
+	// sent is true once the scout is on its way.
+	sent bool
+}
+
+// startScouting starts making a scout for the target, from our island
+// closest to it, see scouting. Returns its first launch, or nil if it can't.
+func (s *smartStrategy) startScouting(t *smartTurn, target *model.Island) *model.PlayerActionLaunch {
+	var from, via *model.Island
+	for _, mine := range t.mine {
+		if from == nil || islandDistance(mine, target) < islandDistance(from, target) {
+			from = mine
+		}
+	}
+	for _, mine := range t.mine {
+		if mine != from && (via == nil || islandDistance(mine, from) < islandDistance(via, from)) {
+			via = mine
+		}
+	}
+	if from == nil || via == nil {
+		return nil
+	}
+	s.scouting = &scouting{from: from.ID(), via: via.ID(), target: target.ID()}
+	return s.continueScouting(t)
+}
+
+// continueScouting makes the next launch of the scouting in progress, if
+// any, and ends it when done or when it no longer makes sense.
+func (s *smartStrategy) continueScouting(t *smartTurn) *model.PlayerActionLaunch {
+	sc := s.scouting
+	if sc == nil {
+		return nil
+	}
+	from, via, target := t.game.Island(sc.from), t.game.Island(sc.via), t.game.Island(sc.target)
+	if from == nil || via == nil || target == nil || !from.IsOwnedBy(t.me) || !via.IsOwnedBy(t.me) {
+		s.scouting = nil
+		return nil
+	}
+	if sc.sent {
+		// Give the army back, if the neighbour can spare it.
+		s.scouting = nil
+		if s.canLaunch(t, via) {
+			return launch(via, from)
+		}
+		return nil
+	}
+	if target.IsOwnedBy(t.me) || !s.uncertain(t, target) {
+		s.scouting = nil
+		return nil
+	}
+	if th, threatened := t.threats[from.ID()]; threatened && th.deficit+from.Strength()/2 > 0 {
+		s.scouting = nil
+		return nil
+	}
+	if half := from.Strength() / 2; half > smartScoutMax {
+		return launch(from, via)
+	} else if half < 1 {
+		s.scouting = nil
+		return nil
+	}
+	sc.sent = true
+	return launch(from, target)
+}
+
+// uncertain is true if the strategy can only guess the army of the island:
+// it is in fog of war, and was never seen, or is another player's and was
+// last seen more than ScoutAge ago. Neutral islands only lose army, at a
+// known rate, unless someone attacks them.
+func (s *smartStrategy) uncertain(t *smartTurn, island *model.Island) bool {
+	if island.Strength() >= 0 {
+		return false
+	}
+	seen, ok := s.seen[island.ID()]
+	if !ok || seen.owner != island.Owner() {
+		return true
+	}
+	return !island.IsOwnedBy(t.neutral) && t.game.Time()-seen.time > s.cur.ScoutAge
+}
+
+// scout sends a small airplane to the island, from the weakest island of
+// ours that can spare it, so that the island shows when it gets close.
+func (s *smartStrategy) scout(t *smartTurn, island *model.Island) *model.PlayerActionLaunch {
+	var from *model.Island
+	for _, mine := range t.mine {
+		half := mine.Strength() / 2
+		if half < 1 || half > smartScoutMax {
+			continue
+		}
+		if th, threatened := t.threats[mine.ID()]; threatened && th.deficit+half > 0 {
+			continue
+		}
+		if from == nil || mine.Strength() < from.Strength() ||
+			mine.Strength() == from.Strength() && islandDistance(mine, island) < islandDistance(from, island) {
+			from = mine
+		}
+	}
+	if from == nil {
+		return nil
+	}
+	return launch(from, island)
 }
 
 // send launches the next airplane of an attack: from the closest origin

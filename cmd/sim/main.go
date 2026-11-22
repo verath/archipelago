@@ -176,9 +176,25 @@ func parseBots(s string) ([]sim.BotKind, error) {
 	return bots, nil
 }
 
+// rotations returns how many times each map is played with rotate: once
+// with each seat rotation, unless all the bots are the same.
+func rotations(bots []sim.BotKind, rotate bool) int {
+	if !rotate {
+		return 1
+	}
+	for _, bot := range bots {
+		if bot != bots[0] {
+			return len(bots)
+		}
+	}
+	return 1
+}
+
 // runVariant plays the games of a variant on parallel goroutines, returning
-// the results in seed order.
-func runVariant(cfg sim.Config, firstSeed int64, games, parallel int) ([]*sim.Result, error) {
+// the results in seed order. Each map is played rots times, rotating which
+// bot sits in which seat, so that every bot gets every starting position.
+func runVariant(cfg sim.Config, firstSeed int64, maps, rots, parallel int) ([]*sim.Result, error) {
+	games := maps * rots
 	results := make([]*sim.Result, games)
 	errs := make([]error, games)
 	next := make(chan int)
@@ -188,7 +204,10 @@ func runVariant(cfg sim.Config, firstSeed int64, games, parallel int) ([]*sim.Re
 		go func() {
 			defer wg.Done()
 			for i := range next {
-				results[i], errs[i] = sim.Run(cfg, firstSeed+int64(i))
+				c := cfg
+				r := i % rots
+				c.Bots = append(slices.Clone(cfg.Bots[r:]), cfg.Bots[:r]...)
+				results[i], errs[i] = sim.Run(c, firstSeed+int64(i/rots))
 			}
 		}()
 	}
@@ -236,7 +255,9 @@ func summarizeFile(path string) ([]*sim.Summary, error) {
 
 func main() {
 	var variantSpecs variantFlags
-	games := flag.Int("games", 200, "games to play per variant")
+	games := flag.Int("games", 200, "maps to play per variant")
+	rotate := flag.Bool("rotate", true, "play each map once per seat rotation, so that every bot gets "+
+		"every starting position (when the bots differ)")
 	seed := flag.Int64("seed", 1, "seed of the first game; game i plays seed+i")
 	botsFlag := flag.String("bots", "smart,smart,smart,smart", "the AI in each seat: smart, opp (opportunistic, "+
 		"as in live games) or rand (random, as in live games)")
@@ -295,12 +316,12 @@ func main() {
 	for _, v := range variants {
 		start := time.Now()
 		cfg := sim.Config{Rules: v.rules, Bots: bots, MaxTime: *maxTime, Tick: *tick, Smart: v.smart, SmartPace: v.pace}
-		results, err := runVariant(cfg, *seed, *games, *parallel)
+		results, err := runVariant(cfg, *seed, *games, rotations(bots, *rotate), *parallel)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "variant %s: %v\n", v.name, err)
 			os.Exit(1)
 		}
-		fmt.Fprintf(os.Stderr, "%s: %d games in %v\n", v.name, *games, time.Since(start).Round(time.Millisecond))
+		fmt.Fprintf(os.Stderr, "%s: %d games in %v\n", v.name, len(results), time.Since(start).Round(time.Millisecond))
 		if jsonOut != nil {
 			enc := json.NewEncoder(jsonOut)
 			for _, res := range results {
