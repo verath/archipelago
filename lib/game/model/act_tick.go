@@ -86,6 +86,8 @@ func (*ActionTick) updateAirplanes(g *Game, delta time.Duration) {
 
 		if target.Owner() == airplane.Owner() {
 			target.SetStrength(targetStr + airplaneStr)
+		} else if target.ShieldUntil() > g.Time() {
+			// Shielded: the attack is wasted.
 		} else if target.Garrison() >= airplaneStr {
 			// The garrison absorbs the whole attack, the army is untouched.
 			target.SetGarrison(target.Garrison() - airplaneStr)
@@ -108,6 +110,9 @@ func (*ActionTick) updateAirplanes(g *Game, delta time.Duration) {
 				target.SetGrowthRemainder(0)
 				target.SetOwner(airplane.Owner())
 				target.SetGarrison(airplane.Garrison())
+				if airplane.Shield() > 0 {
+					target.SetShieldUntil(g.Time() + airplane.Shield())
+				}
 			} else {
 				// If they are equal, the owner is set to the neutral player
 				target.SetStrength(0)
@@ -278,6 +283,7 @@ func (*ActionTick) revivePlayer(g *Game, player *Player) bool {
 	airplane := NewAirplane(edgeOrigin(g, island), island, player.ID(), strength)
 	airplane.SetSpeed(AirplaneDefaultSpeed * 2)
 	airplane.SetGarrison(g.Rules().ReviveGarrison)
+	airplane.SetShield(g.Rules().Shield)
 	g.AddAirplane(airplane)
 	g.SetReviveCount(reviveCount + 1)
 	return true

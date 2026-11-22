@@ -270,3 +270,20 @@ func TestDomination(t *testing.T) {
 		t.Errorf("expected p1 to win by domination, got over=%v winner=%v", over, winner)
 	}
 }
+
+func TestTickAction_Apply_Shield(t *testing.T) {
+	game := CreateDummyGameSimple()
+	p1 := game.Players()[0]
+	island := game.Island("p2")
+	island.SetShieldUntil(10 * time.Second)
+
+	arrive(t, game, island, p1.ID(), 50)
+	if island.Strength() != 10 || island.IsOwnedBy(p1.ID()) {
+		t.Errorf("expected the shield to waste the attack, got (%s, %d)", island.Owner(), island.Strength())
+	}
+	game.SetTime(10 * time.Second)
+	arrive(t, game, island, p1.ID(), 50)
+	if !island.IsOwnedBy(p1.ID()) {
+		t.Error("expected the attack to take the island once the shield is down")
+	}
+}

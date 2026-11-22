@@ -158,6 +158,9 @@ and are all off in live games:
   (e.g. `10s`) against one of the player's islands, with `S` (e.g. `0.1`) of the army above `A`.
   If it defeats the island's army, the island becomes neutral. The same pressure as upkeep, but one
   that players can see coming and react to.
+* `shield=D`: a time-based shield. Starting islands can't be hurt for the first `D` of the game
+  (e.g. `40s`), and the islands revived players capture for `D` after the capture; attacks on them
+  are wasted.
 * `bounty=N`: a bounty on the leader. Whoever takes an island from the player with the most islands
   gets `N` extra army on it.
 * `domination=S/H`: a domination victory. A player holding `S` (e.g. `60%`) of all islands for `H`

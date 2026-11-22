@@ -15,6 +15,8 @@
 //	           (G as 0.7 or 70%)
 //	un=A@S/I   United Nations: above a total army of A, a neutral airplane
 //	           every I (e.g. 10s) with S (0.2 or 20%) of the army above A
+//	shield=D   starting islands, and islands revived players capture,
+//	           can't be hurt for D (e.g. 40s)
 //	bounty=N   a player taking an island from the leader (the player with
 //	           the most islands) gets N extra army on it
 //	domination=S/H  a player holding S (0.6 or 60%) of the islands for H
@@ -102,6 +104,8 @@ func parseVariant(s string) (variant, error) {
 			v.rules.Upkeep, err = parseUpkeep(value)
 		case "un":
 			v.rules.UN, err = parseUN(value)
+		case "shield":
+			v.rules.Shield, err = time.ParseDuration(value)
 		case "bounty":
 			v.rules.Bounty, err = strconv.ParseInt(value, 10, 64)
 		case "domination":

@@ -10,6 +10,10 @@ type Rules struct {
 	// ReviveGarrison is the garrison given to the island a revived player
 	// captures with their revival airplane.
 	ReviveGarrison int64
+	// Shield is how long starting islands can't be hurt, from the start of
+	// the game, and the islands revived players capture, from the capture:
+	// attacks on them are wasted.
+	Shield time.Duration
 	// Upkeep lists the upkeep tiers, ordered by increasing Army. A player
 	// whose total army is at or above a tier's Army gets that tier's Growth
 	// (the highest such tier applies). Below the first tier growth is

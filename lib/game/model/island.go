@@ -42,6 +42,8 @@ type Island struct {
 	// garrison is an extra defence force on the island. It absorbs attacks
 	// before the army does, never grows and never leaves the island.
 	garrison int64
+	// shieldUntil is the game time until which the island can't be hurt.
+	shieldUntil time.Duration
 }
 
 // NewIsland creates a new Island from the provided values, automatically
@@ -100,6 +102,17 @@ func (i *Island) SetGarrison(garrison int64) {
 	i.garrison = garrison
 }
 
+// ShieldUntil returns the game time until which the island can't be hurt:
+// attacks on it are wasted.
+func (i *Island) ShieldUntil() time.Duration {
+	return i.shieldUntil
+}
+
+// SetShieldUntil sets the game time until which the island can't be hurt.
+func (i *Island) SetShieldUntil(t time.Duration) {
+	i.shieldUntil = t
+}
+
 // Copy performs a deep copy of the Island, returning the copy.
 func (i *Island) Copy() *Island {
 	return &Island{
@@ -109,5 +122,6 @@ func (i *Island) Copy() *Island {
 		size:            i.size,
 		growthRemainder: i.growthRemainder,
 		garrison:        i.garrison,
+		shieldUntil:     i.shieldUntil,
 	}
 }

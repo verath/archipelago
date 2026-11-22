@@ -65,6 +65,7 @@ func createIslands(players []*model.Player, playerNeutral *model.Player, size mo
 		island.SetGrowthRemainder(data.GrowthRemainder)
 		if data.Player != playerNeutral {
 			island.SetGarrison(rules.StartGarrison)
+			island.SetShieldUntil(rules.Shield)
 		}
 		islands = append(islands, island)
 	}

@@ -30,6 +30,9 @@ type Airplane struct {
 	// garrison is the garrison the destination island gets if the airplane
 	// captures it. Only revival airplanes carry one.
 	garrison int64
+	// shield is how long the destination island can't be hurt if the
+	// airplane captures it. Only revival airplanes carry one.
+	shield time.Duration
 }
 
 // NewAirplane creates a new Airplane, starting at origin, targeting the
@@ -120,6 +123,18 @@ func (a *Airplane) SetGarrison(garrison int64) {
 	a.garrison = garrison
 }
 
+// Shield returns how long the destination island can't be hurt if the
+// airplane captures it.
+func (a *Airplane) Shield() time.Duration {
+	return a.shield
+}
+
+// SetShield sets how long the destination island can't be hurt if the
+// airplane captures it.
+func (a *Airplane) SetShield(shield time.Duration) {
+	a.shield = shield
+}
+
 // Copy performs a deep copy of the airplane.
 func (a *Airplane) Copy() *Airplane {
 	return &Airplane{
@@ -131,5 +146,6 @@ func (a *Airplane) Copy() *Airplane {
 		speed:       a.speed,
 		launchSeq:   a.launchSeq,
 		garrison:    a.garrison,
+		shield:      a.shield,
 	}
 }

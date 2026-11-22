@@ -242,6 +242,9 @@ const (
 	// smartStageAt is the share of the growth cap from which an island is
 	// considered full, and its army better used elsewhere.
 	smartStageAt = 0.9
+	// smartShielded is the defence of an island that is shielded when an
+	// attack would land: more than any attack.
+	smartShielded = 1 << 30
 	// smartScoutMax is the largest airplane the strategy scouts with.
 	smartScoutMax = 5
 	// smartRayWidth is how far, in tiles, an island may be from the line an
@@ -563,6 +566,9 @@ func (s *smartStrategy) planeStrength(airplane *model.Airplane) int64 {
 // defence estimates the army an attacker has to beat to take the island,
 // garrison included, after flying for eta.
 func (s *smartStrategy) defence(t *smartTurn, island *model.Island, eta time.Duration) int64 {
+	if island.ShieldUntil() > t.game.Time()+eta {
+		return smartShielded
+	}
 	strength := island.Strength()
 	age := time.Duration(0)
 	if strength < 0 {
@@ -697,6 +703,9 @@ func (s *smartStrategy) threats(t *smartTurn) map[model.IslandID]threat {
 				continue
 			}
 			eta := time.Duration(target.dist / airplane.Speed())
+			if target.island.ShieldUntil() > t.game.Time()+eta {
+				continue // Shielded when it lands.
+			}
 			th, ok := threats[target.island.ID()]
 			if !ok || eta < th.first {
 				th.first = eta

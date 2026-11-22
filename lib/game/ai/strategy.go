@@ -110,6 +110,10 @@ func (s *opportunisticStrategy) NextAction(state clientState, game *model.Game, 
 		if island.ID() == originIsland.ID() {
 			return false
 		}
+		// Attacks on a shielded island are wasted.
+		if !island.IsOwnedBy(myPlayer.ID()) && island.ShieldUntil() > game.Time() {
+			return false
+		}
 		islandStrength := island.Strength()
 		// Island is in FoW, make a guess about its strength.
 		if islandStrength < 0 {
