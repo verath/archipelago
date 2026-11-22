@@ -252,7 +252,8 @@ interface TextProps {
 }
 
 const CenterText = ({ children }: TextProps): React.JSX.Element => (
-    <div className="center-text-wrap">{children}</div>
+    // The inner div keeps the text and its dots on lines that wrap together.
+    <div className="center-text-wrap"><div>{children}</div></div>
 );
 
 const LoadingText = ({ children }: TextProps): React.JSX.Element => (
