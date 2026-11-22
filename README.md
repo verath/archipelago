@@ -49,6 +49,11 @@ rendering and [React](https://react.dev/) 19 for the UI around the game. Depende
 with npm and the app is bundled with [Vite](https://vite.dev/). Vite only strips the types;
 `npm run typecheck` in `web/` runs the TypeScript compiler (`tsc`) to check them.
 
+Two TypeScript versions are installed. The type check uses TypeScript 7 (the native Go compiler,
+the `typescript-7` alias in `package.json`). ESLint uses `typescript` 6, because typescript-eslint
+needs the JavaScript compiler API that TypeScript 7 no longer ships. Drop the 6.x dependency once
+typescript-eslint supports TypeScript 7.
+
 ### Backend
 
 The backend is written in Go and uses Go modules. It relies primarily on the Go standard library
