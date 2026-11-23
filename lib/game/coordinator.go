@@ -245,11 +245,11 @@ func (c *Coordinator) startGame(ctx context.Context, clients []Client) error {
 		return fmt.Errorf("Error creating game: %w", err)
 	}
 	gameLoop := newGameLoop(c.logger, game)
-	playerProxies := make([]*playerProxy, numClients)
-	for i, player := range game.Players() {
-		playerProxies[i] = newPlayerProxy(player.ID(), clients[i])
+	players := make([]*player, numClients)
+	for i, p := range game.Players() {
+		players[i] = &player{id: p.ID(), client: clients[i]}
 	}
-	ctrl, err := newController(c.logger, gameLoop, playerProxies)
+	ctrl, err := newController(c.logger, gameLoop, players)
 	if err != nil {
 		return fmt.Errorf("Error creating game controller: %w", err)
 	}

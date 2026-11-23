@@ -7,6 +7,7 @@ import "context"
 type MockClient struct {
 	DisconnectFunc   func()
 	DisconnectChFunc func() <-chan struct{}
+	PeerClosedFunc   func() bool
 	WriteMessageFunc func(ctx context.Context, msg []byte) error
 	ReadMessageFunc  func(ctx context.Context) ([]byte, error)
 }
@@ -16,6 +17,9 @@ func (c *MockClient) Disconnect() {
 }
 func (c *MockClient) DisconnectCh() <-chan struct{} {
 	return c.DisconnectChFunc()
+}
+func (c *MockClient) PeerClosed() bool {
+	return c.PeerClosedFunc()
 }
 func (c *MockClient) WriteMessage(ctx context.Context, msg []byte) error {
 	return c.WriteMessageFunc(ctx, msg)

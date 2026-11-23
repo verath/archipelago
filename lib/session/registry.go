@@ -3,8 +3,6 @@ package session
 import (
 	"sync"
 	"time"
-
-	"github.com/verath/archipelago/lib/game"
 )
 
 // A Registry creates Sessions and finds them by token. Sessions are
@@ -27,7 +25,7 @@ func NewRegistry(grace time.Duration) *Registry {
 
 // New creates a new Session on the connection client and adds it to the
 // Registry until it ends.
-func (r *Registry) New(client game.Client) *Session {
+func (r *Registry) New(client Client) *Session {
 	s := New(client, r.grace)
 	r.mu.Lock()
 	r.sessions[s.token] = s
