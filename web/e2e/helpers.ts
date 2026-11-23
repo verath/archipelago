@@ -1,4 +1,4 @@
-import { expect, type Page } from "@playwright/test";
+import { expect, type Page, type Response } from "@playwright/test";
 
 import type { ArchipelagoTestHook, TestHookIsland } from "../src/testHook.ts";
 
@@ -29,6 +29,25 @@ export function gameState(page: Page): Promise<GameState | null> {
             gameResult: t.gameResult(),
         };
     });
+}
+
+/**
+ * Opens the game and clicks "Play!" to join the next game, resolving to the
+ * page's response.
+ */
+export async function openAndPlay(page: Page): Promise<Response> {
+    // Non-null: goto returns null only for same-document navigations.
+    const response = (await page.goto("/"))!;
+    await clickPlay(page);
+    return response;
+}
+
+/**
+ * Clicks "Play!" on a page that shows it, which connects and joins the next
+ * game.
+ */
+export async function clickPlay(page: Page): Promise<void> {
+    await page.getByRole("button", { name: "Play!" }).click();
 }
 
 /**

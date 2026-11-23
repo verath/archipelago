@@ -2,7 +2,7 @@ import fs from "node:fs";
 import path from "node:path";
 
 import { test, expect } from "./fixtures.ts";
-import { collectPageProblems, type CSPViolation } from "./helpers.ts";
+import { clickPlay, collectPageProblems, type CSPViolation } from "./helpers.ts";
 import { DIST_DIR } from "./paths.ts";
 import { firebaseHeaders } from "./servers.ts";
 
@@ -26,16 +26,18 @@ test.describe("production build", () => {
         const response = (await page.goto("/"))!;
         expect(response.headers()["content-security-policy"])
             .toBe(firebaseHeaders()["Content-Security-Policy"]);
+        await clickPlay(page);
         await expect(page.getByText("Finding a game")).toBeVisible();
 
         const page2 = await newPlayerPage({ navigate: false });
         const problems2 = await collectPageProblems(page2);
         await page2.goto("/");
+        await clickPlay(page2);
 
         for (const p of [page, page2]) {
-            await expect(p.locator("canvas")).toBeVisible();
+            await expect(p.locator(".game-canvas canvas")).toBeVisible();
             // The canvas is sized to the board once the first tick arrived.
-            await expect.poll(async () => (await p.locator("canvas").boundingBox())?.width ?? 0)
+            await expect.poll(async () => (await p.locator(".game-canvas canvas").boundingBox())?.width ?? 0)
                 .toBeGreaterThan(100);
             // Let a few more frames render.
             await p.evaluate(() => new Promise<void>((resolve) => {

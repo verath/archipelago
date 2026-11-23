@@ -252,6 +252,7 @@ export default class GameModel {
                 throw new ProtocolError(`delta updates unknown island ${islandData.id}`);
             }
             island.updateArmy(islandData.army);
+            island.updateGarrison(islandData.garrison);
         }
         // Removed before added, see EventGameDelta.
         for (const id of delta.airplanesRemoved ?? []) {

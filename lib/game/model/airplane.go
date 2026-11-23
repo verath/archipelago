@@ -27,6 +27,9 @@ type Airplane struct {
 	// launchSeq is the PlayerActionLaunch.Seq of the launch that created the
 	// airplane, 0 if not created by a launch.
 	launchSeq uint32
+	// garrison is the garrison the destination island gets if the airplane
+	// captures it. Only revival airplanes carry one.
+	garrison int64
 }
 
 // NewAirplane creates a new Airplane, starting at origin, targeting the
@@ -100,6 +103,18 @@ func (a *Airplane) SetLaunchSeq(seq uint32) {
 	a.launchSeq = seq
 }
 
+// Garrison returns the garrison the destination island gets if the airplane
+// captures it.
+func (a *Airplane) Garrison() int64 {
+	return a.garrison
+}
+
+// SetGarrison sets the garrison the destination island gets if the airplane
+// captures it.
+func (a *Airplane) SetGarrison(garrison int64) {
+	a.garrison = garrison
+}
+
 // Copy performs a deep copy of the airplane.
 func (a *Airplane) Copy() *Airplane {
 	return &Airplane{
@@ -110,5 +125,6 @@ func (a *Airplane) Copy() *Airplane {
 		direction:   a.direction,
 		speed:       a.speed,
 		launchSeq:   a.launchSeq,
+		garrison:    a.garrison,
 	}
 }

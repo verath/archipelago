@@ -119,6 +119,10 @@ func (s *opportunisticStrategy) NextAction(state clientState, game *model.Game) 
 		if islandStrength > model.IslandGrowthCap {
 			islandStrength = model.IslandGrowthCap
 		}
+		// A garrison has to be beaten as well, it is never hidden by FoW.
+		if !island.IsOwnedBy(myPlayer.ID()) {
+			islandStrength += island.Garrison()
+		}
 		// Punish by owner.
 		if island.IsOwnedBy(game.PlayerNeutral().ID()) {
 			// Punish attacking neutral islands.

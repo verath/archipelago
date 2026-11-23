@@ -1,6 +1,6 @@
 import type { TestHookAirplane, TestHookIsland } from "../src/testHook.ts";
 import { test, expect } from "./fixtures.ts";
-import { gameState, myIsland, waitForGameStarted } from "./helpers.ts";
+import { gameState, myIsland, openAndPlay, waitForGameStarted } from "./helpers.ts";
 
 // Non-null assertions (!) below: gameState is non-null once the game has
 // started (the test hook is installed), waitForGameStarted waited for
@@ -12,7 +12,7 @@ test.describe("game against AI", () => {
     test.use({ backendArgs: ["-lobbyWait", "500ms"] });
 
     test("a single player gets a game with AI opponents that ticks", async ({ page }) => {
-        await page.goto("/");
+        await openAndPlay(page);
         const state = await waitForGameStarted(page);
 
         expect(state.connectionState).toBe("CONNECTED");
@@ -22,9 +22,13 @@ test.describe("game against AI", () => {
         owners.delete(state.neutralPlayerId);
         expect(owners.size).toBe(4);
         expect(owners).toContain(state.myPlayerId);
+        // Starting islands have a garrison, other islands none.
+        for (const island of state.islands) {
+            expect(island.garrison).toBe(island.ownerId === state.neutralPlayerId ? 0 : 20);
+        }
 
         // All islands are rendered on the canvas (so it has a bounding box).
-        const canvas = (await page.locator("canvas").boundingBox())!;
+        const canvas = (await page.locator(".game-canvas canvas").boundingBox())!;
         for (const island of state.islands) {
             expect(island.screen).not.toBeNull();
             const screen = island.screen!;
@@ -48,7 +52,7 @@ test.describe("launching an airplane", () => {
     test.use({ backendArgs: ["-aiPlayers", "0", "-lobbyWait", "0s"] });
 
     test("halves my island's strength and attacks the target on arrival", async ({ page, newPlayerPage }) => {
-        await page.goto("/");
+        await openAndPlay(page);
         await newPlayerPage();
         const state = await waitForGameStarted(page);
         const me = state.myPlayerId;

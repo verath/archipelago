@@ -396,11 +396,16 @@ func (x *Airplane) GetLaunchSeq() uint32 {
 }
 
 type Island struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Id            string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
-	Army          *Army                  `protobuf:"bytes,2,opt,name=army,proto3" json:"army,omitempty"`
-	Position      *Coordinate            `protobuf:"bytes,3,opt,name=position,proto3" json:"position,omitempty"`
-	Size          float32                `protobuf:"fixed32,4,opt,name=size,proto3" json:"size,omitempty"`
+	state    protoimpl.MessageState `protogen:"open.v1"`
+	Id       string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	Army     *Army                  `protobuf:"bytes,2,opt,name=army,proto3" json:"army,omitempty"`
+	Position *Coordinate            `protobuf:"bytes,3,opt,name=position,proto3" json:"position,omitempty"`
+	Size     float32                `protobuf:"fixed32,4,opt,name=size,proto3" json:"size,omitempty"`
+	// An extra defence force on the island, 0 if none: it absorbs attacks
+	// before the army does, never grows and never joins a launch. Starting
+	// islands, and the islands revived players capture, have one. Shown also
+	// when the island is in fog of war.
+	Garrison      int32 `protobuf:"varint,5,opt,name=garrison,proto3" json:"garrison,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -459,6 +464,13 @@ func (x *Island) GetPosition() *Coordinate {
 func (x *Island) GetSize() float32 {
 	if x != nil {
 		return x.Size
+	}
+	return 0
+}
+
+func (x *Island) GetGarrison() int32 {
+	if x != nil {
+		return x.Garrison
 	}
 	return 0
 }
@@ -889,7 +901,7 @@ type EventGameDelta struct {
 	GameTime uint32 `protobuf:"varint,2,opt,name=game_time,json=gameTime,proto3" json:"game_time,omitempty"`
 	// Players whose state or last_launch_seq changed, in full.
 	Players []*Player `protobuf:"bytes,3,rep,name=players,proto3" json:"players,omitempty"`
-	// Islands whose army (owner or strength) changed.
+	// Islands whose army (owner or strength) or garrison changed.
 	Islands []*IslandUpdate `protobuf:"bytes,4,rep,name=islands,proto3" json:"islands,omitempty"`
 	// New airplanes, in full. Their position is at game_time.
 	AirplanesAdded []*Airplane `protobuf:"bytes,5,rep,name=airplanes_added,json=airplanesAdded,proto3" json:"airplanes_added,omitempty"`
@@ -986,7 +998,9 @@ type IslandUpdate struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	Id    string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
 	// Always set, both owner and strength.
-	Army          *Army `protobuf:"bytes,2,opt,name=army,proto3" json:"army,omitempty"`
+	Army *Army `protobuf:"bytes,2,opt,name=army,proto3" json:"army,omitempty"`
+	// Always set, see Island.garrison.
+	Garrison      int32 `protobuf:"varint,3,opt,name=garrison,proto3" json:"garrison,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -1033,6 +1047,13 @@ func (x *IslandUpdate) GetArmy() *Army {
 		return x.Army
 	}
 	return nil
+}
+
+func (x *IslandUpdate) GetGarrison() int32 {
+	if x != nil {
+		return x.Garrison
+	}
+	return 0
 }
 
 type AirplaneUpdate struct {
@@ -1297,12 +1318,13 @@ const file_wire_msg_game_proto_rawDesc = "" +
 	"\x05speed\x18\x05 \x01(\x02R\x05speed\x12%\n" +
 	"\x0edestination_id\x18\x06 \x01(\tR\rdestinationId\x12\x1d\n" +
 	"\n" +
-	"launch_seq\x18\a \x01(\rR\tlaunchSeq\"\x82\x01\n" +
+	"launch_seq\x18\a \x01(\rR\tlaunchSeq\"\x9e\x01\n" +
 	"\x06Island\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\"\n" +
 	"\x04army\x18\x02 \x01(\v2\x0e.wire.msg.ArmyR\x04army\x120\n" +
 	"\bposition\x18\x03 \x01(\v2\x14.wire.msg.CoordinateR\bposition\x12\x12\n" +
-	"\x04size\x18\x04 \x01(\x02R\x04size\"\x83\x02\n" +
+	"\x04size\x18\x04 \x01(\x02R\x04size\x12\x1a\n" +
+	"\bgarrison\x18\x05 \x01(\x05R\bgarrison\"\x83\x02\n" +
 	"\x04Game\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12(\n" +
 	"\x04size\x18\x02 \x01(\v2\x14.wire.msg.CoordinateR\x04size\x127\n" +
@@ -1334,10 +1356,11 @@ const file_wire_msg_game_proto_rawDesc = "" +
 	"\aislands\x18\x04 \x03(\v2\x16.wire.msg.IslandUpdateR\aislands\x12;\n" +
 	"\x0fairplanes_added\x18\x05 \x03(\v2\x12.wire.msg.AirplaneR\x0eairplanesAdded\x12E\n" +
 	"\x11airplanes_updated\x18\x06 \x03(\v2\x18.wire.msg.AirplaneUpdateR\x10airplanesUpdated\x12+\n" +
-	"\x11airplanes_removed\x18\a \x03(\tR\x10airplanesRemoved\"B\n" +
+	"\x11airplanes_removed\x18\a \x03(\tR\x10airplanesRemoved\"^\n" +
 	"\fIslandUpdate\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\"\n" +
-	"\x04army\x18\x02 \x01(\v2\x0e.wire.msg.ArmyR\x04army\"D\n" +
+	"\x04army\x18\x02 \x01(\v2\x0e.wire.msg.ArmyR\x04army\x12\x1a\n" +
+	"\bgarrison\x18\x03 \x01(\x05R\bgarrison\"D\n" +
 	"\x0eAirplaneUpdate\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\"\n" +
 	"\x04army\x18\x02 \x01(\v2\x0e.wire.msg.ArmyR\x04army\"\xaf\x01\n" +

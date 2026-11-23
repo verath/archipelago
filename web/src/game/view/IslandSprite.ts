@@ -1,4 +1,4 @@
-import { Sprite, Text } from "pixi.js";
+import { Container, Graphics, Sprite, Text } from "pixi.js";
 
 import * as images from "../../images/index.ts";
 import type ResourceHolder from "../../resource/ResourceHolder.ts";
@@ -24,6 +24,15 @@ const ISLAND_TEXTURES = [
 const SELECTED_TEXTURE = images.TEXTURE_SELECTED;
 const STRENGTH_TEXT_STROKE_WIDTH = 1;
 
+// The garrison shield: its size, and where its center is from the island's
+// center, on screen [px at scale 1]. Top right, clear of the strength text.
+const SHIELD_WIDTH = 44;
+const SHIELD_HEIGHT = 50;
+const SHIELD_OFFSET_X = 42;
+const SHIELD_OFFSET_Y = -38;
+const SHIELD_FILL = 0xe8ebef;
+const SHIELD_STROKE = 0x2f3b45;
+
 export default class IslandSprite extends BaseSprite<IslandModel> {
 
     private readonly _strengthText: Text;
@@ -39,6 +48,18 @@ export default class IslandSprite extends BaseSprite<IslandModel> {
     private _strengthTextColor: PlayerColor | null = null;
 
     private readonly _selectedIndicator: Sprite;
+
+    /**
+     * The shield showing the island's garrison, hidden without one.
+     */
+    private readonly _garrison: Container;
+
+    private readonly _garrisonText: Text;
+
+    /**
+     * The garrison shown by the shield, null before the first update.
+     */
+    private _shownGarrison: number | null = null;
 
     /**
      * Islands don't move or change size, so the sprite is placed and scaled
@@ -59,6 +80,11 @@ export default class IslandSprite extends BaseSprite<IslandModel> {
         this._selectedIndicator.alpha = 0;
         this.addChild(this._selectedIndicator);
 
+        this._garrisonText = IslandSprite._createGarrisonText();
+        this._garrison = IslandSprite._createGarrison(this._garrisonText);
+        this._garrison.visible = false;
+        this.addChild(this._garrison);
+
         // Set scale depending on the island size. Island size is 0-1,
         // we scale that to make sure they are not too small.
         const scale = (island.size * 0.8 + 0.2);
@@ -76,6 +102,7 @@ export default class IslandSprite extends BaseSprite<IslandModel> {
         const rotations = [0, Math.PI * 1 / 2, Math.PI, Math.PI * 3 / 2];
         this.rotation = rotations[Math.floor(Math.random() * rotations.length)];
         this._strengthText.rotation -= this.rotation;
+        this._placeGarrison(scale);
 
         // Listen for clicks (pointer events cover both mouse and touch)
         this.eventMode = "static";
@@ -100,6 +127,61 @@ export default class IslandSprite extends BaseSprite<IslandModel> {
         return strengthText;
     }
 
+    /**
+     * A shield, with the garrison text on it.
+     */
+    private static _createGarrison(text: Text): Container {
+        const w = SHIELD_WIDTH / 2;
+        const h = SHIELD_HEIGHT / 2;
+        const shield = new Graphics()
+            .moveTo(-w, -h)
+            .lineTo(w, -h)
+            .lineTo(w, 0)
+            .quadraticCurveTo(w, h * 0.7, 0, h)
+            .quadraticCurveTo(-w, h * 0.7, -w, 0)
+            .closePath()
+            .fill(SHIELD_FILL)
+            .stroke({ color: SHIELD_STROKE, width: 3 });
+        const garrison = new Container();
+        garrison.addChild(shield);
+        garrison.addChild(text);
+        return garrison;
+    }
+
+    private static _createGarrisonText(): Text {
+        const text = new Text({
+            text: "",
+            style: {
+                fontFamily: FONT_FAMILY_DEFAULT,
+                fontSize: 24,
+                fontWeight: "bold",
+                align: "center",
+                fill: SHIELD_STROKE,
+            },
+        });
+        text.anchor.set(0.5, 0.5);
+        // A bit above the middle, where the shield is widest.
+        text.y = -3;
+        return text;
+    }
+
+    /**
+     * Places the garrison shield at the top right of the island on screen,
+     * upright and at the same size whatever the island's rotation and scale.
+     */
+    private _placeGarrison(scale: number): void {
+        const cos = Math.cos(-this.rotation);
+        const sin = Math.sin(-this.rotation);
+        const x = SHIELD_OFFSET_X / scale;
+        const y = SHIELD_OFFSET_Y / scale;
+        this._garrison.position.set(
+            TILE_WIDTH / 2 + x * cos - y * sin,
+            TILE_HEIGHT / 2 + x * sin + y * cos,
+        );
+        this._garrison.rotation = -this.rotation;
+        this._garrison.scale.set(1 / scale, 1 / scale);
+    }
+
     private static _createSelectedIndicator(resourceHolder: ResourceHolder): Sprite {
         const selectedIndicator = new Sprite(resourceHolder.getTexture(SELECTED_TEXTURE));
         selectedIndicator.anchor.set(0.5, 0.5);
@@ -112,6 +194,7 @@ export default class IslandSprite extends BaseSprite<IslandModel> {
         const island = this.model;
         this._sprite.tint = ownerColor(island).fill;
         this._updateStrengthText(island);
+        this._updateGarrison(island);
         // Show island selected indicator
         this._selectedIndicator.alpha = island.selected ? 1 : 0;
     }
@@ -135,6 +218,21 @@ export default class IslandSprite extends BaseSprite<IslandModel> {
             this._strengthTextColor = color;
             this._strengthText.style.fill = color.textFill;
             this._strengthText.style.stroke = { color: color.textStroke, width: STRENGTH_TEXT_STROKE_WIDTH };
+        }
+    }
+
+    /**
+     * Shows the garrison on the shield, or hides the shield without one.
+     */
+    private _updateGarrison(island: IslandModel): void {
+        const garrison = island.garrison;
+        if (this._shownGarrison === garrison) {
+            return;
+        }
+        this._shownGarrison = garrison;
+        this._garrison.visible = garrison > 0;
+        if (garrison > 0) {
+            this._garrisonText.text = "" + garrison;
         }
     }
 

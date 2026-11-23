@@ -1,4 +1,5 @@
 import { test, expect } from "./fixtures.ts";
+import { openAndPlay } from "./helpers.ts";
 
 /**
  * Parses the backend's "client traffic" log lines (logged when a websocket
@@ -27,7 +28,7 @@ test.describe("websocket traffic", () => {
             cdp.on("Network.webSocketHandshakeResponseReceived", (evt) => resolve({ url, headers: evt.response.headers }));
         });
 
-        await page.goto("/");
+        await openAndPlay(page);
         const { url, headers } = await handshake;
         expect(new URL(url).searchParams.get("v")).toBe("5");
         const extensions = Object.entries(headers)
@@ -36,7 +37,7 @@ test.describe("websocket traffic", () => {
 
         // Watch a few seconds of ticks, then disconnect so that the backend
         // logs the traffic of the connection.
-        await expect(page.locator("canvas")).toBeVisible();
+        await expect(page.locator(".game-canvas canvas")).toBeVisible();
         await page.waitForTimeout(3_000);
         await page.close();
 

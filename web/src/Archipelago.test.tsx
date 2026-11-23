@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import React from "react";
-import { describe, it, expect, vi, afterEach } from "vitest";
-import { render, screen, cleanup, act, waitFor } from "@testing-library/react";
+import { describe, it, expect, vi, afterEach, onTestFinished } from "vitest";
+import { render, screen, cleanup, act, waitFor, fireEvent } from "@testing-library/react";
 
 // The game canvas is covered by the end-to-end tests: stub out Pixi and the
 // view built on it, and the resource loading that needs a browser.
@@ -25,7 +25,7 @@ vi.mock("./resource/ResourceLoader.ts", () => ({
 }));
 
 import {
-    ArchipelagoView, GameResultView, LobbyScreen,
+    Archipelago, ArchipelagoView, GameResultView, LobbyScreen,
     type ArchipelagoModel, type ConnectionState, type ModelChangeListener, type UIAction,
 } from "./Archipelago.tsx";
 import GameModel from "./game/model/GameModel.ts";
@@ -63,15 +63,24 @@ function renderView(store: Store) {
 }
 
 describe("LobbyScreen", () => {
-    it("shows text for each connection state", () => {
-        const { container, rerender } = render(<LobbyScreen connectionState="CONNECTING" />);
+    it("shows a Play button before connecting, that starts the game", () => {
+        const dispatch = vi.fn<(action: UIAction) => void>();
+        render(<LobbyScreen connectionState="IDLE" dispatch={dispatch} />);
+        fireEvent.click(screen.getByRole("button", { name: "Play!" }));
+        expect(dispatch).toHaveBeenCalledExactlyOnceWith({ type: "game/start" });
+    });
+
+    it("shows text for each other connection state", () => {
+        const dispatch = vi.fn<(action: UIAction) => void>();
+        const { container, rerender } = render(<LobbyScreen connectionState="CONNECTING" dispatch={dispatch} />);
         expect(container.textContent).toContain("Connecting");
 
-        rerender(<LobbyScreen connectionState="CONNECTED" />);
+        rerender(<LobbyScreen connectionState="CONNECTED" dispatch={dispatch} />);
         expect(container.textContent).toContain("Finding a game");
 
-        rerender(<LobbyScreen connectionState="DISCONNECTED" />);
+        rerender(<LobbyScreen connectionState="DISCONNECTED" dispatch={dispatch} />);
         expect(container.textContent).toContain("Disconnected!");
+        expect(screen.queryByRole("button")).toBeNull();
     });
 });
 
@@ -118,21 +127,40 @@ describe("GameResultView", () => {
 });
 
 describe("ArchipelagoView", () => {
-    it("shows loading text until resources are loaded, then the lobby", async () => {
-        const store = makeStore(lobbyModel("CONNECTING"));
+    it("shows loading text until resources are loaded, then the Play button", async () => {
+        const store = makeStore(lobbyModel("IDLE"));
         renderView(store);
         expect(screen.getByText("Loading resources")).toBeTruthy();
-        expect(await screen.findByText("Connecting")).toBeTruthy();
+        expect(screen.queryByRole("button", { name: "Play!" })).toBeNull();
+        expect(await screen.findByRole("button", { name: "Play!" })).toBeTruthy();
     });
 
-    it("requests to start the game once resources are loaded", async () => {
-        const store = makeStore(lobbyModel("CONNECTING"));
+    it("starts the game only when Play is clicked", async () => {
+        const store = makeStore(lobbyModel("IDLE"));
         renderView(store);
-        await screen.findByText("Connecting");
-        // The start is dispatched from an effect that React may run after
-        // the lobby is in the DOM, so wait for it rather than expect it now.
-        await waitFor(() => expect(store.dispatch).toHaveBeenCalledTimes(1));
-        expect(store.dispatch).toHaveBeenCalledWith({ type: "game/start" });
+        const play = await screen.findByRole("button", { name: "Play!" });
+        expect(store.dispatch).not.toHaveBeenCalled();
+
+        fireEvent.click(play);
+        expect(store.dispatch).toHaveBeenCalledExactlyOnceWith({ type: "game/start" });
+
+        act(() => store.set(lobbyModel("CONNECTING")));
+        expect(screen.getByText("Connecting")).toBeTruthy();
+        expect(screen.queryByRole("button", { name: "Play!" })).toBeNull();
+    });
+
+    it("plays a made-up game behind the lobby, until the real game starts", async () => {
+        const store = makeStore(lobbyModel("IDLE"));
+        renderView(store);
+        await screen.findByRole("button", { name: "Play!" });
+        // The (mocked) canvas gets attached once the renderer is created.
+        await waitFor(() => expect(document.querySelector(".lobby-background canvas")).not.toBeNull());
+
+        const gameModel = new GameModel();
+        gameModel.myPlayerId = "me";
+        act(() => store.set({ connectionState: "CONNECTED", gameModel, gameResult: null }));
+        expect(document.querySelector(".lobby-background")).toBeNull();
+        await waitFor(() => expect(document.querySelector(".game-canvas canvas")).not.toBeNull());
     });
 
     it("follows model changes", async () => {
@@ -182,5 +210,40 @@ describe("ArchipelagoView", () => {
         expect(store.listenerCount()).toBe(1);
         unmount();
         expect(store.listenerCount()).toBe(0);
+    });
+});
+
+describe("Archipelago", () => {
+    afterEach(() => {
+        vi.unstubAllGlobals();
+        vi.restoreAllMocks();
+    });
+
+    it("connects only once Play is clicked, and only once", async () => {
+        const sockets: string[] = [];
+        vi.stubGlobal("WebSocket", class {
+            constructor(url: string) { sockets.push(url); }
+            close() { }
+        });
+        const warn = vi.spyOn(console, "warn").mockImplementation(() => { });
+        const root = document.createElement("div");
+        document.body.appendChild(root);
+        onTestFinished(() => { root.remove(); });
+        const archipelago = new Archipelago(root, "ws://localhost/app/ws?v=5");
+        act(() => { archipelago.init(); });
+
+        const play = await screen.findByRole("button", { name: "Play!" });
+        expect(sockets).toEqual([]);
+
+        // A double click, before React re-renders without the button.
+        act(() => {
+            play.click();
+            play.click();
+        });
+        expect(sockets).toEqual(["ws://localhost/app/ws?v=5"]);
+        // Connection.connect() would also ignore a second call, but warn.
+        expect(warn).not.toHaveBeenCalled();
+        expect(screen.getByText("Connecting")).toBeTruthy();
+        expect(screen.queryByRole("button", { name: "Play!" })).toBeNull();
     });
 });

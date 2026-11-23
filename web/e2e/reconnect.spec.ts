@@ -1,5 +1,5 @@
 import { test, expect } from "./fixtures.ts";
-import { gameState, waitForGameStarted, type GameState } from "./helpers.ts";
+import { gameState, openAndPlay, waitForGameStarted, type GameState } from "./helpers.ts";
 
 /** The islands' owners and strengths, to see that the game goes on. */
 const islandsKey = (state: GameState): string =>
@@ -10,7 +10,7 @@ test.describe("network drop", () => {
     test.use({ backendArgs: ["-lobbyWait", "500ms", "-resumeGrace", "20s"] });
 
     test("the game resumes on a new connection when the connection breaks", async ({ page, backend, network }) => {
-        await page.goto("/");
+        await openAndPlay(page);
         const before = await waitForGameStarted(page);
 
         network.dropConnections();
@@ -31,7 +31,7 @@ test.describe("network drop", () => {
     });
 
     test("shows that it is reconnecting while the network is down", async ({ page, network }) => {
-        await page.goto("/");
+        await openAndPlay(page);
         const before = await waitForGameStarted(page);
 
         network.setOffline(true);

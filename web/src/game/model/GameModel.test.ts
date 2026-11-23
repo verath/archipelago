@@ -233,6 +233,23 @@ describe("GameModel.applyDelta", () => {
         expect(model.airplaneById("a3")?.strength).toBe(6);
     });
 
+    it("updates island garrisons, also when only the garrison changed", () => {
+        const model = newGame({ islands: [makeIsland("mine", 2, 2, "me", 10, 1, 20)] });
+        expect(model.islandById("mine")?.garrison).toBe(20);
+
+        model.applyDelta(makeDelta(2, 333, {
+            islands: [{ id: "mine", army: { ownerId: "me", strength: 10 }, garrison: 5 }],
+        }));
+        expect(model.islandById("mine")?.garrison).toBe(5);
+        expect(model.islandById("mine")?.strength).toBe(10);
+
+        // proto3 leaves out 0, a garrison that is gone.
+        model.applyDelta(makeDelta(3, 400, {
+            islands: [{ id: "mine", army: { ownerId: "enemy", strength: 3 } }],
+        }));
+        expect(model.islandById("mine")?.garrison).toBe(0);
+    });
+
     it("positions added airplanes at the delta's game time", () => {
         let now = 0;
         const model = new GameModel(() => now);

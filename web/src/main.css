@@ -14,13 +14,60 @@ canvas {
     margin: 0 auto;
 }
 
+/* The made-up game behind the lobby: faded, under the lobby, and not
+   clickable. */
+.lobby-background {
+    position: fixed;
+    inset: 0;
+    overflow: hidden;
+    opacity: 0.45;
+    pointer-events: none;
+}
+
+/* Centers its content in the viewport, on phones and desktops alike. */
 .center-text-wrap {
-    display: block;
-    margin-top: 10vmin;
-    line-height: 20vmin;
+    /* Above the lobby background. */
+    position: relative;
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    /* Without the mobile browser toolbars, where supported. */
+    min-height: 100dvh;
+    padding: 16px;
     text-align: center;
     font-family: 'Droid Sans Mono', 'Courier New', monospace;
     font-size: 10vmin;
+}
+
+.play-button {
+    padding: 0 0.8em;
+    font: inherit;
+    line-height: 1.6;
+    color: #fff;
+    /* The theme color, see index.html. */
+    background-color: #002171;
+    border: none;
+    border-radius: 0.3em;
+    box-shadow: 0 0.1em 0.3em rgba(0, 0, 0, 0.4);
+    cursor: pointer;
+    /* No double-tap-to-zoom delay on phones. */
+    touch-action: manipulation;
+}
+
+.play-button:hover {
+    background-color: #0d47a1;
+}
+
+.play-button:focus-visible {
+    outline: 0.08em solid #111;
+    outline-offset: 0.1em;
+}
+
+.play-button:active {
+    box-shadow: 0 0.05em 0.15em rgba(0, 0, 0, 0.4);
+    transform: translateY(0.05em);
 }
 
 .reconnecting-wrap {
